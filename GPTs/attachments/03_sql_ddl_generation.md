@@ -10,6 +10,7 @@
 
 - Generate tablespace DDL for disk, memory, volatile, and temporary storage.
 - Generate table DDL for memory tables, disk tables, LOB columns, temporary tables, partitioned tables, and 8.1 JSON columns.
+- Generate queue DDL and minimal queue usage checks.
 - Generate SQL for indexes, constraints, users, privileges, sequences, and replication objects.
 - Convert Oracle-style DDL into Altibase DDL while preserving object names and checking Altibase-specific storage clauses.
 - Generate post-DDL verification SQL for meta tables, performance views, and properties.
@@ -26,7 +27,7 @@
 - If the customer specifies a version, generate SQL for that version. If the customer does not specify a version, use the 8.1 baseline and state when a feature might not exist in 7.1 or 7.3.
 - Always identify the storage target before generating DDL: memory data, disk data, volatile data, or temporary disk space.
 - Prefer complete runnable examples with follow-up verification SQL. Do not provide DDL without owner, tablespace, and privilege assumptions when those affect execution.
-- For broad compatibility with 7.1 and 7.3, omit `IF NOT EXISTS` unless the customer targets 8.1 verified source or explicitly requests idempotent DDL.
+- For broad compatibility with 7.1 and 7.3, omit `IF NOT EXISTS` and `IF EXISTS` unless the customer targets 8.1 verified source or explicitly requests idempotent DDL.
 - Do not claim Oracle DDL can run unchanged. Convert Oracle storage, tablespace, LOB, sequence, and replication assumptions into Altibase syntax.
 
 ## DDL Generation Flow
@@ -212,15 +213,24 @@ WHERE space_name = 'APP_VOL_TBS';
 ### Table Syntax
 
 ```text
+drop_if_exists ::=
+  IF EXISTS           -- 8.1 verified source only; omit for 7.1 and 7.3
+
 table ::=
-  CREATE [[GLOBAL] TEMPORARY] TABLE [owner.]table_name
+  CREATE [[GLOBAL] TEMPORARY] TABLE [create_if_not_exists] [owner.]table_name
   ( column_definition [, column_definition ...]
     [, table_constraint ...] )
   [ON COMMIT {DELETE ROWS | PRESERVE ROWS}]
+  [ACCESS {READ ONLY | READ WRITE | READ APPEND}]
   [MAXROWS integer]
   [TABLESPACE tablespace_name]
   [LOB (lob_column) STORE AS (TABLESPACE tablespace_name)]
   [PARTITION BY {RANGE | HASH | LIST} (...)]
+  [ENABLE ROW MOVEMENT | DISABLE ROW MOVEMENT]
+  [PCTFREE integer] [PCTUSED integer] [INITRANS integer] [MAXTRANS integer]
+  [STORAGE (storage_attribute ...)]
+  [LOGGING | NOLOGGING]
+  [PARALLEL integer | NOPARALLEL]
   [AS SELECT ...]
 
 column_definition ::=
@@ -229,16 +239,134 @@ column_definition ::=
   [NOT NULL]
   [PRIMARY KEY | UNIQUE | CHECK (condition)]
   [REFERENCES [owner.]table_name [(column_name)] [ON DELETE {NO ACTION | CASCADE | SET NULL}]]
+
+drop_table ::=
+  DROP TABLE [drop_if_exists] [owner.]table_name
+
+alter_table_core ::=
+  ALTER TABLE [owner.]table_name
+  { ADD COLUMN (column_definition [, column_definition ...])
+  | DROP COLUMN {column_name | (column_name [, column_name ...])}
+  | RENAME COLUMN old_column_name TO new_column_name
+  | ADD CONSTRAINT constraint_definition
+  | DROP {CONSTRAINT constraint_name | PRIMARY KEY | UNIQUE (column_name [, ...]) | LOCALUNIQUE (column_name [, ...])}
+  | RENAME TO new_table_name
+  | MAXROWS integer
+  | ACCESS {READ ONLY | READ WRITE | READ APPEND}
+  | ENABLE ROW MOVEMENT
+  | DISABLE ROW MOVEMENT
+  | ALTER TABLESPACE tablespace_name [INDEX (...)] [LOB (...)]
+  | ALLOCATE EXTENT (SIZE size)
+  | COMPACT
+  | TOUCH }
+
+partition_by_range ::=
+  PARTITION BY RANGE (partition_key [, partition_key ...])
+  ( PARTITION partition_name VALUES LESS THAN (value [, value ...]) [TABLESPACE tablespace_name] [LOB (...)] [, ...]
+    , PARTITION partition_name VALUES DEFAULT [TABLESPACE tablespace_name] [LOB (...)] )
+
+partition_by_list ::=
+  PARTITION BY LIST (partition_key)
+  ( PARTITION partition_name VALUES (value [, value ...]) [TABLESPACE tablespace_name] [, ...]
+    , PARTITION partition_name VALUES DEFAULT [TABLESPACE tablespace_name] )
+
+partition_by_hash ::=
+  PARTITION BY HASH (partition_key [, partition_key ...])
+  ( PARTITION partition_name [TABLESPACE tablespace_name] [, ...] )
+
+alter_table_partition ::=
+  ALTER TABLE [owner.]table_name
+  { ADD PARTITION partition_name [INDEX (...)]
+  | COALESCE PARTITION
+  | DROP PARTITION partition_name
+  | MERGE PARTITIONS partition_name, partition_name INTO PARTITION new_partition_name [TABLESPACE tablespace_name] [INDEX (...)] [LOB (...)]
+  | RENAME PARTITION old_partition_name TO new_partition_name
+  | SPLIT PARTITION partition_name {AT (value [, ...]) | VALUES (value [, ...])} INTO (partition_description, partition_description)
+  | TRUNCATE PARTITION partition_name
+  | ALTER PARTITION partition_name TABLESPACE tablespace_name [INDEX (...)] [LOB (...)] }
 ```
 
 Generation notes:
 
+- `IF NOT EXISTS` for `CREATE TABLE` and `IF EXISTS` for `DROP TABLE` are available in the Altibase 8.1 verified source. Omit both for 7.1 and 7.3.
+- Required privilege: `SYS`, `CREATE TABLE` or `CREATE ANY TABLE` for the target schema when creating tables; `SYS`, owner, `ALTER` object privilege, or `ALTER ANY TABLE` for `ALTER TABLE`; `SYS`, owner, or `DROP ANY TABLE` for `DROP TABLE`.
 - If `TABLESPACE` is omitted, Altibase uses the creating user's `DEFAULT TABLESPACE`; if that is not set, the system memory default tablespace is used.
+- Use memory tablespaces for persistent hot data, disk tablespaces for large persistent data, volatile tablespaces for restart-discardable data and `GLOBAL TEMPORARY TABLE` rows, and disk temporary tablespaces for sort/work space rather than ordinary table storage.
 - For `PRIMARY KEY`, `UNIQUE`, and `LOCALUNIQUE`, Altibase creates supporting indexes. The supporting index uses the table's tablespace unless a `USING INDEX` clause specifies otherwise.
 - `MAXROWS` limits the number of records and is not supported with partitioned tables.
-- LOB columns in disk tables can be stored in a separate LOB tablespace; LOB columns in memory tables cannot be stored separately from the table.
+- A table can have only one `PRIMARY KEY`; primary and unique constraints can use up to 32 columns.
+- A `TIMESTAMP` column is generated internally and only one `TIMESTAMP` column can be created in one table. Do not specify an explicit `DEFAULT` for it.
+- `CHECK` constraints cannot contain subqueries, sequences, pseudo columns such as `LEVEL` or `ROWNUM`, non-deterministic functions such as `SYSDATE` or `USER_ID`, the `PRIOR` operator, or LOB data.
+- LOB columns in disk tables can be stored in a separate disk LOB tablespace. LOB columns in memory tables cannot be stored separately from the table; memory LOB `IN ROW` sizing belongs in the data type definition.
+- LOB type columns cannot be used in volatile tables or disk temporary tablespaces, cannot be partition keys, cannot be indexed, and should not normally be declared `NOT NULL`.
 - Temporary tables can use `ON COMMIT DELETE ROWS` for transaction-specific data or `ON COMMIT PRESERVE ROWS` for session-specific data.
 - For `GLOBAL TEMPORARY TABLE`, specify a volatile tablespace in the table `TABLESPACE` clause, not a disk temporary tablespace.
+- Temporary table definitions are shared metadata, but rows are private to the session that inserts them. Session-specific temporary table DDL is allowed only when the session is not bound to the table; transaction-specific temporary table DDL causes the internal DDL commit behavior to remove transaction-level rows.
+- Temporary tables cannot be partitioned, cannot have foreign keys, and do not support distributed transactions.
+- Range and list partitioned tables require a `DEFAULT` partition. Range and hash partition keys can use up to 32 columns; list partitioning uses a single partition key column.
+- `ENABLE ROW MOVEMENT` allows updates that move rows between partitions when partition key values change. If omitted, `DISABLE ROW MOVEMENT` is the default.
+- `ADD PARTITION` and `COALESCE PARTITION` are for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
+- Moving a non-partitioned table with `ALTER TABLE ... ALTER TABLESPACE` moves records. Moving a partitioned table's table-level tablespace does not move existing partition records; use partition-level clauses to move partition data.
+- When a table is a replication target, do not generate `ALTER TABLE` that changes the table definition.
+- `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns or explicit target data types; expression columns need aliases.
+- `PCTFREE` and `PCTUSED` are meaningful for disk-based table pages. Do not copy Oracle storage clauses without checking Altibase syntax and storage target.
+- `JSON` columns are an 8.1 baseline feature. Use `JSON [IN ROW size]` when needed, ensure `TEMPORARY_LOB_ENABLE=1`, and avoid JSON columns for 7.1 or 7.3 unless the customer confirms support.
+
+Table DDL item blocks:
+
+- Memory table: persistent memory storage; can use `MAXROWS`; indexes are memory indexes and index `TABLESPACE` is ignored. Use for hot OLTP data that must survive restart.
+- Disk table: persistent disk storage; supports disk physical attributes, separate disk LOB tablespaces, and disk index tablespaces. Use for large tables, history, and LOB-heavy data.
+- Volatile table: stored in volatile tablespace and lost at shutdown. Use for non-LOB restart-discardable data and `GLOBAL TEMPORARY TABLE` row storage.
+- Temporary table: metadata persists, rows are session-specific or transaction-specific. Use `ON COMMIT DELETE ROWS` or `ON COMMIT PRESERVE ROWS`; do not use partitioning or foreign keys.
+- LOB column: use `BLOB` or `CLOB`; keep separate `LOB (...) STORE AS (TABLESPACE ...)` clauses only for disk tables. For transient large values in 8.1, distinguish Temporary LOB execution memory from table LOB columns.
+- JSON column: use only for 8.1. JSON follows broad LOB restrictions, uses Temporary LOB internally, and cannot be used with `SELECT FOR UPDATE`.
+- Partitioned table: choose range for time/range pruning, list for discrete values, hash for distribution. Name partitions explicitly and specify partition tablespaces when placement matters.
+- Queue table: use `CREATE QUEUE`, not `CREATE TABLE`, when the object must support `ENQUEUE` and `DEQUEUE`.
+
+### Queue Syntax
+
+```text
+queue ::=
+  CREATE QUEUE [create_if_not_exists] [owner.]queue_name
+  ( {message_size | queue_column_definition [, queue_column_definition ...]} )
+  [MAXROWS integer]
+
+queue_column_definition ::=
+  column_name data_type
+
+alter_queue ::=
+  ALTER QUEUE [owner.]queue_name {COMPACT | MSGID RESET}
+
+drop_queue ::=
+  DROP QUEUE [drop_if_exists] [owner.]queue_name
+
+enqueue_usage ::=
+  ENQUEUE INTO [owner.]queue_name (queue_column [, queue_column ...])
+  VALUES (value [, value ...])
+
+dequeue_usage ::=
+  DEQUEUE queue_column [, queue_column ...]
+  FROM [owner.]queue_name
+  [WHERE condition]
+  [{FIFO | LIFO}]
+  [WAIT integer [time_unit]]
+
+time_unit ::=
+  SEC | MSEC | USEC
+```
+
+Generation notes:
+
+- `IF NOT EXISTS` for `CREATE QUEUE` and `IF EXISTS` for `DROP QUEUE` are available in the Altibase 8.1 verified source. Omit both for 7.1 and 7.3.
+- Required privilege for `CREATE QUEUE` follows table creation privilege rules: `SYS`, `CREATE TABLE` or `CREATE ANY TABLE` in the user's schema, or `CREATE ANY TABLE` in another schema.
+- `DROP QUEUE` requires `SYS`, the owner, or `DROP ANY TABLE`.
+- `queue_name` can be up to 28 bytes. Creating a queue also creates an internal object named `queue_name || '_NEXT_MSG_ID'`; avoid names that collide with that generated object.
+- The message-size form accepts a byte size from `1` through `32000`.
+- The column-definition form uses `CREATE TABLE` column definitions but does not support column constraints, encryption clauses, or `TIMESTAMP`.
+- `MAXROWS` ranges from `1` through `4294967295`; the default is `4294967295`.
+- `ALTER QUEUE ... COMPACT` returns empty pages to the queue tablespace without moving queue data. `ALTER QUEUE ... MSGID RESET` resets the queue message id.
+- `DROP QUEUE` removes the queue table, its index, and the sequence used for `MSGID` values.
+- `DEQUEUE` reads and removes the matching message. `FIFO` is the default; `LIFO` reads the newest matching message. `DEQUEUE` can reference only one queue table, and a `DEQUEUE` `WHERE` clause cannot contain a subquery.
 
 ### Index Syntax
 
@@ -601,11 +729,12 @@ TABLESPACE app_vol_tbs;
 
 CREATE GLOBAL TEMPORARY TABLE app.tmp_report_cache (
     report_key  VARCHAR(80),
-    payload     CLOB
+    payload     VARCHAR(4000)
 ) ON COMMIT PRESERVE ROWS
-TABLESPACE app_vol_tbs
-LOB (payload) STORE AS (TABLESPACE app_vol_tbs);
+TABLESPACE app_vol_tbs;
 ```
+
+Do not put ordinary `BLOB` or `CLOB` columns in volatile temporary-table storage. For transient large text or binary values, use a permanent disk table with LOB storage, application-side staging, or 8.1 Temporary LOB processing as appropriate.
 
 Create a range-partitioned disk table:
 
@@ -625,13 +754,47 @@ PARTITION BY RANGE (order_date)
 TABLESPACE app_disk_tbs;
 ```
 
+Create list and hash partitioned disk tables:
+
+```sql
+CREATE TABLE app.customer_region (
+    customer_id  BIGINT NOT NULL,
+    region_code  VARCHAR(20) NOT NULL,
+    status       CHAR(1) DEFAULT 'A',
+    CONSTRAINT pk_customer_region PRIMARY KEY (customer_id, region_code)
+)
+PARTITION BY LIST (region_code)
+(
+    PARTITION p_kr VALUES ('KR') TABLESPACE app_disk_tbs,
+    PARTITION p_us VALUES ('US') TABLESPACE app_disk_tbs,
+    PARTITION p_other VALUES DEFAULT TABLESPACE app_disk_tbs
+)
+ENABLE ROW MOVEMENT
+TABLESPACE app_disk_tbs;
+
+CREATE TABLE app.event_bucket (
+    event_id    BIGINT NOT NULL,
+    created_at  DATE DEFAULT SYSDATE,
+    payload     VARCHAR(4000),
+    CONSTRAINT pk_event_bucket PRIMARY KEY (event_id)
+)
+PARTITION BY HASH (event_id)
+(
+    PARTITION p01 TABLESPACE app_disk_tbs,
+    PARTITION p02 TABLESPACE app_disk_tbs,
+    PARTITION p03 TABLESPACE app_disk_tbs,
+    PARTITION p04 TABLESPACE app_disk_tbs
+)
+TABLESPACE app_disk_tbs;
+```
+
 8.1 JSON table example:
 
 ```sql
 CREATE TABLE app.app_event (
     event_id    BIGINT NOT NULL,
     user_id     INTEGER,
-    payload     JSON,
+    payload     JSON IN ROW 2048,
     created_at  DATE DEFAULT SYSDATE,
     CONSTRAINT pk_app_event PRIMARY KEY (event_id)
 ) TABLESPACE app_disk_tbs;
@@ -642,6 +805,69 @@ CREATE TABLE app.app_event (
 - Treat `JSON` as an 8.1 baseline feature.
 - JSON processing uses Temporary LOB internally; check `TEMPORARY_LOB_ENABLE` when a JSON workload fails or when memory use is being reviewed.
 - Avoid generating the `JSON` column type for 7.1 or 7.3 unless the customer provides version-specific confirmation.
+- Do not create partition keys or indexes on JSON columns. Treat JSON columns as LOB-like for DDL restrictions.
+
+Alter table examples:
+
+```sql
+ALTER TABLE app.app_document
+ADD COLUMN (updated_at DATE DEFAULT SYSDATE);
+
+ALTER TABLE app.app_document
+ALTER TABLESPACE app_disk_tbs
+LOB (body TABLESPACE app_disk_tbs);
+
+ALTER TABLE app.order_history
+ENABLE ROW MOVEMENT;
+
+ALTER TABLE app.order_history
+SPLIT PARTITION p_default
+AT ('01-JAN-2027')
+INTO (
+    PARTITION p_2026 TABLESPACE app_disk_tbs,
+    PARTITION p_future TABLESPACE app_disk_tbs
+);
+
+ALTER TABLE app.event_bucket
+ADD PARTITION p05;
+
+ALTER TABLE app.event_bucket
+COALESCE PARTITION;
+```
+
+Queue DDL and minimal usage examples:
+
+```sql
+CREATE QUEUE app.app_event_q (
+    event_id    BIGINT,
+    payload     VARCHAR(4000),
+    corrid      INTEGER
+) MAXROWS 1000000;
+
+ENQUEUE INTO app.app_event_q (event_id, payload, corrid)
+VALUES (1001, '{"type":"signup"}', 10);
+
+DEQUEUE event_id, payload, corrid
+FROM app.app_event_q
+WHERE corrid = 10
+FIFO
+WAIT 5;
+
+ALTER QUEUE app.app_event_q COMPACT;
+ALTER QUEUE app.app_event_q MSGID RESET;
+```
+
+For an 8.1 verified source target, idempotent queue DDL can be generated:
+
+```sql
+CREATE QUEUE IF NOT EXISTS app.app_event_q (
+    event_id    BIGINT,
+    payload     VARCHAR(4000),
+    corrid      INTEGER
+) MAXROWS 1000000;
+
+DROP QUEUE IF EXISTS app.app_event_q;
+```
 
 Verify table definitions:
 
@@ -657,6 +883,9 @@ WHERE t.user_id = u.user_id
       'TMP_ORDER_STAGE',
       'TMP_REPORT_CACHE',
       'ORDER_HISTORY',
+      'CUSTOMER_REGION',
+      'EVENT_BUCKET',
+      'APP_EVENT_Q',
       'APP_EVENT'
   );
 
@@ -677,6 +906,34 @@ SELECT t.table_name, m.mem_page_cnt, m.mem_slot_size, m.fixed_used_mem, m.var_us
 FROM SYSTEM_.SYS_TABLES_ t, V$MEMTBL_INFO m
 WHERE t.table_oid = m.table_oid
   AND t.table_name = 'APP_USER';
+
+SELECT p.partition_name,
+       p.partition_min_value,
+       p.partition_max_value,
+       p.partition_order,
+       p.tbs_id,
+       p.partition_access
+FROM SYSTEM_.SYS_TABLE_PARTITIONS_ p,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE p.user_id = t.user_id
+  AND p.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name IN ('ORDER_HISTORY', 'CUSTOMER_REGION', 'EVENT_BUCKET')
+ORDER BY t.table_name, p.partition_order, p.partition_name;
+
+SELECT u.user_name,
+       t.table_name AS queue_name,
+       t.table_type,
+       t.maxrow,
+       t.column_count
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'APP_EVENT_Q'
+  AND t.table_type = 'Q';
 
 SELECT name, value1
 FROM V$PROPERTY
@@ -886,6 +1143,13 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
 - Tablespaces: Convert Oracle datafile and autoextend clauses into Altibase disk, memory, volatile, or temporary tablespace DDL. Oracle does not imply Altibase memory storage.
 - Tables: Keep ordinary column and constraint definitions when compatible, but rewrite tablespace, LOB storage, temporary table, partitioning, and `MAXROWS` clauses for Altibase.
+- Memory vs disk: Oracle heap tables do not map automatically to Altibase memory tables. Choose `TABLESPACE app_mem_tbs` only when memory persistence and sizing are intentional; otherwise use a disk tablespace.
+- Temporary tables: Oracle `GLOBAL TEMPORARY TABLE` syntax is similar only at a high level. In Altibase, temporary table rows are stored in a volatile tablespace, temporary tables cannot be partitioned, foreign keys are not allowed, and ordinary LOB columns should not be placed in the volatile temporary-table design.
+- LOB storage: Oracle `LOB (...) STORE AS` clauses must be rewritten. In Altibase, separate LOB tablespace placement is for disk tables. Do not copy Oracle `SECUREFILE`, `BASICFILE`, `RETENTION`, `CACHE`, or similar LOB storage attributes as Altibase syntax.
+- JSON: Oracle JSON constraints and JSON column designs are not portable. Use Altibase native `JSON` only for 8.1 and check `TEMPORARY_LOB_ENABLE`; for 7.1 and 7.3, use `VARCHAR` or `CLOB` plus application validation or plan an upgrade.
+- Partitioning: Oracle range/list/hash clauses need Altibase checks. Altibase range and list tables require a `DEFAULT` partition, list partitioning uses one key column, LOB columns cannot be partition keys, and `MAXROWS` cannot be used with partitioned tables.
+- Physical attributes: Oracle storage, compression, segment, and organization clauses are not drop-in compatible. In Altibase, `PCTFREE` and `PCTUSED` are disk-page tuning knobs; `STORAGE (INITEXTENTS ... NEXTEXTENTS ... MINEXTENTS ... MAXEXTENTS ...)` uses Altibase extent semantics.
+- Queues: Oracle Advanced Queuing package and queue-table DDL are not portable. Generate Altibase `CREATE QUEUE`, `ALTER QUEUE`, `DROP QUEUE`, `ENQUEUE`, and `DEQUEUE` syntax instead.
 - Data types: Use `05_data_types_properties.md` for exact type mapping. Do not map Oracle `CLOB`, `BLOB`, `NUMBER`, or `VARCHAR2` blindly without checking Altibase limits and semantics.
 - Indexes: Convert function-based indexes only when all expressions are supported. User-defined functions must be `DETERMINISTIC`.
 - Users: Convert Oracle profile and quota assumptions into Altibase `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, `ACCESS`, `LIMIT`, and explicit `GRANT` statements.
@@ -894,15 +1158,16 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
 ## Version Differences
 
-- 7.1: Use 7.1 SQL Reference syntax. Avoid `IF NOT EXISTS`, native `JSON`, Temporary LOB checks, and `USING SSL` replication unless the customer provides version-specific confirmation.
+- 7.1: Use 7.1 SQL Reference syntax. Avoid `IF NOT EXISTS`, `IF EXISTS`, native `JSON`, Temporary LOB checks, and `USING SSL` replication unless the customer provides version-specific confirmation.
 - 7.3: Use 7.3 SQL Reference syntax. Treat ordinary DDL patterns as close to 7.1, but check 7.3-specific SQL, Spatial, and Replication improvements when relevant.
-- 8.1: Use Altibase 8.1 verified source for `IF NOT EXISTS` in supported `CREATE` statements, native `JSON`, Temporary LOB, `TEMPORARY_LOB_ENABLE`, `V$TEMPORARY_LOBS`, `USING SSL` replication, and `REPLICATION_SSL_PORT_NO`.
+- 8.1: Use Altibase 8.1 verified source for `IF NOT EXISTS` in supported `CREATE` statements, `IF EXISTS` in supported `DROP` statements, native `JSON`, Temporary LOB, `TEMPORARY_LOB_ENABLE`, `V$TEMPORARY_LOBS`, `USING SSL` replication, and `REPLICATION_SSL_PORT_NO`.
 
 ## DDL Response Checklist
 
 - State the assumed Altibase version.
 - State the assumed owner/schema, tablespaces, file paths, host names, and ports.
-- Include prerequisite privileges or `SYS` requirements for tablespace and replication DDL.
-- Generate DDL in execution order: tablespaces, users, grants, tables, indexes, sequences, replication.
-- Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_INDICES_`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
+- Include prerequisite privileges or `SYS` requirements for tablespace, table, queue, and replication DDL.
+- Generate DDL in execution order: tablespaces, users, grants, tables, queues, indexes, sequences, replication.
+- For Oracle conversion requests, explicitly state table-level differences for storage target, temporary tables, LOB storage, JSON, partitions, and queues.
+- Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
 - Keep examples free of internal source labels and local repository paths.
