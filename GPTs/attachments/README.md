@@ -8,8 +8,10 @@ about Altibase 7.1, 7.3, and 8.1.
 
 - Keep exactly 20 attachment Markdown files, excluding this `README.md`.
 - Write every attachment in canonical English.
+- Treat canonical English as the source language for the knowledge files. The GPT may
+  translate explanations at answer time, but the attachment text itself should stay English.
 - Support Altibase 7.1, 7.3, and 8.1 answers.
-- Label Altibase 8.1 material as based on the Altibase 8.1 verified source.
+- Label Altibase 8.1 material as based on the `Altibase 8.1 verified source`.
 - Prioritize Altibase-specific DDL, configuration, operation, compatibility, and troubleshooting behavior.
 - Keep common SQL behavior that overlaps with Oracle brief unless Altibase differs.
 - Convert tables and images into searchable Markdown text whenever possible.
@@ -73,6 +75,13 @@ Use compact, searchable item blocks for large reference tables. Use BNF-like tex
 SQL syntax diagrams. Use Mermaid only when it helps explain graphs, flows, states,
 architecture, topology, or sequences. Replace UI screenshots with procedural text and
 clear input or value descriptions.
+
+## Source Traceability Policy
+
+Customer-facing attachments may cite source material only with safe labels such as
+Altibase version, manual family, release note, or topic. Keep internal paths and branch
+names in work documents only. For Altibase 8.1, use `Altibase 8.1 verified source` or
+equivalent wording instead of any internal source-set name.
 
 ## Pre-Upload Checks
 

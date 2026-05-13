@@ -1,65 +1,88 @@
-# Altibase GPTs 첨부 문서 구축 작업 문서
+# Altibase GPTs Attachment Build Workplan
 
-## 목적
+## Purpose
 
-GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서다. 최종 산출물은 고객이 7.1, 7.3, 8.1 중 어떤 버전을 사용하더라도 자기 버전 기준으로 SQL, DDL, 설정, 운영, 이중화, 오류 대응 답변을 받을 수 있게 하는 것이다.
+This is the working standard for building the 20 Markdown files that will be uploaded
+to GPTs. The final attachment set must let customers get version-aware answers for
+SQL, DDL, configuration, operation, replication, and troubleshooting whether they use
+Altibase 7.1, 7.3, or 8.1.
 
-## 실행 관리
+## Execution Management
 
-긴 작업은 job 단위로 나누어 진행한다.
+Long work is split into jobs.
 
 - Job list: `GPTs/Altibase_GPT_Attachment_Job_List.md`
 - Runner script: `GPTs/scripts/attachment_jobs.sh`
 
-각 job은 `ToDo`, `InProgress`, `Review`, `Done`, `Fail`, `Blocked`, `Skip` 중 하나의 상태를 가진다. 각 단계는 Codex CLI에 job prompt를 전달하여 독립적으로 실행할 수 있게 구성한다.
+Each job has one status: `ToDo`, `InProgress`, `Review`, `Done`, `Fail`, `Blocked`, or
+`Skip`. Each step is designed so the runner can pass an independent job prompt to the
+Codex CLI.
 
-커밋/복구 규칙:
+Commit and recovery rules:
 
-- 각 job은 시작 시점과 종료 시점에 Git commit을 남긴다.
-- 시작은 `bash GPTs/scripts/attachment_jobs.sh start JOB-ID`로 처리한다. 이 명령은 상태를 `InProgress`로 바꾸고 `GPTs/` 변경분만 commit한다.
-- `run JOB-ID`는 job이 `ToDo`이면 자동으로 `start JOB-ID`를 먼저 수행한 뒤 Codex CLI를 실행한다.
-- 종료는 `bash GPTs/scripts/attachment_jobs.sh finish JOB-ID Review "요약"` 또는 `Done`, `Fail`, `Blocked`, `Skip` 중 하나로 처리한다. 이 명령은 상태 변경과 산출물을 함께 commit한다.
-- 긴 job에서는 중간 저장점이 필요할 때 `bash GPTs/scripts/attachment_jobs.sh commit JOB-ID "중간 요약"`을 사용한다.
-- 중간에 토큰 부족, 세션 종료, CLI 실패가 발생하면 `bash GPTs/scripts/attachment_jobs.sh history JOB-ID`로 해당 job의 진행 commit을 확인하고 이어서 작업한다.
-- runner의 commit 범위는 기본적으로 `GPTs/`이다. 원본 매뉴얼이나 다른 디렉터리의 수정분은 job commit에 포함하지 않는다.
-- 실패한 job은 `finish JOB-ID Fail "실패 이유"`로 닫아 원인을 commit message에 남긴다. 그 job에 의존하지 않는 다른 ready job은 계속 진행한다.
-- `start`와 `run`은 시작 전에 `GPTs/` 아래 미커밋 변경이 있는지 확인한다. 미커밋 변경이 있으면 다음 job commit에 섞일 수 있으므로 기본적으로 중단한다.
-- 수동 복구 상황에서만 `ALLOW_DIRTY_COMMIT_SCOPE=1`을 붙여 미커밋 변경이 있는 상태의 시작을 허용한다.
-- `DRY_RUN=1`은 상태 변경, Codex 실행, stage, commit을 모두 하지 않는 preview 모드로 사용한다.
+- Each job should leave a Git commit at the start and at the finish.
+- Start a job with `bash GPTs/scripts/attachment_jobs.sh start JOB-ID`. This changes
+  the job status to `InProgress` and commits only changes under `GPTs/`.
+- `run JOB-ID` automatically starts a `ToDo` job before running the Codex CLI.
+- Finish a job with `bash GPTs/scripts/attachment_jobs.sh finish JOB-ID Done "summary"`,
+  or use `Review`, `Fail`, `Blocked`, or `Skip` when appropriate. The finish command
+  commits the status change and outputs together.
+- For long jobs, use `bash GPTs/scripts/attachment_jobs.sh commit JOB-ID "intermediate summary"`
+  when an intermediate save point is useful.
+- If token exhaustion, session closure, or CLI failure interrupts a job, use
+  `bash GPTs/scripts/attachment_jobs.sh history JOB-ID` to find job commits and resume.
+- The runner commit scope is `GPTs/` by default. Source manuals and other directories
+  are not included in job commits.
+- Close failed jobs with `finish JOB-ID Fail "failure reason"` so the reason is captured
+  in the commit message. Other ready jobs that do not depend on the failed job may continue.
+- `start` and `run` check for uncommitted changes under `GPTs/` before starting, because
+  those changes could otherwise mix with the next job commit.
+- Use `ALLOW_DIRTY_COMMIT_SCOPE=1` only for manual recovery when a dirty `GPTs/` scope is
+  intentional.
+- `DRY_RUN=1` previews status changes, Codex execution, staging, and commits without
+  making changes.
 
-전체 자동 진행:
+Automated execution:
 
-- `bash GPTs/scripts/attachment_jobs.sh run-all`은 선행 job이 모두 `Done`인 `ToDo` 작업을 처음부터 끝까지 순차 실행한다.
-- `bash GPTs/scripts/attachment_jobs.sh run-all "P3 SQL Core"`처럼 phase를 지정하면 해당 phase의 ready job만 실행한다.
-- `MAX_JOBS=3`을 붙이면 긴 작업을 3개 job 단위로 끊어서 실행할 수 있다.
-- `STOP_ON_FAIL=1`을 붙이면 job 하나가 실패한 즉시 전체 실행을 멈춘다. 기본값은 실패한 job을 `Fail`로 닫고 관계 없는 ready job을 계속 실행하는 것이다.
-- `AUTO_ACCEPT_REVIEW=1`을 붙이면 Codex가 `Review`로 끝낸 job을 자동으로 `Done`으로 승격해 후속 dependency가 계속 진행되게 한다.
-- `ALLOW_FAILURES=1`을 붙이면 실패 job이 있어도 `run-all`이 shell 성공으로 종료될 수 있다. 기본값은 실패가 하나라도 있으면 non-zero로 종료한다.
-- `ALLOW_INCOMPLETE=1`을 붙이면 더 이상 ready job이 없어 멈췄지만 blocked `ToDo`가 남아 있어도 shell 성공으로 반환한다.
+- `bash GPTs/scripts/attachment_jobs.sh run-all` runs ready `ToDo` jobs whose dependencies
+  are all `Done`.
+- `bash GPTs/scripts/attachment_jobs.sh run-all "P3 SQL Core"` runs ready jobs only for
+  that phase.
+- `MAX_JOBS=3` limits a long run to three jobs.
+- `STOP_ON_FAIL=1` stops the run immediately after a job fails. By default, failed jobs
+  are marked `Fail` and unrelated ready jobs continue.
+- `AUTO_ACCEPT_REVIEW=1` promotes jobs that finish as `Review` to `Done` during `run-all`.
+- `ALLOW_FAILURES=1` allows `run-all` to exit successfully even when failures occurred.
+- `ALLOW_INCOMPLETE=1` allows `run-all` to exit successfully when no more jobs are ready
+  but blocked `ToDo` jobs remain.
 
-선행 관계 규칙:
+Dependency rules:
 
-- `next`와 `run`은 선행 job이 모두 `Done`인 작업만 실행 대상으로 삼는다.
-- 어떤 job이 `Fail` 또는 `Blocked`가 되어도 관계 없는 다른 `ToDo` job은 계속 진행할 수 있다.
-- 문서 변환 job은 필요한 source inventory, 언어 정책, 헤더 변환, label cleanup이 성공한 후 실행한다.
-- Mermaid 변환 job은 image inventory와 관련 첨부 문서 변환이 성공한 후 실행한다.
-- QA job은 자신이 검수하는 변환 job들이 성공한 후 실행한다.
+- `next` and `run` only target jobs whose dependencies are all `Done`.
+- If a job becomes `Fail` or `Blocked`, unrelated `ToDo` jobs may still continue.
+- Document conversion jobs run only after the required source inventory, language policy,
+  header conversion, and label cleanup jobs have succeeded.
+- Mermaid conversion jobs run only after image inventory and related attachment conversion
+  jobs have succeeded.
+- QA jobs run only after the conversion jobs they check have succeeded.
 
-## 원천 버전 매핑
+## Source Version Mapping
 
-| 답변 기준 버전 | 내부 원천 경로 | 고객용 표기 |
+| Answer baseline version | Internal source path | Customer-facing label |
 | --- | --- | --- |
 | 7.1 | `Manuals/Altibase_7.1` | Altibase 7.1 |
 | 7.3 | `Manuals/Altibase_7.3` | Altibase 7.3 |
-| 8.1 | `Manuals/Altibase_trunk` + `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md` | Altibase 8.1 검증본 |
+| 8.1 | `Manuals/Altibase_trunk` + `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md` | Altibase 8.1 verified source |
 
-검수 규칙:
+Review rules:
 
-- 첨부용 문서에는 `trunk`를 쓰지 않는다.
-- 내부 작업 문서와 선정안에는 추적성을 위해 원천 경로를 유지한다.
-- 8.1 원천은 8.1 릴리스 노트와 대조해 신규 기능 반영 여부를 확인한다.
+- Do not use internal source labels such as `trunk` in customer-facing attachment files.
+- Work documents and the selection document may keep internal source paths for concise
+  traceability.
+- Check the 8.1 source against the 8.1 release notes for new feature coverage before using
+  it as the 8.1 baseline.
 
-## 산출물
+## Outputs
 
 - `GPTs/Altibase_GPT_Document_Selection.md`
 - `GPTs/Altibase_GPT_Attachment_Build_Workplan.md`
@@ -85,26 +108,27 @@ GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서�
 - `GPTs/attachments/18_security_ssl_tls.md`
 - `GPTs/attachments/19_spatial_nifi_tableau_misc.md`
 
-## 작업 단계
+## Work Stages
 
-### 1차: SQL/DDL 생성 핵심
+### Stage 1: SQL/DDL Generation Core
 
-대상:
+Targets:
 
 - `03_sql_ddl_generation.md`
 - `04_sql_dml_oracle_compatibility.md`
 - `05_data_types_properties.md`
 - `06_data_dictionary_performance_views.md`
 
-작업:
+Work:
 
-- Oracle과 겹치는 일반 SQL은 축약한다.
-- Altibase DDL, 테이블스페이스, 메모리/디스크 테이블, 인덱스, 시퀀스, 사용자/권한, 이중화 SQL, 프로퍼티 확인 SQL은 예제 중심으로 정리한다.
-- 7.1/7.3/8.1 차이가 있으면 명시한다.
+- Compress general SQL that overlaps with Oracle.
+- Organize Altibase DDL, tablespaces, memory/disk tables, indexes, sequences, users and
+  privileges, replication SQL, and property check SQL around executable examples.
+- State 7.1/7.3/8.1 differences when they exist.
 
-### 2차: 운영/성능/이중화
+### Stage 2: Operations, Performance, and Replication
 
-대상:
+Targets:
 
 - `01_getting_started_installation.md`
 - `02_administration_operations.md`
@@ -113,29 +137,30 @@ GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서�
 - `09_replication_ha_cdc.md`
 - `18_security_ssl_tls.md`
 
-작업:
+Work:
 
-- 운영 절차는 체크리스트로 만든다.
-- 표는 항목 단위 설명으로 분해한다.
-- 이미지 흐름은 Mermaid 또는 절차 텍스트로 바꾼다.
+- Convert operational procedures into checklists.
+- Decompose tables into item-level explanations.
+- Convert flow images to Mermaid or procedural text.
 
-### 3차: 개발 인터페이스
+### Stage 3: Development Interfaces
 
-대상:
+Targets:
 
 - `10_psm_stored_external_procedures.md`
 - `11_java_jdbc_spring.md`
 - `12_c_cli_odbc_precompiler.md`
 - `13_isql_iloader_basic_tools.md`
 
-작업:
+Work:
 
-- 연결 문자열, 드라이버, API 사용 순서, LOB 처리, 오류 대응을 FAQ화한다.
-- API 표는 함수별 "역할/인자/반환/주의사항"으로 분해한다.
+- Convert connection strings, drivers, API order of use, LOB handling, and error handling
+  into FAQ-style guidance.
+- Decompose API tables by function into role, arguments, return value, and cautions.
 
-### 4차: 도구/마이그레이션/외부 연동
+### Stage 4: Tools, Migration, and External Integration
 
-대상:
+Targets:
 
 - `00_version_release_platform.md`
 - `14_utilities_operation_tools.md`
@@ -144,70 +169,93 @@ GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서�
 - `17_kubernetes_aku_cloud.md`
 - `19_spatial_nifi_tableau_misc.md`
 
-작업:
+Work:
 
-- 릴리스 노트는 버전 차이와 업그레이드 주의사항 중심으로 재구성한다.
-- 스크린샷 중심 문서는 의미 있는 절차 설명으로 대체한다.
-- 특정 도구별 제약사항과 문제 해결 항목을 분리한다.
+- Reorganize release notes around version differences and upgrade cautions.
+- Replace screenshot-heavy material with meaningful procedure text.
+- Separate tool-specific restrictions from troubleshooting items.
 
-## 공통 문서 템플릿
+## Common Attachment Template
 
-각 첨부 문서는 아래 구조를 따른다.
+Each attachment should follow this structure until final cleanup.
 
 ```markdown
-# 문서 제목
+# Document Title
 
-## 적용 버전
+## Applicable Versions
 
 - 7.1:
 - 7.3:
 - 8.1:
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
 - ...
 
-## 원천 문서
+## Source Documents
 
 - 7.1:
 - 7.3:
-- 8.1 검증본:
+- 8.1 verified source:
 
-## 핵심 정리
+## Core Guidance
 
-## 버전별 차이
+## Version Differences
 
-## 변환 TODO
+## Conversion TODO
 ```
 
-## 검수 체크리스트
+## Attachment Writing Policy
 
-- `GPTs/attachments/*.md`가 정확히 20개인지 확인한다.
-- `GPTs/attachments/README.md`는 첨부 카탈로그이며 20개 카운트에서 제외한다.
-- 첨부용 문서 본문에 `trunk`가 남지 않았는지 확인한다.
-- 각 첨부 문서에 적용 버전, 원천 문서, 답변 가능한 질문, 변환 TODO가 있는지 확인한다.
-- `C:/`, `file://`, 깨진 이미지 링크, 원본 스크린샷만 의미하는 문장이 남지 않았는지 확인한다.
-- SQL 생성 문서는 최소 20개 대표 질문으로 샘플링한다.
+- Write final attachment files in canonical English.
+- The GPT should answer in the user's language whenever possible, but literal technical
+  tokens must stay unchanged in every answer language.
+- Keep SQL object names, function names, error codes, property names, commands, file paths,
+  package names, class names, method names, API names, connector names, and version numbers
+  literal.
+- Keep customer-facing source references concise and safe: use only product, manual,
+  version, and topic names.
+- Do not expose internal repository names, branch names, local filesystem paths, or local
+  build labels in customer-facing attachment files.
+- Label 8.1 customer-facing material as `Altibase 8.1 verified source` or equivalent
+  customer-safe wording.
+- Use compact, searchable item blocks for large reference tables.
+- Use compact BNF-like text for SQL syntax diagrams. Use Mermaid only when it makes SQL
+  syntax clearer than text.
+- Use Mermaid for graph, flow, state, architecture, topology, and sequence diagrams when
+  the diagram improves retrieval or explanation.
+- Replace UI screenshots with procedural text and clear input/value descriptions.
 
-## 대표 SQL 생성 검수 질문
+## Review Checklist
 
-1. 8.1 기준 JSON 칼럼이 있는 테이블 DDL을 만들어줘.
-2. 7.3 기준 디스크 테이블스페이스와 그 위의 테이블을 만들어줘.
-3. 메모리 테이블스페이스를 생성하고 자동 확장을 켜는 SQL을 만들어줘.
-4. 특정 테이블에 인덱스를 추가하고 확인하는 SQL을 만들어줘.
-5. 사용자 생성과 기본 테이블스페이스 지정 SQL을 만들어줘.
-6. 권한 부여와 회수 SQL을 만들어줘.
-7. 시퀀스 생성 SQL을 만들어줘.
-8. 테이블을 다른 테이블스페이스로 이동하는 SQL을 만들어줘.
-9. LOB 칼럼을 가진 테이블 DDL을 만들어줘.
-10. 파티션 테이블 생성 예제를 만들어줘.
-11. 이중화 객체를 생성하는 SQL을 만들어줘.
-12. 8.1 기준 SSL 이중화 생성 예제를 만들어줘.
-13. 이중화 시작/중지 SQL을 만들어줘.
-14. 프로퍼티 값을 확인하는 SQL을 만들어줘.
-15. 성능 뷰에서 세션 상태를 확인하는 SQL을 만들어줘.
-16. 실행 계획을 확인하는 절차를 알려줘.
-17. iLoader로 데이터를 적재하는 명령 예제를 만들어줘.
-18. JDBC 연결 문자열을 만들어줘.
-19. Oracle DDL을 Altibase DDL로 바꿀 때 주의할 점을 알려줘.
-20. 특정 오류 코드가 발생했을 때 원인과 조치 방법을 알려줘.
+- Confirm that `GPTs/attachments/*.md` contains exactly 20 files excluding
+  `GPTs/attachments/README.md`.
+- Confirm that attachment files are English canonical and ready for multilingual answers.
+- Confirm that customer-facing attachment files do not contain `trunk`.
+- Confirm that every attachment has applicable versions, source documents, answerable
+  questions, and conversion TODOs until final cleanup removes those scaffolding sections.
+- Confirm that no `C:/`, `file://`, broken image links, or screenshot-only references remain.
+- Sample SQL generation documents with at least 20 representative questions.
+
+## Representative SQL Generation Review Questions
+
+1. Create a table DDL with a JSON column for Altibase 8.1.
+2. Create a disk tablespace and a table on it for Altibase 7.3.
+3. Create a memory tablespace and enable auto extension.
+4. Add an index to a specific table and show how to verify it.
+5. Create a user and set a default tablespace.
+6. Grant and revoke privileges.
+7. Create a sequence.
+8. Move a table to another tablespace.
+9. Create a table with a LOB column.
+10. Create a partitioned table example.
+11. Create a replication object.
+12. Create an SSL replication example for Altibase 8.1.
+13. Start and stop replication.
+14. Check a property value.
+15. Check session status from a performance view.
+16. Explain how to check an execution plan.
+17. Create an iLoader data-load command example.
+18. Create a JDBC connection string.
+19. Explain cautions when converting Oracle DDL to Altibase DDL.
+20. Explain causes and actions for a specific error code.
