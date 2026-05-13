@@ -2,36 +2,1251 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 migration-related documents.
-- 7.3: Based on Altibase 7.3 Migration Center and Oracle Adapter guidance.
-- 8.1: Based on Altibase 8.1 verified source and the latest Migration Center release guidance.
+- 7.1: Based on Altibase 7.1 Adapter for Oracle guidance and Migration Center guidance.
+- 7.3: Based on Altibase 7.3 Adapter for Oracle guidance, Migration Center guidance, and Migration Center release-note coverage.
+- 8.1: Based on Altibase 8.1 verified source Migration Center and Adapter for Oracle guidance.
 
 ## Questions This File Can Answer
 
-- How should DDL be changed when moving from Oracle to Altibase?
-- What is the Migration Center usage procedure?
-- When is Oracle Adapter used?
-- How should pre-migration and post-migration verification be performed?
+- How do I plan and run an Oracle-to-Altibase migration with Migration Center?
+- Which Migration Center options matter for schema, data, PSM, partition, empty string, and validation behavior?
+- Which Oracle DDL and data type differences must be checked before running the migration?
+- How are Oracle objects, defaults, character lengths, and JSON columns converted?
+- When should `oraAdapter` be used, and how is DDL handled while it is applying Altibase changes to Oracle?
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Adapter for Oracle User's Manual.
-- 7.3: Migration Center User's Manual; Altibase 7.3 Adapter for Oracle User's Manual.
-- 8.1: Altibase 8.1 verified source Migration Center User's Manual; Adapter for Oracle User's Manual; Migration Center Release Notes.
+- 7.1: Altibase 7.1 Adapter for Oracle User's Manual; Migration Center User's Manual.
+- 7.3: Altibase 7.3 Adapter for Oracle User's Manual; Migration Center User's Manual; Migration Center 7.19 Release Notes.
+- 8.1: Altibase 8.1 verified source Adapter for Oracle User's Manual; Altibase 8.1 verified source Migration Center User's Manual; Migration Center 7.19 Release Notes.
 
-## Core Guidance
+## Response Rules
 
-- Answer Oracle compatibility by separating `Can Use As-Is`, `Needs Modification`, and `Needs Alternative Design`.
-- For DDL conversion, refer first to `03_sql_ddl_generation.md`.
+- Answer explanatory text in the user's language.
+- Keep SQL object names, function names, data types, error codes, property names, commands, file names, and file paths literal.
+- Do not expose internal source labels, repository paths, local workstation paths, or original manual image paths in customer answers.
+- If no Altibase version is specified, use the Altibase 8.1 verified source baseline and mention when behavior differs for 7.1 or 7.3.
+- Treat Migration Center release numbers such as `7.19` as tool package versions, not as Altibase database server versions.
+- Do not claim Oracle compatibility is complete. Classify each object or SQL construct as directly supported, converted with differences, or requiring manual redesign.
+- For production migration commands, confirm source Oracle version, target Altibase version, target storage design, character sets, downtime window, backup/rollback plan, and whether applications will keep writing during migration.
 
-## Version Differences
+## Fast Decision Map
 
-- 7.1: Use 7.1 Adapter for Oracle guidance when the source or target environment includes 7.1.
-- 7.3: Use 7.3 Migration Center and Adapter for Oracle guidance for 7.3 migrations.
-- 8.1: Use Altibase 8.1 verified source and current Migration Center guidance for 8.1 migration answers.
+```mermaid
+flowchart TD
+  A[Migration request] --> B{Direction}
+  B -- Oracle to Altibase initial migration --> C[Use Migration Center]
+  B -- Altibase to Altibase logical migration --> D[Use aexport attachment 14]
+  B -- Altibase changes must be applied to Oracle --> E[Use oraAdapter]
+  B -- SQL rewrite only --> F[Use DDL attachment 03 and DML attachment 04]
+  C --> G{Need schema and data?}
+  G -- Yes --> H[Migration Center DB to DB or DB to File]
+  G -- Objects only --> I[Migration Target: Object]
+  H --> J[Prepare -> Build -> Reconcile -> Run -> Data Validation]
+  E --> K[Configure ALA, OCI, oraAdapter.conf, replication object]
+```
 
-## Conversion TODO
+## Tool and Version Scope
 
-- Organize Migration Center procedures as ordered steps.
-- Link Oracle data type and DDL differences to the SQL generation document.
-- Treat 7.x version mentions in tool release notes as tool versions only.
+Migration Center:
+
+- Purpose: migrates generally compatible database objects and table data to Altibase.
+- Interfaces: GUI mode and CLI mode.
+- Source database scope for the 7.19 tool release includes Oracle Database `10gR2` through `21c`.
+- Target database scope for the 7.19 tool release includes Altibase `6.5.1` or later.
+- Runtime: Java 8 or later. GUI mode requires Java Swing support; CLI mode does not require an OS graphic library.
+- Connection model: JDBC drivers are used for source and destination database connections. Use an Oracle JDBC driver compatible with the source Oracle DBMS and the Java runtime used by Migration Center.
+
+Adapter for Oracle:
+
+- Purpose: `oraAdapter` applies DML changes generated in Altibase to an Oracle database by using Altibase Log Analysis API and Oracle OCI.
+- Use it for post-cutover synchronization, dual-write transition work, or recovery scenarios where Altibase is the source of changes and Oracle is the apply target.
+- Do not use `oraAdapter` as the primary Oracle-to-Altibase migration tool. Use Migration Center for the initial Oracle-to-Altibase schema and data movement.
+- The `oraAdapter` package version must match the Altibase version with which it runs.
+
+## End-to-End Oracle-to-Altibase Migration Flow
+
+```mermaid
+flowchart TD
+  A[Prepare] --> B[Build]
+  B --> C[Reconcile]
+  C --> D[Run]
+  D --> E[Data Validation]
+  E --> F{Differences?}
+  F -- No --> G[Cutover readiness checks]
+  F -- Few differences --> H[FILESYNC]
+  F -- Many differences --> I[Re-run migration after fixing causes]
+```
+
+Step block: `Prepare`
+
+- Purpose: make source Oracle and target Altibase connections usable inside a Migration Center project.
+- Required inputs: Oracle host, port, service or JDBC URL details, Oracle user/password, Oracle JDBC driver, Altibase host, port, Altibase user/password, Altibase JDBC driver, connection encoding, and optional JDBC properties.
+- GUI procedure: start `migcenter.bat` on Windows or `migcenter.sh` on Unix-like systems; use `Database > Add Database Connection`; fill `DB Product`, `Connection Name`, `IP`, `Port`, `User`, `Password`, `JDBC Driver`, `Encoding`, `IP Version`, and `Property`; test the connection; then create or open a project and connect both databases.
+- CLI procedure: define connection and project entries in a registration XML file, then run `./migcenter.sh register register.xml`.
+- Cautions: if JDBC metadata cannot be retrieved from older Oracle versions, replace the Oracle JDBC driver with a driver compatible with the source database.
+
+Step block: `Build`
+
+- Purpose: collect source and target metadata, estimate data volume, and produce build reports.
+- GUI procedure: choose `Migration > Build User` for all migratable objects owned by the source connection user, or `Migration > Build Table` for selected tables and dependent constraints/indexes.
+- CLI command:
+
+```bash
+./migcenter.sh build project_path
+```
+
+- Counting methods: `Approximate Counting Method` is faster and uses source statistics; `Exact Counting Method` runs count queries and is slower but more accurate for progress estimation.
+- Outputs: build reports, `SrcDbObj_Create.sql`, and unsupported-object reports where applicable.
+- Caution: if Oracle metadata changes after Build, rerun Build, Reconcile, and Run.
+
+Step block: `Reconcile`
+
+- Purpose: build the actual migration plan and adjust source-to-target differences.
+- GUI procedure: choose `Migration > Reconcile`, then confirm or edit data type mapping, PSM data type mapping, tablespace mapping, object-to-tablespace mapping, partitioned table conversion, SELECT statements, unacceptable names, and destination DDL.
+- CLI command:
+
+```bash
+./migcenter.sh reconcile project_path
+```
+
+- Important limitation: CLI Reconcile uses default values and does not provide the same manual tuning experience as GUI mode.
+- Outputs: Reconcile reports, sample `DbObj_Create.sql`, sample `DbObj_Drop.sql`, and PSM conversion reports such as `sqlconv.html`, `sqlconv_src.sql`, and `sqlconv_dest.sql`.
+- Caution: if `Migration Options` are changed after Reconcile, run Reconcile again.
+
+Step block: `Run`
+
+- Purpose: create destination schema and copy data, or create files for later loading.
+- GUI procedure: choose `Migration > Run`, confirm the warning dialog, and review the report.
+- CLI command:
+
+```bash
+./migcenter.sh run project_path
+```
+
+- Internal order: `Initialization`, `PreSchema`, `Table & Data`, then `PostSchema`.
+- `PreSchema`: migrates sequence objects.
+- `Table & Data`: migrates table objects and data.
+- `PostSchema`: migrates queues, constraints, indexes, private synonyms, and PSM-related objects depending on source DBMS and version.
+- Outputs: `RunReport4Summary.html`, `RunReport4Missing.html`, `DbObj_Failed.sql`, and failed-data files under `db2db` or `db2file` depending on migration type and options.
+- Caution: Run is irreversible in the sense that it changes the destination database. Confirm backups, object-drop settings, and target connection details first.
+
+Step block: `Data Validation`
+
+- Purpose: compare migrated table data after Run.
+- GUI procedure: choose `Migration > Data Validation`.
+- CLI commands:
+
+```bash
+./migcenter.sh diff project_path
+./migcenter.sh filesync project_path
+```
+
+- Restrictions: Data Validation can compare only tables with a primary key. LOB columns are excluded from comparison targets.
+- Outputs: Data Validation reports and, when configured, CSV files for different rows.
+- Recommended action: use `FILESYNC` for small differences; fix root causes and rerun migration when differences are broad.
+
+## Migration Center CLI Cookbook
+
+Use CLI mode when GUI mode is unavailable, or after GUI Reconcile when the expensive Run and validation work should execute near the database server.
+
+```bash
+# 1. Register project and database connections.
+./migcenter.sh register register.xml
+
+# 2. Edit project options if needed.
+# The options.xml file is created in the project folder.
+
+# 3. Build metadata and reports.
+./migcenter.sh build project_path
+
+# 4. Reconcile with default CLI decisions.
+./migcenter.sh reconcile project_path
+
+# 5. Execute migration.
+./migcenter.sh run project_path
+
+# 6. Compare migrated data.
+./migcenter.sh diff project_path
+
+# 7. Apply CSV differences when FILESYNC is the chosen correction method.
+./migcenter.sh filesync project_path
+```
+
+Practical pattern:
+
+- Use GUI mode through Reconcile when DDL, tablespaces, data type mapping, PSM objects, or partition conversion need manual review.
+- Use CLI mode for `run`, `diff`, and `filesync` when network distance between the GUI client and databases would slow data transfer.
+
+## Pre-Migration Checklist
+
+Checklist item: Source and target version
+
+- Confirm Oracle source version and Altibase target version.
+- For Altibase 8.1 answers, use the Altibase 8.1 verified source baseline.
+- Treat Migration Center `7.19` as a tool release. It can target Altibase `6.5.1` or later according to its release notes.
+
+Checklist item: Target storage design
+
+- Decide which objects belong in memory, disk, volatile, and temporary tablespaces.
+- Prepare a volatile tablespace before migrating Oracle global temporary tables because Altibase temporary tables can be created only in volatile tablespaces.
+- Prepare disk tablespace access for Oracle external tables and hybrid partitioned tables, because Migration Center converts them to regular or partitioned Altibase tables and allocates them to disk.
+
+Checklist item: Character set and string length
+
+- Capture Oracle database character set and national character set.
+- Capture Altibase database character set and national character set.
+- Review character length conversion in Reconcile before Run, especially for `CHAR`, `VARCHAR2`, `NCHAR`, and `NVARCHAR2`.
+
+Checklist item: Object selection
+
+- Use `Build User` for schema-level migration.
+- Use `Build Table` for selected tables and their dependent constraints/indexes.
+- Remember that Oracle sequences, private synonyms, and PSM-family objects are not migrated by `Build Table`.
+
+Checklist item: DDL review
+
+- Review destination DDL in Reconcile before Run.
+- Confirm data type mapping, tablespace mapping, partition behavior, identifier quoting, reserved words, default values, empty string handling, JSON mapping, and PSM conversion comments.
+
+Checklist item: Data migration risk
+
+- Decide whether to use batch inserts.
+- Disable or tune batch LOB processing if large LOB data can cause out-of-memory risk.
+- Decide how to handle rows that fail insertion and whether failed data should be logged.
+
+Checklist item: Validation
+
+- Ensure critical tables have primary keys if Migration Center Data Validation must compare them.
+- Plan separate validation for LOB columns because Data Validation excludes LOB comparison targets.
+
+## Key Migration Options
+
+Option block: `Migration Type`
+
+- `DB to DB`: Migration Center creates destination objects and copies data directly to Altibase.
+- `DB to File`: Migration Center creates SQL scripts, form files, and CSV data files; use iSQL and iLoader to load them into Altibase.
+
+Option block: `Migration Target`
+
+- `Object & Data`: migrate schema and table data.
+- `Object`: migrate database objects only.
+
+Option block: `Foreign Key Migration`
+
+- Controls whether foreign key constraints are included in the migration target.
+- Default is `No` for DB-to-DB and DB-to-File option sets in the source guidance.
+- For large migrations, creating foreign keys after loading data is usually easier to troubleshoot.
+
+Option block: `PSM Migration`
+
+- Controls whether procedures, functions, packages, views, materialized views, typesets, and triggers are included.
+- DB-to-DB default is `No`.
+- DB-to-File default is `Yes`.
+- Converted PSM still requires review because semantic logic is not fully converted.
+
+Option block: `Drop Existing Objects`
+
+- Controls whether destination objects with the same names are dropped and recreated.
+- Default is `No`.
+- Treat `Yes` as destructive. Confirm backup and rollback before enabling it.
+
+Option block: `Keep Partition Table`
+
+- `Yes`: migrate source partitioned tables as partitioned target tables and review partition conversion during Reconcile.
+- `No`: migrate partitioned source tables as non-partitioned target tables.
+- Default is `No`.
+
+Option block: `Use Double-quoted Identifier`
+
+- Controls whether Migration Center can wrap problem schema and object names in double quotes.
+- Use it when Reconcile reports object names with spaces, special characters, or other forms that violate unquoted Altibase identifier rules.
+- Keep object names literal when explaining this option; quoted identifiers can affect application SQL.
+
+Option block: `Remove FORCE from View DDL`
+
+- Controls whether `FORCE` is removed from view creation statements.
+- Altibase does not use Oracle `CREATE FORCE VIEW` semantics. Review converted views and dependencies.
+
+Option block: `Invisible Column Migration`
+
+- Altibase does not support Oracle invisible columns.
+- `Yes`: invisible columns are converted to normal columns and migrated.
+- `No`: invisible columns are excluded from migration.
+- Default is `No`.
+
+Option block: `Postfix for reserved word`
+
+- Adds a postfix to source object names that conflict with Altibase reserved keywords.
+- Default postfix is `_POC`.
+
+Option block: `Batch Execution` and `Batch Size`
+
+- `Batch Execution` uses JDBC batch insert for higher performance.
+- Default is `Yes`; default `Batch Size` is `10000`.
+- Disable batch execution when troubleshooting individual insert failures.
+
+Option block: `Batch LOB type`
+
+- Controls whether `BLOB` and `CLOB` are batch processed.
+- Default is `No`.
+- Enabling it can improve throughput but can also cause out-of-memory issues with large LOBs.
+
+Option block: `Convert Oversized String VARCHAR To CLOB`
+
+- Applies when a source string column maps to Altibase `VARCHAR` but exceeds the Altibase maximum of `32000` bytes.
+- `Yes`: convert to `CLOB`.
+- `No`: convert to `VARCHAR(32000)`, which can truncate or reject oversized values.
+- Default is `Yes`.
+
+Option block: `Correction Factor for Character Type Conversion`
+
+- Adjusts `CHAR` and `VARCHAR` byte lengths when source and target character sets use different maximum bytes per character.
+- Formula:
+
+```text
+Dest. Size = Ceil(Correction Factor * Src. Size)
+Correction Factor = Dest. MaxBytes / Src. MaxBytes
+```
+
+- A value of `1` disables length expansion.
+- If a character set is specified at the column level, Migration Center uses its automatic calculation for that column instead of the user-defined factor.
+
+Option block: `Data Validation Options`
+
+- `Operation`: `DIFF` compares data; `FILESYNC` applies CSV differences to the destination.
+- `Write to CSV`: writes inconsistent data to CSV.
+- `Include LOB`: controls whether LOB data is written to CSV for differences.
+- `Data Sampling`: default is `Yes`; set to `No` for full validation when runtime allows.
+
+## Oracle Object Migration Support
+
+Object block: `Table`
+
+- `Build User`: migratable.
+- `Build Table`: migratable.
+- Notes: table and column comments are migrated. Oracle global temporary tables require a volatile Altibase tablespace. Oracle external tables and hybrid partitioned tables are converted to regular or partitioned Altibase tables and need disk tablespace access. Blockchain and immutable tables are converted to regular tables.
+
+Object block: `Primary Key Constraint`
+
+- `Build User`: migratable.
+- `Build Table`: migratable.
+
+Object block: `Unique Constraint`
+
+- `Build User`: migratable.
+- `Build Table`: migratable.
+
+Object block: `Check Constraint`
+
+- `Build User`: migratable.
+- `Build Table`: migratable.
+- Notes: `IS JSON` check constraints are excluded from migration.
+
+Object block: `Foreign Key Constraint`
+
+- `Build User`: migratable.
+- `Build Table`: migratable.
+- Notes: inclusion depends on the `Foreign Key Migration` option.
+
+Object block: `Index`
+
+- `Build User`: migratable.
+- `Build Table`: migratable.
+- Notes: invisible indexes, unusable indexes, and multivalue indexes are not migrated.
+
+Object block: `Sequence`
+
+- `Build User`: migratable.
+- `Build Table`: not migrated as an independent sequence object.
+- Notes: scalable sequences are not migrated.
+
+Object block: `Private Synonym`
+
+- `Build User`: partly migratable.
+- `Build Table`: not migrated.
+- Notes: only synonyms that refer to objects in the same schema are migrated.
+
+Object block: `Procedure`, `Function`, `Package`, `View`, `Materialized View`, `Trigger`
+
+- `Build User`: partly migratable.
+- `Build Table`: not migrated.
+- Notes: Migration Center converts object creation statements using PSM converter rules and attempts migration. Review converted SQL, TODO comments, removed clauses, dependency order, and runtime semantics before accepting the result.
+
+## Oracle-to-Altibase DDL Difference Map
+
+```mermaid
+flowchart TD
+  A[Oracle DDL] --> B{Object class}
+  B -- Table or column --> C[Map data types, defaults, empty strings, storage]
+  B -- Constraint --> D[Check JSON, FK options, NOT NULL, LOB restrictions]
+  B -- Index --> E[Skip unsupported invisible, unusable, multivalue forms]
+  B -- Sequence or identity --> F[Convert sequence or generated sequence default]
+  B -- PSM or view --> G[Run PSM converter, then review TODO and removed clauses]
+  B -- Synonym --> H[Same-schema private synonyms only]
+  C --> I[Review destination DDL in Reconcile]
+  D --> I
+  E --> I
+  F --> I
+  G --> I
+  H --> I
+```
+
+Difference block: storage clauses and tablespaces
+
+- Oracle tablespace assumptions do not translate directly to Altibase storage design.
+- Altibase table placement must distinguish memory, disk, volatile, and temporary storage.
+- If `TABLESPACE` is omitted in Altibase table DDL, Altibase uses the creating user's default tablespace; if that is not set, the system memory default tablespace can be used.
+- Review each target table and index tablespace in Reconcile instead of accepting Oracle storage clauses blindly.
+
+Difference block: temporary tables
+
+- Oracle global temporary tables are migrated to Altibase temporary tables.
+- Altibase temporary tables can only be created in volatile tablespaces.
+- Create and grant access to a volatile tablespace before Reconcile if Oracle global temporary tables are in scope.
+
+Difference block: external, hybrid partitioned, blockchain, and immutable tables
+
+- Oracle external tables and hybrid partitioned tables are converted to regular or partitioned Altibase tables.
+- These tables are often large and are automatically allocated to disk tablespace.
+- Oracle blockchain and immutable tables are converted to regular Altibase tables.
+
+Difference block: partitioned tables
+
+- `Keep Partition Table=Yes` preserves partitioned table shape where Migration Center can convert it.
+- `Keep Partition Table=No` converts partitioned source tables to non-partitioned target tables.
+- Always review partitioned table conversion during Reconcile.
+
+Difference block: identifiers
+
+- Object names that violate unquoted Altibase identifier rules can fail creation.
+- Use the Reconcile `Unacceptable Name` step to find them.
+- Enable `Use Double-quoted Identifier` only when the application can tolerate quoted identifier behavior.
+- Reserved-word conflicts can be handled by the configured postfix, default `_POC`.
+
+Difference block: default values
+
+- Most default values are kept as-is, but some source defaults require conversion or manual review.
+- Oracle date strings such as `'97/04/21'` are emitted as comments such as `/* DEFAULT '97/04/21' */` so the user can choose the correct Altibase expression.
+- Only listed standalone source functions are converted automatically. Complex expressions can remain incompatible and must be reviewed in Reconcile.
+
+Difference block: empty strings
+
+- Altibase treats empty strings `''` as `NULL`.
+- Oracle also treats `CHAR` and `VARCHAR2` empty strings as `NULL`, but migration can still fail if a source definition combines `DEFAULT ''` with `NOT NULL`.
+- Object Options can replace the default empty string, remove `NOT NULL`, or both.
+- Data Options can replace empty string data in `NOT NULL` columns and optionally nullable columns.
+
+Difference block: LOB and `NOT NULL`
+
+- Migration Center can remove a `NOT NULL` constraint from a LOB column during migration because Altibase LOB insertion is initialized with `NULL` before the LOB value is written through a LOB locator.
+- After data migration, manually validate LOB rows and add the `NOT NULL` constraint if the target design requires it.
+
+Difference block: JSON
+
+- For Altibase 7.3 and earlier, Oracle `JSON` columns are converted to `CLOB`.
+- For Altibase 8.1 verified source and later JSON-capable targets, Oracle `JSON` columns are converted to `JSON`.
+- Oracle `VARCHAR2`, `BLOB`, or `CLOB` columns with an `IS JSON` check constraint can be treated as JSON source columns, but the `IS JSON` check constraint itself is excluded from migration.
+
+Difference block: PSM
+
+- Oracle PL/SQL-like objects are converted by Migration Center's PSM converter, but semantic logic is not fully converted.
+- Review `TODO` comments and removed-clause comments in converted PSM output.
+- Use attachment `10_psm_stored_external_procedures.md` for Altibase PSM syntax and execution rules.
+
+## Oracle-to-Altibase Data Type Mapping Blocks
+
+Data type block: `CHAR`
+
+- Source: `CHAR`
+- Destination: `CHAR`
+- Notice: Oracle character-length definitions are converted to Altibase byte-length definitions because Altibase `CHAR` is defined in bytes.
+
+Data type block: `NCHAR`
+
+- Source: `NCHAR`
+- Destination: `NCHAR`
+- Notice: explicit sizes are kept, for example `NCHAR(10)` to `NCHAR(10)`. Oracle JDBC reports national character column size in bytes, while Altibase JDBC reports the number of stored characters, so the target column can be larger than necessary.
+
+Data type block: `VARCHAR2`
+
+- Source: `VARCHAR2`
+- Destination: `VARCHAR` or `CLOB`
+- Notice: Oracle character-length definitions are converted to Altibase byte-length definitions. If the mapped length exceeds `32000` bytes, `Convert Oversized String VARCHAR To CLOB=Yes` converts to `CLOB`; `No` converts to `VARCHAR(32000)`.
+
+Data type block: `NVARCHAR2`
+
+- Source: `NVARCHAR2`
+- Destination: `NVARCHAR`
+- Notice: size differences follow the same national-character size caveat as `NCHAR`.
+
+Data type block: `LONG`
+
+- Source: `LONG`
+- Destination: `CLOB`
+
+Data type block: `NUMBER`
+
+- Source: `NUMBER`
+- Destination: `NUMBER`
+- Notice: `NUMBER` without precision and scale remains `NUMBER` without precision and scale. Oracle and Altibase internally handle this form as floating-number style storage.
+
+Data type block: `FLOAT`
+
+- Source: `FLOAT`
+- Destination: `FLOAT`
+
+Data type block: `BINARY FLOAT`
+
+- Source: `BINARY FLOAT`
+- Destination: `FLOAT`
+
+Data type block: `BINARY DOUBLE`
+
+- Source: `BINARY DOUBLE`
+- Destination: `DOUBLE`
+- Notice: `NaN` and `INF` values are not supported by Altibase and are not migrated.
+
+Data type block: `DATE`
+
+- Source: `DATE`
+- Destination: `DATE`
+
+Data type block: `TIMESTAMP`
+
+- Source: `TIMESTAMP`
+- Destination: `DATE`
+- Notice: precision can be lost. Oracle timestamp scale is nanoseconds, 9 digits; Altibase date/time fractional scale is microseconds, 6 digits.
+
+Data type block: `RAW`
+
+- Source: `RAW`
+- Destination: `BLOB`
+
+Data type block: `LONG RAW`
+
+- Source: `LONG RAW`
+- Destination: `BLOB`
+
+Data type block: `BLOB`
+
+- Source: `BLOB`
+- Destination: `BLOB`
+
+Data type block: `CLOB`
+
+- Source: `CLOB`
+- Destination: `CLOB`
+
+Data type block: `NCLOB`
+
+- Source: `NCLOB`
+- Destination: `NVARCHAR(10666)`
+- Notice: Altibase has no compatible `NCLOB` type. Data can be lost if actual precision exceeds the `NVARCHAR` maximum.
+
+Data type block: `ROWID`
+
+- Source: `ROWID`
+- Destination: `VARCHAR(18)`
+- Notice: Altibase does not support Oracle `ROWID` as a data type.
+
+Data type block: `JSON`
+
+- Source: `JSON`
+- Destination: `CLOB` or `JSON`
+- Notice: Altibase 7.3 and earlier use `CLOB`; Altibase 8.1 verified source and later JSON-capable targets use `JSON`.
+
+## Default Value Conversion Blocks
+
+Default block: character empty string
+
+- Source pattern: `DEFAULT ''`
+- Destination behavior: Altibase treats it as `DEFAULT NULL`, so the default can be removed.
+- If combined with `NOT NULL`, configure empty string handling before Run.
+
+Default block: date string literal
+
+- Source example: `DEFAULT '97/04/21'`
+- Destination example: `/* DEFAULT '97/04/21' */`
+- Action: manually replace the comment with a target-safe expression such as `TO_DATE(...)` after confirming the intended format.
+
+Default block: `DBTIMEZONE`
+
+- Source: `DBTIMEZONE`
+- Destination: `DB_TIMEZONE()`
+
+Default block: `SYS_GUID()`
+
+- Source: `SYS_GUID()`
+- Destination: `SYS_GUID_STR()`
+
+Default block: `UID`
+
+- Source: `UID`
+- Destination: `USER_ID()`
+
+Default block: `USER`
+
+- Source: `USER`
+- Destination: `USER_NAME()`
+
+Default block: identity column
+
+- Source: Oracle identity column
+- Destination pattern: `__SYS_table_name_column_name_SEQ.NEXTVAL`
+- Notes: Migration Center generates a sequence-backed default for the target column.
+
+Default block: `DEFAULT ON NULL`
+
+- Source example: `DEFAULT ON NULL 'test'`
+- Destination example: `DEFAULT 'test' NOT NULL`
+
+Compact example:
+
+```sql
+-- Source Oracle pattern
+CREATE TABLE testtbl_4_defval (
+  c6 DATE DEFAULT '97/04/21',
+  c8 VARCHAR2(100) DEFAULT DBTIMEZONE,
+  c9 VARCHAR2(100) DEFAULT SYS_GUID(),
+  c12 NUMBER GENERATED BY DEFAULT AS IDENTITY,
+  c13 CHAR(5) DEFAULT ON NULL 'test'
+);
+
+-- Destination Altibase pattern after conversion and review
+CREATE TABLE TESTTBL_4_DEFVAL (
+  C6 DATE /* DEFAULT '97/04/21' */,
+  C8 VARCHAR(100) DEFAULT DB_TIMEZONE(),
+  C9 VARCHAR(100) DEFAULT SYS_GUID_STR(),
+  C12 NUMBER DEFAULT __SYS_TESTTBL_4_DEFVAL_C12_SEQ.NEXTVAL NOT NULL,
+  C13 CHAR(5) DEFAULT 'test' NOT NULL
+);
+```
+
+## Empty String Handling Blocks
+
+Source column pattern:
+
+```sql
+C1 CHAR(10) DEFAULT '' NOT NULL
+```
+
+Object option result block: replace default and remove `NOT NULL`
+
+- `Replace Default Empty String=Yes`
+- `Replacement Default Value=EMPTY_STRING`
+- `Remove Not Null=Yes`
+- Generated target column:
+
+```sql
+C1 CHAR(10) DEFAULT 'EMPTY_STRING'
+```
+
+Object option result block: replace default and keep `NOT NULL`
+
+- `Replace Default Empty String=Yes`
+- `Replacement Default Value=EMPTY_STRING`
+- `Remove Not Null=No`
+- Generated target column:
+
+```sql
+C1 CHAR(10) DEFAULT 'EMPTY_STRING' NOT NULL
+```
+
+Object option result block: do not replace default and remove `NOT NULL`
+
+- `Replace Default Empty String=No`
+- `Remove Not Null=Yes`
+- Generated target column:
+
+```sql
+C1 CHAR(10)
+```
+
+Object option result block: do not replace default and keep `NOT NULL`
+
+- `Replace Default Empty String=No`
+- `Remove Not Null=No`
+- Generated target column:
+
+```sql
+C1 CHAR(10) NOT NULL
+```
+
+Data option block: replace empty string rows
+
+- `Replace Empty Strings in Not Null=Yes`: replace empty string data in `NOT NULL` columns.
+- `Replacement String`: replacement value.
+- `Apply to Nullable Columns=Yes`: also replace empty string data in nullable columns.
+
+## Character Set and Length Blocks
+
+Length conversion rule:
+
+```text
+Dest. Size = Ceil(Correction Factor * Src. Size)
+Correction Factor = Dest. MaxBytes / Src. MaxBytes
+```
+
+Common Altibase max-byte block:
+
+- `KO16KSC5601`: `2`
+- `MS949`: `2`
+- `BIG5`: `2`
+- `GB231280`: `2`
+- `MS936`: `2`
+- `UTF8`: `3`
+- `SHIFTJIS`: `2`
+- `MS932`: `2`
+- `EUCJP`: `3`
+
+Common Oracle max-byte block:
+
+- `AL16UTF16`: `4`
+- `AL32UTF8`: `4`
+- `UTF8`: `3`
+- `JA16EUC`: `3`
+- `JA16SJIS`: `2`
+- `KO16KSC5601`: `2`
+- `KO16MSWIN949`: `2`
+- `ZHS16GBK`: `2`
+- `ZHS32GB18030`: `4`
+- `ZHT16BIG5`: `2`
+- `US7ASCII`: `1`
+- `WE8ISO8859P1`: `1`
+- `WE8MSWIN1252`: `1`
+
+Operational guidance:
+
+- For character sets not listed by Migration Center, it treats max bytes per character as `1`.
+- If the target character set has larger max bytes than the source, target `CHAR` and `VARCHAR` byte lengths can increase.
+- Large tables can require much more target storage after length correction.
+- Review generated DDL for columns near Altibase limits, especially before accepting conversion to `CLOB`.
+
+## PSM and View Conversion Review
+
+Migration Center's PSM converter is useful, but it is not a proof of behavioral compatibility.
+
+Review block: views
+
+- `FORCE` can be removed.
+- `WITH CHECK OPTION`, inline constraints, object views, XMLType views, `BEQUEATH`, `VISIBLE`/`INVISIBLE`, and default collation clauses can be removed or marked for manual conversion depending on the source statement.
+- Confirm view dependencies after Run.
+
+Review block: triggers
+
+- Some Oracle trigger forms require manual conversion, including `INSTEAD OF`, triggers with multiple events, non-DML triggers, nested table triggers, trigger ordering clauses, disabled triggers, and `CALL` routine clauses.
+- Review references to `:NEW` and `:OLD`; converted output can remove the colon where Altibase syntax requires it.
+
+Review block: functions and procedures
+
+- Oracle Java call specifications, C external call specifications, `PIPELINED`, aggregate implementations, `WITH CONTEXT`, `AGENT IN`, `ACCESSIBLE BY`, `PARALLEL_ENABLE`, `RESULT_CACHE`, and some `AUTHID` or `DETERMINISTIC` clauses can be removed or marked for manual work.
+- Confirm whether required built-in packages exist in Altibase before accepting converted code.
+
+Review block: packages and libraries
+
+- Package `AUTHID`, `ACCESSIBLE BY`, default collation, library `AGENT`, `UNTRUSTED`, and editioning clauses can be removed or require manual conversion.
+- Compile package specifications and bodies in dependency order and inspect errors.
+
+Review block: generated reports
+
+- `sqlconv.html`: compare source and converted PSM.
+- `sqlconv_src.sql`: source PSM text.
+- `sqlconv_dest.sql`: converted PSM with conversion comments.
+- Treat any `TODO` comment as a required manual review item.
+
+## Selective Data Migration
+
+Use the Reconcile `Select Editing` step or `TableCondition.properties` to filter rows.
+
+Pattern:
+
+```properties
+DATE_TEST=WHERE C2 > DATE'2023-12-02'
+
+[DEST]
+DATE_TEST=WHERE C2 > TO_DATE('2023-12-02', 'YYYY-MM-DD')
+```
+
+Rules:
+
+- Each `WHERE` clause must be on a single line.
+- Use the source SQL syntax before `[DEST]`.
+- Use Altibase-compatible syntax under `[DEST]` when source and target SQL syntax differ.
+- The same condition is used when verifying migrated record counts after Run.
+
+## Post-Run Verification Checklist
+
+Verification item: reports
+
+- Review `RunReport4Summary.html` for migrated object and row counts.
+- Review `RunReport4Missing.html` for failed objects and data.
+- Review `DbObj_Failed.sql` for SQL statements that failed and their causes.
+
+Verification item: schema
+
+- Compare source and target counts for tables, primary keys, unique constraints, check constraints, foreign keys, indexes, sequences, synonyms, views, materialized views, procedures, functions, packages, and triggers.
+- Inspect objects created with double-quoted identifiers or reserved-word postfixes.
+- Recompile invalid PSM objects.
+
+Verification item: data
+
+- Run Migration Center `DIFF`.
+- Run row-count checks for tables without primary keys because Data Validation cannot compare them.
+- Use application-specific checks for LOB data because LOB columns are excluded from Data Validation comparison targets.
+
+Verification item: performance and storage
+
+- Check target tablespace usage after length correction and LOB conversion.
+- Check indexes, statistics, and application query plans after data load.
+
+Verification item: application cutover
+
+- Re-test SQL that references Oracle-only behavior, Oracle packages, Oracle `ROWID`, date format assumptions, quoted identifiers, and JSON constraints.
+
+## Oracle-Specific Troubleshooting Blocks
+
+Troubleshooting block: `ORA-01652`
+
+- Symptom: unable to extend temporary segment during large Oracle query processing.
+- Cause: insufficient Oracle temporary tablespace for source-side query work.
+- Action: increase Oracle temporary tablespace or reduce migration query workload.
+
+Troubleshooting block: table has `LONG` or `LONG RAW` with LOB columns
+
+- Risk: Oracle streams `LONG` and `LONG RAW`; if other stream data types are transmitted through the same connection, data transfer can be interrupted.
+- Action: do not assume Migration Center can migrate such a table successfully. Redesign extraction or split the migration path.
+
+Troubleshooting block: Oracle global temporary table fails during Reconcile
+
+- Cause: target Altibase user cannot access a volatile tablespace.
+- Action: create a volatile tablespace, grant access, and rerun Reconcile.
+
+Troubleshooting block: repeated Oracle fetch or bind `SQLException`
+
+- Cause: possible out-of-memory behavior in the Oracle JDBC driver during large data migration.
+- Action: test table mode for one failing table, reduce batch pressure, review LOB settings, and use a compatible Oracle JDBC driver.
+
+Troubleshooting block: `Fail to retrieve Source DDL: java.lang.NullPointerException`
+
+- Cause: Oracle JDBC driver compatibility issue, especially with older Oracle sources.
+- Action: replace the Oracle JDBC driver file used by Migration Center with a driver compatible with the Oracle DBMS.
+
+Troubleshooting block: LOB `NOT NULL` removed
+
+- Cause: Altibase LOB insertion flow initializes LOB data as `NULL` before writing through the LOB locator.
+- Action: complete migration, validate LOB data, then add `NOT NULL` constraints manually where required.
+
+## Adapter for Oracle Architecture
+
+```mermaid
+flowchart LR
+  A[Altibase table DML] --> B[XLog Sender]
+  B --> C[XLog Collector in oraAdapter]
+  C --> D[ALA conversion]
+  D --> E[OCI apply]
+  E --> F[Oracle database]
+  C --> G[Trace logs in trc directory]
+```
+
+Adapter concept:
+
+- `XLog`: logical log converted from physical Altibase logs for DML history.
+- `XLog Sender`: Altibase module that analyzes active logs and sends XLogs and metadata.
+- `XLog Collector`: component inside `oraAdapter` that receives XLogs and metadata.
+- `ALA`: Altibase Log Analysis API used by `oraAdapter`.
+- `OCI`: Oracle Call Interface used to write converted data to Oracle.
+
+## Adapter for Oracle Installation and Configuration
+
+Prerequisite block:
+
+- Supported source in the Adapter manual: Altibase `5.5.1` or above.
+- Oracle target: Oracle Database `10g` or higher with compatible OCI.
+- Install OCI before running `oraAdapter`.
+- Use the same database and national character sets on Altibase and Oracle when possible to reduce conversion cost.
+
+Environment block:
+
+- `ORA_ADAPTER_HOME`: `oraAdapter` installation directory.
+- `PATH`: include `$ORA_ADAPTER_HOME/bin`.
+- Library path: include the Oracle OCI library path. On common Unix-like systems this is `LD_LIBRARY_PATH`; on AIX it is `LIBPATH`.
+- `NLS_LANG`: must correspond to the Altibase character set because `oraAdapter` receives strings from Altibase and OCI converts them for Oracle.
+
+OCI compatibility example:
+
+```bash
+cd $ORACLE_HOME/lib
+ln -s libclntsh.so.11.1 libclntsh.so.10.1
+```
+
+`NLS_LANG` examples:
+
+- Altibase `US7ASCII`: `NLS_LANG=.US7ASCII`, Oracle DB `US7ASCII`.
+- Altibase `KO16KSC5601`: `NLS_LANG=.KO16KSC5601`, Oracle DB `KO16KSC5601`.
+- Altibase `MS949`: `NLS_LANG=.KO16MSWIN949`, Oracle DB `KO16MSWIN949`.
+- Altibase `SHIFT-JIS`: `NLS_LANG=.JA16SJIS`, Oracle DB `JA16SJIS`.
+- Altibase `EUC-JP`: `NLS_LANG=.JA16EUC`, Oracle DB `JA16EUC`.
+- Altibase `GB231280`: `NLS_LANG=.ZHS16CGB231280`, Oracle DB `ZHS16CGB231280`.
+- Altibase `BIG5`: `NLS_LANG=.ZHT16BIG5`, Oracle DB `ZHT16BIG5`.
+- Altibase `UTF-8`: `NLS_LANG=.UTF8`, Oracle DB `UTF8`.
+
+Configuration file:
+
+- File: `$ORA_ADAPTER_HOME/conf/oraAdapter.conf`
+- Do not use spaces or tabs in property values.
+- Use double quotes for values that include special characters.
+
+## Adapter for Oracle Property Blocks
+
+ALA property block:
+
+- `ALA_SENDER_IP`: IP address of the Altibase server. Default is `127.0.0.1`.
+- `ALA_SENDER_REPLICATION_PORT`: sender connection port behavior. `0` means `oraAdapter` waits for the ALA sender; nonzero means it connects directly to that sender port.
+- `ALA_RECEIVER_PORT`: port where `oraAdapter` listens for XLogs. Range is `1024` to `65535`.
+- `ALA_RECEIVE_XLOG_TIMEOUT`: XLog receive timeout in seconds. Default is `300`.
+- `ALA_REPLICATION_NAME`: replication object name created in Altibase.
+- `ALA_SOCKET_TYPE`: `TCP` or `UNIX`; `UNIX` requires Altibase and `oraAdapter` on the same server.
+- `ALA_XLOG_POOL_SIZE`: XLog pool capacity. Increase it for transactions that modify many records or when it is smaller than `REPLICATION_SYNC_TUPLE_COUNT`.
+- `ALA_LOGGING_ACTIVE`: `1` enables ALA trace logs; `0` disables them.
+
+Altibase connection property block:
+
+- `ALTIBASE_USER`: Altibase account used for checks.
+- `ALTIBASE_PASSWORD`: password for `ALTIBASE_USER`.
+- `ALTIBASE_IP`: Altibase server IP. Default is `127.0.0.1`.
+- `ALTIBASE_PORT`: Altibase server port. Range is `1024` to `65535`.
+
+Oracle OCI property block:
+
+- `ORACLE_SERVER_ALIAS`: Oracle alias from `tnsnames.ora`; if omitted, the default Oracle host is used.
+- `ORACLE_USER`: Oracle account used for apply.
+- `ORACLE_PASSWORD`: password for `ORACLE_USER`.
+- `ORACLE_ASYNCHRONOUS_COMMIT`: `1` improves speed but weakens durability; `0` waits for commit log persistence.
+- `ORACLE_GROUP_COMMIT`: `1` groups commit logs for throughput; can increase individual transaction response time.
+- `ORACLE_ARRAY_DML_MAX_SIZE`: groups same-kind DML statements. Default is `10`; set to `1` to disable array DML.
+- `ORACLE_UPDATE_STATEMENT_CACHE_SIZE`: cache size for prepared `UPDATE` statements. `0` disables this cache.
+
+DML behavior property block:
+
+- `ORACLE_ERROR_RETRY_COUNT`: retries record apply errors. LOB-related XLogs are excluded from retry.
+- `ORACLE_ERROR_RETRY_INTERVAL`: retry interval in seconds.
+- `ORACLE_SKIP_ERROR`: controls whether to continue after errors according to include/exclude lists.
+- `ORACLE_SKIP_INSERT`: `1` skips applying Altibase `INSERT` to Oracle.
+- `ORACLE_SKIP_UPDATE`: `1` skips applying Altibase `UPDATE` to Oracle.
+- `ORACLE_SKIP_DELETE`: `1` skips applying Altibase `DELETE` to Oracle.
+- `ORACLE_SET_USER_TO_TABLE`: `1` sets the Oracle table owner from the user specified in the XLog Sender.
+
+Other property block:
+
+- `ADAPTER_ERROR_RESTART_COUNT`: retry count for restarting `oraAdapter` after adapter-level errors.
+- `ADAPTER_ERROR_RESTART_INTERVAL`: interval between adapter restart attempts.
+- `ADAPTER_LOB_TYPE_SUPPORT`: `1` enables LOB support; `0` disables it.
+
+## Adapter for Oracle Startup and Shutdown
+
+Startup sequence:
+
+1. Confirm Altibase and Oracle are running.
+2. Confirm `REPLICATION_PORT_NO` is set to an available replication port. If it changes, restart Altibase.
+3. Create an ALA replication object.
+
+```sql
+CREATE REPLICATION ala FOR ANALYSIS WITH '127.0.0.1', 25090
+  FROM sys.t1 TO scott.t2;
+```
+
+4. Start `oraAdapter`.
+
+```bash
+cd $ORA_ADAPTER_HOME/bin
+./oraAdapter
+```
+
+5. Confirm startup in the trace file.
+
+```bash
+cat $ORA_ADAPTER_HOME/trc/oraAdapter.trc
+```
+
+Expected message pattern:
+
+```text
+Altibase Adapter started.
+```
+
+6. Start the Altibase XLog sender after `oraAdapter` is running.
+
+```sql
+ALTER REPLICATION ala START;
+```
+
+Expected trace message pattern:
+
+```text
+Adapter is ready to process logs.
+```
+
+Shutdown sequence:
+
+```sql
+ALTER REPLICATION ala STOP;
+```
+
+Then stop `oraAdapter` with the chosen process control method or `oaUtility`.
+
+## `oaUtility` Blocks
+
+Utility prerequisite:
+
+- `oaUtility` is a Bash-based script and uses tools such as `sed`, `grep`, `ps`, `wc`, iSQL, and SQLPlus.
+- Personal shell or SQL startup files such as `login.sql` or `glogin.sql` can interfere; neutralize them when diagnosing utility behavior.
+
+Command block: start
+
+```bash
+oaUtility start
+oaUtility start force
+```
+
+- Starts `oraAdapter` as a daemon.
+- `force` starts without checking primary key constraints in the replication target table.
+
+Command block: stop
+
+```bash
+oaUtility stop
+```
+
+- Forcefully terminates the Adapter for Oracle process.
+
+Command block: status
+
+```bash
+oaUtility status
+```
+
+- Checks whether `oraAdapter` is running.
+
+Command block: check
+
+```bash
+oaUtility check
+oaUtility check alive
+oaUtility check constraints
+```
+
+- `alive`: checks whether `oraAdapter` is running.
+- `constraints`: checks whether primary keys in tables to be ported from Altibase to Oracle are defined consistently by column name.
+- The check mode can be used once or continuously depending on the selected option.
+
+Command block: version
+
+```bash
+./oraAdapter -v
+./oraAdapter -version
+```
+
+- Prints `oraAdapter` version information.
+
+## Adapter for Oracle Constraints
+
+Constraint block: table requirements
+
+- A primary key is required in each table to be replicated.
+- The primary key of a replicated table cannot be modified.
+- Tables on both sides must have the same column order and primary key constraints.
+
+Constraint block: conflicts
+
+- If `INSERT`, `UPDATE`, or `DELETE` conflicts in Oracle, execution is canceled and logged or skipped according to configuration.
+- Replication speed can be slower than service-side DML generation.
+
+Constraint block: connection count
+
+- The maximum number of XLog Sender and replication connections per Altibase database is controlled by `REPLICATION_MAX_COUNT`.
+
+Constraint block: ordinary DDL
+
+- Replication target tables generally cannot execute DDL while replication is active.
+- DDL on a replication target table causes changes before the DDL to be applied, then `oraAdapter` terminates. Restart after making the table schemas identical on both sides.
+
+Constraint block: DDL allowed regardless of XLog Sender
+
+- `ALTER INDEX REBUILD PARTITION`
+- `GRANT OBJECT`
+- `REVOKE OBJECT`
+- `CREATE TRIGGER`
+- `DROP TRIGGER`
+
+Constraint block: LOB
+
+- Set `ADAPTER_LOB_TYPE_SUPPORT=1` to use LOB support.
+- LOB support depends on OCI compatibility on Oracle 11g or later.
+- LOB tables are constrained by `ORACLE_ERROR_RETRY_COUNT`, `ORACLE_SKIP_ERROR`, and `ORACLE_ARRAY_DML_MAX_SIZE`.
+- If LOB data is updated using `SELECT FOR UPDATE` on Altibase, commit before relying on replication.
+
+## Adapter for Oracle Data Type Mapping
+
+Data type block: numeric
+
+- Altibase `FLOAT`, `NUMERIC`, `BIGINT`, `INTEGER`, and `SMALLINT` apply to Oracle `NUMBER`.
+- Altibase `DOUBLE` applies to Oracle `NUMBER`; Oracle `BINARY_DOUBLE` can also be used.
+- Altibase `REAL` applies to Oracle `NUMBER`; Oracle `BINARY_FLOAT` can also be used.
+
+Data type block: date
+
+- Altibase `DATE` applies to Oracle `DATE`.
+
+Data type block: character
+
+- Altibase `CHAR` applies to Oracle `CHAR`.
+- Altibase `VARCHAR` applies to Oracle `VARCHAR2`.
+- Altibase `NCHAR` applies to Oracle `NCHAR`.
+- Altibase `NVARCHAR` applies to Oracle `NVARCHAR2`.
+
+Example:
+
+```sql
+-- Altibase source table
+CREATE TABLE T1(
+  A1 INTEGER PRIMARY KEY,
+  A2 CHAR(20),
+  A3 VARCHAR(20),
+  A4 NCHAR(20),
+  A5 NVARCHAR(20)
+);
+
+-- Corresponding Oracle apply target
+CREATE TABLE T1(
+  A1 NUMBER PRIMARY KEY,
+  A2 CHAR(20),
+  A3 VARCHAR2(20),
+  A4 NCHAR(20),
+  A5 NVARCHAR2(20)
+);
+```
+
+## DDL Order While Using `oraAdapter`
+
+Use this order when a replicated table needs DDL.
+
+1. Create matching schema on both sides.
+
+```sql
+CREATE TABLE T1 (C1 INTEGER PRIMARY KEY, C2 SMALLINT);
+```
+
+2. Create the ALA replication object on the active Altibase server.
+
+```sql
+CREATE REPLICATION ala FOR ANALYSIS
+  WITH 'standby_or_adapter_ip', standby_or_adapter_port
+  FROM SYS.T1 TO SYS.T1;
+```
+
+3. Start `oraAdapter`.
+
+```bash
+oaUtility start
+```
+
+4. Start replication.
+
+```sql
+ALTER REPLICATION ala START;
+```
+
+5. Flush replication gaps before DDL.
+
+```sql
+ALTER REPLICATION ala FLUSH ALL;
+```
+
+6. Enable replication DDL properties on the active server.
+
+```sql
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1;
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1;
+```
+
+7. Execute the DDL on the active server. `oraAdapter` terminates when it processes the DDL log.
+
+8. Confirm the active sender and `oraAdapter` trace.
+
+```sql
+SELECT REP_NAME, STATUS FROM V$REPSENDER;
+```
+
+Expected trace pattern:
+
+```text
+Log Record : Meta change xlog was arrived, adapter will be finished
+```
+
+9. Execute equivalent DDL on the Oracle target or standby side so schemas match.
+
+10. Restart `oraAdapter`.
+
+```bash
+oaUtility start
+```
+
+11. Optionally stop and restart replication.
+
+```sql
+ALTER REPLICATION ala STOP;
+ALTER REPLICATION ala START;
+```
+
+12. Run DML and verify data replication.
+
+13. Disable replication DDL properties when DDL work is complete.
+
+```sql
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 0;
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 0;
+```
+
+## Adapter for Oracle Offline Option
+
+Use the offline option when an active Altibase server fails before logs are applied to Oracle and a standby server with the same database structure can access the active server log files.
+
+Syntax:
+
+```sql
+CREATE REPLICATION ala_replication_name FOR ANALYSIS OPTIONS META_LOGGING
+  WITH 'remote_host_ip', remote_host_port_no
+  FROM user_name.table_name TO user_name.table_name;
+
+ALTER REPLICATION ala_replication_name SET OFFLINE ENABLE WITH 'log_dir';
+ALTER REPLICATION ala_replication_name SET OFFLINE DISABLE;
+ALTER REPLICATION ala_replication_name BUILD OFFLINE META [AT SN(sn)];
+ALTER REPLICATION ala_replication_name RESET OFFLINE META;
+ALTER REPLICATION ala_replication_name START WITH OFFLINE;
+```
+
+Offline option notes:
+
+- `META_LOGGING` writes sender meta and Restart SN information into `ala_meta_files` under the log file path.
+- `SET OFFLINE ENABLE WITH 'log_dir'` can be executed only while replication is stopped.
+- `BUILD OFFLINE META` reads metadata from the active server log path.
+- `START WITH OFFLINE` performs one-time offline replication and terminates after applying available logs.
+- If DDL logs are in the gap, offline replication halts. Apply the same DDL on the server performing offline replication or Oracle target as appropriate, then restart offline replication.
+- Do not run `RESET OFFLINE META` just because DDL logs caused an offline replication error; rereading the DDL logs can reproduce the same error.
+
+Offline constraints:
+
+- The ALA object name on the offline `oraAdapter` server must match the active server's ALA object name.
+- Compressed table replication targets are not supported for offline `oraAdapter`.
+- Active and standby log file sizes must match.
+- Storage manager version, OS, OS bit size, and log file size must be compatible.
+- Do not arbitrarily rename, copy, or delete log files or sender metadata files.
+
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for Altibase DDL syntax, tablespaces, table options, indexes, sequences, and replication object generation.
+- Use `04_sql_dml_oracle_compatibility.md` for Oracle-compatible DML, functions, row limiting, joins, `MERGE`, and transaction syntax.
+- Use `05_data_types_properties.md` for detailed Altibase data type limits and property descriptions.
+- Use `10_psm_stored_external_procedures.md` for Altibase PSM syntax, package behavior, dynamic SQL, cursors, exceptions, and external procedures.
+- Use `13_isql_iloader_basic_tools.md` and `14_utilities_operation_tools.md` when Migration Center `DB to File` output must be loaded with iSQL or iLoader, or when Altibase-to-Altibase logical migration is required.
