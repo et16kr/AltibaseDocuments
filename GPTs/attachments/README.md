@@ -1,16 +1,41 @@
 # Altibase GPTs Attachments
 
-이 디렉터리는 GPTs에 업로드할 고객용 Markdown 지식 파일을 담는다.
+This directory contains customer-facing Markdown knowledge files for Altibase GPTs.
+The files are the canonical English source used by the GPT to answer customer questions
+about Altibase 7.1, 7.3, and 8.1.
 
-## 원칙
+## Core Rules
 
-- 첨부 파일은 20개로 제한한다.
-- 각 파일은 7.1, 7.3, 8.1 기준 답변을 지원한다.
-- 8.1 문서는 내부 검증본을 기반으로 하지만, 고객용 첨부 문서에는 내부 원천명을 노출하지 않는다.
-- Oracle과 겹치는 일반 SQL은 축약하고, Altibase DDL/설정/운영 차이점을 우선한다.
-- 표와 이미지는 GPT 검색에 적합한 설명형 Markdown으로 바꾼다.
+- Keep exactly 20 attachment Markdown files, excluding this `README.md`.
+- Write every attachment in canonical English.
+- Support Altibase 7.1, 7.3, and 8.1 answers.
+- Label Altibase 8.1 material as based on the Altibase 8.1 verified source.
+- Prioritize Altibase-specific DDL, configuration, operation, compatibility, and troubleshooting behavior.
+- Keep common SQL behavior that overlaps with Oracle brief unless Altibase differs.
+- Convert tables and images into searchable Markdown text whenever possible.
+- Keep customer-facing source references concise and safe: use product, manual, version, and topic names only.
+- Do not expose internal repository names, branch names, workstation paths, or local build labels.
 
-## 파일 목록
+## Multilingual Answer Policy
+
+The GPT should answer in the user's language whenever possible. Keep the following items
+literal and untranslated in every language:
+
+- SQL object names
+- SQL keywords when used as syntax
+- Function names
+- Error codes
+- Property names
+- Commands and command options
+- File and directory paths
+- Package, class, method, API, and connector names
+- Altibase version numbers and edition names
+
+When translating explanatory text, preserve the exact spelling and casing of literal
+technical tokens. If a translated sentence would make a command, property, or SQL
+syntax ambiguous, keep that portion in English and explain it in the user's language.
+
+## File List
 
 1. `00_version_release_platform.md`
 2. `01_getting_started_installation.md`
@@ -33,8 +58,26 @@
 19. `18_security_ssl_tls.md`
 20. `19_spatial_nifi_tableau_misc.md`
 
-## 업로드 전 검수
+## Attachment Structure
 
-- `README.md`를 제외한 Markdown 파일이 정확히 20개인지 확인한다.
-- 각 파일에 `적용 버전`, `원천 문서`, `이 문서로 답할 수 있는 질문`, `변환 TODO`가 있는지 확인한다.
-- 고객에게 노출하지 않을 내부 원천명이 남아 있지 않은지 확인한다.
+Until final cleanup, each attachment should keep these sections:
+
+- `Applicable Versions`
+- `Source Documents`
+- `Questions This File Can Answer`
+- `Core Guidance`
+- `Version Differences`
+- `Conversion TODO`
+
+Use compact, searchable item blocks for large reference tables. Use BNF-like text for
+SQL syntax diagrams. Use Mermaid only when it helps explain graphs, flows, states,
+architecture, topology, or sequences. Replace UI screenshots with procedural text and
+clear input or value descriptions.
+
+## Pre-Upload Checks
+
+- Confirm that exactly 20 Markdown attachment files exist, excluding `README.md`.
+- Confirm that each attachment is English canonical and ready for multilingual answers.
+- Confirm that version coverage and version differences are explicit.
+- Confirm that customer-facing source references are safe and concise.
+- Confirm that no internal repository labels, local paths, or non-customer source names remain.
