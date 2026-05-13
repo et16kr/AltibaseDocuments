@@ -52,8 +52,11 @@ These patterns are generation guides, not a replacement for the full SQL Referen
 ### Tablespace Syntax
 
 ```text
+create_if_not_exists ::=
+  IF NOT EXISTS        -- 8.1 verified source only; omit for 7.1 and 7.3
+
 disk_tablespace ::=
-  CREATE [DISK] [DATA] TABLESPACE tablespace_name
+  CREATE [DISK] [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   DATAFILE file_spec [, file_spec ...]
   [EXTENTSIZE size]
   [SEGMENT MANAGEMENT {AUTO | MANUAL}]
@@ -63,30 +66,148 @@ file_spec ::=
   [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
 
 memory_tablespace ::=
-  CREATE MEMORY [DATA] TABLESPACE tablespace_name
+  CREATE MEMORY [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   SIZE size
   [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
   [CHECKPOINT PATH 'directory' [, 'directory' ...]]
   [SPLIT EACH size]
+  [ONLINE | OFFLINE]
 
 volatile_tablespace ::=
-  CREATE VOLATILE [DATA] TABLESPACE tablespace_name
+  CREATE VOLATILE [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   SIZE size
   [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
 
 temporary_tablespace ::=
-  CREATE TEMPORARY TABLESPACE tablespace_name
-  TEMPFILE 'absolute_file_path' [SIZE size]
+  CREATE TEMPORARY TABLESPACE [create_if_not_exists] tablespace_name
+  TEMPFILE tempfile_spec [, tempfile_spec ...]
+  [EXTENTSIZE size]
+
+tempfile_spec ::=
+  'absolute_file_path' [SIZE size] [REUSE]
   [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
 ```
 
 Generation notes:
 
-- Disk tablespaces store permanent disk tables and indexes. If `DISK` and `DATA` are omitted, a disk data tablespace is still the ordinary permanent tablespace form.
-- Memory tablespace `SIZE` and `AUTOEXTEND NEXT` must align with memory allocation units derived from `EXPAND_CHUNK_PAGE_COUNT` and the memory page size.
-- Volatile tablespaces exist in memory and are used for volatile tables and temporary-table storage.
-- Temporary tablespaces are disk-based and store temporary results for sessions.
-- Relevant properties include `DEFAULT_SEGMENT_MANAGEMENT_TYPE`, `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, `USER_DATA_FILE_MAX_SIZE`, `EXPAND_CHUNK_PAGE_COUNT`, and `MEM_MAX_DB_SIZE`.
+- `IF NOT EXISTS` is available for tablespace creation in the Altibase 8.1 verified source. Do not generate it for 7.1 or 7.3.
+- Only `SYS` or a user with `CREATE TABLESPACE` can create these tablespaces. `ALTER TABLESPACE` and `DROP TABLESPACE` require the matching system privilege.
+- Disk tablespaces store permanent disk tables and disk indexes. If `DISK` and `DATA` are omitted, the ordinary permanent form is still a disk data tablespace.
+- Disk `DATAFILE` and temporary `TEMPFILE` paths should be absolute paths. Use `REUSE` only when overwriting the existing file is intentional.
+- If disk `SIZE`, `NEXT`, or `MAXSIZE` is omitted, Altibase derives defaults from `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE`. If temporary file values are omitted, check `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
+- Disk `EXTENTSIZE` must align with the disk page size. `SEGMENT MANAGEMENT` defaults from `DEFAULT_SEGMENT_MANAGEMENT_TYPE` when omitted.
+- Memory tablespace `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. `AUTOEXTEND OFF` is the default.
+- Memory `MAXSIZE UNLIMITED` is still bounded by available memory and `MEM_MAX_DB_SIZE`. If `CHECKPOINT PATH` is omitted, Altibase uses `MEM_DB_DIR`.
+- A memory tablespace can be created `OFFLINE` and later made available with `ALTER TABLESPACE ... ONLINE`.
+- Volatile tablespaces exist in memory, have no checkpoint image files, and lose data at shutdown. Their `SIZE` and `AUTOEXTEND NEXT` use the same allocation-unit rule as memory tablespaces, but their total growth is bounded by `VOLATILE_MAX_DB_SIZE`.
+- `CREATE TEMPORARY TABLESPACE` creates disk working space for temporary query results and user `TEMPORARY TABLESPACE` assignment. `GLOBAL TEMPORARY TABLE` objects use a volatile tablespace in the table `TABLESPACE` clause.
+- User-defined disk and memory tablespaces can move between `ONLINE` and `OFFLINE`; volatile and temporary tablespaces cannot use state changes. `DISCARD` is for damaged disk or memory tablespaces during `CONTROL` startup.
+
+Tablespace generation checklist:
+
+- Version: if target is 7.1 or 7.3, omit `IF NOT EXISTS`; if target is 8.1, `IF NOT EXISTS` is allowed but still does not validate that an existing tablespace has the intended attributes.
+- Storage target: use disk for persistent large tables and disk indexes, memory for persistent hot data, volatile for restart-discardable high-speed data and `GLOBAL TEMPORARY TABLE` storage, and temporary for disk work space.
+- Size units: keep explicit units (`K`, `M`, `G`) in generated SQL. For memory and volatile tablespaces, choose values that are multiples of the allocation unit.
+- Filesystem: use absolute `DATAFILE` and `TEMPFILE` paths, confirm free space for initial size plus autoextend growth, and confirm the Altibase OS user can create or reuse the files.
+- Checkpoint paths: for memory tablespaces, confirm checkpoint directories exist and are writable before `CREATE MEMORY TABLESPACE` or checkpoint path `ALTER TABLESPACE`.
+- User assignment: after creating application tablespaces, set `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, and `ACCESS tablespace_name ON` with `CREATE USER` or `ALTER USER`.
+
+Preflight check SQL:
+
+```sql
+SELECT product_version, meta_version
+FROM V$VERSION;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+    'DEFAULT_SEGMENT_MANAGEMENT_TYPE',
+    'USER_DATA_FILE_INIT_SIZE',
+    'USER_DATA_FILE_NEXT_SIZE',
+    'USER_DATA_FILE_MAX_SIZE',
+    'USER_TEMP_FILE_INIT_SIZE',
+    'USER_TEMP_FILE_NEXT_SIZE',
+    'USER_TEMP_FILE_MAX_SIZE',
+    'EXPAND_CHUNK_PAGE_COUNT',
+    'MEM_MAX_DB_SIZE',
+    'VOLATILE_MAX_DB_SIZE',
+    'MEM_DB_DIR'
+)
+ORDER BY name;
+
+SELECT name, columncount
+FROM V$TABLE
+WHERE name IN (
+    'V$TABLESPACES',
+    'V$DATAFILES',
+    'V$MEM_TABLESPACES',
+    'V$VOL_TABLESPACES',
+    'V$MEM_TABLESPACE_CHECKPOINT_PATHS'
+)
+ORDER BY name;
+```
+
+Post-DDL check SQL:
+
+```sql
+SELECT id,
+       name,
+       type,
+       state,
+       extent_management,
+       segment_management,
+       datafile_count,
+       total_page_count * page_size AS total_bytes,
+       allocated_page_count * page_size AS allocated_bytes
+FROM V$TABLESPACES
+WHERE name IN ('APP_DISK_TBS', 'APP_MEM_TBS', 'APP_VOL_TBS', 'APP_TEMP_TBS')
+ORDER BY id;
+
+SELECT t.name AS tablespace_name,
+       d.name AS file_name,
+       d.initsize,
+       d.currsize,
+       d.nextsize,
+       d.maxsize,
+       d.autoextend,
+       d.state
+FROM V$TABLESPACES t,
+     V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND t.name IN ('APP_DISK_TBS', 'APP_TEMP_TBS')
+ORDER BY t.name, d.id;
+
+SELECT space_name,
+       space_status,
+       current_size,
+       autoextend_mode,
+       autoextend_nextsize,
+       maxsize,
+       alloc_page_count,
+       free_page_count,
+       current_db
+FROM V$MEM_TABLESPACES
+WHERE space_name = 'APP_MEM_TBS';
+
+SELECT p.checkpoint_path
+FROM V$MEM_TABLESPACES m,
+     V$MEM_TABLESPACE_CHECKPOINT_PATHS p
+WHERE m.space_id = p.space_id
+  AND m.space_name = 'APP_MEM_TBS'
+ORDER BY p.checkpoint_path;
+
+SELECT space_name,
+       space_status,
+       init_size,
+       current_size,
+       autoextend_mode,
+       next_size,
+       max_size,
+       alloc_page_count,
+       free_page_count
+FROM V$VOL_TABLESPACES
+WHERE space_name = 'APP_VOL_TBS';
+```
 
 ### Table Syntax
 
@@ -117,6 +238,7 @@ Generation notes:
 - `MAXROWS` limits the number of records and is not supported with partitioned tables.
 - LOB columns in disk tables can be stored in a separate LOB tablespace; LOB columns in memory tables cannot be stored separately from the table.
 - Temporary tables can use `ON COMMIT DELETE ROWS` for transaction-specific data or `ON COMMIT PRESERVE ROWS` for session-specific data.
+- For `GLOBAL TEMPORARY TABLE`, specify a volatile tablespace in the table `TABLESPACE` clause, not a disk temporary tablespace.
 
 ### Index Syntax
 
@@ -221,35 +343,114 @@ Generation notes:
 
 ### Tablespace Examples
 
-Create disk, memory, volatile, and temporary tablespaces:
+For 7.1 and 7.3, generate tablespace DDL without `IF NOT EXISTS`:
 
 ```sql
 CREATE DISK DATA TABLESPACE app_disk_tbs
-DATAFILE '/data/altibase/app_disk01.dbf' SIZE 1G
+DATAFILE '/data/altibase/dbs/app_disk01.dbf' SIZE 1G
 AUTOEXTEND ON NEXT 256M MAXSIZE 20G
+EXTENTSIZE 512K
 SEGMENT MANAGEMENT AUTO;
 
 CREATE MEMORY DATA TABLESPACE app_mem_tbs
 SIZE 512M
 AUTOEXTEND ON NEXT 128M MAXSIZE 4G
 CHECKPOINT PATH '/data/altibase/chkpt01', '/data/altibase/chkpt02'
-SPLIT EACH 256M;
+SPLIT EACH 512M;
 
 CREATE VOLATILE DATA TABLESPACE app_vol_tbs
-SIZE 128M
+SIZE 256M
 AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
 
 CREATE TEMPORARY TABLESPACE app_temp_tbs
-TEMPFILE '/data/altibase/app_temp01.tmp' SIZE 512M
+TEMPFILE '/data/altibase/dbs/app_temp01.tmp' SIZE 512M
+AUTOEXTEND ON NEXT 128M MAXSIZE 8G
+EXTENTSIZE 256K;
+```
+
+For an 8.1 verified source target, `IF NOT EXISTS` can be added after `TABLESPACE`:
+
+```sql
+CREATE DISK DATA TABLESPACE IF NOT EXISTS app_disk_tbs
+DATAFILE '/data/altibase/dbs/app_disk01.dbf' SIZE 1G
+AUTOEXTEND ON NEXT 256M MAXSIZE 20G
+SEGMENT MANAGEMENT AUTO;
+
+CREATE MEMORY DATA TABLESPACE IF NOT EXISTS app_mem_tbs
+SIZE 512M
+AUTOEXTEND ON NEXT 128M MAXSIZE 4G
+CHECKPOINT PATH '/data/altibase/chkpt01', '/data/altibase/chkpt02'
+SPLIT EACH 512M;
+
+CREATE VOLATILE DATA TABLESPACE IF NOT EXISTS app_vol_tbs
+SIZE 256M
+AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
+
+CREATE TEMPORARY TABLESPACE IF NOT EXISTS app_temp_tbs
+TEMPFILE '/data/altibase/dbs/app_temp01.tmp' SIZE 512M
 AUTOEXTEND ON NEXT 128M MAXSIZE 8G;
+```
+
+Alter disk and temporary files:
+
+```sql
+ALTER TABLESPACE app_disk_tbs
+ADD DATAFILE '/data/altibase/dbs/app_disk02.dbf' SIZE 1G
+AUTOEXTEND ON NEXT 256M MAXSIZE 20G;
+
+ALTER TABLESPACE app_disk_tbs
+ALTER DATAFILE '/data/altibase/dbs/app_disk01.dbf'
+AUTOEXTEND ON NEXT 512M MAXSIZE 30G;
+
+ALTER TABLESPACE app_temp_tbs
+ADD TEMPFILE '/data/altibase/dbs/app_temp02.tmp' SIZE 512M
+AUTOEXTEND ON NEXT 128M MAXSIZE 8G;
+
+ALTER TABLESPACE app_temp_tbs
+ALTER TEMPFILE '/data/altibase/dbs/app_temp01.tmp'
+SIZE 1G;
+```
+
+Alter memory and volatile growth, and manage memory checkpoint paths:
+
+```sql
+ALTER TABLESPACE app_mem_tbs
+ALTER AUTOEXTEND ON NEXT 256M MAXSIZE 8G;
+
+ALTER TABLESPACE app_vol_tbs
+ALTER AUTOEXTEND ON NEXT 128M MAXSIZE 2G;
+
+STARTUP PROCESS;
+STARTUP CONTROL;
+
+ALTER TABLESPACE app_mem_tbs
+ADD CHECKPOINT PATH '/data3/altibase/chkpt03';
+```
+
+Assign tablespaces to an application user:
+
+```sql
+CREATE USER app IDENTIFIED BY app_password
+DEFAULT TABLESPACE app_mem_tbs
+TEMPORARY TABLESPACE app_temp_tbs
+ACCESS app_disk_tbs ON;
+
+ALTER USER app ACCESS app_mem_tbs ON;
+ALTER USER app ACCESS app_vol_tbs ON;
 ```
 
 Verify tablespaces and relevant properties:
 
 ```sql
-SELECT id, name, type, state, total_page_count, page_size
+SELECT id,
+       name,
+       type,
+       state,
+       datafile_count,
+       total_page_count * page_size AS total_bytes
 FROM V$TABLESPACES
-WHERE name IN ('APP_DISK_TBS', 'APP_TEMP_TBS');
+WHERE name IN ('APP_DISK_TBS', 'APP_MEM_TBS', 'APP_VOL_TBS', 'APP_TEMP_TBS')
+ORDER BY id;
 
 SELECT space_name, current_size, autoextend_mode, autoextend_nextsize, maxsize
 FROM V$MEM_TABLESPACES
@@ -272,9 +473,14 @@ WHERE name IN (
     'USER_DATA_FILE_INIT_SIZE',
     'USER_DATA_FILE_NEXT_SIZE',
     'USER_DATA_FILE_MAX_SIZE',
+    'USER_TEMP_FILE_INIT_SIZE',
+    'USER_TEMP_FILE_NEXT_SIZE',
+    'USER_TEMP_FILE_MAX_SIZE',
     'EXPAND_CHUNK_PAGE_COUNT',
-    'MEM_MAX_DB_SIZE'
-);
+    'MEM_MAX_DB_SIZE',
+    'VOLATILE_MAX_DB_SIZE'
+)
+ORDER BY name;
 ```
 
 ### User and Privilege Examples

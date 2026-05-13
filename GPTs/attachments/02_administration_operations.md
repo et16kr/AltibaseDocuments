@@ -304,7 +304,7 @@ Tablespace type block: volatile data tablespace
 Tablespace type block: temporary tablespace
 
 - Disk-based working space for temporary query results.
-- Temporary data disappears when the associated transaction completes.
+- Temporary result data is not persistent user data and is discarded when the session or statement no longer needs it.
 - Temporary tablespaces are not backed up.
 - `ONLINE`, `OFFLINE`, and `DISCARD` state changes do not apply to temporary tablespaces.
 
@@ -357,11 +357,16 @@ ALTER TABLESPACE app_data DISCARD;
 
 ## Tablespace DDL Syntax
 
+Version rule: `IF NOT EXISTS` is available for tablespace creation in the Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
+
 Disk data tablespace:
 
 ```text
+create_if_not_exists ::=
+  IF NOT EXISTS        -- 8.1 verified source only
+
 disk_tablespace ::=
-  CREATE [DISK] [DATA] TABLESPACE tablespace_name
+  CREATE [DISK] [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   DATAFILE file_spec [, file_spec ...]
   [EXTENTSIZE size]
   [SEGMENT MANAGEMENT {AUTO | MANUAL}]
@@ -375,7 +380,7 @@ Memory data tablespace:
 
 ```text
 memory_tablespace ::=
-  CREATE MEMORY [DATA] TABLESPACE tablespace_name
+  CREATE MEMORY [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   SIZE size
   [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
   [CHECKPOINT PATH 'directory' [, 'directory' ...]]
@@ -387,7 +392,7 @@ Volatile data tablespace:
 
 ```text
 volatile_tablespace ::=
-  CREATE VOLATILE [DATA] TABLESPACE tablespace_name
+  CREATE VOLATILE [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   SIZE size
   [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
 ```
@@ -396,10 +401,13 @@ Temporary tablespace:
 
 ```text
 temporary_tablespace ::=
-  CREATE TEMPORARY TABLESPACE tablespace_name
-  TEMPFILE 'absolute_file_path' [SIZE size] [REUSE]
-  [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
+  CREATE TEMPORARY TABLESPACE [create_if_not_exists] tablespace_name
+  TEMPFILE tempfile_spec [, tempfile_spec ...]
   [EXTENTSIZE size]
+
+tempfile_spec ::=
+  'absolute_file_path' [SIZE size] [REUSE]
+  [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
 ```
 
 Drop tablespace:
@@ -446,7 +454,57 @@ alter_tablespace ::=
     {BEGIN BACKUP | END BACKUP}
 ```
 
+DDL rules:
+
+- `AUTOEXTEND OFF` is the default for disk files, temporary files, memory tablespaces, and volatile tablespaces.
+- Disk data file defaults are controlled by `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE`.
+- Disk temporary file defaults are controlled by `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
+- Memory and volatile `SIZE` and `AUTOEXTEND NEXT` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`.
+- Memory growth is bounded by `MEM_MAX_DB_SIZE`; volatile growth is bounded by `VOLATILE_MAX_DB_SIZE`.
+- `CHECKPOINT PATH` operations apply only to memory tablespaces and require the DBA to create, move, or remove the underlying OS directories and checkpoint image files.
+- Temporary tablespaces are disk work space. `GLOBAL TEMPORARY TABLE` storage is specified with a volatile tablespace in the table `TABLESPACE` clause.
+
 ## Tablespace Operation Runbooks
+
+Runbook: preflight checks before creating or altering tablespaces
+
+```sql
+SELECT product_version, meta_version
+FROM V$VERSION;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'DEFAULT_SEGMENT_MANAGEMENT_TYPE',
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_NEXT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE',
+  'USER_TEMP_FILE_INIT_SIZE',
+  'USER_TEMP_FILE_NEXT_SIZE',
+  'USER_TEMP_FILE_MAX_SIZE',
+  'EXPAND_CHUNK_PAGE_COUNT',
+  'MEM_MAX_DB_SIZE',
+  'VOLATILE_MAX_DB_SIZE',
+  'MEM_DB_DIR'
+)
+ORDER BY name;
+
+SELECT id,
+       name,
+       type,
+       state,
+       datafile_count,
+       total_page_count * page_size AS total_bytes,
+       allocated_page_count * page_size AS allocated_bytes
+FROM V$TABLESPACES
+ORDER BY id;
+```
+
+Preflight notes:
+
+- For 8.1, decide whether `IF NOT EXISTS` is appropriate. It suppresses a duplicate-name error but does not prove that the existing tablespace has the requested files, size, or autoextend settings.
+- For disk and temporary files, confirm filesystem free space and Altibase OS user permissions before running DDL.
+- For memory and volatile tablespaces, calculate the allocation unit from `EXPAND_CHUNK_PAGE_COUNT * 32KB` and choose `SIZE`, `NEXT`, and `SPLIT EACH` values accordingly.
 
 Runbook: create disk data tablespace
 
@@ -454,6 +512,7 @@ Runbook: create disk data tablespace
 CREATE DISK DATA TABLESPACE app_disk_tbs
 DATAFILE '/data/altibase/dbs/app_disk01.dbf' SIZE 1G
 AUTOEXTEND ON NEXT 256M MAXSIZE 20G
+EXTENTSIZE 512K
 SEGMENT MANAGEMENT AUTO;
 
 SELECT t.name AS tablespace_name,
@@ -532,6 +591,13 @@ SELECT space_name,
        current_db
 FROM V$MEM_TABLESPACES
 WHERE space_name = 'APP_MEM_TBS';
+
+SELECT p.checkpoint_path
+FROM V$MEM_TABLESPACES m,
+     V$MEM_TABLESPACE_CHECKPOINT_PATHS p
+WHERE m.space_id = p.space_id
+  AND m.space_name = 'APP_MEM_TBS'
+ORDER BY p.checkpoint_path;
 ```
 
 Rules:
@@ -560,8 +626,7 @@ DROP CHECKPOINT PATH '/data/altibase/chkpt02';
 
 Operational notes:
 
-- Memory checkpoint path add, drop, and rename work during startup phases, but perform them in `CONTROL` for predictable maintenance.
-- In `SERVICE`, modify checkpoint paths only after taking the memory tablespace offline.
+- Memory checkpoint path add, drop, and rename operations are performed in the `CONTROL` startup phase.
 - Altibase does not move existing checkpoint image files for you. Move or copy the affected files at the OS level after the metadata change.
 - A memory tablespace must retain at least one checkpoint path.
 
@@ -592,10 +657,14 @@ SIZE 256M
 AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
 
 SELECT space_name,
+       space_status,
+       init_size,
        current_size,
        autoextend_mode,
        next_size,
-       max_size
+       max_size,
+       alloc_page_count,
+       free_page_count
 FROM V$VOL_TABLESPACES
 WHERE space_name = 'APP_VOL_TBS';
 ```
@@ -607,7 +676,21 @@ Runbook: create temporary tablespace
 ```sql
 CREATE TEMPORARY TABLESPACE app_temp_tbs
 TEMPFILE '/data/altibase/dbs/app_temp01.tmp' SIZE 512M
-AUTOEXTEND ON NEXT 128M MAXSIZE 8G;
+AUTOEXTEND ON NEXT 128M MAXSIZE 8G
+EXTENTSIZE 256K;
+
+SELECT t.name AS tablespace_name,
+       d.name AS tempfile_name,
+       d.initsize,
+       d.currsize,
+       d.nextsize,
+       d.maxsize,
+       d.autoextend,
+       d.state
+FROM V$TABLESPACES t,
+     V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND t.name = 'APP_TEMP_TBS';
 ```
 
 Rules:
@@ -615,6 +698,23 @@ Rules:
 - Temporary tablespaces store temporary query results.
 - They cannot be backed up.
 - Use `ALTER USER ... TEMPORARY TABLESPACE app_temp_tbs` to assign a user's temporary tablespace.
+
+Runbook: add or resize temporary file
+
+```sql
+ALTER TABLESPACE app_temp_tbs
+ADD TEMPFILE '/data/altibase/dbs/app_temp02.tmp' SIZE 512M
+AUTOEXTEND ON NEXT 128M MAXSIZE 8G;
+
+ALTER TABLESPACE app_temp_tbs
+ALTER TEMPFILE '/data/altibase/dbs/app_temp01.tmp'
+AUTOEXTEND ON NEXT 256M MAXSIZE 12G;
+```
+
+Rules:
+
+- A temporary file can be dropped only when it is not in use and no extents are allocated to it.
+- State changes such as `ONLINE`, `OFFLINE`, and `DISCARD` do not apply to temporary tablespaces.
 
 Runbook: drop tablespace
 
