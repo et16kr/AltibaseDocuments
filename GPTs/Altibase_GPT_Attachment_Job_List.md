@@ -122,7 +122,7 @@ Dependency behavior:
 | JOB-012 | P1 Inventory | Done | JOB-010 | English/Korean parity | Compare English and Korean source quality for core docs | `Manuals/*/eng`, `Manuals/*/kor` | `GPTs/reports/eng_kor_parity.md` | English canonical source choice documented |
 | JOB-013 | P1 Inventory | Done | JOB-010 | Image inventory | List candidate images for Mermaid or text conversion | Selected source docs | `GPTs/reports/image_inventory.md` | Each image classified |
 | JOB-014 | P1 Inventory | Done | JOB-010 | Table inventory | List large tables that require decomposition | Selected source docs | `GPTs/reports/table_inventory.md` | Top priority tables identified |
-| JOB-015 | P1 Inventory | ToDo | JOB-010 | Bad links | Detect Windows absolute paths and broken image links in selected sources | Selected source docs | `GPTs/reports/link_inventory.md` | Cleanup targets listed |
+| JOB-015 | P1 Inventory | InProgress | JOB-010 | Bad links | Detect Windows absolute paths and broken image links in selected sources | Selected source docs | `GPTs/reports/link_inventory.md` | Cleanup targets listed |
 | JOB-020 | P2 Language | ToDo | JOB-004, JOB-006 | Canonical language | Convert attachment writing policy to English canonical | Workplan, attachments README | Selection, README, Workplan | English canonical policy clear |
 | JOB-021 | P2 Language | ToDo | JOB-010, JOB-012 | Terminology glossary | Build Altibase terminology glossary for multilingual answers | Source manuals | `GPTs/internal/terminology_glossary.md` | Terms not to translate listed |
 | JOB-022 | P2 Language | ToDo | JOB-020, JOB-021 | Header conversion | Convert all attachment headers and common sections to English | 20 attachments | 20 updated attachments | Common structure is English |
