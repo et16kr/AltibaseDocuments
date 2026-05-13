@@ -132,7 +132,7 @@ Dependency behavior:
 | JOB-031 | P3 SQL Core | Done | JOB-030, JOB-041 | Tablespace DDL | Deepen memory, disk, volatile, temporary tablespace DDL | SQL Reference, Admin | Attachment 03 and 02 | Version-aware DDL and check SQL |
 | JOB-032 | P3 SQL Core | Done | JOB-030, JOB-038 | Table DDL | Deepen table DDL for memory, disk, LOB, JSON, partition, queue | SQL Reference | Attachment 03 | Oracle differences stated |
 | JOB-033 | P3 SQL Core | Done | JOB-030, JOB-043 | Index and constraints | Deepen indexes, constraints, PK, FK, unique, partitioned indexes | SQL Reference, Tuning | Attachment 03 and 08 | Examples plus verification SQL |
-| JOB-034 | P3 SQL Core | InProgress | JOB-030, JOB-041 | Users and privileges | Deepen CREATE USER, ALTER USER, GRANT, REVOKE, roles | SQL Reference, Admin | Attachment 03 and 02 | Least-privilege notes included |
+| JOB-034 | P3 SQL Core | Fail | JOB-030, JOB-041 | Users and privileges | Deepen CREATE USER, ALTER USER, GRANT, REVOKE, roles | SQL Reference, Admin | Attachment 03 and 02 | Least-privilege notes included |
 | JOB-035 | P3 SQL Core | ToDo | JOB-030, JOB-044 | Replication SQL | Deepen CREATE/ALTER REPLICATION and 8.1 SSL examples | SQL Reference, Replication | Attachment 03 and 09 | Non-SSL and SSL cases separated |
 | JOB-036 | P3 SQL Core | ToDo | JOB-030, JOB-038, JOB-039 | Property SQL | Deepen property query/change guidance and system views | General Reference | Attachment 03, 05, 06 | Query examples verified |
 | JOB-037 | P3 SQL Core | Done | JOB-010, JOB-012, JOB-022, JOB-023 | `04_sql_dml_oracle_compatibility.md` | Build Oracle-compatible DML summary and Altibase differences | SQL Reference | Updated attachment 04 | Generic Oracle SQL compressed |
