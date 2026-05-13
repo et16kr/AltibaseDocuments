@@ -539,12 +539,15 @@ run_all_jobs() {
 
         case "$status" in
           Done|Skip)
+            commit_job "$id" "Run-all checkpoint after ${status}"
             echo "==> ${id} finished as ${status}."
             ;;
           Review)
+            commit_job "$id" "Run-all checkpoint after Review"
             echo "==> ${id} finished as Review. Dependent jobs will wait until it is marked Done."
             ;;
           Fail|Blocked)
+            commit_job "$id" "Run-all checkpoint after ${status}"
             echo "==> ${id} finished as ${status}. Independent ready jobs may continue."
             failures=$((failures + 1))
             ;;
@@ -572,6 +575,7 @@ run_all_jobs() {
             ;;
           *)
             echo "==> ${id} already has status ${status}."
+            commit_job "$id" "Run-all checkpoint after command failure [${status}]"
             ;;
         esac
         failures=$((failures + 1))
