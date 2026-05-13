@@ -76,6 +76,42 @@ SQL syntax diagrams. Use Mermaid only when it helps explain graphs, flows, state
 architecture, topology, or sequences. Replace UI screenshots with procedural text and
 clear input or value descriptions.
 
+## Mermaid And Visual Conversion Policy
+
+Use Mermaid when a diagram's relationships are important for answering customer questions.
+Use searchable text when the image is mainly syntax, UI detail, table data, or decoration.
+
+General rules:
+
+- Use a fenced `mermaid` code block with one diagram per block.
+- Add a short lead-in sentence explaining what the diagram represents.
+- Keep labels concise and English, while preserving literal technical tokens such as
+  SQL keywords, object names, error codes, property names, commands, paths, and API names.
+- Keep version scope explicit when the diagram differs across Altibase 7.1, 7.3, and 8.1.
+- Use customer-safe source labels, including `Altibase 8.1 verified source` for 8.1
+  material.
+- Do not reproduce decorative styling, icons, logos, colors, or screenshots.
+- Split large visuals into smaller diagrams or searchable item blocks.
+
+Diagram type rules:
+
+| Source image type | Preferred conversion |
+| --- | --- |
+| Architecture, component, storage, network, cluster, or topology diagram | Mermaid `flowchart LR` or `flowchart TB` with labeled edges and `subgraph` groups only when useful |
+| Operational workflow, installation flow, backup/recovery flow, startup/shutdown flow, failover flow, or decision tree | Mermaid `flowchart TD` with actions, decisions, and outcomes |
+| Lifecycle, replication state, server state, checkpoint state, failure state, or mode transition | Mermaid `stateDiagram-v2` with meaningful transition labels |
+| Client/server exchange, handshake, replication sender/receiver exchange, JDBC or CLI call order, or ordered protocol interaction | Mermaid `sequenceDiagram` when message ordering matters |
+| Query execution plan tree or optimizer example | Indented text by default; Mermaid `flowchart TD` only for small parent-child examples |
+| SQL, PSM, command, data type, or utility syntax railroad diagram | Compact BNF-like text by default; simple Mermaid only for short branching syntax |
+| UI screenshot, wizard, dialog, console screenshot, or web form | Procedural text with menu path, field names, input values, selected options, and expected result |
+| Visual table, compatibility matrix, mapping chart, option list, or screen-captured result table | Markdown table or searchable item blocks |
+| Conceptual reference figure | Short source-backed text summary, or Mermaid only if relationships matter |
+| Syntax legend icon, boilerplate, logo, cover image, or decorative figure | Omit, or document once as shared notation |
+
+Keep Mermaid diagrams compact. Split or replace a diagram with text when it grows beyond
+roughly 12 nodes, 16 edges, or four decision branches. Put long commands, SQL examples,
+and cautions outside the diagram in code blocks or item blocks.
+
 ## Source Traceability Policy
 
 Customer-facing attachments may cite source material only with safe labels such as

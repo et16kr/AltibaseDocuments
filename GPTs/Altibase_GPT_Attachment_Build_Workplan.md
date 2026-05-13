@@ -226,6 +226,56 @@ Each attachment should follow this structure until final cleanup.
   the diagram improves retrieval or explanation.
 - Replace UI screenshots with procedural text and clear input/value descriptions.
 
+## Mermaid And Visual Conversion Policy
+
+Use Mermaid only when the visual relationship carries information that searchable prose
+would otherwise lose. Each converted diagram must help a GPT answer user questions without
+seeing the original image.
+
+General conversion rules:
+
+- Keep every diagram in a fenced `mermaid` code block with exactly one diagram per block.
+- Put a short lead-in sentence before the diagram that states its purpose.
+- Use concise English node labels, but keep SQL object names, SQL keywords, commands,
+  property names, error codes, file paths, product names, and API names literal.
+- Prefer stable, searchable labels over decorative labels. Do not reproduce colors,
+  icons, shadows, screenshots, logos, or visual styling that does not change the meaning.
+- Preserve version scope near the diagram when behavior differs for Altibase 7.1, 7.3,
+  or 8.1.
+- Do not copy internal source labels into customer-facing attachments. Use
+  `Altibase 8.1 verified source` or another customer-safe label for 8.1 source material.
+- If an image contains too much detail for one readable diagram, split it into smaller
+  diagrams or replace nonessential parts with item blocks.
+- If the original figure is ambiguous, write the source-backed facts in text and leave a
+  conversion TODO instead of inventing relationships.
+
+Diagram type rules:
+
+| Source image type | Preferred conversion | Rule |
+| --- | --- | --- |
+| Architecture, component, storage, network, cluster, or topology diagram | `flowchart LR` or `flowchart TB` | Use nodes for hosts, processes, databases, files, listeners, clients, and services. Use labeled edges for data flow, control flow, replication, or dependency direction. Use `subgraph` only when grouping makes ownership or deployment boundaries clearer. |
+| Operational workflow, backup/recovery flow, startup/shutdown flow, installation flow, failover procedure, or decision tree | `flowchart TD` | Represent actions as steps, decisions as branch nodes, and outcomes as terminal nodes. Keep procedure details in surrounding text when a node would become too long. |
+| Lifecycle, replication state, server state, checkpoint state, failure state, or mode transition | `stateDiagram-v2` | Use state names from the manual when available. Show only meaningful transitions and label transition triggers, commands, or conditions. |
+| Client/server exchange, handshake, replication sender/receiver exchange, JDBC or CLI call order, and ordered protocol interaction | `sequenceDiagram` | Use participants for roles or processes and messages for calls, responses, acknowledgements, and errors. Use it only when ordering matters more than topology. |
+| Query execution plan tree or optimizer example | Indented text by default; small `flowchart TD` only when parent-child relationships are the point | Keep operator names, access methods, and object names literal. Avoid large Mermaid plan trees that are harder to search than text. |
+| SQL, PSM, command, data type, or utility syntax railroad diagram | Compact BNF-like text by default; simple `flowchart LR` only for short branching syntax | Preserve literal keywords and placeholders. Use Mermaid only when alternatives or optional branches are clearer visually than a one-screen grammar block. |
+| UI screenshot, wizard screen, dialog, console screenshot, or web form | Procedural text, field/value list, or expected-output block | Do not convert UI screenshots to Mermaid. Record menu paths, buttons, input fields, selected values, and resulting state. |
+| Visual table, compatibility matrix, mapping chart, option list, or screen-captured result table | Searchable item blocks or Markdown table | Decompose large tables into per-item blocks with name, scope, value, default, version, caution, or example fields as applicable. |
+| Conceptual reference figure | Short text summary, or Mermaid only if relationships matter | Summarize the point of the figure in one or two source-backed sentences when the layout itself is not needed. |
+| Syntax legend icon, repeated boilerplate, logo, cover image, or decorative figure | Omit, or document once as shared notation | Do not repeat boilerplate image conversions in every attachment. |
+
+Mermaid readability rules:
+
+- Keep diagrams small enough to scan in a GPT attachment. As a rule of thumb, split a
+  diagram when it exceeds about 12 nodes, 16 edges, or four decision branches.
+- Use left-to-right layout for topology and architecture, top-down layout for procedures
+  and cause/effect flow.
+- Edge labels should explain the relationship, not restate adjacent node names.
+- Prefer one noun phrase per node. Put commands, SQL examples, and long cautions outside
+  the diagram in code blocks or item blocks.
+- When a diagram depends on a preceding or following procedure, keep the procedure as the
+  authoritative text and use Mermaid as a navigational aid.
+
 ## Review Checklist
 
 - Confirm that `GPTs/attachments/*.md` contains exactly 20 files excluding
