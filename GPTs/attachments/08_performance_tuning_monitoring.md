@@ -12,6 +12,7 @@
 - How do I enable and read Altibase execution plan trees?
 - Which plan nodes, scan methods, join methods, statistics, hints, and properties matter for tuning?
 - Which performance views and SQL checks should be used before recommending an index, hint, SQL rewrite, or property change?
+- How should primary keys, unique keys, foreign keys, local unique constraints, and partitioned indexes be evaluated for performance and integrity?
 - How should Monitoring API functions be mapped to performance views?
 - How should SNMP, `ALTIBASE-MIB`, `altiPropertyTable`, `altiStatus`, and `altiTrap` be explained?
 - What is safe to say about the Altibase 8.1 JSON-format execution plan?
@@ -475,6 +476,223 @@ Where:
 - `V(R.a)` is the number of distinct values in column `R.a`.
 - `B(R)` is the number of disk pages for table `R`.
 - `M` is the number of available memory buffer pages.
+
+## Index and Constraint Tuning
+
+Use this section when the proposed fix is `CREATE INDEX`, `CREATE UNIQUE INDEX`, `LOCALUNIQUE`, `PRIMARY KEY`, `FOREIGN KEY`, `CHECK`, a function-based index, or a partitioned index.
+
+Decision flow:
+
+```mermaid
+flowchart TD
+  A[Candidate index or constraint] --> B[Confirm table storage and partitioning]
+  B --> C[Check existing constraints and indexes]
+  C --> D[Compare predicates with leading index columns]
+  D --> E[Check statistics and selectivity]
+  E --> F[Run EXPLAIN PLAN before change]
+  F --> G{Index still justified?}
+  G -->|No| H[Prefer SQL rewrite, stats refresh, or no change]
+  G -->|Yes| I[Create or alter the narrowest useful object]
+  I --> J[Gather/check stats and retest plan plus elapsed time]
+```
+
+Metadata checks before recommending a new index:
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       t.table_type,
+       t.tbs_name,
+       t.is_partitioned,
+       t.temporary,
+       t.column_count
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY';
+
+SELECT i.index_name,
+       i.index_type,
+       i.is_unique,
+       i.is_range,
+       i.is_directkey,
+       i.is_partitioned,
+       i.column_cnt,
+       i.tbs_id
+FROM SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.table_id = t.table_id
+  AND i.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY i.index_name;
+
+SELECT i.index_name,
+       ic.index_col_order,
+       col.column_name,
+       ic.sort_order
+FROM SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_INDEX_COLUMNS_ ic,
+     SYSTEM_.SYS_COLUMNS_ col,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.index_id = ic.index_id
+  AND i.table_id = ic.table_id
+  AND ic.table_id = col.table_id
+  AND ic.column_id = col.column_id
+  AND i.table_id = t.table_id
+  AND i.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY i.index_name, ic.index_col_order;
+
+SELECT c.constraint_name,
+       c.constraint_type,
+       c.index_id,
+       c.column_cnt,
+       c.referenced_table_id,
+       c.referenced_index_id,
+       c.delete_rule,
+       c.check_condition,
+       c.validated
+FROM SYSTEM_.SYS_CONSTRAINTS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.table_id = t.table_id
+  AND c.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY c.constraint_type, c.constraint_name;
+```
+
+Constraint type codes in `SYSTEM_.SYS_CONSTRAINTS_`: `0` = `FOREIGN KEY`, `1` = `NOT NULL`, `2` = `UNIQUE`, `3` = `PRIMARY KEY`, `5` = `TIMESTAMP`, `6` = `LOCAL UNIQUE`, `7` = `CHECK`.
+
+Composite index rules:
+
+- Put equality predicates on leading columns before range predicates when that matches the workload.
+- Key range processing follows the index column order and stops at the first missing leading column or inequality range that prevents later columns from narrowing the range.
+- For `WHERE i1 = 1 AND i2 > 0 AND i3 = 1` on index `(i1, i2, i3)`, `i1` and `i2` can drive the key range and `i3` becomes a filter or key filter.
+- For `WHERE i1 = 1 AND i3 = 1` on index `(i1, i2, i3)`, only `i1` can drive the key range because `i2` is missing.
+- If the frequent predicate is `WHERE i1 > 0 AND i2 = 1`, prefer `(i2, i1)` over `(i1, i2)` when both predicates should be processed by key range.
+- Match `ORDER BY` and `GROUP BY` direction only after the predicate access pattern is correct.
+
+Constraint tuning notes:
+
+- `PRIMARY KEY` and `UNIQUE` constraints create supporting unique indexes and provide reliable uniqueness rules. Do not add a second index with the same key columns.
+- `FOREIGN KEY` constraints protect referential integrity but do not remove the need to tune child-table lookups. If parent deletes, cascading deletes, or child joins are slow, check whether the child foreign-key columns have an index.
+- `ON DELETE SET NULL` requires nullable child columns. If child columns are `NOT NULL`, use `NO ACTION` or redesign the delete rule.
+- `CHECK` constraints are validation rules, not access paths. They can prevent bad data but should not be recommended as a performance fix.
+- On replicated tables, changing constraints or unique indexes can affect replication compatibility. Verify replication design before recommending DDL.
+
+Partitioned index notes:
+
+- Local indexes align index partitions with table partitions, which reduces maintenance scope for partition operations and helps partition-level access.
+- `LOCALUNIQUE` enforces uniqueness within each local index partition, not necessarily across all table partitions.
+- Disk partitioned tables can use local partitioned indexes or global non-partitioned indexes. Use a global non-partitioned unique index only when global uniqueness is required and the operational cost is acceptable.
+- Partitioned memory tables cannot use global non-partitioned indexes; prefer local index designs and include the partition key in uniqueness rules when global validation is not available.
+- Global partitioned indexes are not supported. Do not recommend them.
+- For local indexes, check `SYSTEM_.SYS_PART_INDICES_` and `SYSTEM_.SYS_INDEX_PARTITIONS_` before assuming partition names, tablespaces, or local uniqueness.
+
+Partitioned index verification:
+
+```sql
+SELECT i.index_name,
+       pi.partition_type,
+       pi.is_local_unique
+FROM SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_PART_INDICES_ pi,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.user_id = pi.user_id
+  AND i.table_id = pi.table_id
+  AND i.index_id = pi.index_id
+  AND i.table_id = t.table_id
+  AND i.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY i.index_name;
+
+SELECT i.index_name,
+       ip.index_partition_name,
+       tp.partition_name AS table_partition_name,
+       tp.partition_order,
+       ip.tbs_id
+FROM SYSTEM_.SYS_INDEX_PARTITIONS_ ip,
+     SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_TABLE_PARTITIONS_ tp,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE ip.user_id = i.user_id
+  AND ip.table_id = i.table_id
+  AND ip.index_id = i.index_id
+  AND ip.user_id = tp.user_id
+  AND ip.table_id = tp.table_id
+  AND ip.table_partition_id = tp.partition_id
+  AND i.table_id = t.table_id
+  AND i.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY i.index_name, tp.partition_order;
+```
+
+Function-based and direct key index notes:
+
+- A function-based index is useful only when the query predicate uses the same expression and `QUERY_REWRITE_ENABLE = 1`.
+- User-defined functions in function-based indexes must be `DETERMINISTIC`; cross-schema functions also require `EXECUTE` privilege.
+- Do not use non-deterministic functions, subqueries, sequences, pseudo columns, `PRIOR`, aggregate functions, or LOB data in function-based index expressions.
+- A direct key index can reduce index scan cost for supported memory-resident indexes. It cannot be created on disk-resident indexes, compressed columns, or encrypted columns.
+- In a composite direct key index, the first column is the direct key. Put the intended direct key first.
+
+Property and disk-index consistency checks:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'QUERY_REWRITE_ENABLE',
+  'INDEX_BUILD_THREAD_COUNT'
+)
+ORDER BY name;
+
+SELECT index_name,
+       index_status,
+       index_tbs_id,
+       table_tbs_id,
+       is_unique,
+       is_consistent,
+       is_created_with_logging,
+       is_created_with_force
+FROM V$DISK_BTREE_HEADER
+WHERE index_name IN ('IDX_ORDER_HISTORY_AMOUNT', 'UK_APP_DOCUMENT_TITLE')
+ORDER BY index_name;
+```
+
+Plan and retest pattern:
+
+```sql
+ALTER SESSION SET EXPLAIN PLAN = ONLY;
+
+SELECT order_id, order_date, user_id, amount
+FROM app.order_history
+WHERE user_id = 1001
+  AND order_date >= '01-JAN-2026'
+  AND order_date <  '01-FEB-2026'
+ORDER BY order_date;
+
+ALTER SESSION SET EXPLAIN PLAN = OFF;
+
+SELECT *
+FROM V$DBMS_STATS;
+```
+
+Accept the index change only when the retest shows the intended `INDEX RANGE SCAN`, partition pruning where applicable, lower elapsed time or lower bottleneck metric, and no unacceptable write-path cost.
 
 ## Join Tuning
 

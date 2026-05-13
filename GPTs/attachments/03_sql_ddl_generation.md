@@ -240,6 +240,24 @@ column_definition ::=
   [PRIMARY KEY | UNIQUE | CHECK (condition)]
   [REFERENCES [owner.]table_name [(column_name)] [ON DELETE {NO ACTION | CASCADE | SET NULL}]]
 
+constraint_definition ::=
+  [CONSTRAINT constraint_name]
+  { PRIMARY KEY (column_name [, ...]) [constraint_index_options]
+  | UNIQUE (column_name [, ...]) [constraint_index_options]
+  | LOCALUNIQUE (column_name [, ...]) [constraint_index_options]
+  | FOREIGN KEY (column_name [, ...])
+      REFERENCES [owner.]table_name [(column_name [, ...])]
+      [ON DELETE {NO ACTION | CASCADE | SET NULL}]
+  | CHECK (condition) }
+
+constraint_index_options ::=
+  [DIRECTKEY [MAXSIZE integer]]
+  [USING INDEX
+    [TABLESPACE tablespace_name]
+    [LOCAL [(PARTITION index_partition_name ON table_partition_name [TABLESPACE tablespace_name], ...)]]
+    [LOGGING | NOLOGGING [FORCE | NOFORCE]]
+    [PARALLEL integer]]
+
 drop_table ::=
   DROP TABLE [drop_if_exists] [owner.]table_name
 
@@ -295,14 +313,20 @@ Generation notes:
 - For `PRIMARY KEY`, `UNIQUE`, and `LOCALUNIQUE`, Altibase creates supporting indexes. The supporting index uses the table's tablespace unless a `USING INDEX` clause specifies otherwise.
 - `MAXROWS` limits the number of records and is not supported with partitioned tables.
 - A table can have only one `PRIMARY KEY`; primary and unique constraints can use up to 32 columns.
+- A `PRIMARY KEY` is equivalent to `UNIQUE` plus `NOT NULL`; all primary-key columns must be non-null.
+- Do not define `PRIMARY KEY` and `UNIQUE` on the same column list in the same table. Use one named constraint for the intended rule.
+- A `FOREIGN KEY` must reference a parent `PRIMARY KEY` or `UNIQUE` key. If the referenced column list is omitted, Altibase uses the parent table's primary key.
+- `ON DELETE NO ACTION` is the default foreign-key action. `ON DELETE SET NULL` requires nullable child columns.
 - A `TIMESTAMP` column is generated internally and only one `TIMESTAMP` column can be created in one table. Do not specify an explicit `DEFAULT` for it.
 - `CHECK` constraints cannot contain subqueries, sequences, pseudo columns such as `LEVEL` or `ROWNUM`, non-deterministic functions such as `SYSDATE` or `USER_ID`, the `PRIOR` operator, or LOB data.
+- Multiple `CHECK` constraints may be defined on one column, but Altibase does not guarantee their evaluation order or prove that they are mutually compatible.
+- Be explicit with full date literals in `CHECK` constraints. If the year or month is omitted in a `DATE` constant, Altibase can derive it from the current date.
 - LOB columns in disk tables can be stored in a separate disk LOB tablespace. LOB columns in memory tables cannot be stored separately from the table; memory LOB `IN ROW` sizing belongs in the data type definition.
 - LOB type columns cannot be used in volatile tables or disk temporary tablespaces, cannot be partition keys, cannot be indexed, and should not normally be declared `NOT NULL`.
 - Temporary tables can use `ON COMMIT DELETE ROWS` for transaction-specific data or `ON COMMIT PRESERVE ROWS` for session-specific data.
 - For `GLOBAL TEMPORARY TABLE`, specify a volatile tablespace in the table `TABLESPACE` clause, not a disk temporary tablespace.
 - Temporary table definitions are shared metadata, but rows are private to the session that inserts them. Session-specific temporary table DDL is allowed only when the session is not bound to the table; transaction-specific temporary table DDL causes the internal DDL commit behavior to remove transaction-level rows.
-- Temporary tables cannot be partitioned, cannot have foreign keys, and do not support distributed transactions.
+- Temporary tables cannot be partitioned, cannot have foreign keys, and do not support distributed transactions. Do not generate `FOREIGN KEY` clauses for them.
 - Range and list partitioned tables require a `DEFAULT` partition. Range and hash partition keys can use up to 32 columns; list partitioning uses a single partition key column.
 - `ENABLE ROW MOVEMENT` allows updates that move rows between partitions when partition key values change. If omitted, `DISABLE ROW MOVEMENT` is the default.
 - `ADD PARTITION` and `COALESCE PARTITION` are for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
@@ -322,6 +346,11 @@ Table DDL item blocks:
 - JSON column: use only for 8.1. JSON follows broad LOB restrictions, uses Temporary LOB internally, and cannot be used with `SELECT FOR UPDATE`.
 - Partitioned table: choose range for time/range pruning, list for discrete values, hash for distribution. Name partitions explicitly and specify partition tablespaces when placement matters.
 - Queue table: use `CREATE QUEUE`, not `CREATE TABLE`, when the object must support `ENQUEUE` and `DEQUEUE`.
+- Primary key: one per table; supports referential integrity and creates an internal unique index.
+- Unique key: enforces global duplicate prevention for the key scope that the supporting index can validate; allows `NULL` values.
+- Local unique key: use `LOCALUNIQUE` for partitioned tables when uniqueness is required within each local index partition rather than across the whole table.
+- Foreign key: references a parent primary or unique key and should normally have an index on the child key when parent deletes or updates are frequent.
+- Check constraint: enforce simple deterministic row rules; avoid incomplete date constants and unsupported expressions.
 
 ### Queue Syntax
 
@@ -380,15 +409,52 @@ index ::=
   [TABLESPACE tablespace_name]
   [LOGGING | NOLOGGING [FORCE | NOFORCE]]
   [PARALLEL integer]
+
+alter_index ::=
+  ALTER INDEX [owner.]index_name
+  { REBUILD [PARTITION index_partition_name [TABLESPACE tablespace_name]]
+  | DIRECTKEY [MAXSIZE integer]
+  | DIRECTKEY OFF
+  | RENAME TO new_index_name
+  | AGING
+  | REORGANIZATION
+  | ALLOCATE EXTENT (SIZE size)
+  | STORAGE (storage_attribute ...) }
+
+drop_index ::=
+  DROP INDEX [owner.]index_name
 ```
 
 Generation notes:
 
 - `BTREE` is the default index type. `RTREE` is for multidimensional data such as spatial use cases.
+- A `LOCAL` partitioned index creates one index partition for each table partition. If partition names are omitted, Altibase generates them automatically.
+- Altibase supports local partitioned indexes and global non-partitioned indexes. Global partitioned indexes are not supported.
+- Disk partitioned tables can use local partitioned indexes or global non-partitioned indexes. Partitioned memory tables can use local partitioned indexes but not global non-partitioned indexes.
+- A local index can only be a B+tree index. Do not generate `INDEXTYPE IS RTREE` for local partitioned indexes.
+- For partitioned indexes, specify tablespaces at index-partition level with `LOCAL (...)`; do not use a whole-index `TABLESPACE` clause for the partitioned index.
+- `LOCALUNIQUE` enforces uniqueness within each local index partition. Use ordinary `UNIQUE` only when the requested uniqueness must be global and the target table/storage type supports the required non-partitioned index.
 - A function-based index can use built-in functions or user-defined functions. User-defined functions used in the expression must be `DETERMINISTIC`.
+- A function-based index can be chosen by the optimizer only when `QUERY_REWRITE_ENABLE = 1`.
 - An index cannot be created on a LOB column.
+- A direct key index stores the direct key with the index entry. It can reduce index scan cost, but cannot be created on disk-resident indexes, compressed columns, or encrypted columns. For composite direct key indexes, the first column is the direct key.
 - For memory tables, a `TABLESPACE` clause on an index is ignored because memory indexes are not stored in tablespaces.
 - For disk-table indexes, `NOLOGGING` can improve build speed but may require dropping and rebuilding the index after a system or media fault if the index becomes inconsistent.
+- `PARALLEL integer` is an index-build hint. Valid generation range is `0` through `512`; omitted or `0` lets Altibase derive the thread count from `INDEX_BUILD_THREAD_COUNT` or the host CPU count.
+- Use `ALTER INDEX ... REBUILD` for inconsistent disk B-tree indexes or after changing direct-key attributes. `AGING` is for disk indexes; `REORGANIZATION` is for memory B-tree index space cleanup.
+
+Index type selection flow:
+
+```mermaid
+flowchart TD
+  A[Index requested] --> B{Table partitioned?}
+  B -->|No| C[Create global non-partitioned index]
+  B -->|Yes| D{Storage type}
+  D -->|Disk| E{Global uniqueness needed?}
+  E -->|Yes| F[Use non-partitioned UNIQUE index or constraint when supported]
+  E -->|No| G[Use LOCAL index or LOCALUNIQUE for per-partition uniqueness]
+  D -->|Memory| H[Use LOCAL index; avoid global non-partitioned index on partitioned memory table]
+```
 
 ### User and Privilege Syntax
 
@@ -944,6 +1010,158 @@ SELECT type, open_count
 FROM V$TEMPORARY_LOBS;
 ```
 
+### Constraint Examples
+
+Create named primary-key, unique, check, and foreign-key constraints:
+
+```sql
+CREATE TABLE app.department (
+    dept_id    INTEGER NOT NULL,
+    dept_code  VARCHAR(20) NOT NULL,
+    dept_name  VARCHAR(80) NOT NULL,
+    status     CHAR(1) DEFAULT 'A',
+    CONSTRAINT pk_department PRIMARY KEY (dept_id)
+        USING INDEX TABLESPACE app_disk_tbs,
+    CONSTRAINT uk_department_code UNIQUE (dept_code)
+        USING INDEX TABLESPACE app_disk_tbs,
+    CONSTRAINT ck_department_status CHECK (status IN ('A', 'I'))
+) TABLESPACE app_disk_tbs;
+
+CREATE TABLE app.employee (
+    emp_id   BIGINT NOT NULL,
+    dept_id  INTEGER,
+    email    VARCHAR(160),
+    status   CHAR(1) DEFAULT 'A',
+    CONSTRAINT pk_employee PRIMARY KEY (emp_id)
+        USING INDEX TABLESPACE app_disk_tbs,
+    CONSTRAINT uk_employee_email UNIQUE (email)
+        USING INDEX TABLESPACE app_disk_tbs,
+    CONSTRAINT fk_employee_department
+        FOREIGN KEY (dept_id)
+        REFERENCES app.department (dept_id)
+        ON DELETE SET NULL,
+    CONSTRAINT ck_employee_status CHECK (status IN ('A', 'I', 'L'))
+) TABLESPACE app_disk_tbs;
+```
+
+Add constraints after loading data:
+
+```sql
+ALTER TABLE app.app_document
+ADD CONSTRAINT uk_app_document_user_title
+UNIQUE (user_id, title)
+USING INDEX TABLESPACE app_disk_tbs;
+
+ALTER TABLE app.app_document
+ADD CONSTRAINT ck_app_document_title
+CHECK (LENGTH(title) > 0);
+
+ALTER TABLE app.order_history
+ADD CONSTRAINT fk_order_history_user
+FOREIGN KEY (user_id)
+REFERENCES app.app_user (user_id)
+ON DELETE NO ACTION;
+```
+
+Add a local unique constraint to a partitioned table and name the local index partitions:
+
+```sql
+ALTER TABLE app.order_history
+ADD CONSTRAINT luk_order_history_user_order
+LOCALUNIQUE (user_id, order_date, order_id)
+USING INDEX LOCAL
+(
+    PARTITION luk_oh_2025 ON p_2025 TABLESPACE app_disk_tbs,
+    PARTITION luk_oh_default ON p_default TABLESPACE app_disk_tbs
+);
+```
+
+Drop constraints explicitly:
+
+```sql
+ALTER TABLE app.employee
+DROP CONSTRAINT fk_employee_department;
+
+ALTER TABLE app.employee
+DROP UNIQUE (email);
+
+ALTER TABLE app.employee
+DROP PRIMARY KEY;
+
+ALTER TABLE app.order_history
+DROP LOCALUNIQUE (user_id, order_date, order_id);
+```
+
+Verify constraints:
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       c.constraint_name,
+       c.constraint_type,
+       c.index_id,
+       c.column_cnt,
+       c.referenced_table_id,
+       c.referenced_index_id,
+       c.delete_rule,
+       c.check_condition,
+       c.validated
+FROM SYSTEM_.SYS_CONSTRAINTS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.user_id = u.user_id
+  AND c.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name IN ('DEPARTMENT', 'EMPLOYEE', 'APP_DOCUMENT', 'ORDER_HISTORY')
+ORDER BY t.table_name, c.constraint_type, c.constraint_name;
+
+SELECT c.constraint_name,
+       cc.constraint_col_order,
+       col.column_name
+FROM SYSTEM_.SYS_CONSTRAINTS_ c,
+     SYSTEM_.SYS_CONSTRAINT_COLUMNS_ cc,
+     SYSTEM_.SYS_COLUMNS_ col,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.user_id = cc.user_id
+  AND c.table_id = cc.table_id
+  AND c.constraint_id = cc.constraint_id
+  AND cc.user_id = col.user_id
+  AND cc.table_id = col.table_id
+  AND cc.column_id = col.column_id
+  AND c.user_id = u.user_id
+  AND c.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name IN ('DEPARTMENT', 'EMPLOYEE', 'APP_DOCUMENT', 'ORDER_HISTORY')
+ORDER BY c.constraint_name, cc.constraint_col_order;
+
+SELECT child.table_name AS child_table,
+       c.constraint_name AS foreign_key_name,
+       c.delete_rule,
+       parent.table_name AS parent_table,
+       pc.constraint_name AS referenced_key_name
+FROM SYSTEM_.SYS_CONSTRAINTS_ c,
+     SYSTEM_.SYS_TABLES_ child,
+     SYSTEM_.SYS_TABLES_ parent,
+     SYSTEM_.SYS_CONSTRAINTS_ pc,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.user_id = u.user_id
+  AND child.user_id = u.user_id
+  AND c.table_id = child.table_id
+  AND c.referenced_table_id = parent.table_id
+  AND c.referenced_index_id = pc.constraint_id
+  AND parent.user_id = u.user_id
+  AND pc.user_id = u.user_id
+  AND pc.table_id = parent.table_id
+  AND c.constraint_type = 0
+  AND u.user_name = 'APP'
+ORDER BY child.table_name, c.constraint_name;
+```
+
+Constraint type codes in `SYSTEM_.SYS_CONSTRAINTS_`: `0` = `FOREIGN KEY`, `1` = `NOT NULL`, `2` = `UNIQUE`, `3` = `PRIMARY KEY`, `5` = `TIMESTAMP`, `6` = `LOCAL UNIQUE`, `7` = `CHECK`. `DELETE_RULE` codes are `0` = `NO ACTION`, `1` = `CASCADE`, and `2` = `SET NULL`.
+
 ### Index Examples
 
 Create ordinary, unique, disk, local, function-based, and direct key indexes:
@@ -960,6 +1178,18 @@ CREATE INDEX app.idx_order_history_user
 ON app.order_history (user_id, order_date)
 LOCAL;
 
+CREATE INDEX app.idx_order_history_date_user
+ON app.order_history (order_date, user_id)
+LOCAL
+(
+    PARTITION idx_oh_date_2025 ON p_2025 TABLESPACE app_disk_tbs,
+    PARTITION idx_oh_date_default ON p_default TABLESPACE app_disk_tbs
+);
+
+CREATE LOCALUNIQUE INDEX app.lidx_order_history_amount_order
+ON app.order_history (amount, order_id, order_date)
+LOCAL;
+
 CREATE INDEX app.idx_order_history_amount
 ON app.order_history (amount)
 TABLESPACE app_disk_tbs
@@ -969,9 +1199,9 @@ PARALLEL 4;
 CREATE INDEX app.idx_app_user_name_upper
 ON app.app_user (UPPER(user_name));
 
-CREATE INDEX app.idx_app_user_direct
-ON app.app_user (user_id)
-DIRECTKEY;
+CREATE INDEX app.idx_app_user_status_direct
+ON app.app_user (status)
+DIRECTKEY MAXSIZE 4;
 ```
 
 Function-based index with a user-defined function:
@@ -988,6 +1218,22 @@ END;
 
 CREATE INDEX app.idx_app_user_name_key
 ON app.app_user (app.get_name_key(user_name));
+```
+
+Index maintenance examples:
+
+```sql
+ALTER INDEX app.idx_order_history_amount REBUILD;
+
+ALTER INDEX app.idx_order_history_date_user
+REBUILD PARTITION idx_oh_date_2025 TABLESPACE app_disk_tbs;
+
+ALTER INDEX app.idx_app_user_status_direct DIRECTKEY OFF;
+
+ALTER INDEX app.idx_app_user_status_direct
+RENAME TO idx_app_user_status;
+
+DROP INDEX app.idx_app_user_status;
 ```
 
 Verify indexes:
@@ -1016,6 +1262,69 @@ WHERE i.index_id = ic.index_id
   AND ic.table_id = c.table_id
   AND i.index_name = 'IDX_ORDER_HISTORY_USER'
 ORDER BY ic.index_col_order;
+
+SELECT i.index_name,
+       pi.partition_type,
+       pi.is_local_unique
+FROM SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_PART_INDICES_ pi,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.user_id = pi.user_id
+  AND i.table_id = pi.table_id
+  AND i.index_id = pi.index_id
+  AND i.table_id = t.table_id
+  AND i.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY i.index_name;
+
+SELECT i.index_name,
+       ip.index_partition_name,
+       tp.partition_name AS table_partition_name,
+       ip.tbs_id,
+       ip.created,
+       ip.last_ddl_time
+FROM SYSTEM_.SYS_INDEX_PARTITIONS_ ip,
+     SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_TABLE_PARTITIONS_ tp,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE ip.user_id = i.user_id
+  AND ip.table_id = i.table_id
+  AND ip.index_id = i.index_id
+  AND ip.user_id = tp.user_id
+  AND ip.table_id = tp.table_id
+  AND ip.table_partition_id = tp.partition_id
+  AND i.table_id = t.table_id
+  AND i.user_id = u.user_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY'
+ORDER BY i.index_name, tp.partition_order;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('QUERY_REWRITE_ENABLE', 'INDEX_BUILD_THREAD_COUNT')
+ORDER BY name;
+
+SELECT index_name,
+       index_status,
+       index_tbs_id,
+       table_tbs_id,
+       is_unique,
+       is_consistent,
+       is_created_with_logging,
+       is_created_with_force
+FROM V$DISK_BTREE_HEADER
+WHERE index_name IN (
+    'IDX_ORDER_HISTORY_AMOUNT',
+    'IDX_ORDER_HISTORY_USER',
+    'IDX_ORDER_HISTORY_DATE_USER',
+    'UK_APP_DOCUMENT_TITLE'
+)
+ORDER BY index_name;
 ```
 
 ### Sequence Examples
@@ -1167,7 +1476,7 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 - State the assumed Altibase version.
 - State the assumed owner/schema, tablespaces, file paths, host names, and ports.
 - Include prerequisite privileges or `SYS` requirements for tablespace, table, queue, and replication DDL.
-- Generate DDL in execution order: tablespaces, users, grants, tables, queues, indexes, sequences, replication.
+- Generate DDL in execution order: tablespaces, users, grants, tables, constraints, queues, indexes, sequences, replication.
 - For Oracle conversion requests, explicitly state table-level differences for storage target, temporary tables, LOB storage, JSON, partitions, and queues.
-- Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
+- Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_CONSTRAINT_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `SYSTEM_.SYS_INDEX_COLUMNS_`, `SYSTEM_.SYS_PART_INDICES_`, `SYSTEM_.SYS_INDEX_PARTITIONS_`, `V$DISK_BTREE_HEADER`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
 - Keep examples free of internal source labels and local repository paths.
