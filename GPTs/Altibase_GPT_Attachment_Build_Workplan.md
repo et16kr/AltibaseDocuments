@@ -24,6 +24,15 @@ GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서�
 - runner의 commit 범위는 기본적으로 `GPTs/`이다. 원본 매뉴얼이나 다른 디렉터리의 수정분은 job commit에 포함하지 않는다.
 - 실패한 job은 `finish JOB-ID Fail "실패 이유"`로 닫아 원인을 commit message에 남긴다. 그 job에 의존하지 않는 다른 ready job은 계속 진행한다.
 
+전체 자동 진행:
+
+- `bash GPTs/scripts/attachment_jobs.sh run-all`은 선행 job이 모두 `Done`인 `ToDo` 작업을 처음부터 끝까지 순차 실행한다.
+- `bash GPTs/scripts/attachment_jobs.sh run-all "P3 SQL Core"`처럼 phase를 지정하면 해당 phase의 ready job만 실행한다.
+- `MAX_JOBS=3`을 붙이면 긴 작업을 3개 job 단위로 끊어서 실행할 수 있다.
+- `STOP_ON_FAIL=1`을 붙이면 job 하나가 실패한 즉시 전체 실행을 멈춘다. 기본값은 실패한 job을 `Fail`로 닫고 관계 없는 ready job을 계속 실행하는 것이다.
+- `AUTO_ACCEPT_REVIEW=1`을 붙이면 Codex가 `Review`로 끝낸 job을 자동으로 `Done`으로 승격해 후속 dependency가 계속 진행되게 한다.
+- `ALLOW_INCOMPLETE=1`을 붙이면 더 이상 ready job이 없어 멈췄지만 blocked `ToDo`가 남아 있어도 shell 성공으로 반환한다.
+
 선행 관계 규칙:
 
 - `next`와 `run`은 선행 job이 모두 `Done`인 작업만 실행 대상으로 삼는다.

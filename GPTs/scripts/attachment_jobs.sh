@@ -23,6 +23,7 @@ Usage:
   bash GPTs/scripts/attachment_jobs.sh prompt <JOB-ID>
   bash GPTs/scripts/attachment_jobs.sh start <JOB-ID>
   bash GPTs/scripts/attachment_jobs.sh run <JOB-ID>
+  bash GPTs/scripts/attachment_jobs.sh run-all [PHASE]
   bash GPTs/scripts/attachment_jobs.sh finish <JOB-ID> <Review|Done|Fail|Blocked|Skip> [commit message]
   bash GPTs/scripts/attachment_jobs.sh commit <JOB-ID> [commit message]
   bash GPTs/scripts/attachment_jobs.sh history <JOB-ID>
@@ -38,6 +39,12 @@ Environment:
   COMMIT_PATHSPEC  Commit scope. Default: GPTs
   FORCE=1          Bypass dependency/status readiness checks for recovery.
   DRY_RUN=1        Print commit commands without staging or committing.
+  MAX_JOBS=N       Stop run-all after N jobs. Default: 0 means no limit.
+  STOP_ON_FAIL=1   Stop run-all immediately when a job command fails.
+  AUTO_ACCEPT_REVIEW=1
+                   Promote Review to Done after a successful run-all job.
+  ALLOW_INCOMPLETE=1
+                   Return success when run-all stops with blocked ToDo jobs.
 USAGE
 }
 
@@ -186,6 +193,22 @@ ready_jobs() {
   done < <(awk '/^\| JOB-/' "$JOBS_DOC")
 }
 
+ready_job_ids() {
+  local phase_filter="${1:-}"
+  require_jobs_doc
+  local id line
+  while IFS= read -r line; do
+    mapfile -t cells < <(job_cells "$line")
+    id="${cells[0]}"
+    if [[ -n "$phase_filter" && "${cells[1]}" != "$phase_filter" ]]; then
+      continue
+    fi
+    if is_ready "$id"; then
+      printf '%s\n' "$id"
+    fi
+  done < <(awk '/^\| JOB-/' "$JOBS_DOC")
+}
+
 blocked_jobs() {
   require_jobs_doc
   local id line
@@ -197,6 +220,21 @@ blocked_jobs() {
       printf "%-8s %-14s %-11s %-70s %s\n" "${cells[0]}" "${cells[1]}" "${cells[2]}" "$(deps_summary "$id")" "${cells[4]}"
     fi
   done < <(awk '/^\| JOB-/' "$JOBS_DOC")
+}
+
+todo_count() {
+  local phase_filter="${1:-}"
+  require_jobs_doc
+  awk -F'|' -v phase_filter="$phase_filter" "$trim_awk"'
+    $0 ~ /^\| JOB-/ {
+      phase=trim($3)
+      status=trim($4)
+      if (status == "ToDo" && (phase_filter == "" || phase == phase_filter)) {
+        count++
+      }
+    }
+    END { print count + 0 }
+  ' "$JOBS_DOC"
 }
 
 next_job() {
@@ -274,7 +312,9 @@ Project rules:
 Before finishing:
 - Run: find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | wc -l
 - Run: rg -n "trunk|C:/|file://" GPTs/attachments || true
-- Summarize changed files, then finish the job through the runner so status and output are committed:
+- Summarize changed files, then finish the job through the runner so status and output are committed.
+- Use Done when the acceptance criteria are satisfied; use Review only when a human or second-pass review is genuinely needed:
+  bash GPTs/scripts/attachment_jobs.sh finish ${cells[0]} Done "short summary"
   bash GPTs/scripts/attachment_jobs.sh finish ${cells[0]} Review "short summary"
 
 If the job cannot be completed, mark it Fail or Blocked with a brief note in your final response.
@@ -396,6 +436,110 @@ run_job() {
   "$CODEX_BIN" "$CODEX_SUBCOMMAND" "$prompt"
 }
 
+run_all_jobs() {
+  local phase_filter="${1:-}"
+  local max_jobs="${MAX_JOBS:-0}"
+  [[ "$max_jobs" =~ ^[0-9]+$ ]] || die "MAX_JOBS must be a non-negative integer"
+
+  local ran=0
+  local failures=0
+  local id status rc target
+
+  echo "Starting run-all${phase_filter:+ for phase ${phase_filter}}."
+  echo "MAX_JOBS=${max_jobs}, AUTO_ACCEPT_REVIEW=${AUTO_ACCEPT_REVIEW:-0}, STOP_ON_FAIL=${STOP_ON_FAIL:-0}"
+
+  while true; do
+    mapfile -t ids < <(ready_job_ids "$phase_filter")
+    [[ ${#ids[@]} -gt 0 ]] || break
+
+    local progressed=0
+    for id in "${ids[@]}"; do
+      if [[ "$max_jobs" -gt 0 && "$ran" -ge "$max_jobs" ]]; then
+        echo "MAX_JOBS reached after ${ran} job(s)."
+        validate
+        return 0
+      fi
+
+      if ! is_ready "$id"; then
+        continue
+      fi
+
+      target="$(job_field "$id" 4)"
+      echo
+      echo "==> run-all starting ${id}: ${target}"
+
+      if run_job "$id"; then
+        status="$(job_status "$id")"
+
+        if [[ "$status" == "Review" && "${AUTO_ACCEPT_REVIEW:-0}" == "1" ]]; then
+          finish_job "$id" Done "Auto-accepted Review during run-all"
+          status="$(job_status "$id")"
+        fi
+
+        case "$status" in
+          Done|Skip)
+            echo "==> ${id} finished as ${status}."
+            ;;
+          Review)
+            echo "==> ${id} finished as Review. Dependent jobs will wait until it is marked Done."
+            ;;
+          Fail|Blocked)
+            echo "==> ${id} finished as ${status}. Independent ready jobs may continue."
+            failures=$((failures + 1))
+            ;;
+          InProgress|ToDo)
+            echo "==> ${id} ended without a terminal status; marking Fail for recovery."
+            finish_job "$id" Fail "Codex command ended without finish status during run-all"
+            failures=$((failures + 1))
+            ;;
+          *)
+            echo "==> ${id} ended with unexpected status ${status}; marking Fail for recovery."
+            finish_job "$id" Fail "Unexpected job status during run-all: ${status}"
+            failures=$((failures + 1))
+            ;;
+        esac
+      else
+        rc=$?
+        echo "==> ${id} command failed with exit code ${rc}."
+        status="$(job_status "$id" 2>/dev/null || printf 'Missing')"
+        case "$status" in
+          InProgress|ToDo)
+            finish_job "$id" Fail "Codex command failed during run-all with exit code ${rc}"
+            ;;
+          Missing)
+            echo "==> ${id} is missing from the job list; cannot mark Fail."
+            ;;
+          *)
+            echo "==> ${id} already has status ${status}."
+            ;;
+        esac
+        failures=$((failures + 1))
+        if [[ "${STOP_ON_FAIL:-0}" == "1" ]]; then
+          validate
+          return "$rc"
+        fi
+      fi
+
+      ran=$((ran + 1))
+      progressed=1
+    done
+
+    [[ "$progressed" -eq 1 ]] || break
+  done
+
+  echo
+  echo "run-all stopped after ${ran} job(s); failures observed: ${failures}."
+  validate
+
+  local remaining_todo
+  remaining_todo="$(todo_count "$phase_filter")"
+  if [[ "$remaining_todo" -gt 0 ]]; then
+    echo
+    echo "No more ready jobs; ${remaining_todo} ToDo job(s) remain blocked by dependencies or review states."
+    [[ "${ALLOW_INCOMPLETE:-0}" == "1" ]] || return 2
+  fi
+}
+
 finish_job() {
   local id="$1"
   local status="$2"
@@ -497,6 +641,10 @@ case "$cmd" in
   run)
     [[ $# -eq 2 ]] || die "run requires JOB-ID"
     run_job "$2"
+    ;;
+  run-all)
+    [[ $# -le 2 ]] || die "run-all accepts at most one optional PHASE argument"
+    run_all_jobs "${2:-}"
     ;;
   finish)
     [[ $# -ge 3 ]] || die "finish requires JOB-ID and status"

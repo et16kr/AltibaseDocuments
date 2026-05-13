@@ -31,6 +31,8 @@ bash GPTs/scripts/attachment_jobs.sh deps JOB-030
 bash GPTs/scripts/attachment_jobs.sh prompt JOB-030
 bash GPTs/scripts/attachment_jobs.sh start JOB-030
 bash GPTs/scripts/attachment_jobs.sh run JOB-030
+bash GPTs/scripts/attachment_jobs.sh run-all
+bash GPTs/scripts/attachment_jobs.sh run-all "P1 Inventory"
 bash GPTs/scripts/attachment_jobs.sh finish JOB-030 Review "DDL guide expanded"
 bash GPTs/scripts/attachment_jobs.sh finish JOB-030 Done "Reviewed and accepted"
 bash GPTs/scripts/attachment_jobs.sh finish JOB-030 Fail "Source section missing"
@@ -44,10 +46,28 @@ By default, `run` calls `codex exec "<prompt>"`. Override if needed:
 CODEX_BIN=codex CODEX_SUBCOMMAND=exec bash GPTs/scripts/attachment_jobs.sh run JOB-030
 ```
 
+To run from the first available job through the remaining dependency graph:
+
+```bash
+bash GPTs/scripts/attachment_jobs.sh run-all
+```
+
+Useful controls:
+
+```bash
+MAX_JOBS=3 bash GPTs/scripts/attachment_jobs.sh run-all
+STOP_ON_FAIL=1 bash GPTs/scripts/attachment_jobs.sh run-all
+AUTO_ACCEPT_REVIEW=1 bash GPTs/scripts/attachment_jobs.sh run-all
+ALLOW_INCOMPLETE=1 bash GPTs/scripts/attachment_jobs.sh run-all
+bash GPTs/scripts/attachment_jobs.sh run-all "P3 SQL Core"
+```
+
 Commit behavior:
 
 - `start JOB-ID` changes the job to `InProgress` and immediately commits the status change.
 - `run JOB-ID` automatically performs `start JOB-ID` first when the job is still `ToDo`.
+- `run-all [PHASE]` repeatedly runs ready `ToDo` jobs whose dependencies are `Done`. If a job fails, it is closed as `Fail` when possible, and unrelated ready jobs continue unless `STOP_ON_FAIL=1` is set.
+- `AUTO_ACCEPT_REVIEW=1 run-all` promotes a successful `Review` job to `Done` so dependent jobs can continue without a manual review gate.
 - `finish JOB-ID Review|Done|Fail|Blocked|Skip "message"` changes the final status and immediately commits all changes under `GPTs/`.
 - `commit JOB-ID "message"` can be used for an extra checkpoint during a long job.
 - `history JOB-ID` shows the Git commits for that specific job.
