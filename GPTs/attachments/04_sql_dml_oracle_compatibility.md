@@ -1,37 +1,43 @@
-# 04. SQL DML과 Oracle 호환성
+# 04. SQL DML and Oracle Compatibility
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 SQL Reference 기준
-- 7.3: Altibase 7.3 SQL Reference 기준
-- 8.1: Altibase 8.1 검증본 SQL Reference 기준
+- 7.1: Based on Altibase 7.1 SQL Reference.
+- 7.3: Based on Altibase 7.3 SQL Reference.
+- 8.1: Based on Altibase 8.1 verified source SQL Reference.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- Altibase에서 Oracle SQL을 어느 정도 그대로 쓸 수 있는가?
-- SELECT, INSERT, UPDATE, DELETE 작성 시 주의할 점은 무엇인가?
-- Oracle 함수와 Altibase 함수의 차이를 알려줘.
-- 8.1 JSON 함수는 어떻게 써야 하는가?
+- How much Oracle SQL can be used unchanged in Altibase?
+- What cautions apply when writing `SELECT`, `INSERT`, `UPDATE`, and `DELETE`?
+- What are the differences between Oracle functions and Altibase functions?
+- How should 8.1 JSON functions be used?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/SQL Reference.md`
-- 7.3: `Manuals/Altibase_7.3/kor/SQL Reference.md`
-- 8.1 검증본: `SQL Reference.md`
+- 7.1: Altibase 7.1 SQL Reference.
+- 7.3: Altibase 7.3 SQL Reference.
+- 8.1: Altibase 8.1 verified source SQL Reference.
 
-## 핵심 정리
+## Core Guidance
 
-- 일반 DML은 Oracle과 유사하다고 안내하되, Altibase 데이터 타입/함수/제한사항은 반드시 확인한다.
-- SQL 생성 요청에서 DML만 필요한 경우에도 테이블이 메모리인지 디스크인지, LOB/JSON 사용 여부를 확인한다.
-- JSON 함수는 8.1 기준 기능으로 분리한다.
+- Explain that ordinary DML is similar to Oracle, but always check Altibase data types, functions, and restrictions.
+- Even when a SQL generation request only needs DML, confirm whether the table is memory or disk based and whether LOB or JSON is used.
+- Treat JSON functions as 8.1 baseline features.
 
-## 답변 지침
+## Answer Guidelines
 
-- Oracle 호환 영역: 기본 SELECT, JOIN, INSERT, UPDATE, DELETE, GROUP BY, ORDER BY.
-- Altibase 확인 필요 영역: 데이터 타입 변환, 날짜/문자 함수, 정규 표현식, LOB, JSON, 힌트, 계층 질의, 분석 함수.
+- Oracle-compatible areas: basic `SELECT`, `JOIN`, `INSERT`, `UPDATE`, `DELETE`, `GROUP BY`, and `ORDER BY`.
+- Areas requiring Altibase checks: data type conversion, date and character functions, regular expressions, LOB, JSON, hints, hierarchical queries, and analytic functions.
 
-## 변환 TODO
+## Version Differences
 
-- Oracle과 유사한 구문은 한 줄 설명과 예제 하나로 축약한다.
-- Altibase 전용 또는 차이가 있는 함수만 상세화한다.
-- 8.1 JSON 함수는 `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID` 중심으로 정리한다.
+- 7.1: Treat ordinary DML as the stable baseline and verify functions or limits against the 7.1 SQL Reference.
+- 7.3: Note 7.3 SQL improvements when they affect Oracle compatibility or function behavior.
+- 8.1: Treat JSON functions and JSON data handling as Altibase 8.1 verified source features.
+
+## Conversion TODO
+
+- Compress syntax that is similar to Oracle into one-line guidance plus one example.
+- Expand only Altibase-specific functions or functions with meaningful differences.
+- Organize 8.1 JSON functions around `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, and `JSON_VALID`.

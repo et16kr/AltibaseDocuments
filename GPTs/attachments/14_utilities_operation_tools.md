@@ -1,30 +1,36 @@
-# 14. 운영 유틸리티
+# 14. Operations Utilities
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 Utilities 기준
-- 7.3: Altibase 7.3 Utilities와 도구 매뉴얼 기준
-- 8.1: Altibase 8.1 검증본 Utilities와 도구 매뉴얼 기준
+- 7.1: Based on Altibase 7.1 Utilities Manual.
+- 7.3: Based on Altibase 7.3 Utilities Manual and tool manuals.
+- 8.1: Based on Altibase 8.1 verified source Utilities Manual and tool manuals.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- aexport는 언제 쓰는가?
-- altiComp로 데이터 비교/동기화를 어떻게 하는가?
-- AKU, altiMon, dump 계열 도구는 어떤 용도인가?
-- dataCompJ는 어떤 상황에 쓰는가?
+- When is aexport used?
+- How are data comparison and synchronization performed with altiComp?
+- What are AKU, altiMon, and dump-family tools used for?
+- When is dataCompJ used?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/Utilities Manual.md`
-- 7.3: `Manuals/Altibase_7.3/kor/Utilities Manual.md`, `Manuals/Tools/Altibase_release/kor/dataCompJ User's Manual.md`
-- 8.1 검증본: `Utilities Manual.md`, `dataCompJ User's Manual.md`
+- 7.1: Altibase 7.1 Utilities Manual.
+- 7.3: Altibase 7.3 Utilities Manual; dataCompJ User's Manual.
+- 8.1: Altibase 8.1 verified source Utilities Manual; dataCompJ User's Manual.
 
-## 핵심 정리
+## Core Guidance
 
-- 유틸리티별로 "언제 쓰는가", "대표 명령", "주의사항", "확인 방법"을 같은 형식으로 정리한다.
-- AKU는 Kubernetes 문서와 교차 참조한다.
+- For each utility, use a consistent format: `When to Use`, `Representative Command`, `Cautions`, and `Verification Method`.
+- Cross-reference AKU with the Kubernetes document.
 
-## 변환 TODO
+## Version Differences
 
-- 유틸리티 목차를 도구별 독립 블록으로 분해한다.
-- 긴 명령 예제는 목적별 cookbook으로 정리한다.
+- 7.1: Use 7.1 utility behavior and command options for 7.1 systems.
+- 7.3: Include 7.3 utility and tool manual changes, including data comparison tooling where relevant.
+- 8.1: Use Altibase 8.1 verified source for utility behavior and current tool guidance.
+
+## Conversion TODO
+
+- Decompose the utility table of contents into independent tool blocks.
+- Organize long command examples into purpose-based cookbook entries.

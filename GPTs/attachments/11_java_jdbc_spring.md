@@ -1,32 +1,38 @@
-# 11. Java, JDBC, Spring
+# 11. Java, JDBC, and Spring
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 JDBC 기준
-- 7.3: Altibase 7.3 JDBC와 JDBC 4.2 개선 기준
-- 8.1: Altibase 8.1 검증본 JDBC와 Java 호환성 기준
+- 7.1: Based on Altibase 7.1 JDBC guidance.
+- 7.3: Based on Altibase 7.3 JDBC guidance and JDBC 4.2 improvements.
+- 8.1: Based on Altibase 8.1 verified source JDBC guidance and Java compatibility.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- JDBC 연결 문자열을 만들어줘.
-- Java 버전 호환성은 어떻게 되는가?
-- Spring Data JPA/Hibernate에서 Altibase를 연결하려면?
-- JDBC LOB/JSON 처리 시 주의할 점은?
+- Generate a JDBC connection string.
+- What is the Java version compatibility?
+- How is Altibase connected from Spring Data JPA or Hibernate?
+- What cautions apply to JDBC LOB or JSON handling?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/JDBC User's Manual.md`, `Manuals/Altibase_7.1/kor/Adapter for JDBC User's Manual.md`
-- 7.3: `Manuals/Altibase_7.3/kor/JDBC User's Manual.md`, `Manuals/Altibase_7.3/kor/Adapter for JDBC User's Manual.md`
-- 8.1 검증본: `JDBC User's Manual.md`, `Adapter for JDBC User's Manual.md`, `Technical Documents/kor/JavaCompatibility.md`
-- 공통 외부 가이드: `3rd Party Guide for Altibase/kor/Spring Data JPA User's Guide for Altibase.md`, `3rd Party Guide for Altibase/kor/Spring Data JPA with Hibernate 6.4 User's Guide for Altibase.md`
+- 7.1: Altibase 7.1 JDBC User's Manual; Adapter for JDBC User's Manual.
+- 7.3: Altibase 7.3 JDBC User's Manual; Adapter for JDBC User's Manual.
+- 8.1: Altibase 8.1 verified source JDBC User's Manual; Adapter for JDBC User's Manual; Java Compatibility.
+- Common external guides: Spring Data JPA User's Guide for Altibase; Spring Data JPA with Hibernate 6.4 User's Guide for Altibase.
 
-## 핵심 정리
+## Core Guidance
 
-- Java 답변은 드라이버 파일, JDBC URL, 계정/권한, charset, failover 옵션을 함께 다룬다.
-- Spring/Hibernate 질문은 dialect, datasource, transaction 설정을 우선한다.
+- Java answers should cover the driver file, JDBC URL, account and privileges, charset, and failover options together.
+- For Spring or Hibernate questions, prioritize dialect, datasource, and transaction settings.
 
-## 변환 TODO
+## Version Differences
 
-- 연결 문자열과 Spring 설정 예제를 버전별로 정리한다.
-- JavaCompatibility 문서를 버전 매트릭스에서 설명형 목록으로 바꾼다.
-- 8.1 JSON/LOB JDBC 주의사항을 보강한다.
+- 7.1: Use 7.1 JDBC driver and Java compatibility guidance for 7.1 applications.
+- 7.3: Include 7.3 JDBC 4.2 and driver behavior when it affects application setup.
+- 8.1: Use Altibase 8.1 verified source for JDBC, Java compatibility, JSON, and LOB guidance.
+
+## Conversion TODO
+
+- Organize connection string and Spring configuration examples by version.
+- Convert Java Compatibility material from a version matrix into explanatory lists.
+- Add details for 8.1 JSON and LOB JDBC cautions.

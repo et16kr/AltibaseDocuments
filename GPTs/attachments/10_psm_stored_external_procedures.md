@@ -1,31 +1,37 @@
-# 10. PSM, 저장 프로시저, 외부 프로시저
+# 10. PSM, Stored Procedures, and External Procedures
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 Stored Procedures 기준
-- 7.3: Altibase 7.3 Stored Procedures 기준
-- 8.1: Altibase 8.1 검증본 Stored Procedures 기준
+- 7.1: Based on Altibase 7.1 Stored Procedures Manual.
+- 7.3: Based on Altibase 7.3 Stored Procedures Manual.
+- 8.1: Based on Altibase 8.1 verified source Stored Procedures Manual.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- 저장 프로시저와 함수를 어떻게 작성하는가?
-- 커서, 예외, 패키지, VARRAY 사용법은?
-- C/C++ 외부 프로시저는 어떻게 연결하는가?
-- 8.1 Temporary LOB와 PSM의 관계는?
+- How are stored procedures and functions written?
+- How are cursors, exceptions, packages, and VARRAY used?
+- How are C/C++ external procedures connected?
+- What is the relationship between 8.1 Temporary LOB and PSM?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/Stored Procedures Manual.md`, `Manuals/Altibase_7.1/kor/External Procedures Manual.md`
-- 7.3: `Manuals/Altibase_7.3/kor/Stored Procedures Manual.md`, `Manuals/Altibase_7.3/kor/External Procedures Manual.md`
-- 8.1 검증본: `Stored Procedures Manual.md`, `External Procedures Manual.md`
+- 7.1: Altibase 7.1 Stored Procedures Manual; External Procedures Manual.
+- 7.3: Altibase 7.3 Stored Procedures Manual; External Procedures Manual.
+- 8.1: Altibase 8.1 verified source Stored Procedures Manual; External Procedures Manual.
 
-## 핵심 정리
+## Core Guidance
 
-- Oracle PL/SQL과 유사한 부분은 짧게 설명하고, Altibase PSM 문법과 제한을 우선한다.
-- 문법 이미지는 BNF형 텍스트로 변환한다.
+- Briefly cover areas similar to Oracle PL/SQL, and prioritize Altibase PSM syntax and limitations.
+- Convert syntax images to BNF-like text.
 
-## 변환 TODO
+## Version Differences
 
-- procedure/function/package/cursor/exception 예제를 최소 예제와 운영 예제로 나눈다.
-- 외부 프로시저는 external/internal mode 차이를 별도 설명한다.
-- 8.1 Temporary LOB 관련 PSM 동작을 보강한다.
+- 7.1: Use 7.1 PSM and external procedure syntax and restrictions for 7.1 answers.
+- 7.3: Record 7.3 procedure, package, cursor, or external procedure differences separately.
+- 8.1: Use Altibase 8.1 verified source for Temporary LOB behavior related to PSM.
+
+## Conversion TODO
+
+- Split procedure, function, package, cursor, and exception examples into minimal examples and production examples.
+- Explain external and internal mode differences for external procedures separately.
+- Add details for PSM behavior related to 8.1 Temporary LOB.

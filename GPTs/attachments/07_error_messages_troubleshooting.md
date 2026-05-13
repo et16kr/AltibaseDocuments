@@ -1,40 +1,46 @@
-# 07. 오류 메시지와 문제 해결
+# 07. Error Messages and Troubleshooting
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 Error Message Reference 기준
-- 7.3: Altibase 7.3 Error Message Reference 기준
-- 8.1: Altibase 8.1 검증본 Error Message Reference 기준
+- 7.1: Based on Altibase 7.1 Error Message Reference.
+- 7.3: Based on Altibase 7.3 Error Message Reference.
+- 8.1: Based on Altibase 8.1 verified source Error Message Reference.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- 특정 Altibase 오류 코드의 원인과 조치 방법은?
-- SQL 실행 오류가 발생했을 때 무엇을 확인해야 하는가?
-- JSON, LOB, replication, 정규 표현식 관련 오류는 어떻게 조치하는가?
+- What are the cause and action for a specific Altibase error code?
+- What should be checked when a SQL execution error occurs?
+- How should JSON, LOB, replication, or regular expression errors be handled?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/Error Message Reference.md`
-- 7.3: `Manuals/Altibase_7.3/kor/Error Message Reference.md`
-- 8.1 검증본: `Error Message Reference.md`
+- 7.1: Altibase 7.1 Error Message Reference.
+- 7.3: Altibase 7.3 Error Message Reference.
+- 8.1: Altibase 8.1 verified source Error Message Reference.
 
-## 핵심 정리
+## Core Guidance
 
-- 오류 답변은 "증상 -> 원인 -> 조치 -> 확인 SQL/명령 -> 관련 문서" 순서로 작성한다.
-- 8.1 JSON 관련 오류는 8.1 전용으로 표시한다.
+- Error answers should follow `Symptom -> Cause -> Action -> Check SQL or Command -> Related Document`.
+- Mark 8.1 JSON-related errors as 8.1-specific.
 
-## 변환 형식
+## Version Differences
+
+- 7.1: Use 7.1 error messages and actions when the customer reports a 7.1 system.
+- 7.3: Check 7.3 error wording and actions before reusing 7.1 guidance.
+- 8.1: Use Altibase 8.1 verified source for JSON, Temporary LOB, replication SSL, and other 8.1-specific errors.
+
+## Conversion Format
 
 ```text
-오류 코드:
-증상:
-주요 원인:
-조치:
-확인 SQL/명령:
-버전 주의사항:
+Error Code:
+Symptom:
+Primary Causes:
+Action:
+Check SQL or Command:
+Version Cautions:
 ```
 
-## 변환 TODO
+## Conversion TODO
 
-- 오류 목록을 코드 순서뿐 아니라 주제별로도 재분류한다.
-- 자주 묻는 SQL/DDL/이중화/접속 오류를 우선 변환한다.
+- Reclassify error lists not only by code order but also by topic.
+- Convert frequently asked SQL, DDL, replication, and connection errors first.

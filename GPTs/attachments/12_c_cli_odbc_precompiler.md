@@ -1,30 +1,36 @@
 # 12. C, CLI, ODBC, Precompiler
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 C/CLI/ODBC/Precompiler 기준
-- 7.3: Altibase 7.3 C/CLI/ODBC/Precompiler 기준
-- 8.1: Altibase 8.1 검증본 C/CLI/ODBC/Precompiler 기준
+- 7.1: Based on Altibase 7.1 C, CLI, ODBC, and Precompiler manuals.
+- 7.3: Based on Altibase 7.3 C, CLI, ODBC, and Precompiler manuals.
+- 8.1: Based on Altibase 8.1 verified source C, CLI, ODBC, and Precompiler manuals.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- CLI API의 기본 호출 순서는?
-- ODBC 연결 문자열은 어떻게 작성하는가?
-- C Interface와 Precompiler는 어떤 차이가 있는가?
-- LOB/JSON 관련 CLI 함수 사용 시 주의할 점은?
+- What is the basic CLI API call order?
+- How is an ODBC connection string written?
+- What is the difference between C Interface and Precompiler?
+- What cautions apply when using CLI functions related to LOB or JSON?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/CLI User's Manual.md`, `Manuals/Altibase_7.1/kor/ODBC User's Manual.md`, `Manuals/Altibase_7.1/kor/Altibase C Interface Manual.md`, `Manuals/Altibase_7.1/kor/Precompiler User's Manual.md`
-- 7.3: `Manuals/Altibase_7.3/kor/CLI User's Manual.md`, `Manuals/Altibase_7.3/kor/ODBC User's Manual.md`, `Manuals/Altibase_7.3/kor/Altibase C Interface Manual.md`, `Manuals/Altibase_7.3/kor/Precompiler User's Manual.md`
-- 8.1 검증본: `CLI User's Manual.md`, `ODBC User's Manual.md`, `Altibase C Interface Manual.md`, `Precompiler User's Manual.md`
+- 7.1: Altibase 7.1 CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.
+- 7.3: Altibase 7.3 CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.
+- 8.1: Altibase 8.1 verified source CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.
 
-## 핵심 정리
+## Core Guidance
 
-- API 표는 함수별 설명 블록으로 분해한다.
-- 연결 문자열, 핸들 생성/해제, 트랜잭션 처리, LOB 처리 순서를 cookbook으로 만든다.
+- Decompose API tables into per-function explanation blocks.
+- Build cookbook entries for connection strings, handle allocation and release, transaction handling, and LOB handling order.
 
-## 변환 TODO
+## Version Differences
 
-- CLI API 목록을 "연결", "실행", "fetch", "LOB", "오류 처리"로 재분류한다.
-- 8.1 JSON 관련 LOB locator 함수 설명을 보강한다.
+- 7.1: Use 7.1 C, CLI, ODBC, and Precompiler APIs for 7.1 answers.
+- 7.3: Capture 7.3 API, connection, or precompiler changes separately.
+- 8.1: Use Altibase 8.1 verified source for JSON and LOB-related CLI guidance.
+
+## Conversion TODO
+
+- Reclassify CLI API lists into `Connection`, `Execution`, `Fetch`, `LOB`, and `Error Handling`.
+- Add details for 8.1 JSON-related LOB locator functions.

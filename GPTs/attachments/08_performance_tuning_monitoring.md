@@ -1,41 +1,47 @@
-# 08. 성능 튜닝과 모니터링
+# 08. Performance Tuning and Monitoring
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 Performance Tuning 기준
-- 7.3: Altibase 7.3 Performance Tuning 기준
-- 8.1: Altibase 8.1 검증본 Performance Tuning 기준
+- 7.1: Based on Altibase 7.1 Performance Tuning Guide.
+- 7.3: Based on Altibase 7.3 Performance Tuning Guide.
+- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- 실행 계획을 어떻게 해석하는가?
-- 인덱스, 조인, 스캔 방식 선택 기준은?
-- 느린 SQL을 진단하려면 어떤 성능 뷰를 봐야 하는가?
-- 8.1 JSON 형식 실행 계획은 무엇인가?
+- How should execution plans be interpreted?
+- What criteria guide index, join, and scan method choices?
+- Which performance views should be checked to diagnose slow SQL?
+- What is the 8.1 JSON-format execution plan?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/Performance Tuning Guide.md`, `Manuals/Altibase_7.1/kor/Monitoring API Developer's Guide.md`, `Manuals/Altibase_7.1/kor/SNMP Agent Guide.md`
-- 7.3: `Manuals/Altibase_7.3/kor/Performance Tuning Guide.md`, `Manuals/Altibase_7.3/kor/Monitoring API Developer's Guide.md`, `Manuals/Altibase_7.3/kor/SNMP Agent Guide.md`
-- 8.1 검증본: `Performance Tuning Guide.md`, `Monitoring API Developer's Guide.md`, `SNMP Agent Guide.md`
+- 7.1: Altibase 7.1 Performance Tuning Guide; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 7.3: Altibase 7.3 Performance Tuning Guide; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 8.1: Altibase 8.1 verified source Performance Tuning Guide; Monitoring API Developer's Guide; SNMP Agent Guide.
 
-## 핵심 정리
+## Core Guidance
 
-- 튜닝 답변은 실행 계획, 인덱스 유무, 통계, 조인 방식, 메모리/디스크 테이블 여부를 함께 본다.
-- 이미지 기반 plan tree는 Mermaid 또는 들여쓰기 텍스트로 변환한다.
+- Tuning answers should consider the execution plan, index presence, statistics, join method, and whether tables are memory or disk based.
+- Convert image-based plan trees to Mermaid or indented text.
 
-## Mermaid 변환 후보
+## Version Differences
+
+- 7.1: Use 7.1 execution plan and performance view behavior for 7.1 tuning answers.
+- 7.3: Include 7.3 tuning, monitoring, or SNMP changes when they affect diagnostics.
+- 8.1: Use Altibase 8.1 verified source for JSON-format plans and 8.1 performance view changes.
+
+## Mermaid Conversion Candidate
 
 ```mermaid
 flowchart TD
-  A[SQL 수집] --> B[실행 계획 확인]
-  B --> C[스캔/조인 방식 확인]
-  C --> D[인덱스와 통계 확인]
-  D --> E[수정 SQL 또는 인덱스 제안]
+  A[Collect SQL] --> B[Check execution plan]
+  B --> C[Check scan and join methods]
+  C --> D[Check indexes and statistics]
+  D --> E[Suggest SQL change or index]
 ```
 
-## 변환 TODO
+## Conversion TODO
 
-- 실행 계획 노드 이미지를 Mermaid tree로 변환한다.
-- 주요 성능 뷰는 `06_data_dictionary_performance_views.md`와 교차 참조한다.
-- 8.1 JSON plan 설명을 릴리스 노트와 대조한다.
+- Convert execution plan node images to Mermaid trees.
+- Cross-reference major performance views with `06_data_dictionary_performance_views.md`.
+- Cross-check the 8.1 JSON plan explanation against the release notes.

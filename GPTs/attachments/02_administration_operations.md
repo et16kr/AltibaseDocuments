@@ -1,40 +1,46 @@
-# 02. 운영 관리
+# 02. Administration and Operations
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 Administrator 기준
-- 7.3: Altibase 7.3 Administrator 기준
-- 8.1: Altibase 8.1 검증본 Administrator 기준
+- 7.1: Based on Altibase 7.1 Administrator's Manual.
+- 7.3: Based on Altibase 7.3 Administrator's Manual.
+- 8.1: Based on Altibase 8.1 verified source Administrator's Manual.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- 계정과 권한을 어떻게 관리하는가?
-- 테이블스페이스, 데이터파일, 로그 파일을 어떻게 관리하는가?
-- 백업과 복구의 기본 절차는 무엇인가?
-- 메모리/디스크 테이블스페이스 운영 차이는 무엇인가?
+- How are accounts and privileges managed?
+- How are tablespaces, datafiles, and log files managed?
+- What are the basic backup and recovery procedures?
+- What operational differences exist between memory and disk tablespaces?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
-- 7.3: `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
-- 8.1 검증본: `Administrator's Manual.md`
+- 7.1: Altibase 7.1 Administrator's Manual.
+- 7.3: Altibase 7.3 Administrator's Manual.
+- 8.1: Altibase 8.1 verified source Administrator's Manual.
 
-## 핵심 정리
+## Core Guidance
 
-- 운영 답변은 "현재 상태 확인 -> 변경 SQL/명령 -> 적용 후 확인" 순서로 작성한다.
-- 운영 변경 작업은 백업, 권한, 서비스 영향, 롤백 가능성을 함께 언급한다.
-- 테이블스페이스와 데이터파일은 SQL 문법만이 아니라 파일 시스템 여유 공간과 복구 영향까지 함께 설명한다.
+- Operational answers should follow `Check current state -> Change SQL or command -> Verify after applying`.
+- Operational changes should mention backup, privileges, service impact, and rollback feasibility.
+- Tablespace and datafile guidance should cover not only SQL syntax but also filesystem free space and recovery impact.
 
-## 운영 체크리스트 형식
+## Operations Checklist Format
 
-1. 현재 버전과 대상 객체를 확인한다.
-2. 관련 프로퍼티와 메타/성능 뷰를 조회한다.
-3. 변경 전 백업 또는 영향 범위를 확인한다.
-4. DDL/운영 명령을 실행한다.
-5. 변경 후 메타/성능 뷰로 검증한다.
+1. Identify the current version and target object.
+2. Query related properties and meta or performance views.
+3. Confirm backup status or impact scope before the change.
+4. Execute the DDL or operational command.
+5. Verify with meta or performance views after the change.
 
-## 변환 TODO
+## Version Differences
 
-- 백업/복구 절차를 작업 전/작업 중/작업 후 체크리스트로 분해한다.
-- 테이블스페이스 표를 유형별 설명 블록으로 바꾼다.
-- 운영 이미지와 구조 그림은 Mermaid flowchart로 변환한다.
+- 7.1: Use 7.1 Administrator's Manual behavior for account, tablespace, backup, and recovery guidance.
+- 7.3: Add 7.3 operational changes when a command, property, or view differs from 7.1.
+- 8.1: Use Altibase 8.1 verified source for 8.1 operations and mark 8.1-only behavior explicitly.
+
+## Conversion TODO
+
+- Decompose backup and recovery procedures into before, during, and after checklists.
+- Convert tablespace tables into per-type explanation blocks.
+- Convert operations images and architecture figures to Mermaid flowcharts.

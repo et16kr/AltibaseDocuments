@@ -1,30 +1,36 @@
-# 13. iSQL, iLoader, 기본 도구
+# 13. iSQL, iLoader, and Basic Tools
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: Altibase 7.1 iSQL/iLoader 기준
-- 7.3: Altibase 7.3 iSQL/iLoader 기준
-- 8.1: Altibase 8.1 검증본 iSQL/iLoader 기준
+- 7.1: Based on Altibase 7.1 iSQL and iLoader manuals.
+- 7.3: Based on Altibase 7.3 iSQL and iLoader manuals.
+- 8.1: Based on Altibase 8.1 verified source iSQL and iLoader manuals.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- iSQL로 접속하고 SQL을 실행하는 방법은?
-- iLoader로 데이터를 내보내고 적재하는 명령은?
-- 운영자가 자주 쓰는 기본 확인 명령은?
-- 비밀번호 파일이나 보안 로그인 옵션은 어떻게 쓰는가?
+- How do I connect and run SQL with iSQL?
+- What commands export and load data with iLoader?
+- Which basic check commands do operators use frequently?
+- How are password files or secure login options used?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: `Manuals/Altibase_7.1/kor/iSQL User's Manual.md`, `Manuals/Altibase_7.1/kor/iLoader User's Manual.md`
-- 7.3: `Manuals/Altibase_7.3/kor/iSQL User's Manual.md`, `Manuals/Altibase_7.3/kor/iLoader User's Manual.md`
-- 8.1 검증본: `iSQL User's Manual.md`, `iLoader User's Manual.md`
+- 7.1: Altibase 7.1 iSQL User's Manual; iLoader User's Manual.
+- 7.3: Altibase 7.3 iSQL User's Manual; iLoader User's Manual.
+- 8.1: Altibase 8.1 verified source iSQL User's Manual; iLoader User's Manual.
 
-## 핵심 정리
+## Core Guidance
 
-- iSQL 답변은 접속, 스크립트 실행, 결과 확인, 오류 확인 순서로 답한다.
-- iLoader 답변은 formout/out/in, 구분자, 파일 경로, replace/append 모드 같은 실무 항목을 우선한다.
+- iSQL answers should follow connection, script execution, result verification, and error checking.
+- iLoader answers should prioritize practical items such as formout, out, in, delimiters, file paths, and replace or append modes.
 
-## 변환 TODO
+## Version Differences
 
-- iSQL 명령은 자주 쓰는 명령 위주로 cookbook화한다.
-- iLoader 절차는 `포맷 생성 -> export -> import -> 검증`으로 정리한다.
+- 7.1: Use 7.1 iSQL and iLoader options for 7.1 operational answers.
+- 7.3: Note 7.3 command or option differences where they affect import, export, or secure login.
+- 8.1: Use Altibase 8.1 verified source for current iSQL and iLoader behavior.
+
+## Conversion TODO
+
+- Build an iSQL command cookbook centered on frequently used commands.
+- Organize iLoader procedures as `Create format -> Export -> Import -> Verify`.

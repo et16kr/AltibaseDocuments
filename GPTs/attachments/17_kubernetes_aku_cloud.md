@@ -1,30 +1,36 @@
-# 17. Kubernetes와 AKU
+# 17. Kubernetes and AKU
 
-## 적용 버전
+## Applicable Versions
 
-- 7.1: 기본 제품 매뉴얼 기준, Kubernetes 전용 가이드는 별도 확인 필요
-- 7.3: AKU 지원과 Kubernetes 가이드 기준
-- 8.1: Altibase 8.1 검증본과 Kubernetes/AKU 가이드 기준
+- 7.1: Based on base product manuals; dedicated Kubernetes guidance requires separate confirmation.
+- 7.3: Based on AKU support and Kubernetes guidance.
+- 8.1: Based on Altibase 8.1 verified source and Kubernetes/AKU guidance.
 
-## 이 문서로 답할 수 있는 질문
+## Questions This File Can Answer
 
-- Kubernetes에서 Altibase를 배포할 때 주의할 점은?
-- AKU는 어떤 역할을 하는가?
-- Pod 시작/종료 시 데이터 동기화 절차는?
-- 컨테이너 환경에서 이중화와 스토리지를 어떻게 고려해야 하는가?
+- What should be considered when deploying Altibase on Kubernetes?
+- What role does AKU perform?
+- What is the data synchronization procedure during Pod startup and shutdown?
+- How should replication and storage be considered in container environments?
 
-## 원천 문서
+## Source Documents
 
-- 7.1: 기본 운영/이중화 문서
-- 7.3: `3rd Party Guide for Altibase/kor/Kubernetes User's Guide for Altibase.md`, `3rd Party Guide for Altibase/kor/Altibase aku Sample Guide for Kubernetes.md`, `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
-- 8.1 검증본: `Kubernetes User's Guide for Altibase.md`, `Altibase aku Sample Guide for Kubernetes.md`
+- 7.1: Base operations and replication manuals.
+- 7.3: Kubernetes User's Guide for Altibase; Altibase AKU Sample Guide for Kubernetes; Altibase 7.3 Release Notes.
+- 8.1: Altibase 8.1 verified source Kubernetes User's Guide for Altibase; Altibase AKU Sample Guide for Kubernetes.
 
-## 핵심 정리
+## Core Guidance
 
-- Kubernetes 답변은 StatefulSet, PV/PVC, Pod lifecycle, AKU start/end, 이중화 초기화/동기화를 함께 설명한다.
-- AKU 관련 명령은 운영 유틸리티 문서와 교차 참조한다.
+- Kubernetes answers should explain StatefulSet, PV/PVC, Pod lifecycle, AKU start/end, and replication initialization or synchronization together.
+- Cross-reference AKU-related commands with the operations utilities document.
 
-## 변환 TODO
+## Version Differences
 
-- YAML/명령 예제는 목적별로 분리한다.
-- Pod 시작/종료 흐름은 Mermaid flowchart로 변환한다.
+- 7.1: Treat Kubernetes guidance as requiring separate confirmation beyond the base 7.1 product manuals.
+- 7.3: Use 7.3 AKU and Kubernetes guidance where supported.
+- 8.1: Use Altibase 8.1 verified source for Kubernetes and AKU guidance.
+
+## Conversion TODO
+
+- Separate YAML and command examples by purpose.
+- Convert Pod startup and shutdown flows to Mermaid flowcharts.
