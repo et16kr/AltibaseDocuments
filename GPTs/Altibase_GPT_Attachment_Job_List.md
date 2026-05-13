@@ -58,6 +58,8 @@ Useful controls:
 MAX_JOBS=3 bash GPTs/scripts/attachment_jobs.sh run-all
 STOP_ON_FAIL=1 bash GPTs/scripts/attachment_jobs.sh run-all
 AUTO_ACCEPT_REVIEW=1 bash GPTs/scripts/attachment_jobs.sh run-all
+DRY_RUN=1 bash GPTs/scripts/attachment_jobs.sh run-all
+ALLOW_FAILURES=1 bash GPTs/scripts/attachment_jobs.sh run-all
 ALLOW_INCOMPLETE=1 bash GPTs/scripts/attachment_jobs.sh run-all
 bash GPTs/scripts/attachment_jobs.sh run-all "P3 SQL Core"
 ```
@@ -68,10 +70,13 @@ Commit behavior:
 - `run JOB-ID` automatically performs `start JOB-ID` first when the job is still `ToDo`.
 - `run-all [PHASE]` repeatedly runs ready `ToDo` jobs whose dependencies are `Done`. If a job fails, it is closed as `Fail` when possible, and unrelated ready jobs continue unless `STOP_ON_FAIL=1` is set.
 - `AUTO_ACCEPT_REVIEW=1 run-all` promotes a successful `Review` job to `Done` so dependent jobs can continue without a manual review gate.
+- `DRY_RUN=1` previews job actions without changing statuses, running Codex, staging, or committing.
+- `run-all` returns nonzero when any job fails unless `ALLOW_FAILURES=1` is set.
 - `finish JOB-ID Review|Done|Fail|Blocked|Skip "message"` changes the final status and immediately commits all changes under `GPTs/`.
 - `commit JOB-ID "message"` can be used for an extra checkpoint during a long job.
 - `history JOB-ID` shows the Git commits for that specific job.
 - Commits are intentionally scoped to `GPTs/` so unrelated source manual edits are not included.
+- `start` and `run` refuse to begin when `GPTs/` already has uncommitted changes, because those changes would be swept into the next job commit. Use `ALLOW_DIRTY_COMMIT_SCOPE=1` only for manual recovery.
 - Use `mark` only for manual recovery when a commit is not desired; normal work should use `start` and `finish`.
 
 Dependency behavior:

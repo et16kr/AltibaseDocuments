@@ -23,6 +23,9 @@ GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서�
 - 중간에 토큰 부족, 세션 종료, CLI 실패가 발생하면 `bash GPTs/scripts/attachment_jobs.sh history JOB-ID`로 해당 job의 진행 commit을 확인하고 이어서 작업한다.
 - runner의 commit 범위는 기본적으로 `GPTs/`이다. 원본 매뉴얼이나 다른 디렉터리의 수정분은 job commit에 포함하지 않는다.
 - 실패한 job은 `finish JOB-ID Fail "실패 이유"`로 닫아 원인을 commit message에 남긴다. 그 job에 의존하지 않는 다른 ready job은 계속 진행한다.
+- `start`와 `run`은 시작 전에 `GPTs/` 아래 미커밋 변경이 있는지 확인한다. 미커밋 변경이 있으면 다음 job commit에 섞일 수 있으므로 기본적으로 중단한다.
+- 수동 복구 상황에서만 `ALLOW_DIRTY_COMMIT_SCOPE=1`을 붙여 미커밋 변경이 있는 상태의 시작을 허용한다.
+- `DRY_RUN=1`은 상태 변경, Codex 실행, stage, commit을 모두 하지 않는 preview 모드로 사용한다.
 
 전체 자동 진행:
 
@@ -31,6 +34,7 @@ GPTs에 업로드할 20개 Markdown 문서를 만들기 위한 작업 기준서�
 - `MAX_JOBS=3`을 붙이면 긴 작업을 3개 job 단위로 끊어서 실행할 수 있다.
 - `STOP_ON_FAIL=1`을 붙이면 job 하나가 실패한 즉시 전체 실행을 멈춘다. 기본값은 실패한 job을 `Fail`로 닫고 관계 없는 ready job을 계속 실행하는 것이다.
 - `AUTO_ACCEPT_REVIEW=1`을 붙이면 Codex가 `Review`로 끝낸 job을 자동으로 `Done`으로 승격해 후속 dependency가 계속 진행되게 한다.
+- `ALLOW_FAILURES=1`을 붙이면 실패 job이 있어도 `run-all`이 shell 성공으로 종료될 수 있다. 기본값은 실패가 하나라도 있으면 non-zero로 종료한다.
 - `ALLOW_INCOMPLETE=1`을 붙이면 더 이상 ready job이 없어 멈췄지만 blocked `ToDo`가 남아 있어도 shell 성공으로 반환한다.
 
 선행 관계 규칙:

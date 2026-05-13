@@ -38,13 +38,16 @@ Environment:
   GIT_BIN          Git binary. Default: git
   COMMIT_PATHSPEC  Commit scope. Default: GPTs
   FORCE=1          Bypass dependency/status readiness checks for recovery.
-  DRY_RUN=1        Print commit commands without staging or committing.
+  DRY_RUN=1        Preview without changing status, running Codex, staging, or committing.
   MAX_JOBS=N       Stop run-all after N jobs. Default: 0 means no limit.
   STOP_ON_FAIL=1   Stop run-all immediately when a job command fails.
   AUTO_ACCEPT_REVIEW=1
                    Promote Review to Done after a successful run-all job.
+  ALLOW_FAILURES=1 Return success from run-all even if one or more jobs failed.
   ALLOW_INCOMPLETE=1
                    Return success when run-all stops with blocked ToDo jobs.
+  ALLOW_DIRTY_COMMIT_SCOPE=1
+                   Allow start/run to begin when COMMIT_PATHSPEC already has changes.
 USAGE
 }
 
@@ -57,6 +60,15 @@ trim_awk='function trim(s){gsub(/^[ \t]+|[ \t]+$/, "", s); return s}'
 
 require_jobs_doc() {
   [[ -f "$JOBS_DOC" ]] || die "job list not found: $JOBS_DOC"
+}
+
+is_dry_run() {
+  [[ "${DRY_RUN:-0}" == "1" ]]
+}
+
+require_git_repo() {
+  command -v "$GIT_BIN" >/dev/null 2>&1 || die "git binary not found: $GIT_BIN"
+  "$GIT_BIN" -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree: $ROOT_DIR"
 }
 
 valid_status() {
@@ -373,8 +385,7 @@ commit_job() {
     return 0
   fi
 
-  command -v "$GIT_BIN" >/dev/null 2>&1 || die "git binary not found: $GIT_BIN"
-  "$GIT_BIN" -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not inside a git work tree: $ROOT_DIR"
+  require_git_repo
   "$GIT_BIN" -C "$ROOT_DIR" add -- "$COMMIT_PATHSPEC"
 
   if "$GIT_BIN" -C "$ROOT_DIR" diff --cached --quiet -- "$COMMIT_PATHSPEC"; then
@@ -383,6 +394,20 @@ commit_job() {
   fi
 
   "$GIT_BIN" -C "$ROOT_DIR" commit -m "$message" -m "$(commit_body "$id")" -- "$COMMIT_PATHSPEC"
+}
+
+ensure_clean_commit_scope_before_start() {
+  is_dry_run && return 0
+  [[ "${FORCE:-0}" == "1" ]] && return 0
+  [[ "${ALLOW_DIRTY_COMMIT_SCOPE:-0}" == "1" ]] && return 0
+
+  require_git_repo
+  local dirty
+  dirty="$("$GIT_BIN" -C "$ROOT_DIR" status --porcelain -- "$COMMIT_PATHSPEC")"
+  if [[ -n "$dirty" ]]; then
+    printf '%s\n' "$dirty" >&2
+    die "uncommitted changes exist under ${COMMIT_PATHSPEC}; finish or commit current work before starting another job. Use ALLOW_DIRTY_COMMIT_SCOPE=1 only for manual recovery."
+  fi
 }
 
 ensure_startable() {
@@ -422,13 +447,19 @@ start_job() {
     return 0
   fi
 
+  if is_dry_run; then
+    echo "[dry-run] would mark ${id} InProgress"
+    commit_job "$id" "GPTs ${id}: start"
+    return 0
+  fi
+
+  ensure_clean_commit_scope_before_start
   mark_job "$id" InProgress
   commit_job "$id" "GPTs ${id}: start"
 }
 
 run_job() {
   local id="$1"
-  command -v "$CODEX_BIN" >/dev/null 2>&1 || die "Codex binary not found: $CODEX_BIN"
   ensure_startable "$id"
 
   if [[ "$(job_status "$id")" == "ToDo" ]]; then
@@ -437,6 +468,13 @@ run_job() {
 
   local prompt
   prompt="$(generate_prompt "$id")"
+
+  if is_dry_run; then
+    echo "[dry-run] would run: ${CODEX_BIN} ${CODEX_SUBCOMMAND} <generated prompt for ${id}>"
+    return 0
+  fi
+
+  command -v "$CODEX_BIN" >/dev/null 2>&1 || die "Codex binary not found: $CODEX_BIN"
   "$CODEX_BIN" "$CODEX_SUBCOMMAND" "$prompt"
 }
 
@@ -450,7 +488,21 @@ run_all_jobs() {
   local id status rc target
 
   echo "Starting run-all${phase_filter:+ for phase ${phase_filter}}."
-  echo "MAX_JOBS=${max_jobs}, AUTO_ACCEPT_REVIEW=${AUTO_ACCEPT_REVIEW:-0}, STOP_ON_FAIL=${STOP_ON_FAIL:-0}"
+  echo "MAX_JOBS=${max_jobs}, AUTO_ACCEPT_REVIEW=${AUTO_ACCEPT_REVIEW:-0}, STOP_ON_FAIL=${STOP_ON_FAIL:-0}, ALLOW_FAILURES=${ALLOW_FAILURES:-0}"
+
+  if is_dry_run; then
+    echo "Dry run: no statuses will change, Codex will not run, and no commits will be created."
+    mapfile -t ids < <(ready_job_ids "$phase_filter")
+    if [[ ${#ids[@]} -eq 0 ]]; then
+      echo "No ready ToDo jobs."
+      return 0
+    fi
+    for id in "${ids[@]}"; do
+      target="$(job_field "$id" 4)"
+      echo "[dry-run] would run ${id}: ${target}"
+    done
+    return 0
+  fi
 
   while true; do
     mapfile -t ids < <(ready_job_ids "$phase_filter")
@@ -461,6 +513,11 @@ run_all_jobs() {
       if [[ "$max_jobs" -gt 0 && "$ran" -ge "$max_jobs" ]]; then
         echo "MAX_JOBS reached after ${ran} job(s)."
         validate
+        if [[ "$failures" -gt 0 && "${ALLOW_FAILURES:-0}" != "1" ]]; then
+          echo
+          echo "run-all observed ${failures} failed or blocked job(s). Set ALLOW_FAILURES=1 only when this is acceptable."
+          return 1
+        fi
         return 0
       fi
 
@@ -535,13 +592,23 @@ run_all_jobs() {
   echo "run-all stopped after ${ran} job(s); failures observed: ${failures}."
   validate
 
+  local exit_code=0
+  if [[ "$failures" -gt 0 && "${ALLOW_FAILURES:-0}" != "1" ]]; then
+    echo
+    echo "run-all observed ${failures} failed or blocked job(s). Set ALLOW_FAILURES=1 only when this is acceptable."
+    exit_code=1
+  fi
+
   local remaining_todo
   remaining_todo="$(todo_count "$phase_filter")"
   if [[ "$remaining_todo" -gt 0 ]]; then
     echo
     echo "No more ready jobs; ${remaining_todo} ToDo job(s) remain blocked by dependencies or review states."
-    [[ "${ALLOW_INCOMPLETE:-0}" == "1" ]] || return 2
+    if [[ "${ALLOW_INCOMPLETE:-0}" != "1" && "$exit_code" -eq 0 ]]; then
+      exit_code=2
+    fi
   fi
+  return "$exit_code"
 }
 
 finish_job() {
@@ -553,6 +620,17 @@ finish_job() {
     *) die "finish status must be one of Review, Done, Fail, Blocked, Skip" ;;
   esac
   job_line "$id" >/dev/null || die "unknown job: $id"
+
+  if is_dry_run; then
+    echo "[dry-run] would mark ${id} ${status}"
+    if [[ $# -gt 0 ]]; then
+      commit_job "$id" "GPTs ${id}: $* [${status}]"
+    else
+      commit_job "$id"
+    fi
+    return 0
+  fi
+
   mark_job "$id" "$status"
 
   if [[ $# -gt 0 ]]; then
