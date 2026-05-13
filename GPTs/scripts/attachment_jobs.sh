@@ -358,7 +358,11 @@ commit_job() {
 
   local message
   if [[ $# -gt 0 ]]; then
-    message="$*"
+    if [[ "$*" == GPTs\ "$id":* ]]; then
+      message="$*"
+    else
+      message="GPTs ${id}: $*"
+    fi
   else
     message="$(commit_message_default "$id")"
   fi
@@ -574,7 +578,7 @@ job_history() {
   local id="$1"
   job_line "$id" >/dev/null || die "unknown job: $id"
   command -v "$GIT_BIN" >/dev/null 2>&1 || die "git binary not found: $GIT_BIN"
-  "$GIT_BIN" -C "$ROOT_DIR" log --oneline --decorate --grep="GPTs ${id}" -- "$COMMIT_PATHSPEC" || true
+  "$GIT_BIN" -C "$ROOT_DIR" log --oneline --decorate --grep="$id" -- "$COMMIT_PATHSPEC" || true
 }
 
 validate() {
