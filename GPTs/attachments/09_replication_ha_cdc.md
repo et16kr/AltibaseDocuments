@@ -79,6 +79,27 @@ Terminology block: metadata and targets
 - `Replication Target Partition`: partition selected in replication syntax.
 - `Replication Target Column`: a same-named column in the corresponding local and remote target tables.
 
+## Core Replication Topology Diagram
+
+Use this topology when explaining ordinary table-to-table or partition-to-partition replication. A `Sender` reads redo logs for local replication targets, creates XLogs, connects to the peer Receiver port, and the peer `Receiver` applies the XLogs to matching targets.
+
+```mermaid
+flowchart LR
+  subgraph Local["Local Server"]
+    App[Service transactions] --> LocalTarget[Replication target tables or partitions]
+    LocalTarget --> Redo[Redo logs]
+    Redo --> Sender[Sender thread]
+    Sender --> Restart[Restart SN and Sender metadata]
+  end
+  subgraph Remote["Remote Server"]
+    Manager[Replication manager] --> Receiver[Receiver thread]
+    Receiver --> RemoteTarget[Matching target tables or partitions]
+    Receiver --> ApplyStatus[Apply status and error files]
+  end
+  Sender -- XLogs over peer Receiver port --> Receiver
+  LocalTarget -. same names and compatible target type .-> RemoteTarget
+```
+
 ## Replication State Diagram
 
 Use this state model when explaining `CREATE REPLICATION`, `ALTER REPLICATION ... SYNC`, `START`, `QUICKSTART`, `STOP`, `RESET`, and `DROP REPLICATION`.
@@ -100,6 +121,23 @@ stateDiagram-v2
   Stopped --> RunningCurrent: QUICKSTART
   Stopped --> Created: RESET
   Stopped --> NotCreated: DROP REPLICATION
+```
+
+Use this state model when explaining recovery behavior after server, communication, or service-line failure.
+
+```mermaid
+stateDiagram-v2
+  [*] --> NormalReplication
+  NormalReplication --> ServerFailure: local or remote server shuts down abnormally
+  ServerFailure --> ReceiverStopped: peer Receiver terminates
+  ReceiverStopped --> SenderRetry: peer Sender retries connection
+  SenderRetry --> NormalReplication: server restarts and XLogs replay
+  NormalReplication --> CommunicationFailure: communication is interrupted
+  CommunicationFailure --> RestartRecorded: Receiver rollback and Sender records Restart SN
+  RestartRecorded --> SenderRetry
+  NormalReplication --> ServiceLineFailure: primary service line fails
+  ServiceLineFailure --> BackupLineService: backup line provides service
+  BackupLineService --> NormalReplication: primary line is restored
 ```
 
 ## Replication Mode Guide
@@ -156,6 +194,50 @@ flowchart LR
   Active -- Sender sends XLogs --> Standby[Standby Altibase]
   Standby -- Receiver applies XLogs --> Standby
   App -. failover callback validates .-> Standby
+```
+
+Use this diagram when explaining why Active-Active replication needs write ownership rules and conflict planning.
+
+```mermaid
+flowchart LR
+  AppA[Application workload A] --> NodeA[Altibase Node A]
+  AppB[Application workload B] --> NodeB[Altibase Node B]
+  NodeA -- Sender sends XLogs --> NodeB
+  NodeB -- Sender sends XLogs --> NodeA
+  NodeA -. writes shared rows .-> Conflict[Conflict risk]
+  NodeB -. writes shared rows .-> Conflict
+  Conflict --> Logs[Replication error files and skipped conflicts]
+```
+
+Use this topology for a replication object with multiple remote host address and port pairs.
+
+```mermaid
+flowchart LR
+  Sender[Sender thread] --> HostList[Remote host list in replication object]
+  HostList --> Primary[Primary remote host and port]
+  HostList --> Backup[Backup remote host and port]
+  Primary -- normal connection --> Receiver[Remote Receiver]
+  Primary -. line failure .-> Retry[Reconnect attempt]
+  Retry --> Backup
+  Backup -- alternate connection --> Receiver
+```
+
+Use this partition topology when explaining that table targets map to tables and partition targets map to matching partitions.
+
+```mermaid
+flowchart LR
+  subgraph LocalPart["Local partitioned table"]
+    LocalTable[table T] --> LocalP1[partition P1]
+    LocalTable --> LocalP2[partition P2 selected]
+    LocalTable --> LocalP3[partition P3]
+  end
+  subgraph RemotePart["Remote partitioned table"]
+    RemoteTable[table T] --> RemoteP1[partition P1]
+    RemoteTable --> RemoteP2[partition P2 selected]
+    RemoteTable --> RemoteP3[partition P3]
+  end
+  LocalP2 -- partition-to-partition replication --> RemoteP2
+  LocalTable -. table-to-table only .-> RemoteTable
 ```
 
 ## Prerequisite Checklist
@@ -672,6 +754,21 @@ flowchart TD
   E --> F[ALTER REPLICATION rep1 START WITH OFFLINE]
   F --> G[ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 0]
   G --> H[Restart normal replication as needed]
+```
+
+Use this state model when explaining the `OFFLINE` option lifecycle. Offline replication is one-time; normal replication must be restarted separately when needed.
+
+```mermaid
+stateDiagram-v2
+  [*] --> OfflineDisabled
+  OfflineDisabled --> OfflineEnabled: OPTIONS OFFLINE or SET OFFLINE ENABLE
+  OfflineEnabled --> OfflineMetaBuilt: BUILD OFFLINE META
+  OfflineMetaBuilt --> SQLApplyEnabled: REPLICATION_SQL_APPLY_ENABLE = 1
+  SQLApplyEnabled --> OfflineRunning: START WITH OFFLINE
+  OfflineRunning --> OfflineFinished: unsent logs applied and threads stop
+  OfflineFinished --> SQLApplyDisabled: REPLICATION_SQL_APPLY_ENABLE = 0
+  OfflineMetaBuilt --> OfflineEnabled: RESET OFFLINE META
+  OfflineEnabled --> OfflineDisabled: SET OFFLINE DISABLE
 ```
 
 ## Replication DDL Guidance
