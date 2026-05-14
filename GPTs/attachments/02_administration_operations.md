@@ -211,15 +211,22 @@ User operation block: create user
 CREATE USER app_user IDENTIFIED BY app_password
 DEFAULT TABLESPACE app_data
 TEMPORARY TABLESPACE app_temp
-ACCESS app_data ON;
+ACCESS app_data ON
+LIMIT (
+    FAILED_LOGIN_ATTEMPTS 5,
+    PASSWORD_LOCK_TIME 1,
+    PASSWORD_LIFE_TIME 90,
+    PASSWORD_GRACE_TIME 7
+);
 ```
 
 Checklist:
 
 1. Confirm the default and temporary tablespaces exist and are online.
 2. Confirm the creator has `CREATE USER`.
-3. Grant only the required system and object privileges.
-4. Verify login and default tablespace behavior.
+3. Set `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, and explicit `ACCESS tablespace_name ON` for every tablespace the user will use.
+4. Grant only the required system and object privileges, preferably through roles for repeatable operational grants.
+5. Verify login, default tablespace behavior, roles, and grants.
 
 User operation block: alter user
 
@@ -228,7 +235,20 @@ ALTER USER app_user IDENTIFIED BY new_password;
 ALTER USER app_user DEFAULT TABLESPACE app_data2;
 ALTER USER app_user TEMPORARY TABLESPACE app_temp2;
 ALTER USER app_user ACCESS app_archive ON;
+ALTER USER app_user ACCOUNT LOCK;
+ALTER USER app_user ACCOUNT UNLOCK;
 ```
+
+`ALTER USER ... LIMIT (...)` can be executed only by `SYS`. When a password policy is changed, policy items omitted from the new `LIMIT` clause are initialized. An individual user can change their own password without `ALTER USER` system privilege, but changing other users requires `ALTER USER`.
+
+For SSL or IPC-only accounts, `SYS` can restrict ordinary TCP connections:
+
+```sql
+ALTER USER app_user DISABLE TCP;
+ALTER USER app_user ENABLE TCP;
+```
+
+When changing the `SYS` password with `ALTER USER`, also run `altipasswd` so `$ALTIBASE_HOME/conf/syspassword` matches, and update scripts that embed the old password.
 
 User operation block: drop user
 
@@ -239,25 +259,151 @@ DROP USER app_user CASCADE;
 
 Use `CASCADE` only when the user's schema objects should also be removed.
 
+Role operation block:
+
+```sql
+CREATE ROLE app_runtime_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON app_owner.orders TO app_runtime_role;
+GRANT app_runtime_role TO app_user;
+DROP ROLE app_runtime_role;
+```
+
+Role rules:
+
+- A role is created empty; grant system privileges or object privileges to the role, then grant the role to users.
+- A user must reconnect before privileges newly granted through a role are enabled.
+- A role cannot be granted to another role or to `PUBLIC`.
+- A user can have at most 126 granted roles.
+- Use `DROP ROLE` only after checking users that currently depend on the role.
+
 Privilege block: system privileges
 
 - Database: `ALTER SYSTEM`, `ALTER DATABASE`, `DROP DATABASE`.
 - Tablespace: `CREATE TABLESPACE`, `ALTER TABLESPACE`, `DROP TABLESPACE`, `MANAGE TABLESPACE`.
 - User: `CREATE USER`, `ALTER USER`, `DROP USER`.
 - Table: `CREATE TABLE`, `CREATE ANY TABLE`, `ALTER ANY TABLE`, `DROP ANY TABLE`, `SELECT ANY TABLE`, `INSERT ANY TABLE`, `UPDATE ANY TABLE`, `DELETE ANY TABLE`, `LOCK ANY TABLE`.
+- Session: `CREATE SESSION`, `ALTER SESSION`.
 - Other common families: index, sequence, procedure, view, role, synonym, materialized view, trigger, directory, database link, library, and job privileges.
+
+Object privilege support blocks:
+
+- Table: `ALTER`, `DELETE`, `INDEX`, `INSERT`, `REFERENCES`, `SELECT`, `UPDATE`.
+- Sequence: `ALTER`, `SELECT`.
+- Stored procedure, stored function, package, and external procedure: `EXECUTE`.
+- View: `SELECT`.
+- Directory: `READ`, `WRITE`.
+- External library: `EXECUTE`.
 
 Privilege operation block: grant and revoke
 
 ```sql
-GRANT ALTER TABLESPACE, CREATE TABLESPACE TO app_dba_role;
-GRANT SELECT, INSERT, UPDATE ON app_owner.orders TO app_user;
+CREATE ROLE app_dba_role;
+GRANT CREATE TABLESPACE, ALTER TABLESPACE TO app_dba_role;
+GRANT app_dba_role TO app_dba_user;
+
+CREATE ROLE app_runtime_role;
+GRANT SELECT, INSERT, UPDATE ON app_owner.orders TO app_runtime_role;
+GRANT app_runtime_role TO app_user;
 
 REVOKE ALTER TABLESPACE FROM app_dba_role;
-REVOKE UPDATE ON app_owner.orders FROM app_user;
+REVOKE UPDATE ON app_owner.orders FROM app_runtime_role;
 ```
 
-When a general user is created, Altibase automatically grants minimum creation privileges such as `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, and `CREATE LIBRARY`. Still state explicit grants in operational answers so the final privilege model is auditable.
+Object grants require `SYS`, the object owner, or a user that already has the relevant object privilege `WITH GRANT OPTION`. Do not add `WITH GRANT OPTION` for ordinary application users. Do not use it when granting object privileges to a role.
+
+Revocation rules:
+
+- The `SYS` user or the original grantor can revoke privileges.
+- Revoke the exact system privilege, object privilege, or role that was granted.
+- Use `CASCADE CONSTRAINTS` when revoking `REFERENCES` or `ALL` must also drop dependent referential constraints.
+- Review dependent sessions and application behavior before revoking a role used by active users.
+
+When a general user is created, Altibase automatically grants baseline privileges such as `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, and `CREATE LIBRARY`. Still state explicit grants in operational answers so the final privilege model is auditable. For a strict runtime account, audit the automatically granted baseline privileges and revoke unused DDL privileges.
+
+Least-privilege notes:
+
+- Prefer object privileges on named objects over `ANY` system privileges.
+- Prefer a small role per operational duty, such as `app_runtime_role`, `app_readonly_role`, or `app_dba_role`, over direct grants scattered across users.
+- Avoid `ALL PRIVILEGES`, `TO PUBLIC`, `GRANT ANY PRIVILEGES`, and broad `ANY` privileges unless the request is explicitly administrative.
+- Separate schema owner accounts from runtime application accounts. Runtime users normally need `CREATE SESSION` plus object privileges only.
+- Do not grant metadata-modifying privileges such as `CREATE USER`, `DROP USER`, `CREATE TABLESPACE`, or `ALTER SYSTEM` to application runtime users.
+
+Audit users, roles, and grants:
+
+```sql
+SELECT u.user_name, u.user_type, u.account_lock, u.disable_tcp,
+       dt.name AS default_tablespace,
+       tt.name AS temporary_tablespace
+FROM SYSTEM_.SYS_USERS_ u, V$TABLESPACES dt, V$TABLESPACES tt
+WHERE u.default_tbs_id = dt.id
+  AND u.temp_tbs_id = tt.id
+ORDER BY u.user_type, u.user_name;
+
+SELECT grantee.user_name AS grantee_name,
+       role_user.user_name AS role_name
+FROM SYSTEM_.SYS_USER_ROLES_ r,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_USERS_ role_user
+WHERE r.grantee_id = grantee.user_id
+  AND r.role_id = role_user.user_id
+ORDER BY grantee.user_name, role_user.user_name;
+
+SELECT grantee.user_name AS grantee_name,
+       p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+ORDER BY grantee.user_name, p.priv_name;
+
+SELECT grantee.user_name AS grantee_name,
+       p.priv_name,
+       owner.user_name AS object_owner,
+       t.table_name AS object_name,
+       g.obj_type,
+       g.with_grant_option
+FROM SYSTEM_.SYS_GRANT_OBJECT_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_USERS_ owner,
+     SYSTEM_.SYS_PRIVILEGES_ p,
+     SYSTEM_.SYS_TABLES_ t
+WHERE g.grantee_id = grantee.user_id
+  AND g.user_id = owner.user_id
+  AND g.priv_id = p.priv_id
+  AND g.user_id = t.user_id
+  AND g.obj_id = t.table_id
+ORDER BY grantee.user_name, owner.user_name, t.table_name, p.priv_name;
+```
+
+Audit broad or public grants:
+
+```sql
+SELECT grantee.user_name AS grantee_name, p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+  AND (p.priv_name = 'ALL' OR p.priv_name LIKE '% ANY %')
+ORDER BY grantee.user_name, p.priv_name;
+
+SELECT p.priv_name,
+       owner.user_name AS object_owner,
+       t.table_name AS object_name,
+       g.obj_type,
+       g.with_grant_option
+FROM SYSTEM_.SYS_GRANT_OBJECT_ g,
+     SYSTEM_.SYS_USERS_ owner,
+     SYSTEM_.SYS_PRIVILEGES_ p,
+     SYSTEM_.SYS_TABLES_ t
+WHERE g.grantee_id = 0
+  AND g.user_id = owner.user_id
+  AND g.priv_id = p.priv_id
+  AND g.user_id = t.user_id
+  AND g.obj_id = t.table_id
+ORDER BY owner.user_name, t.table_name, p.priv_name;
+```
 
 ## Tablespace Concepts
 
@@ -1368,6 +1514,14 @@ Template: create or resize tablespace
 3. Provide DDL.
 4. Provide verification SQL.
 5. Mention backup follow-up if structure changed.
+
+Template: create or change users and privileges
+
+1. State assumptions: version, account purpose, owner schema, tablespaces, and whether the account is schema-owner, runtime, read-only, or DBA-like.
+2. Create or alter the user with explicit `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, `ACCESS`, account lock, TCP access, and password policy choices when relevant.
+3. Grant through small roles when the same privilege set is reusable; otherwise grant only named object privileges.
+4. Avoid `ALL PRIVILEGES`, `TO PUBLIC`, and `ANY` privileges unless the request is explicitly administrative.
+5. Include audit SQL for `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_USER_ROLES_`, `SYSTEM_.SYS_GRANT_SYSTEM_`, and `SYSTEM_.SYS_GRANT_OBJECT_`.
 
 Template: online backup
 

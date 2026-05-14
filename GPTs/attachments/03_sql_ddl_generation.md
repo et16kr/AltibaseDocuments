@@ -459,31 +459,80 @@ flowchart TD
 ### User and Privilege Syntax
 
 ```text
-user ::=
-  CREATE USER user_name IDENTIFIED BY password
-  [DEFAULT TABLESPACE tablespace_name]
-  [TEMPORARY TABLESPACE tablespace_name]
-  [ACCESS tablespace_name {ON | OFF}]
-  [LIMIT (password_parameter [, password_parameter ...])]
-  [ENABLE | DISABLE]
+create_user ::=
+  CREATE USER [IF NOT EXISTS] user_name IDENTIFIED BY password create_user_option ...
+
+create_user_option ::=
+    DEFAULT TABLESPACE tablespace_name
+  | TEMPORARY TABLESPACE tablespace_name
+  | ACCESS tablespace_name {ON | OFF}
+  | LIMIT (password_parameter [, password_parameter ...])
+  | {ENABLE TCP | DISABLE TCP}
+
+password_parameter ::=
+    {FAILED_LOGIN_ATTEMPTS | PASSWORD_LIFE_TIME | PASSWORD_REUSE_TIME |
+     PASSWORD_REUSE_MAX | PASSWORD_LOCK_TIME | PASSWORD_GRACE_TIME}
+    {value | UNLIMITED | DEFAULT}
+  | PASSWORD_VERIFY_FUNCTION {function_name | NULL | DEFAULT}
+
+alter_user ::=
+  ALTER USER user_name alter_user_option ...
+
+alter_user_option ::=
+    IDENTIFIED BY password
+  | DEFAULT TABLESPACE tablespace_name
+  | TEMPORARY TABLESPACE tablespace_name
+  | ACCESS tablespace_name {ON | OFF}
+  | LIMIT (password_parameter [, password_parameter ...])
+  | ACCOUNT {LOCK | UNLOCK}
+  | {ENABLE TCP | DISABLE TCP}
+
+drop_user ::=
+  DROP USER [IF EXISTS] user_name [CASCADE]
+
+role_ddl ::=
+  CREATE ROLE role_name
+  DROP ROLE role_name
 
 grant_system ::=
-  GRANT system_privilege [, system_privilege ...] TO {user_name | role_name | PUBLIC}
+  GRANT {system_privilege | role_name | ALL PRIVILEGES}
+        [, {system_privilege | role_name | ALL PRIVILEGES} ...]
+  TO {user_name | role_name | PUBLIC} [, {user_name | role_name | PUBLIC} ...]
 
 grant_object ::=
-  GRANT object_privilege [, object_privilege ...]
-  ON [owner.]object_name
-  TO {user_name | role_name | PUBLIC}
+  GRANT {object_privilege [, object_privilege ...] | ALL [PRIVILEGES]}
+  ON {[owner.]object_name | DIRECTORY directory_name}
+  TO {user_name | role_name | PUBLIC} [, {user_name | role_name | PUBLIC} ...]
   [WITH GRANT OPTION]
+
+revoke_system ::=
+  REVOKE {system_privilege | role_name | ALL PRIVILEGES}
+         [, {system_privilege | role_name | ALL PRIVILEGES} ...]
+  FROM {user_name | role_name | PUBLIC} [, {user_name | role_name | PUBLIC} ...]
+
+revoke_object ::=
+  REVOKE {object_privilege [, object_privilege ...] | ALL [PRIVILEGES]}
+  ON {[owner.]object_name | DIRECTORY directory_name}
+  FROM {user_name | role_name | PUBLIC} [, {user_name | role_name | PUBLIC} ...]
+  [CASCADE CONSTRAINTS]
 ```
 
 Generation notes:
 
+- `IF NOT EXISTS` on `CREATE USER` and `IF EXISTS` on `DROP USER` are available in the Altibase 8.1 verified source. Omit them for 7.1 and 7.3.
 - `CREATE SESSION` is required for a normal application user to connect.
-- New application schemas usually need only specific DDL privileges, such as `CREATE TABLE`, `CREATE SEQUENCE`, and object privileges on required tables.
+- New application schemas usually need only specific DDL privileges, such as `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE VIEW`, and object privileges on required tables.
+- Runtime accounts normally need `CREATE SESSION` plus object privileges such as `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `EXECUTE`, or `SELECT` on a sequence. Do not grant schema DDL privileges to runtime accounts unless the application really creates objects.
 - To allow additional tablespace access after user creation, generate `ALTER USER user_name ACCESS tablespace_name ON`.
-- Use least privilege. Avoid `ALL PRIVILEGES` or `ANY` privileges unless the customer explicitly needs administrative scope.
+- Use least privilege. Avoid `ALL PRIVILEGES`, `TO PUBLIC`, and `ANY` privileges such as `SELECT ANY TABLE` unless the customer explicitly needs administrative scope and accepts the blast radius.
+- `CREATE ROLE` creates an empty role. Grant system or object privileges to the role, then grant the role to users. A user must reconnect before privileges newly granted through a role are enabled.
+- A role cannot be granted to another role or to `PUBLIC`. A user can have at most 126 granted roles.
+- `WITH GRANT OPTION` lets the grantee re-grant object privileges. Do not use it for ordinary application users, and do not use it when granting object privileges to a role.
+- `ALTER USER ... LIMIT (...)` can be executed only by `SYS`; when a password policy is changed, policy items omitted from the new `LIMIT` clause are initialized.
+- `ALTER USER ... ACCOUNT LOCK|UNLOCK` explicitly controls account lock state. `ALTER USER ... DISABLE TCP` restricts ordinary TCP connections for that user; SSL or IPC can still be used where configured.
+- When changing the `SYS` password with `ALTER USER`, also update the `syspassword` file with `altipasswd` and update scripts that embed the old password.
 - The owner of an object, or a user with object privilege `WITH GRANT OPTION`, can grant object privileges.
+- The `SYS` user or the original grantor can revoke privileges. Use `CASCADE CONSTRAINTS` when revoking `REFERENCES` or `ALL` must also drop dependent referential constraints.
 
 ### Sequence Syntax
 
@@ -679,7 +728,7 @@ ORDER BY name;
 
 ### User and Privilege Examples
 
-Create an application schema, assign default storage, and grant only required privileges:
+Create an application schema, assign default storage, and grant only required DDL privileges through a role:
 
 ```sql
 CREATE USER app IDENTIFIED BY app_password
@@ -693,14 +742,14 @@ LIMIT (
     PASSWORD_GRACE_TIME 7
 );
 
-GRANT CREATE SESSION TO app;
-GRANT CREATE TABLE TO app;
-GRANT CREATE SEQUENCE TO app;
+CREATE ROLE app_schema_ddl_role;
+GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO app_schema_ddl_role;
+GRANT app_schema_ddl_role TO app;
 
 ALTER USER app ACCESS app_mem_tbs ON;
 ```
 
-Grant object privileges to a separate runtime user:
+Grant object privileges to a separate runtime user through a role. The runtime user should reconnect after the role is granted:
 
 ```sql
 CREATE USER app_runtime IDENTIFIED BY runtime_password
@@ -710,21 +759,34 @@ ACCESS app_disk_tbs ON;
 
 GRANT CREATE SESSION TO app_runtime;
 ALTER USER app_runtime ACCESS app_mem_tbs ON;
-GRANT SELECT, INSERT, UPDATE, DELETE ON app.app_user TO app_runtime;
-GRANT SELECT ON app.app_document TO app_runtime;
-GRANT SELECT ON app.seq_app_user TO app_runtime;
+
+CREATE ROLE app_runtime_dml_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON app.app_user TO app_runtime_dml_role;
+GRANT SELECT ON app.app_document TO app_runtime_dml_role;
+GRANT SELECT ON app.seq_app_user TO app_runtime_dml_role;
+GRANT app_runtime_dml_role TO app_runtime;
+```
+
+For a strict runtime account, audit the automatically granted baseline privileges and revoke unused DDL privileges:
+
+```sql
+REVOKE CREATE TABLE, CREATE SEQUENCE, CREATE PROCEDURE, CREATE VIEW,
+       CREATE TRIGGER, CREATE SYNONYM, CREATE MATERIALIZED VIEW,
+       CREATE LIBRARY
+FROM app_runtime;
 ```
 
 Verify users and grants:
 
 ```sql
-SELECT u.user_name, u.account_lock, u.disable_tcp,
+SELECT u.user_name, u.user_type, u.account_lock, u.disable_tcp,
        dt.name AS default_tablespace,
        tt.name AS temporary_tablespace
 FROM SYSTEM_.SYS_USERS_ u, V$TABLESPACES dt, V$TABLESPACES tt
 WHERE u.default_tbs_id = dt.id
   AND u.temp_tbs_id = tt.id
-  AND u.user_name IN ('APP', 'APP_RUNTIME');
+  AND u.user_name IN ('APP', 'APP_RUNTIME', 'APP_SCHEMA_DDL_ROLE',
+                      'APP_RUNTIME_DML_ROLE');
 
 SELECT p.priv_name, grantee.user_name AS grantee_name
 FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
@@ -732,10 +794,22 @@ FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
      SYSTEM_.SYS_USERS_ grantee
 WHERE g.priv_id = p.priv_id
   AND g.grantee_id = grantee.user_id
-  AND grantee.user_name IN ('APP', 'APP_RUNTIME');
+  AND grantee.user_name IN ('APP', 'APP_RUNTIME', 'APP_SCHEMA_DDL_ROLE',
+                            'APP_RUNTIME_DML_ROLE')
+ORDER BY grantee.user_name, p.priv_name;
+
+SELECT grantee.user_name AS grantee_name,
+       role_user.user_name AS role_name
+FROM SYSTEM_.SYS_USER_ROLES_ r,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_USERS_ role_user
+WHERE r.grantee_id = grantee.user_id
+  AND r.role_id = role_user.user_id
+  AND grantee.user_name IN ('APP', 'APP_RUNTIME')
+ORDER BY grantee.user_name, role_user.user_name;
 
 SELECT p.priv_name, grantee.user_name AS grantee_name,
-       owner.user_name AS object_owner, t.table_name
+       owner.user_name AS object_owner, t.table_name, g.with_grant_option
 FROM SYSTEM_.SYS_GRANT_OBJECT_ g,
      SYSTEM_.SYS_PRIVILEGES_ p,
      SYSTEM_.SYS_USERS_ grantee,
@@ -745,7 +819,36 @@ WHERE g.priv_id = p.priv_id
   AND g.grantee_id = grantee.user_id
   AND g.user_id = owner.user_id
   AND g.obj_id = t.table_id
-  AND grantee.user_name = 'APP_RUNTIME';
+  AND grantee.user_name = 'APP_RUNTIME_DML_ROLE'
+ORDER BY t.table_name, p.priv_name;
+```
+
+Least-privilege review queries:
+
+```sql
+SELECT grantee.user_name AS grantee_name, p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+  AND (p.priv_name = 'ALL' OR p.priv_name LIKE '% ANY %')
+ORDER BY grantee.user_name, p.priv_name;
+
+SELECT p.priv_name,
+       owner.user_name AS object_owner,
+       t.table_name AS object_name,
+       g.with_grant_option
+FROM SYSTEM_.SYS_GRANT_OBJECT_ g,
+     SYSTEM_.SYS_PRIVILEGES_ p,
+     SYSTEM_.SYS_USERS_ owner,
+     SYSTEM_.SYS_TABLES_ t
+WHERE g.grantee_id = 0
+  AND g.user_id = owner.user_id
+  AND g.priv_id = p.priv_id
+  AND g.user_id = t.user_id
+  AND g.obj_id = t.table_id
+ORDER BY owner.user_name, t.table_name, p.priv_name;
 ```
 
 ### Table Examples
@@ -1475,8 +1578,9 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
 - State the assumed Altibase version.
 - State the assumed owner/schema, tablespaces, file paths, host names, and ports.
-- Include prerequisite privileges or `SYS` requirements for tablespace, table, queue, and replication DDL.
+- Include prerequisite privileges or `SYS` requirements for tablespace, user, role, table, queue, and replication DDL.
 - Generate DDL in execution order: tablespaces, users, grants, tables, constraints, queues, indexes, sequences, replication.
+- For users and grants, include least-privilege notes and verification SQL for roles, system privileges, object privileges, and broad grants.
 - For Oracle conversion requests, explicitly state table-level differences for storage target, temporary tables, LOB storage, JSON, partitions, and queues.
 - Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_CONSTRAINT_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `SYSTEM_.SYS_INDEX_COLUMNS_`, `SYSTEM_.SYS_PART_INDICES_`, `SYSTEM_.SYS_INDEX_PARTITIONS_`, `V$DISK_BTREE_HEADER`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
 - Keep examples free of internal source labels and local repository paths.
