@@ -153,6 +153,10 @@ ALTER SESSION SET QUERY_TIMEOUT = 120;
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'QUERY_TIMEOUT';
+
+SELECT query_time_limit
+FROM V$SESSION
+WHERE id = SESSION_ID();
 ```
 
 For 8.1 Temporary LOB checks:
@@ -197,6 +201,10 @@ WHERE name = 'TIME_ZONE';
 SELECT name, utc_offset
 FROM V$TIME_ZONE_NAMES
 WHERE name = 'Asia/Seoul';
+
+SELECT time_zone
+FROM V$SESSION
+WHERE id = SESSION_ID();
 ```
 
 Replication ports:
@@ -1435,7 +1443,6 @@ ORDER BY transaction_id, statement_id;
 ```sql
 SELECT server_status,
        archivelog_mode,
-       checkpoint_scale,
        begin_chkpt_file_no,
        begin_chkpt_file_offset,
        end_chkpt_file_no,
@@ -1446,7 +1453,7 @@ SELECT server_status,
 FROM V$LOG;
 ```
 
-`SERVER_STATUS` values include server shutdown and server started. `ARCHIVELOG_MODE` values include `ARCHIVE` and `NOARCHIVE`.
+`SERVER_STATUS` values include server shutdown and server started. `ARCHIVELOG_MODE` values include `ARCHIVE` and `NOARCHIVE`. For `CHECKPOINT_SCALE`, use the 8.1-only stable checkpoint check instead of adding it to this common query.
 
 ### Check Archive Progress
 

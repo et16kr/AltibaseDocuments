@@ -1685,9 +1685,9 @@ Write embedded SQL in a `.sc` file, declare host variables inside `EXEC SQL BEGI
 
 
 ## Additional API Interfaces
-While JDBC, ODBC, C Interface, and CLI are primarily used, Altibase also provides full support for the following APIs (detailed in the API User's Manual):
-- **PHP & PDO**: Altibase supports PHP modules and PDO drivers for web application integration.
-- **ADO.NET**: Native Altibase ADO.NET data provider is available for .NET framework applications.
-- **XA Interface (Distributed Transactions)**: Altibase supports the X/Open XA standard for distributed transaction processing, allowing integration with TP monitors like Tuxedo.
-- **CheckServer API & iLoader API**: Internal APIs for building custom monitoring logic (CheckServer) or high-speed bulk data loading (iLoader) directly in C/C++ applications without invoking the command-line utility.
+Additional API families exist, but they have version, platform, package, and unsupported-interface limits that must be checked in the API User's Manual before generating implementation code:
 
+- **PHP & PDO**: PHP modules and PDO drivers exist for web application integration; verify the supported PHP/PDO API set and target platform before use.
+- **ADO.NET**: Native Altibase ADO.NET data provider is available for .NET framework applications; verify framework/runtime version, provider package, and unsupported interfaces.
+- **XA Interface (Distributed Transactions)**: Altibase supports the X/Open XA standard for distributed transaction processing, but TP monitor configuration and transaction-boundary behavior must be source-checked for the target environment.
+- **CheckServer API & iLoader API**: Use these only with the API User's Manual constraints. CheckServer has local/single-process restrictions, and iLoader API behavior should not be assumed equivalent to the command-line utility without source-backed option coverage.

@@ -46,6 +46,7 @@ Primary Causes:
 Immediate Action:
 Check SQL or Command:
 Version Cautions:
+Escalation:
 Related Document:
 ```
 
@@ -54,7 +55,7 @@ If one field is unknown, say `Unknown from the supplied message` instead of inve
 Short answers may compress the fields, but preserve the same order:
 
 ```text
-Symptom -> Cause -> Action -> Check SQL or Command -> Version Cautions
+Symptom -> Cause -> Action -> Check SQL or Command -> Version Cautions -> Escalation
 ```
 
 ## Error Code Normalization
@@ -796,6 +797,7 @@ FROM SYSTEM_.SYS_USERS_ u,
      SYSTEM_.SYS_TABLES_ t,
      SYSTEM_.SYS_COLUMNS_ c
 WHERE u.user_id = t.user_id
+  AND t.user_id = c.user_id
   AND t.table_id = c.table_id
   AND u.user_name = '<OWNER_NAME>'
   AND t.table_name = '<TABLE_NAME>'
@@ -1059,7 +1061,7 @@ Symptom: DDL fails while one or more related temporary tables are in use.
 
 Primary Causes: Temporary tables based on the target table are active in a session.
 
-Immediate Action: Truncate the related temporary tables or end the session or transaction using them, then retry the DDL.
+Immediate Action: Identify the related temporary table usage. The primary source action is to truncate all temporary tables based on the target table and retry. Ending a session or transaction is an operational fallback only after owner/session confirmation and impact review.
 
 Check SQL or Command:
 
@@ -1076,6 +1078,10 @@ WHERE t.user_id = u.user_id
 ```
 
 Version Cautions: The same runtime code appears in 7.1, 7.3, and 8.1.
+
+Diagnostic caution: Do not invent a session-kill query for this error unless the target version source provides a supported way to identify the temporary table and owning session.
+
+Escalation: If the blocking session or temporary table cannot be identified from dictionary checks and trace logs, collect the exact DDL, owner and object name, active session list, and version before escalating.
 
 Related Document: Administration and Operations; SQL DDL Generation.
 
@@ -1341,7 +1347,9 @@ echo "$ALTIBASE_SSL_PORT_NO"
 altibase -v
 ```
 
-Version Cautions: 7.3 and 8.1 sources include SSL client errors. Confirm client library version matches server expectations.
+Version Cautions: 7.1, 7.3, and 8.1 sources include SSL client errors. Confirm client library version matches server expectations.
+
+Escalation: If the client library, OpenSSL library, `PORT_NO`, and `ALTIBASE_SSL_PORT_NO` are correct but the connection still fails, collect the client trace, detailed OpenSSL error text, server version, client version, and connection string with secrets removed.
 
 Related Document: Security SSL TLS; C CLI ODBC Precompiler.
 

@@ -302,6 +302,11 @@ partition_by_hash ::=
   PARTITION BY HASH (partition_key [, partition_key ...])
   ( PARTITION partition_name [TABLESPACE tablespace_name] [, ...] )
 
+range_partitioning_using_hash ::=
+  PARTITION BY RANGE_USING_HASH (single_partition_key)
+  ( PARTITION partition_name VALUES LESS THAN (hash_mod_1000_value) [TABLESPACE tablespace_name] [, ...]
+    , PARTITION partition_name VALUES DEFAULT [TABLESPACE tablespace_name] )
+
 alter_table_partition ::=
   ALTER TABLE [owner.]table_name
   { ADD PARTITION partition_name [INDEX (...)]
@@ -417,7 +422,7 @@ Generation notes:
 
 ```text
 index ::=
-  CREATE [UNIQUE | LOCALUNIQUE] INDEX [owner.]index_name
+  CREATE [UNIQUE | LOCALUNIQUE] INDEX [IF NOT EXISTS] [owner.]index_name
   ON [owner.]table_name ( index_expr [ASC | DESC] [, index_expr [ASC | DESC] ...] )
   [INDEXTYPE IS {BTREE | RTREE}]
   [DIRECTKEY [MAXSIZE integer]]
@@ -438,7 +443,7 @@ alter_index ::=
   | STORAGE (storage_attribute ...) }
 
 drop_index ::=
-  DROP INDEX [owner.]index_name
+  DROP INDEX [IF EXISTS] [owner.]index_name
 ```
 
 Generation notes:
@@ -454,10 +459,12 @@ Generation notes:
 - A function-based index can be chosen by the optimizer only when `QUERY_REWRITE_ENABLE = 1`.
 - An index cannot be created on a LOB column.
 - A direct key index stores the direct key with the index entry. It can reduce index scan cost, but cannot be created on disk-resident indexes, compressed columns, or encrypted columns. For composite direct key indexes, the first column is the direct key.
+- Direct key `MAXSIZE` defaults to `8` when omitted. Use direct key indexes only for source-supported scalar type families; unsupported full-key direct key definitions fail, while partial-key type families store only the configured prefix.
 - For memory tables, a `TABLESPACE` clause on an index is ignored because memory indexes are not stored in tablespaces.
 - For disk-table indexes, `NOLOGGING` can improve build speed but may require dropping and rebuilding the index after a system or media fault if the index becomes inconsistent.
 - `PARALLEL integer` is an index-build hint. Valid generation range is `0` through `512`; omitted or `0` lets Altibase derive the thread count from `INDEX_BUILD_THREAD_COUNT` or the host CPU count.
 - Use `ALTER INDEX ... REBUILD` for inconsistent disk B-tree indexes or after changing direct-key attributes. `AGING` is for disk indexes; `REORGANIZATION` is for memory B-tree index space cleanup.
+- `IF NOT EXISTS` for `CREATE INDEX` and `IF EXISTS` for `DROP INDEX` are Altibase 8.1 verified source syntax. Omit both for 7.1 and 7.3.
 
 Index type selection flow:
 
@@ -1248,7 +1255,7 @@ CREATE TABLE app.order_history (
 )
 PARTITION BY RANGE (order_date)
 (
-    PARTITION p_2025 VALUES LESS THAN ('01-JAN-2026') TABLESPACE app_disk_tbs,
+    PARTITION p_2025 VALUES LESS THAN (TO_DATE('2026-01-01', 'YYYY-MM-DD')) TABLESPACE app_disk_tbs,
     PARTITION p_default VALUES DEFAULT TABLESPACE app_disk_tbs
 )
 TABLESPACE app_disk_tbs;
@@ -1322,7 +1329,7 @@ ENABLE ROW MOVEMENT;
 
 ALTER TABLE app.order_history
 SPLIT PARTITION p_default
-AT ('01-JAN-2027')
+AT (TO_DATE('2027-01-01', 'YYYY-MM-DD'))
 INTO (
     PARTITION p_2026 TABLESPACE app_disk_tbs,
     PARTITION p_future TABLESPACE app_disk_tbs
@@ -1692,8 +1699,10 @@ FROM SYSTEM_.SYS_INDICES_ i,
      SYSTEM_.SYS_COLUMNS_ c
 WHERE i.index_id = ic.index_id
   AND i.table_id = ic.table_id
+  AND i.user_id = ic.user_id
   AND ic.column_id = c.column_id
   AND ic.table_id = c.table_id
+  AND ic.user_id = c.user_id
   AND i.index_name = 'IDX_ORDER_HISTORY_USER'
 ORDER BY ic.index_col_order;
 

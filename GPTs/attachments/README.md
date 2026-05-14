@@ -69,7 +69,7 @@ Until final cleanup, each attachment should keep these sections:
 - `Questions This File Can Answer`
 - `Core Guidance`
 - `Version Differences`
-- `Conversion TODO`
+- `Residual Scope Notes`
 
 Use compact, searchable item blocks for large reference tables. Use BNF-like text for
 SQL syntax diagrams. Use Mermaid only when it helps explain graphs, flows, states,

@@ -127,7 +127,8 @@ Phase block: `META`
 Phase block: `SERVICE`
 
 - Purpose: normal service. Users other than `SYS` can connect.
-- `SHUTDOWN NORMAL`, `SHUTDOWN IMMEDIATE`, and `SHUTDOWN ABORT` are available.
+- `SHUTDOWN NORMAL` and `SHUTDOWN IMMEDIATE` are service-phase shutdown choices.
+- `SHUTDOWN ABORT` can be executed in any startup phase, but it is emergency-only because restart recovery is expected.
 
 Shutdown choices:
 
@@ -151,6 +152,7 @@ Command block: `SHUTDOWN ABORT`
 
 - Forcibly terminates the server.
 - Restart recovery is expected on the next startup. Use only when normal or immediate shutdown is not possible.
+- Do not present `SHUTDOWN ABORT` as a normal service-phase alternative for planned maintenance.
 
 ## Key Operational Views
 
@@ -873,7 +875,11 @@ DROP CHECKPOINT PATH '/data/altibase/chkpt02';
 Operational notes:
 
 - Memory checkpoint path add, drop, and rename operations are performed in the `CONTROL` startup phase.
+- Plan a maintenance window and stop service traffic before changing checkpoint paths.
+- Pre-create destination directories and set ownership and permissions for the Altibase OS account before `STARTUP CONTROL`.
 - Altibase does not move existing checkpoint image files for you. Move or copy the affected files at the OS level after the metadata change.
+- For rename operations, move or copy the existing checkpoint image files to the new directory before returning to service.
+- In the `CONTROL` phase, use `V$TABLESPACES` to check tablespace state and `V$MEM_TABLESPACE_CHECKPOINT_PATHS` to verify checkpoint path entries, then continue to `STARTUP SERVICE`.
 - A memory tablespace must retain at least one checkpoint path.
 
 Runbook: change memory or volatile autoextend
@@ -1072,13 +1078,33 @@ Backup method block: offline physical backup
 - Works in `NOARCHIVELOG` mode.
 - Restores only to the backup point.
 
+Preflight discovery:
+
+```sql
+SELECT name,
+       storedcount,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
+FROM V$PROPERTY
+WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR', 'LOG_DIR')
+ORDER BY name;
+
+SELECT spaceid, id, name
+FROM V$DATAFILES
+ORDER BY spaceid, id;
+```
+
+The copy commands below are placeholders. Expand them to every discovered path and create a manifest or file-count check after the copy.
+
 ```bash
 server stop
 
+# Placeholder examples; replace with paths discovered from V$PROPERTY and V$DATAFILES.
 cp -r $ALTIBASE_HOME/dbs0 /backup/altibase/offline/
 cp -r $ALTIBASE_HOME/dbs1 /backup/altibase/offline/
 cp -r $ALTIBASE_HOME/logs /backup/altibase/offline/
 cp -r $ALTIBASE_HOME/dbs/*.dbf /backup/altibase/offline/
+find /backup/altibase/offline -type f | sort > /backup/altibase/offline_manifest.txt
 ```
 
 Backup method block: online full database backup
@@ -1225,6 +1251,8 @@ Incremental backup block: prerequisites
 - Page change tracking must be enabled.
 - `changeTracking` and `backupInfo` files are created in `$ALTIBASE_HOME/dbs`.
 - If `backupInfo` is lost, previously created incremental backup files cannot be used.
+- Before incremental restore, verify that `$ALTIBASE_HOME/dbs/changeTracking` and `$ALTIBASE_HOME/dbs/backupInfo` exist.
+- If startup in `CONTROL` fails because these files are missing, start `PROCESS`, disable incremental chunk change tracking if needed, restore `backupInfo` from the latest incremental backup tag directory, then continue to `CONTROL`.
 
 Enable and configure:
 

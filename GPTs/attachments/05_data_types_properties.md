@@ -586,7 +586,7 @@ Restrictions and prerequisites:
 - JSON columns follow the same broad restrictions as LOB columns.
 - JSON processing uses Temporary LOB, so `TEMPORARY_LOB_ENABLE` must be `1`.
 - `JSON` cannot be used with `SELECT FOR UPDATE`.
-- JSON path expressions used by JSON functions must be string literals. They cannot be bind variables, `NULL`, table columns, SQL functions, or user-defined functions.
+- Before generating dynamic JSON path-expression SQL, verify the path operand form in the target 8.1 SQL Reference. If the exact grammar is not confirmed, use literal JSON path expressions in examples and avoid claiming support for bind variables, table columns, SQL functions, or user-defined functions as JSON path operands.
 
 JSON function family:
 
@@ -778,6 +778,10 @@ ALTER SYSTEM SET QUERY_TIMEOUT = 300;
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'QUERY_TIMEOUT';
+
+SELECT query_time_limit
+FROM V$SESSION
+WHERE id = SESSION_ID();
 ```
 
 Session-level timeout test:
@@ -806,6 +810,10 @@ ALTER SESSION SET TIME_ZONE = 'Asia/Seoul';
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'TIME_ZONE';
+
+SELECT time_zone
+FROM V$SESSION
+WHERE id = SESSION_ID();
 ```
 
 SQL plan cache size change and related system view check:
@@ -987,7 +995,9 @@ Range: one to eight actual paths.
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
 FROM V$PROPERTY
 WHERE name = 'MEM_DB_DIR';
 ```
@@ -1005,7 +1015,9 @@ Range: path value; multiple values can be configured where supported.
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
 FROM V$PROPERTY
 WHERE name = 'LOG_DIR';
 ```
@@ -1023,7 +1035,9 @@ Range: three log anchor file paths are required.
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
 FROM V$PROPERTY
 WHERE name = 'LOGANCHOR_DIR';
 ```
@@ -1610,6 +1624,10 @@ WHERE name = 'TIME_ZONE';
 SELECT name, utc_offset
 FROM V$TIME_ZONE_NAMES
 WHERE name = 'Asia/Seoul';
+
+SELECT time_zone
+FROM V$SESSION
+WHERE id = SESSION_ID();
 ```
 
 ### Property Item: `NLS_NUMERIC_CHARACTERS`
@@ -1968,7 +1986,7 @@ WHERE name = 'PSM_CASE_SENSITIVE_MODE';
 
 ### Property Item: `LISTAGG_PRECISION`
 
-Version: 8.1 verified source property.
+Version: documented in sampled 7.3 Korean source and 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
 
 Meaning: size of the `VARCHAR` returned by `LISTAGG`.
 
@@ -2013,7 +2031,7 @@ WHERE name = 'REGEXP_MODE';
 
 ### Property Item: `VARRAY_MEMORY_MAXIMUM`
 
-Version: 8.1 verified source property.
+Version: documented in sampled 7.3 Korean source and 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
 
 Meaning: maximum memory, in bytes, allowed for one `VARRAY` variable.
 

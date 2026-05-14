@@ -1133,8 +1133,8 @@ ALTER SESSION SET EXPLAIN PLAN = ONLY;
 SELECT order_id, order_date, user_id, amount
 FROM app.order_history
 WHERE user_id = 1001
-  AND order_date >= '01-JAN-2026'
-  AND order_date <  '01-FEB-2026'
+  AND order_date >= TO_DATE('2026-01-01', 'YYYY-MM-DD')
+  AND order_date <  TO_DATE('2026-02-01', 'YYYY-MM-DD')
 ORDER BY order_date;
 
 ALTER SESSION SET EXPLAIN PLAN = OFF;
