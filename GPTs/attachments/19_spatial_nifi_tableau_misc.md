@@ -1420,12 +1420,13 @@ NiFi UI procedure: create an Altibase controller service from a processor
 9. Enter `Controller Service Name`. The UI example uses `Altibase_DBCPConnectionPool`.
 10. Click `CREATE`.
 11. Return to the controller service list.
-12. Click the arrow shown for the newly created service.
-13. Click the gear icon for that service.
+12. Open the action/details control for the newly created service.
+13. Open the service configuration.
 14. Go to the `PROPERTIES` tab.
 15. Fill in the Altibase connection values.
 16. Click `APPLY`.
-17. Enable the controller service by clicking the enable icon.
+17. Enable the controller service from the service action control.
+18. Confirm that the service state changes to enabled and that the processor can select this controller service.
 
 NiFi controller service property block:
 
@@ -1437,7 +1438,7 @@ NiFi controller service property block:
 - `Password`: Altibase user password.
 - Optional pooling fields shown in the UI include `Max Wait Time`, `Max Total Connections`, `Minimum Idle Connections`, and `Max Idle Connections`. Tune these for the flow and database capacity.
 
-NiFi sample values from the converted UI:
+NiFi controller service example values:
 
 ```text
 Controller Service Name: Altibase_DBCPConnectionPool
@@ -1494,7 +1495,7 @@ Tableau JDBC driver procedure:
 
 1. Install Tableau Desktop.
 2. Copy the Altibase JDBC driver into the Tableau driver directory.
-3. On Windows, the guide uses `C:\Program Files\Tableau\Drivers`.
+3. Use Tableau's `Drivers` directory for the installed desktop edition.
 4. For Altibase 7.1, use `$ALTIBASE_HOME/lib/Altibase42.jar`.
 5. For 7.3, 8.1, or other installed versions, use the JDBC driver supplied with that installed Altibase client or server package unless a certified package states otherwise.
 
@@ -1509,21 +1510,21 @@ Tableau UI procedure: connect to Altibase
    - `Dialect`: `SQL92`.
    - `Username`: Altibase user account.
    - `Password`: Altibase user password.
-   - `Properties File`: browse to the Altibase JDBC driver jar path if Tableau requests this field. The UI example uses `C:\Program Files\Tableau\Drivers\Altibase42.jar`.
+   - `Properties File`: browse to the Altibase JDBC driver jar path if Tableau requests this field. For an Altibase 7.1 driver, choose `Altibase42.jar` from Tableau's `Drivers` directory.
 6. Click `Sign In`.
 7. After login, open the `Database` dropdown.
 8. Select the target database, for example `mydb`.
 9. Select or enter the target schema, such as the schema that owns the tables you want to analyze.
 
-Tableau sample values from the converted UI:
+Tableau connection example values:
 
 ```text
 Connector: Other Databases (JDBC)
 URL: jdbc:Altibase://10.10.1.132:20300/mydb
 Dialect: SQL92
 Username: sys
-Password: masked in UI
-Properties File: C:\Program Files\Tableau\Drivers\Altibase42.jar
+Password: supplied by the operator and not displayed after entry
+Properties File: Altibase42.jar in Tableau's Drivers directory
 Database: mydb
 ```
 

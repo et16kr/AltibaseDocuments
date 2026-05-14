@@ -1136,7 +1136,9 @@ Connection procedure:
 DBeaver issue block: LOB data is not retrieved
 
 - Cause: DBeaver uses `Auto-Commit` by default; Altibase LOB retrieval requires manual transaction handling.
-- Fix: switch the connection to `Manual Commit`, or disable auto-commit by default in `Window` > `Preferences` > `Connections` > `Connection Types`.
+- Fix for the current connection: use the transaction mode selector in the SQL toolbar and choose `Manual Commit`.
+- Fix for a specific connection: open `Edit Connection` or press `F4`, go to `Connection settings` > `Initialization` > `Connection`, clear `Auto-commit`, save the connection, and reconnect.
+- Fix for the global default: open `Window` > `Preferences` > `Connections` > `Connection Types`, clear `Auto-commit by default`, apply the setting, and reconnect.
 - Caution: in `Manual Commit`, explicitly commit or roll back table modifications.
 
 DBeaver issue block: `SYSTEM_` schema is not visible
@@ -1192,6 +1194,24 @@ DBeaver issue block: binary data cannot be modified in Data Editor
 DBeaver issue block: `BIT`, `VARBIT`, and `NIBBLE`
 
 - DBeaver processes binary data by byte. Since `BIT`, `VARBIT`, and `NIBBLE` can be smaller than a byte, DBeaver handles them as numeric or character types.
+
+DBeaver issue block: reset DBeaver settings and reinstall
+
+- Purpose: remove old DBeaver workspace data before reinstalling or rebuilding a connection profile.
+- Procedure: exit DBeaver, uninstall or replace the application as needed, then remove the DBeaver workspace directory for the operating system.
+- Common workspace locations:
+  - Windows: `%APPDATA%\DBeaverData`.
+  - macOS: `~/Library/DBeaverData/`.
+  - Linux: `$XDG_DATA_HOME/DBeaverData/`, or `~/.local/share/DBeaverData/` when `$XDG_DATA_HOME` is not set.
+- Verification: after reinstalling, start DBeaver and confirm that old connection profiles and driver settings are no longer present.
+
+DBeaver issue block: set SQL Editor auto-commit off by default
+
+- Procedure: right-click the connection and choose `Edit Connection`, or select the connection and press `F4`.
+- In the connection configuration, go to `Connection settings` > `Initialization` > `Connection`.
+- Clear `Auto-commit`, save the connection, and reconnect before opening a new SQL editor.
+- Temporary alternative: use the SQL editor transaction mode selector to switch the active editor session from `Auto-Commit` to `Manual Commit`.
+- Verification: the SQL editor opens in manual transaction mode for that connection, and table changes require an explicit commit or rollback.
 
 ## Connector Block: Hibernate
 

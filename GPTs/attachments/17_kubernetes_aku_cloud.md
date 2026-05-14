@@ -31,6 +31,7 @@
 - Treat example passwords such as `manager` and example accounts such as `SYS` as placeholders. Recommend Kubernetes `Secret` objects or equivalent protected secret handling.
 - Before giving production-ready commands, ask for Altibase version, Kubernetes version, container image, storage class, PV/PVC design, license basis, replica count, replication target tables, backup status, downtime window, and recovery plan.
 - For destructive operations such as `TRUNCATE`, `ALTER REPLICATION ... RESET`, `aku -p clean`, or manual master-pod recovery, require a backup and an explicit operator decision.
+- Do not depend on installer or console images for this topic. Express Kubernetes and AKU guidance as YAML, commands, Mermaid lifecycle flows, field/value descriptions, and expected results.
 
 ## Fast Decision Map
 
