@@ -384,6 +384,28 @@ flowchart LR
   T3 -- "T3.m3 = T4.x3" --> T4["T4"]
 ```
 
+Join relationship order is not always the final physical join order:
+
+```text
+Relationship order by selectivity:
+JOIN
+ JOIN
+  JOIN
+   T1
+   T2
+  T3
+ T4
+
+Physical order after join-method selection:
+JOIN
+ JOIN
+  T3
+  JOIN
+   T1
+   T2
+ T4
+```
+
 Full outer join plan pattern:
 
 ```text
@@ -418,6 +440,417 @@ flowchart TD
   B -- TOP_RESULT_CACHE --> D[Cache final result]
   C --> E[Reuse when identical query and related tables are unchanged]
   D --> E
+```
+
+Image-derived plan pattern catalog:
+
+Pattern block: `General join tree and fetch path`
+
+```text
+PROJECT
+ JOIN (METHOD: INDEX_NL)
+  JOIN (METHOD: INDEX_NL)
+   SCAN (TABLE: T1, FULL SCAN)
+   SCAN (TABLE: T2, INDEX: IDX2, RANGE SCAN)
+  SCAN (TABLE: T3, INDEX: IDX3, RANGE SCAN)
+```
+
+- The request path starts at `PROJECT` and moves downward through child nodes.
+- The record-return path starts at leaf `SCAN` nodes and moves upward to `PROJECT`.
+- In same-depth siblings, the earlier row in the plan output is the left child.
+
+Pattern block: `AGGREGATION using sort order`
+
+```text
+PROJECT
+ AGGREGATION
+  GROUPING
+   SCAN (TABLE: T1, INDEX: IDX3, FULL SCAN)
+```
+
+Pattern block: `GROUP-AGGREGATION`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `FILTER over grouped result`
+
+```text
+PROJECT
+ FILTER
+  [FILTER]
+  <predicate, such as I2 < 2>
+  GROUP-AGGREGATION
+   SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `COUNT`
+
+```text
+PROJECT
+ COUNT (TABLE: T1, INDEX: IDX1)
+```
+
+Pattern block: `DISTINCT`
+
+```text
+PROJECT
+ DISTINCT
+  SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `DISTINCT plus ORDER BY materialization`
+
+```text
+PROJECT
+ SORT (memory temporary table, or disk temporary table with DISK_PAGE_COUNT)
+  DISTINCT (memory temporary table, or disk temporary table with DISK_PAGE_COUNT)
+   SCAN (TABLE: <source table>, FULL SCAN)
+```
+
+Pattern block: `DISTINCT with UNION`
+
+```text
+PROJECT
+ DISTINCT
+  VIEW
+   BAG-UNION
+    PROJECT
+     SCAN (TABLE: T1, FULL SCAN)
+    PROJECT
+     SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `DISTINCT used for subquery key range`
+
+```text
+PROJECT
+ SCAN (TABLE: T1, INDEX: IDX1, RANGE SCAN)
+ ::SUB-QUERY BEGIN
+ PROJECT
+  DISTINCT
+   VIEW
+    PROJECT
+     SCAN (TABLE: T2, FULL SCAN)
+ ::SUB-QUERY END
+```
+
+Pattern block: `DISTINCT by sort order`
+
+```text
+PROJECT
+ GROUPING
+  SCAN (TABLE: T1, INDEX: IDX3, FULL SCAN)
+```
+
+Pattern block: `COUNT(DISTINCT ...) by sort order`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  GROUPING
+   SCAN (TABLE: T1, INDEX: IDX2, FULL SCAN)
+```
+
+Pattern block: `BAG-UNION for UNION ALL`
+
+```text
+PROJECT
+ VIEW
+  BAG-UNION
+   PROJECT
+    GROUP-AGGREGATION
+     SCAN (TABLE: T1, FULL SCAN)
+   PROJECT
+    GROUP-AGGREGATION
+     SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `CONCATENATION for OR or DNF`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  CONCATENATION
+   SCAN (TABLE: T1, INDEX: IDX1, RANGE SCAN)
+   FILTER
+    SCAN (TABLE: T1, INDEX: IDX2, RANGE SCAN)
+```
+
+Pattern block: `CONNECT BY`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  CONNECT BY
+   MATERIALIZATION
+    VIEW
+     PROJECT
+      SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `FULL-OUTER-JOIN using sort`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  FILTER
+   FULL-OUTER-JOIN (METHOD: SORT)
+    SCAN (TABLE: T1, FULL SCAN)
+    SORT
+     SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `FULL OUTER JOIN decomposed with indexes`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  FILTER
+   CONCATENATION
+    LEFT-OUTER-JOIN (METHOD: INDEX_NL)
+     SCAN (TABLE: T1, FULL SCAN)
+     SCAN (TABLE: T2, INDEX: IDX1, RANGE SCAN)
+    ANTI-OUTER-JOIN (METHOD: ANTI_COST)
+     SCAN (TABLE: T2, FULL SCAN)
+     SCAN (TABLE: T1, INDEX: IDX1, RANGE SCAN)
+```
+
+Pattern block: `LEFT-OUTER-JOIN`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  FILTER
+   LEFT-OUTER-JOIN (METHOD: NL)
+    SCAN (TABLE: T1, FULL SCAN)
+    SCAN (TABLE: T2, INDEX: IDX1, RANGE SCAN)
+```
+
+Pattern block: `MERGE-JOIN using index order`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  MERGE-JOIN (METHOD: MERGE)
+   SCAN (TABLE: T1, INDEX: IDX1, RANGE SCAN)
+   SCAN (TABLE: T2, INDEX: IDX1, RANGE SCAN)
+```
+
+Pattern block: `MERGE-JOIN using SORT`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  MERGE-JOIN (METHOD: MERGE)
+   SORT
+    SCAN (TABLE: T1, FULL SCAN)
+   SORT
+    SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `LIMIT-SORT for ORDER BY ... LIMIT`
+
+```text
+PROJECT
+ LIMIT-SORT
+  SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `LIMIT-SORT in subquery search`
+
+```text
+PROJECT
+ SCAN (TABLE: T1, FULL SCAN)
+ ::SUB-QUERY BEGIN
+ PROJECT
+  LIMIT-SORT
+   VIEW
+    PROJECT
+     SCAN (TABLE: T2, FULL SCAN)
+ ::SUB-QUERY END
+```
+
+Pattern block: `SET-DIFFERENCE for MINUS`
+
+```text
+PROJECT
+ VIEW
+  SET-DIFFERENCE
+   PROJECT
+    SCAN (TABLE: T1, FULL SCAN)
+   PROJECT
+    SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `SET-INTERSECT`
+
+```text
+PROJECT
+ VIEW
+  SET-INTERSECT
+   PROJECT
+    SCAN (TABLE: T1, FULL SCAN)
+   PROJECT
+    SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `SORT for ORDER BY`
+
+```text
+PROJECT
+ SORT
+  AGGREGATION
+   GROUPING
+    SCAN (TABLE: T1, INDEX: IDX3, FULL SCAN)
+```
+
+Pattern block: `SORT for GROUP BY`
+
+```text
+PROJECT
+ AGGREGATION
+  GROUPING
+   SORT
+    SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `SORT for DISTINCT`
+
+```text
+PROJECT
+ GROUPING
+  SORT
+   SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `SORT join`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: SORT)
+   SCAN (TABLE: T1, FULL SCAN)
+   SORT
+    SCAN (TABLE: T2, FULL SCAN)
+```
+
+Pattern block: `STORE nested-loop join`
+
+```text
+PROJECT
+ JOIN (METHOD: STORE_NL)
+  SCAN (TABLE: T2, FULL SCAN)
+  STORE
+   SCAN (TABLE: T1, INDEX: IDX1)
+```
+
+Pattern block: `VIEW`
+
+```text
+PROJECT
+ VIEW
+  PROJECT
+   AGGREGATION
+    GROUPING
+     SCAN (TABLE: T1, INDEX: IDX3, FULL SCAN)
+```
+
+Pattern block: `VIEW-SCAN with materialized view result`
+
+```text
+PROJECT
+ JOIN (METHOD: SORT)
+  VIEW-SCAN (VIEW: V1)
+   MATERIALIZATION
+    VIEW
+     PROJECT
+      GROUP-AGGREGATION
+       SCAN (TABLE: T1, FULL SCAN)
+  PROJECT
+   SORT
+    SCAN (TABLE: T1, FULL SCAN)
+```
+
+Pattern block: `VIEW-SCAN filter diagram`
+
+```text
+PROJECT
+ FILTER
+  VIEW-SCAN (VIEW: V1)
+   MATERIALIZATION
+    VIEW
+     <view child plan>
+  PROJECT
+   <subquery child plan>
+    VIEW-SCAN (VIEW: V1)
+```
+
+Pattern block: `Memory table SCAN versus disk table SCAN`
+
+```text
+PROJECT
+ SCAN (TABLE: M1, FULL SCAN, ACCESS: <n>, COST: <n>)
+
+PROJECT
+ SCAN (TABLE: D1, FULL SCAN, ACCESS: <n>, DISK_PAGE_COUNT: <n>, COST: <n>)
+```
+
+Pattern block: `SCAN predicate detail`
+
+```text
+PROJECT
+ SCAN (TABLE: T1, INDEX: IDX1, RANGE SCAN)
+  [FIXED KEY]
+  AND
+   OR
+    I1 = 1000
+  [FILTER]
+  I2 = 0
+```
+
+Pattern block: `Partition coordinator`
+
+```text
+PROJECT
+ GROUP-AGGREGATION
+  PARTITION-COORDINATOR (TABLE: <partitioned table>, PARTITION: selected/total)
+   SCAN (PARTITION: P1, FULL SCAN)
+   SCAN (PARTITION: P2, FULL SCAN)
+```
+
+Pattern block: `Parallel scan coordinator`
+
+```text
+PROJECT
+ SORT
+  GROUP-AGGREGATION
+   PARALLEL-SCAN-COORDINATOR (TABLE: <table>)
+    PARALLEL-QUEUE (TID: 1)
+     SCAN (TABLE: <table>, TID: 1)
+    PARALLEL-QUEUE (TID: 2)
+     SCAN (TABLE: <table>, TID: 2)
+```
+
+Pattern block: `Result Cache`
+
+```text
+PROJECT
+ SORT  <-- cacheable intermediate result
+  SCAN
+```
+
+Pattern block: `Top Result Cache`
+
+```text
+PROJECT
+ MATERIALIZATION  <-- cacheable final result
+  VIEW
+   PROJECT
+    SCAN
 ```
 
 ## Access Methods
@@ -476,6 +909,24 @@ Where:
 - `V(R.a)` is the number of distinct values in column `R.a`.
 - `B(R)` is the number of disk pages for table `R`.
 - `M` is the number of available memory buffer pages.
+
+Data type conversion path tuning rule:
+
+- Same-type comparison is preferred because it avoids conversion cost.
+- Indexes are available for `CHAR` and `VARCHAR` comparisons, and for comparisons inside integer, real-number, and non-native numeric type groups.
+- Numeric comparisons can convert across `SMALLINT`, `INTEGER`, `BIGINT`, `REAL`, `DOUBLE`, `NUMERIC`, `DECIMAL`, `NUMBER`, and `FLOAT` families. When the index-column value is converted, an index scan can still work but becomes slower than a scan with matching data types.
+- Character-to-numeric comparisons use a conversion path through character and numeric families. Do not rely on implicit conversion for production predicates; bind values and literals should match the target column type.
+- `DATE`, `INTERVAL`, `CHAR`, and `VARCHAR` conversions should be treated as potential index and CPU-cost risks until the plan confirms the intended `INDEX RANGE SCAN`.
+
+Searchable conversion checks:
+
+```text
+Preferred: bigint_col = BIGINT'1'
+Riskier:   bigint_col = NUMERIC'1'
+Preferred: varchar_col = VARCHAR'abc'
+Allowed:   char_col = VARCHAR'abc'
+Allowed:   varchar_col = CHAR'abc'
+```
 
 ## Index and Constraint Tuning
 
@@ -736,6 +1187,90 @@ Join category block: `Merge`
 - Methods: index merge join, sort merge join.
 - Typical use: both inputs are already ordered or can be efficiently ordered by the join key.
 - Related hint: `USE_MERGE`.
+
+Join method plan-pattern blocks:
+
+```text
+Full nested loop:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: NL)
+   SCAN (TABLE: T1, FULL SCAN)
+   SCAN (TABLE: T2, FULL SCAN)
+
+Full store nested loop:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: STORE_NL)
+   SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+   STORE
+    SCAN (TABLE: T2, FULL SCAN)
+
+Index nested loop:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: INDEX_NL)
+   SCAN (TABLE: T1, INDEX: IDX3)
+   SCAN (TABLE: T2, INDEX: IDX1)
+
+Inverse index nested loop:
+PROJECT
+ GROUP-AGGREGATION
+  SEMI-JOIN INVERSE (METHOD: INDEX_NL)
+   HASH
+    SCAN (TABLE: T2, VIEW SCAN)
+   SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+
+One-pass sort join:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: SORT)
+   SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+   SORT
+    SCAN (TABLE: T2, FULL SCAN)
+
+Two-pass sort join:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: SORT)
+   SORT
+    SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+   SORT
+    SCAN (TABLE: T2, FULL SCAN)
+
+Inverse sort join:
+PROJECT
+ GROUP-AGGREGATION
+  SEMI-JOIN INVERSE (METHOD: SORT)
+   SCAN (TABLE: T1, VIEW SCAN)
+   SORT
+    SCAN (TABLE: T2, FULL SCAN)
+
+One-pass hash join:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: HASH)
+   SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+   HASH
+    SCAN (TABLE: T2, FULL SCAN)
+
+Two-pass hash join:
+PROJECT
+ GROUP-AGGREGATION
+  JOIN (METHOD: HASH)
+   HASH
+    SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+   HASH
+    SCAN (TABLE: T2, FULL SCAN)
+
+Inverse hash join:
+PROJECT
+ GROUP-AGGREGATION
+  SEMI-JOIN INVERSE (METHOD: HASH)
+   SCAN (TABLE: T1, VIEW SCAN)
+   HASH
+    SCAN (TABLE: T2, FULL SCAN)
+```
 
 Join type symbols used in source tables:
 
@@ -1107,6 +1642,30 @@ Shared cache areas:
 - `Shared SQL Plan Cache`: stores SQL execution plans.
 - `Stored Procedure Cache`: stores stored procedure execution plans.
 - `Meta Cache`: stores metadata for quick access.
+
+SQL Plan Cache architecture:
+
+```mermaid
+flowchart TB
+  subgraph PM[Physical memory]
+    subgraph Cache[Cache]
+      SPC[Shared SQL Plan Cache]
+      PROC[Stored Procedure Cache]
+      META[Meta Cache]
+    end
+    MT[Memory Tablespace]
+    LB[Log Buffer]
+    DBUF[Disk Buffer]
+  end
+  subgraph SS[Stable storage]
+    CI[Checkpoint Image]
+    SL[Stable Log]
+    DTS[Disk Tablespace]
+  end
+  MT <--> CI
+  LB --> SL
+  DBUF <--> DTS
+```
 
 Key properties:
 
