@@ -159,7 +159,7 @@ Dependency behavior:
 | JOB-072 | P7 Mermaid | Done | JOB-013, JOB-030, JOB-037, JOB-070 | SQL syntax diagrams | Convert SQL syntax diagrams to BNF or Mermaid | SQL Reference | Attachments 03, 04 | Syntax readable without images |
 | JOB-073 | P7 Mermaid | Done | JOB-013, JOB-043, JOB-070 | Performance diagrams | Convert plan tree and tuning images | Performance Tuning | Attachment 08 | Plan structures searchable |
 | JOB-074 | P7 Mermaid | Done | JOB-013, JOB-044, JOB-070 | Replication diagrams | Convert replication topology and state diagrams | Replication | Attachment 09 | Mermaid topology/state diagrams |
-| JOB-075 | P7 Mermaid | ToDo | JOB-013, JOB-063, JOB-064, JOB-065, JOB-070 | UI screenshots | Replace UI screenshots with procedural text | 3rd party guides | Attachments 16, 17, 19 | No screenshot dependency |
+| JOB-075 | P7 Mermaid | InProgress | JOB-013, JOB-063, JOB-064, JOB-065, JOB-070 | UI screenshots | Replace UI screenshots with procedural text | 3rd party guides | Attachments 16, 17, 19 | No screenshot dependency |
 | JOB-080 | P8 QA | Done | JOB-003 | Count validation | Validate exactly 20 upload attachments excluding README | Attachments | QA report | Count equals 20 |
 | JOB-081 | P8 QA | Done | JOB-023 | Forbidden strings | Validate no internal source labels, Windows paths, file URLs in attachments | Attachments | QA report | No matches |
 | JOB-082 | P8 QA | ToDo | JOB-030, JOB-037, JOB-038, JOB-039, JOB-040, JOB-041, JOB-042, JOB-043, JOB-044, JOB-045, JOB-050, JOB-051, JOB-052, JOB-053, JOB-060, JOB-061, JOB-062, JOB-063, JOB-064, JOB-065 | Version coverage | Validate each attachment has 7.1, 7.3, 8.1 guidance | Attachments | QA report | Coverage complete or exception documented |
