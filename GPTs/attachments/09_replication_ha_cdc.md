@@ -213,7 +213,7 @@ ORDER BY name;
 Use this compact BNF-like form for customer answers.
 
 ```text
-CREATE [LAZY | EAGER] REPLICATION replication_name
+CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
   [FOR ANALYSIS | FOR PROPAGABLE LOGGING | FOR PROPAGATION | FOR ANALYSIS PROPAGATION]
   [AS MASTER | AS SLAVE]
   [OPTIONS option_name [option_name ...]]
@@ -227,55 +227,142 @@ CREATE [LAZY | EAGER] REPLICATION replication_name
 Syntax notes:
 
 - If `LAZY` or `EAGER` is omitted, LAZY mode is used.
+- `IF NOT EXISTS` is available for `CREATE REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
 - `replication_name` must be the same on both nodes.
 - `remote_host_port_no` is the peer Receiver port.
-- In 7.1 and 7.3 TCP replication, use the peer `REPLICATION_PORT_NO`.
-- In 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
+- If the `USING` clause is omitted, ordinary TCP replication is used.
+- In non-SSL TCP replication, use the peer `REPLICATION_PORT_NO`. This is the ordinary replication port, not the database service port and not `SSL_PORT_NO`.
+- In Altibase 8.1 verified source SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For InfiniBand, use `USING IB [ib_latency]` and the peer `REPLICATION_IB_PORT_NO`.
 - `FOR ANALYSIS` creates an XLog Sender for Log Analyzer CDC, not ordinary table-to-table apply.
 - `AS MASTER` and `AS SLAVE` affect handshaking. Valid pairings are not-set with not-set, master with slave, and slave with master.
 
-Basic Active-Standby example:
+## CREATE REPLICATION Examples: Non-SSL TCP
+
+Use this case for ordinary replication over TCP in 7.1, 7.3, and 8.1 when the customer did not request replication SSL.
+
+Non-SSL prerequisites:
+
+- Target tables and primary keys already exist on both nodes.
+- Both nodes use the same database character set and national character set.
+- The peer port used in `WITH 'host', port` is the peer node's `REPLICATION_PORT_NO`.
+- The same `replication_name` and target item list are created on both nodes, with the peer endpoint reversed.
+- The same table-to-table or partition-to-partition mapping is intended on both nodes.
+
+Preflight:
 
 ```sql
--- Active node
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('REPLICATION_PORT_NO', 'REPLICATION_MAX_COUNT')
+ORDER BY name;
+```
+
+Example topology:
+
+- Node A: `192.168.1.60`, `REPLICATION_PORT_NO = 25524`
+- Node B: `192.168.1.12`, `REPLICATION_PORT_NO = 35524`
+- Replication object: `rep1`
+- Replication targets: `sys.employees`, `sys.departments`
+
+```sql
+-- Node A: use Node B's ordinary replication port.
 CREATE REPLICATION rep1
-WITH 'standby_ip', standby_repl_port
+WITH '192.168.1.12', 35524
 FROM sys.employees TO sys.employees,
 FROM sys.departments TO sys.departments;
 
--- Standby node
+-- Node B: use Node A's ordinary replication port.
 CREATE REPLICATION rep1
-WITH 'active_ip', active_repl_port
+WITH '192.168.1.60', 25524
 FROM sys.employees TO sys.employees,
 FROM sys.departments TO sys.departments;
 ```
 
-Altibase 8.1 SSL example:
+Initial start choices:
 
 ```sql
--- Node A
-CREATE REPLICATION rep1
-WITH 'node_b_ip', node_b_ssl_repl_port USING SSL
+-- Copy current target rows from the local node to the peer, then start Sender.
+ALTER REPLICATION rep1 SYNC;
+
+-- If data was already aligned and restart metadata is valid, resume from the latest restart point.
+ALTER REPLICATION rep1 START;
+
+-- Use only when old unsent changes may be skipped intentionally.
+ALTER REPLICATION rep1 QUICKSTART;
+```
+
+## CREATE REPLICATION Examples: Altibase 8.1 SSL
+
+Use this case only for Altibase 8.1 verified source replication SSL. Keep it separate from ordinary client/server SSL/TLS. The ordinary client/server SSL listener uses `SSL_PORT_NO`; replication SSL uses `REPLICATION_SSL_PORT_NO`.
+
+SSL prerequisites:
+
+- Both nodes are Altibase 8.1 when using this verified 8.1 guidance.
+- Ordinary SSL/TLS setup has already been completed on each replication target server.
+- Each node has a nonzero `REPLICATION_SSL_PORT_NO`.
+- Firewalls allow each peer to connect to the other peer's `REPLICATION_SSL_PORT_NO`.
+- `USING SSL` is specified in both matching `CREATE REPLICATION` statements.
+- `FOR ANALYSIS` Log Analyzer replication is not combined with SSL, because Log Analyzer does not support SSL or InfiniBand communication in the verified source guidance.
+
+Preflight:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'SSL_ENABLE',
+  'SSL_PORT_NO',
+  'REPLICATION_SSL_PORT_NO',
+  'REPLICATION_MAX_COUNT'
+)
+ORDER BY name;
+```
+
+Example topology:
+
+- Node A: `192.168.1.60`, `REPLICATION_SSL_PORT_NO = 35524`
+- Node B: `192.168.1.12`, `REPLICATION_SSL_PORT_NO = 45524`
+- Replication object: `rep1_ssl`
+- Replication targets: `sys.employees`, `sys.departments`
+
+```sql
+-- Node A: use Node B's SSL replication port.
+CREATE REPLICATION rep1_ssl
+WITH '192.168.1.12', 45524 USING SSL
 FROM sys.employees TO sys.employees,
 FROM sys.departments TO sys.departments;
 
--- Node B
-CREATE REPLICATION rep1
-WITH 'node_a_ip', node_a_ssl_repl_port USING SSL
+-- Node B: use Node A's SSL replication port.
+CREATE REPLICATION rep1_ssl
+WITH '192.168.1.60', 35524 USING SSL
 FROM sys.employees TO sys.employees,
 FROM sys.departments TO sys.departments;
 ```
 
-8.1 SSL cautions:
+Start SSL replication the same way as non-SSL replication:
+
+```sql
+-- Initial copy and start.
+ALTER REPLICATION rep1_ssl SYNC;
+
+-- Normal restart after a controlled stop.
+ALTER REPLICATION rep1_ssl START;
+
+-- Planned maintenance validation before service movement.
+ALTER REPLICATION rep1_ssl FLUSH ALL WAIT 60;
+```
+
+Altibase 8.1 SSL cautions:
 
 - Altibase 8.1 supports SSL/TLS encryption for replication communication.
 - `USING SSL` is specified in `CREATE REPLICATION`.
-- `REPLICATION_SSL_PORT_NO` configures the SSL replication port.
+- `REPLICATION_SSL_PORT_NO` configures the local SSL replication Receiver port. If this property is `0`, SSL replication cannot connect to that node.
 - General SSL/TLS server setup must be completed before using SSL replication.
+- `SSL_PORT_NO` and `REPLICATION_SSL_PORT_NO` are different ports.
 - Log Analyzer does not support SSL or InfiniBand communication; do not combine `FOR ANALYSIS` with `USING SSL`.
 
-Multi-IP example:
+Non-SSL multi-IP example:
 
 ```sql
 CREATE REPLICATION rep1
@@ -376,6 +463,35 @@ Operation block: `FLUSH`
 - `FLUSH ALL` waits through the most recent log instead of only the log point at command execution.
 - `WAIT timeout_sec` bounds the wait.
 - Use before DDL, failover validation, maintenance, or application cutover.
+
+Lifecycle examples:
+
+```sql
+-- Initial alignment for all targets in the replication object.
+ALTER REPLICATION rep1 SYNC;
+
+-- Align selected targets only, then start later from the restart point.
+ALTER REPLICATION rep1 SYNC ONLY TABLE sys.employees, sys.departments;
+ALTER REPLICATION rep1 START;
+
+-- Stop before changing target membership.
+ALTER REPLICATION rep1 STOP;
+ALTER REPLICATION rep1 ADD TABLE
+FROM sys.projects TO sys.projects;
+ALTER REPLICATION rep1 SYNC TABLE sys.projects;
+
+-- Remove a target only after confirming no unsafe replication gap remains.
+ALTER REPLICATION rep1 STOP;
+ALTER REPLICATION rep1 DROP TABLE
+FROM sys.projects TO sys.projects;
+
+-- Planned cutover or maintenance check.
+ALTER REPLICATION rep1 FLUSH ALL WAIT 60;
+
+-- Reset restart metadata only while stopped and only when the object definition remains valid.
+ALTER REPLICATION rep1 STOP;
+ALTER REPLICATION rep1 RESET;
+```
 
 Verification after start:
 

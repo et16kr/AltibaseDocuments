@@ -557,30 +557,57 @@ Generation notes:
 ### Replication Syntax
 
 ```text
-replication ::=
-  CREATE REPLICATION replication_name
-  [AS MASTER | AS SLAVE]
+replication_non_ssl ::=
+  CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
   [FOR ANALYSIS | FOR ANALYSIS PROPAGATION | FOR PROPAGABLE LOGGING | FOR PROPAGATION]
+  [AS MASTER | AS SLAVE]
   [OPTIONS option_list]
-  WITH 'remote_host_ip', remote_replication_port [USING {TCP | IB ib_latency}]
-  FROM [owner.]local_table TO [owner.]remote_table
-  [, FROM [owner.]local_table TO [owner.]remote_table ...]
+  WITH 'remote_host_ip_or_name', remote_replication_port [USING TCP | USING IB ib_latency]
+       [...]
+  FROM [owner.]local_table [PARTITION local_partition]
+  TO   [owner.]remote_table [PARTITION remote_partition]
+  [, FROM ... TO ...]
 
 replication_ssl_8_1 ::=
-  CREATE REPLICATION replication_name
-  WITH 'remote_host_ip', remote_ssl_replication_port USING SSL
-  FROM [owner.]local_table TO [owner.]remote_table
+  CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
+  [AS MASTER | AS SLAVE]
+  [OPTIONS option_list]
+  WITH 'remote_host_ip_or_name', remote_ssl_replication_port USING SSL
+       [...]
+  FROM [owner.]local_table [PARTITION local_partition]
+  TO   [owner.]remote_table [PARTITION remote_partition]
+  [, FROM ... TO ...]
 
-alter_replication_control ::=
-  ALTER REPLICATION replication_name {SYNC | SYNC ONLY | START | QUICKSTART | STOP | RESET | FLUSH}
+alter_replication ::=
+  ALTER REPLICATION replication_name SYNC [PARALLEL parallel_factor]
+    [TABLE [owner.]table_name [PARTITION partition_name], ...]
+| ALTER REPLICATION replication_name SYNC ONLY [PARALLEL parallel_factor]
+    [TABLE [owner.]table_name [PARTITION partition_name], ...]
+| ALTER REPLICATION replication_name START [RETRY]
+| ALTER REPLICATION replication_name QUICKSTART [RETRY]
+| ALTER REPLICATION replication_name STOP
+| ALTER REPLICATION replication_name RESET
+| ALTER REPLICATION replication_name ADD TABLE
+    FROM [owner.]local_table [PARTITION local_partition]
+    TO   [owner.]remote_table [PARTITION remote_partition]
+| ALTER REPLICATION replication_name DROP TABLE
+    FROM [owner.]local_table [PARTITION local_partition]
+    TO   [owner.]remote_table [PARTITION remote_partition]
+| ALTER REPLICATION replication_name FLUSH [ALL] [WAIT timeout_sec]
 ```
 
 Generation notes:
 
 - Only `SYS` can execute replication-related statements.
+- `IF NOT EXISTS` is available for `CREATE REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3; it also does not verify that an existing replication object has the desired endpoints or target items.
 - The replication object name must be the same on both servers.
 - The port in `WITH 'host', port` is the remote server's replication receiver port. For ordinary replication, check `REPLICATION_PORT_NO` on the remote server.
-- In 8.1, SSL replication uses `USING SSL` and the remote server's `REPLICATION_SSL_PORT_NO`. SSL configuration must already be completed on each replication target server.
+- Non-SSL replication and SSL replication are separate generation cases. Do not mix ordinary TCP ports and SSL replication ports in the same example.
+- If `USING` is omitted, ordinary TCP replication is used. `USING TCP` can be shown for clarity, but it is not required.
+- `USING IB ib_latency` is only for InfiniBand environments. Use the peer `REPLICATION_IB_PORT_NO`, and verify `IB_ENABLE`.
+- In Altibase 8.1 verified source, SSL replication uses `USING SSL` and the remote server's `REPLICATION_SSL_PORT_NO`. SSL configuration must already be completed on each replication target server.
+- Do not combine `FOR ANALYSIS` Log Analyzer replication with `USING SSL`.
+- `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
 
 ## Complete DDL Examples
 
@@ -1478,11 +1505,18 @@ WHERE t.user_id = u.user_id
 
 ### Replication Examples
 
-Create the same ordinary replication object on both servers. Replace host names, ports, owners, and table names with the customer's environment.
+Use this section only after confirming that the target tables and primary keys already exist on both nodes. Replace host names, ports, owners, and table names with the customer's environment.
+
+Non-SSL TCP replication example:
 
 Local server `192.168.10.10`, remote server `192.168.10.20`:
 
 ```sql
+-- Query this on 192.168.10.20 and use the result as the port below.
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'REPLICATION_PORT_NO';
+
 CREATE REPLICATION rep_app_user
 WITH '192.168.10.20', 35524
 FROM app.app_user TO app.app_user,
@@ -1494,6 +1528,11 @@ ALTER REPLICATION rep_app_user SYNC;
 Remote server `192.168.10.20`, local server `192.168.10.10`:
 
 ```sql
+-- Query this on 192.168.10.10 and use the result as the port below.
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'REPLICATION_PORT_NO';
+
 CREATE REPLICATION rep_app_user
 WITH '192.168.10.10', 25524
 FROM app.app_user TO app.app_user,
@@ -1502,12 +1541,26 @@ FROM app.app_document TO app.app_document;
 ALTER REPLICATION rep_app_user SYNC;
 ```
 
-8.1 SSL replication example:
+Altibase 8.1 verified source SSL replication example:
 
 ```sql
+-- Node A: 192.168.10.10, SSL replication receiver port 45514.
+-- Node B: 192.168.10.20, SSL replication receiver port 45524.
+-- Ordinary SSL/TLS server setup must already be complete on both nodes.
+
+-- On Node A, create the object using Node B's REPLICATION_SSL_PORT_NO.
 CREATE REPLICATION rep_app_user_ssl
 WITH '192.168.10.20', 45524 USING SSL
-FROM app.app_user TO app.app_user;
+FROM app.app_user TO app.app_user,
+FROM app.app_document TO app.app_document;
+
+ALTER REPLICATION rep_app_user_ssl SYNC;
+
+-- On Node B, create the object using Node A's REPLICATION_SSL_PORT_NO.
+CREATE REPLICATION rep_app_user_ssl
+WITH '192.168.10.10', 45514 USING SSL
+FROM app.app_user TO app.app_user,
+FROM app.app_document TO app.app_document;
 
 ALTER REPLICATION rep_app_user_ssl SYNC;
 ```
@@ -1516,9 +1569,12 @@ Replication cautions:
 
 - Run corresponding `CREATE REPLICATION` statements on both servers.
 - Use `ALTER REPLICATION ... SYNC` when existing table data must be copied and replication should be started in one operation.
+- Use `ALTER REPLICATION ... SYNC ONLY` when table data should be copied but Sender creation should be delayed.
 - Use `ALTER REPLICATION ... START` when replication should resume from the previous restart SN.
 - Use `ALTER REPLICATION ... QUICKSTART` only when the customer accepts starting from the current log position.
-- For 8.1 SSL replication, query `REPLICATION_SSL_PORT_NO` and confirm SSL/TLS server configuration first.
+- Use `ALTER REPLICATION ... FLUSH [ALL] [WAIT timeout_sec]` before planned DDL, maintenance, or failover validation.
+- To add or drop a replication target, run `ALTER REPLICATION ... STOP`, apply `ADD TABLE` or `DROP TABLE` on both nodes with the intended mapping, then restart or resynchronize.
+- For Altibase 8.1 SSL replication, query `REPLICATION_SSL_PORT_NO` on the peer node and confirm SSL/TLS server configuration first.
 
 Verify replication:
 
