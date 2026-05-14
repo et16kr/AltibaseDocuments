@@ -58,6 +58,7 @@ Use these first when selecting the right source:
 | --- | --- |
 | Product and meta version | `V$VERSION` |
 | Properties | `V$PROPERTY` |
+| Property effect checks | `V$PROPERTY` plus the related performance view, such as `V$SQL_PLAN_CACHE`, `V$TIME_ZONE_NAMES`, `V$TEMPORARY_LOBS`, or replication views |
 | Performance view inventory | `V$TABLE`, `V$ALLCOLUMN` |
 | Tables, views, sequences, queues | `SYSTEM_.SYS_TABLES_` |
 | Columns | `SYSTEM_.SYS_COLUMNS_` |
@@ -100,19 +101,58 @@ Use `META_VERSION` when an upgrade, migration, or metadata compatibility questio
 
 ```sql
 SELECT name,
+       storedcount,
+       attr,
+       min,
+       max,
        value1,
        value2,
        value3,
-       min,
-       max,
-       attr,
-       storedcount
+       value4,
+       value5,
+       value6,
+       value7,
+       value8
 FROM V$PROPERTY
 WHERE name IN (
   '<PROPERTY_NAME_1>',
   '<PROPERTY_NAME_2>'
 )
 ORDER BY name;
+```
+
+`STOREDCOUNT` is the number of configured values for the property. Multi-value properties can use `VALUE1` through `VALUE8`.
+
+For multi-value path properties:
+
+```sql
+SELECT name,
+       storedcount,
+       value1,
+       value2,
+       value3,
+       value4,
+       value5,
+       value6,
+       value7,
+       value8
+FROM V$PROPERTY
+WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR')
+ORDER BY name;
+```
+
+For dynamic property change checks, always query before and after the change in the same session or maintenance window:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+
+ALTER SESSION SET QUERY_TIMEOUT = 120;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
 ```
 
 For 8.1 Temporary LOB checks:
@@ -127,6 +167,83 @@ WHERE name IN (
 )
 ORDER BY name;
 ```
+
+### Verify Property Effects with System Views
+
+Use this when the user asks whether a property change is active or whether the running system reflects the configured value.
+
+SQL plan cache:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'SQL_PLAN_CACHE_SIZE';
+
+SELECT max_cache_size,
+       current_cache_size,
+       current_cache_obj_count,
+       cache_hit_count,
+       cache_miss_count
+FROM V$SQL_PLAN_CACHE;
+```
+
+Time zone:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'TIME_ZONE';
+
+SELECT name, utc_offset
+FROM V$TIME_ZONE_NAMES
+WHERE name = 'Asia/Seoul';
+```
+
+Replication ports:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('REPLICATION_PORT_NO', 'REPLICATION_SSL_PORT_NO')
+ORDER BY name;
+
+SELECT port, max_sender_count, max_receiver_count
+FROM V$REPEXEC;
+```
+
+Storage defaults used by generated DDL:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_NEXT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE',
+  'USER_TEMP_FILE_INIT_SIZE',
+  'USER_TEMP_FILE_NEXT_SIZE',
+  'USER_TEMP_FILE_MAX_SIZE',
+  'MEM_MAX_DB_SIZE',
+  'VOLATILE_MAX_DB_SIZE'
+)
+ORDER BY name;
+
+SELECT id, name, type, state, datafile_count, total_page_count, page_size
+FROM V$TABLESPACES
+ORDER BY id;
+```
+
+Property and system-view matrix:
+
+| Question | Property check | Related view check |
+| --- | --- | --- |
+| What value is configured? | `V$PROPERTY` | Usually none |
+| Is a performance-view query portable? | `V$TABLE` | `V$ALLCOLUMN` |
+| Did `SQL_PLAN_CACHE_SIZE` take effect? | `V$PROPERTY` | `V$SQL_PLAN_CACHE` |
+| Is `TIME_ZONE` value valid? | `V$PROPERTY` | `V$TIME_ZONE_NAMES` |
+| Is Temporary LOB enabled and used in 8.1? | `V$PROPERTY` | `V$TEMPORARY_LOBS` |
+| Which replication port is configured? | `V$PROPERTY` | `V$REPEXEC`, `V$REPGAP`, `V$REPSENDER`, `V$REPRECEIVER` |
+| Which storage default affects DDL? | `V$PROPERTY` | `V$TABLESPACES`, `V$DATAFILES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES` |
 
 ### Check Whether a Performance View or Column Exists
 
@@ -1400,6 +1517,72 @@ ALTER SESSION SET FREE TEMPORARY LOB;
 Use this only when session Temporary LOB cleanup is intended.
 
 ## Searchable Object Blocks
+
+### Object Block: `V$PROPERTY`
+
+Purpose: shows internally set Altibase property values, min/max metadata, attributes, and multi-value entries.
+
+Key columns: `NAME`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `VALUE1`, `VALUE2`, `VALUE3`, `VALUE4`, `VALUE5`, `VALUE6`, `VALUE7`, `VALUE8`.
+
+Representative SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1, value2, value3
+FROM V$PROPERTY
+WHERE name IN ('QUERY_TIMEOUT', 'SQL_PLAN_CACHE_SIZE', 'TIME_ZONE')
+ORDER BY name;
+```
+
+### Object Block: `V$TABLE` and `V$ALLCOLUMN`
+
+Purpose: list available performance views and the columns exposed by those views.
+
+Key columns: `V$TABLE.NAME`, `V$TABLE.SLOTSIZE`, `V$TABLE.COLUMNCOUNT`, `V$ALLCOLUMN.TABLENAME`, `V$ALLCOLUMN.COLNAME`.
+
+Representative SQL:
+
+```sql
+SELECT name, slotsize, columncount
+FROM V$TABLE
+WHERE name IN ('V$PROPERTY', 'V$SQL_PLAN_CACHE', 'V$TEMPORARY_LOBS')
+ORDER BY name;
+
+SELECT tablename, colname
+FROM V$ALLCOLUMN
+WHERE tablename IN ('V$PROPERTY', 'V$SQL_PLAN_CACHE', 'V$TEMPORARY_LOBS')
+ORDER BY tablename, colname;
+```
+
+### Object Block: `V$VERSION`
+
+Purpose: shows product, package, storage-manager, metadata, communication protocol, and replication protocol versions.
+
+Key columns: `PRODUCT_VERSION`, `PKG_BUILD_PLATFORM_INFO`, `PRODUCT_TIME`, `SM_VERSION`, `META_VERSION`, `PROTOCOL_VERSION`, `REPL_PROTOCOL_VERSION`.
+
+Representative SQL:
+
+```sql
+SELECT product_version,
+       meta_version,
+       protocol_version,
+       repl_protocol_version
+FROM V$VERSION;
+```
+
+### Object Block: `V$TIME_ZONE_NAMES`
+
+Purpose: lists region names, abbreviations, and UTC offset values that can be used for `TIME_ZONE`.
+
+Key columns: `NAME`, `UTC_OFFSET`.
+
+Representative SQL:
+
+```sql
+SELECT name, utc_offset
+FROM V$TIME_ZONE_NAMES
+WHERE name IN ('Asia/Seoul', 'UTC')
+ORDER BY name;
+```
 
 ### Object Block: `SYSTEM_.SYS_TABLES_`
 

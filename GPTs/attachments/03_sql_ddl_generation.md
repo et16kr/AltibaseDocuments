@@ -12,6 +12,7 @@
 - Generate table DDL for memory tables, disk tables, LOB columns, temporary tables, partitioned tables, and 8.1 JSON columns.
 - Generate queue DDL and minimal queue usage checks.
 - Generate SQL for indexes, constraints, users, privileges, sequences, and replication objects.
+- Generate SQL to inspect properties, change dynamic properties, and verify related performance views.
 - Convert Oracle-style DDL into Altibase DDL while preserving object names and checking Altibase-specific storage clauses.
 - Generate post-DDL verification SQL for meta tables, performance views, and properties.
 
@@ -28,6 +29,7 @@
 - Always identify the storage target before generating DDL: memory data, disk data, volatile data, or temporary disk space.
 - Prefer complete runnable examples with follow-up verification SQL. Do not provide DDL without owner, tablespace, and privilege assumptions when those affect execution.
 - For broad compatibility with 7.1 and 7.3, omit `IF NOT EXISTS` and `IF EXISTS` unless the customer targets 8.1 verified source or explicitly requests idempotent DDL.
+- For property changes, show `V$PROPERTY` before and after the change, use `ALTER SYSTEM` or `ALTER SESSION` only for documented dynamic properties, and add the related performance-view check when one exists.
 - Do not claim Oracle DDL can run unchanged. Convert Oracle storage, tablespace, LOB, sequence, and replication assumptions into Altibase syntax.
 
 ## DDL Generation Flow
@@ -609,7 +611,102 @@ Generation notes:
 - Do not combine `FOR ANALYSIS` Log Analyzer replication with `USING SSL`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
 
+### Property SQL Syntax
+
+```text
+property_profile_query ::=
+  SELECT name, storedcount, attr, min, max, value1, ..., value8
+  FROM V$PROPERTY
+  WHERE name {= property_name | IN (property_name [, ...])}
+
+alter_system_property ::=
+  ALTER SYSTEM SET property_name = property_value
+
+alter_session_property ::=
+  ALTER SESSION SET property_name = property_value
+
+property_view_availability_query ::=
+  SELECT name, columncount
+  FROM V$TABLE
+  WHERE name IN (view_name [, ...])
+```
+
+Generation notes:
+
+- `ALTER SYSTEM` changes a documented system-level dynamic property for the running server. The user must be `SYS` or have `ALTER SYSTEM` privilege.
+- `ALTER SESSION` changes a documented session-level dynamic property for the current session only.
+- For properties documented as `NONE`, read-only, database-creation-only, or restart-required, do not generate `ALTER SYSTEM` or `ALTER SESSION`; generate `V$PROPERTY` checks and the static configuration procedure instead.
+- Quote string values such as `TIME_ZONE`, `DEFAULT_DATE_FORMAT`, and `NLS_NUMERIC_CHARACTERS`; keep numeric values explicit and state the unit.
+- If a related performance view exists, verify the runtime effect with that view. Examples: `SQL_PLAN_CACHE_SIZE` with `V$SQL_PLAN_CACHE`, `TIME_ZONE` with `V$TIME_ZONE_NAMES`, Temporary LOB properties with `V$TEMPORARY_LOBS`, and replication port properties with `V$REPEXEC` or replication runtime views.
+
 ## Complete DDL Examples
+
+### Property SQL Examples
+
+Change a dynamic timeout for the current session:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+
+ALTER SESSION SET QUERY_TIMEOUT = 120;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+```
+
+Change a dynamic timeout for the running server:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+
+ALTER SYSTEM SET QUERY_TIMEOUT = 300;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+```
+
+Change SQL plan cache size and verify the related system view:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'SQL_PLAN_CACHE_SIZE';
+
+SELECT max_cache_size,
+       current_cache_size,
+       current_cache_obj_count,
+       cache_hit_count,
+       cache_miss_count
+FROM V$SQL_PLAN_CACHE;
+
+ALTER SYSTEM SET SQL_PLAN_CACHE_SIZE = 134217728;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'SQL_PLAN_CACHE_SIZE';
+
+SELECT max_cache_size,
+       current_cache_size,
+       current_cache_obj_count
+FROM V$SQL_PLAN_CACHE;
+```
+
+Check a static property before DDL planning:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN ('LOG_FILE_SIZE', 'PORT_NO', 'MAX_CLIENT')
+ORDER BY name;
+```
+
+For these static examples, explain the file, restart, or database recreation path instead of emitting a dynamic `ALTER` statement.
 
 ### Tablespace Examples
 

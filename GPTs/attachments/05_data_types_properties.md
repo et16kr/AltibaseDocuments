@@ -13,6 +13,7 @@
 - How do `FIXED`, `VARIABLE`, and `IN ROW` affect column storage?
 - What are the 8.1 `JSON` data type and Temporary LOB features?
 - Where are Altibase server properties checked, and how are static and dynamic property changes applied?
+- Which SQL should be used to inspect a property, change a dynamic property, and verify the related system view?
 - What do properties such as `LOG_FILE_SIZE`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, and `REPLICATION_SSL_PORT_NO` mean?
 
 ## Source Documents
@@ -27,6 +28,7 @@
 - If the customer specifies a version, use that version's data types and property definitions. If no version is specified, use the 8.1 baseline and call out features that do not exist in 7.1 or 7.3.
 - For data type questions, identify the data shape, maximum size, storage target, and whether Oracle compatibility matters.
 - For property questions, answer with `Meaning`, `Default`, `Dynamic Change Support`, `Range`, and `Check SQL`.
+- For property change questions, include pre-change SQL, the correct `ALTER SYSTEM` or `ALTER SESSION` form only when the property supports it, post-change SQL, and any restart or recreation requirement.
 - Do not expose internal source labels. Refer to the 8.1 source family as `Altibase 8.1 verified source`.
 - Do not keep large source tables as-is. Convert them into searchable data type or property item blocks.
 
@@ -638,11 +640,86 @@ Attribute interpretation:
 - `Single Value`: one configured value.
 - `Multiple Values`: multiple configured values are accepted.
 
+Alter level interpretation:
+
+- `SESSION`: use `ALTER SESSION` for the current session only.
+- `SYSTEM`: use `ALTER SYSTEM` for the running server.
+- `BOTH`: either `ALTER SESSION` or `ALTER SYSTEM` is valid; choose scope deliberately.
+- `NONE`: do not generate dynamic SQL. Use `altibase.properties`, an `ALTIBASE_property_name` environment variable, restart, or database recreation as documented for that property.
+
+Do not infer alter level from the `V$PROPERTY.ATTR` number alone. Use the property's documented dynamic-change support and verify the installed version.
+
+## Property Change Decision Flow
+
+```mermaid
+flowchart TD
+  A[Need property guidance] --> B[Check version and current value in V$PROPERTY]
+  B --> C{Dynamic change supported?}
+  C -->|No| D[Use altibase.properties or ALTIBASE_property_name and plan restart or recreation]
+  C -->|Yes| E{Scope required?}
+  E -->|Current session only| F[ALTER SESSION SET property = value]
+  E -->|All sessions or server default| G[ALTER SYSTEM SET property = value]
+  E -->|Either| H[Choose SESSION for test, SYSTEM for server-wide change]
+  F --> I[Verify V$PROPERTY in same session and related performance view]
+  G --> I
+  D --> J[Verify after restart or recreation with V$PROPERTY and related view]
+```
+
+## Compact Property SQL Syntax
+
+These patterns replace SQL syntax diagrams for property operations.
+
+```text
+property_profile_query ::=
+  SELECT name, storedcount, attr, min, max, value1, ..., value8
+  FROM V$PROPERTY
+  WHERE name {= property_name | IN (property_name [, ...])}
+
+alter_system_property ::=
+  ALTER SYSTEM SET property_name = property_value
+
+alter_session_property ::=
+  ALTER SESSION SET property_name = property_value
+
+free_session_temporary_lob_8_1 ::=
+  ALTER SESSION SET FREE TEMPORARY LOB
+```
+
+Property SQL rules:
+
+- Use exact property names, for example `QUERY_TIMEOUT`, not a translated property label.
+- Quote string values such as date formats and time zone names.
+- Keep numeric values explicit. If the property unit is seconds or bytes, state that unit.
+- For `ALTER SYSTEM`, the user must be `SYS` or have `ALTER SYSTEM` privilege.
+- For `ALTER SESSION`, the change affects only the current session.
+- For persistent operations policy, also maintain `altibase.properties` when the site requires restart-stable configuration; do not assume a dynamic statement replaces file configuration unless the target version documentation confirms it.
+
 ## Property Check SQL
 
-Use exact property names in `V$PROPERTY`.
+Use exact property names in `V$PROPERTY`. `V$PROPERTY` exposes `NAME`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, and `VALUE1` through `VALUE8`; multi-value properties use multiple `VALUE` columns.
 
 ```sql
+SELECT name,
+       storedcount,
+       attr,
+       min,
+       max,
+       value1,
+       value2,
+       value3,
+       value4,
+       value5,
+       value6,
+       value7,
+       value8
+FROM V$PROPERTY
+WHERE name = '<PROPERTY_NAME>';
+
+SELECT name, storedcount, value1, value2, value3, value4, value5, value6, value7, value8
+FROM V$PROPERTY
+WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR')
+ORDER BY name;
+
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'LOG_FILE_SIZE';
@@ -673,6 +750,86 @@ SELECT name, utc_offset
 FROM V$TIME_ZONE_NAMES
 WHERE name = 'Asia/Seoul';
 ```
+
+## Property Change Examples
+
+System-level timeout change:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+
+ALTER SYSTEM SET QUERY_TIMEOUT = 300;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+```
+
+Session-level timeout test:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+
+ALTER SESSION SET QUERY_TIMEOUT = 120;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'QUERY_TIMEOUT';
+```
+
+Session time zone change with value validation:
+
+```sql
+SELECT name, utc_offset
+FROM V$TIME_ZONE_NAMES
+WHERE name = 'Asia/Seoul';
+
+ALTER SESSION SET TIME_ZONE = 'Asia/Seoul';
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'TIME_ZONE';
+```
+
+SQL plan cache size change and related system view check:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'SQL_PLAN_CACHE_SIZE';
+
+SELECT max_cache_size,
+       current_cache_size,
+       current_cache_obj_count,
+       cache_hit_count,
+       cache_miss_count
+FROM V$SQL_PLAN_CACHE;
+
+ALTER SYSTEM SET SQL_PLAN_CACHE_SIZE = 134217728;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'SQL_PLAN_CACHE_SIZE';
+
+SELECT max_cache_size,
+       current_cache_size,
+       current_cache_obj_count
+FROM V$SQL_PLAN_CACHE;
+```
+
+Static or read-only property answer pattern:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN ('LOG_FILE_SIZE', 'PORT_NO', 'MAX_CLIENT');
+```
+
+Do not generate `ALTER SYSTEM` or `ALTER SESSION` for these examples unless the target version documentation explicitly says the property is dynamically changeable. Explain the required restart or database recreation path instead.
 
 ## Property Categories
 
