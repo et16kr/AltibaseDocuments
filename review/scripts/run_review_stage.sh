@@ -191,7 +191,7 @@ run_stage() {
   fi
 
   command -v "$CODEX_BIN" >/dev/null 2>&1 || die "codex binary not found: $CODEX_BIN"
-  (cd "$ROOT_DIR" && "$CODEX_BIN" "$CODEX_SUBCOMMAND" "$prompt")
+  (cd "$ROOT_DIR" && "$CODEX_BIN" "$CODEX_SUBCOMMAND" "$prompt" </dev/null)
 }
 
 run_all() {
