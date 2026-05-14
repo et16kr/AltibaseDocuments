@@ -435,3 +435,8 @@ ORDER BY name;
 - If the user asks for a generated migration plan, include a backup, target platform check, binary/meta compatibility check, replication feature check, application client test, and post-upgrade SQL verification.
 - If a feature is release-note-only, say that the release notes confirm the feature but avoid operational details that are not present in the source.
 
+
+
+## Minor Patch & Release Notes Caveats
+- **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific `ReleaseNotes` (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
+

@@ -1682,3 +1682,12 @@ Template: APRE build
 ```text
 Write embedded SQL in a `.sc` file, declare host variables inside `EXEC SQL BEGIN DECLARE SECTION` and `EXEC SQL END DECLARE SECTION`, use indicator variables for NULL and binary/LOB length handling, precompile with `apre`, compile the generated `.c` or `.cpp` with `-I $ALTIBASE_HOME/include`, and link with the APRE and ODBC CLI libraries from `$ALTIBASE_HOME/lib`.
 ```
+
+
+## Additional API Interfaces
+While JDBC, ODBC, C Interface, and CLI are primarily used, Altibase also provides full support for the following APIs (detailed in the API User's Manual):
+- **PHP & PDO**: Altibase supports PHP modules and PDO drivers for web application integration.
+- **ADO.NET**: Native Altibase ADO.NET data provider is available for .NET framework applications.
+- **XA Interface (Distributed Transactions)**: Altibase supports the X/Open XA standard for distributed transaction processing, allowing integration with TP monitors like Tuxedo.
+- **CheckServer API & iLoader API**: Internal APIs for building custom monitoring logic (CheckServer) or high-speed bulk data loading (iLoader) directly in C/C++ applications without invoking the command-line utility.
+

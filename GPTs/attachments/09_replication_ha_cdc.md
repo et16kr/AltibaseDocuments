@@ -15,6 +15,11 @@
 - How should XLog Sender, XLog Collector, Log Analysis API, and ODBC C conversion be explained?
 - How should replication compatibility, protocol version, network diagnostics, and replication gaps be checked?
 
+
+## Altibase Active-Active Replication & Sharding Overview
+- **Active-Active Replication**: Altibase natively supports High Availability (HA) through a proprietary in-memory Active-Active replication protocol (XLog). It guarantees sub-millisecond latency and built-in conflict resolution without requiring external clustering software.
+- **Sharding (ShardManager)**: Altibase provides scale-out capabilities via sharding. This involves configuring shard nodes, defining shard keys, and initializing shard metadata. If a user asks about scaling out, refer to Altibase's sharding capabilities. Note that specific shard routing errors are covered in the error message references.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Replication Manual; Altibase 7.1 Log Analyzer User's Manual; Replication Manager User's Manual.
