@@ -52,6 +52,14 @@ flowchart TD
 
 These patterns are generation guides, not a replacement for the full SQL Reference grammar.
 
+Syntax notation used in this attachment:
+
+- `[ ... ]` means optional syntax.
+- `{ A | B }` means choose exactly one alternative.
+- `item [, item ...]` means one or more comma-separated items.
+- `...` after a clause means the clause may repeat.
+- Lowercase names such as `table_name`, `expr`, and `subquery` are placeholders to replace with customer objects or expressions.
+
 ### Tablespace Syntax
 
 ```text
@@ -359,8 +367,11 @@ Table DDL item blocks:
 ```text
 queue ::=
   CREATE QUEUE [create_if_not_exists] [owner.]queue_name
-  ( {message_size | queue_column_definition [, queue_column_definition ...]} )
+  ( {message_size [{FIXED | VARIABLE}]
+    | queue_column_definition [, queue_column_definition ...]} )
   [MAXROWS integer]
+  [DELETE {ON | OFF}]
+  [TABLESPACE tablespace_name]
 
 queue_column_definition ::=
   column_name data_type
@@ -395,6 +406,9 @@ Generation notes:
 - The message-size form accepts a byte size from `1` through `32000`.
 - The column-definition form uses `CREATE TABLE` column definitions but does not support column constraints, encryption clauses, or `TIMESTAMP`.
 - `MAXROWS` ranges from `1` through `4294967295`; the default is `4294967295`.
+- `FIXED` uses fixed-length message storage. `VARIABLE` uses variable-length queue storage.
+- `DELETE ON` or `DELETE OFF` controls delete behavior for queue messages when the option is available in the target version. If the customer targets 7.1 or 7.3, verify support before generating it.
+- Use `TABLESPACE tablespace_name` when queue placement matters; otherwise Altibase uses the creator's default tablespace.
 - `ALTER QUEUE ... COMPACT` returns empty pages to the queue tablespace without moving queue data. `ALTER QUEUE ... MSGID RESET` resets the queue message id.
 - `DROP QUEUE` removes the queue table, its index, and the sequence used for `MSGID` values.
 - `DEQUEUE` reads and removes the matching message. `FIFO` is the default; `LIFO` reads the newest matching message. `DEQUEUE` can reference only one queue table, and a `DEQUEUE` `WHERE` clause cannot contain a subquery.
@@ -638,6 +652,189 @@ Generation notes:
 - For properties documented as `NONE`, read-only, database-creation-only, or restart-required, do not generate `ALTER SYSTEM` or `ALTER SESSION`; generate `V$PROPERTY` checks and the static configuration procedure instead.
 - Quote string values such as `TIME_ZONE`, `DEFAULT_DATE_FORMAT`, and `NLS_NUMERIC_CHARACTERS`; keep numeric values explicit and state the unit.
 - If a related performance view exists, verify the runtime effect with that view. Examples: `SQL_PLAN_CACHE_SIZE` with `V$SQL_PLAN_CACHE`, `TIME_ZONE` with `V$TIME_ZONE_NAMES`, Temporary LOB properties with `V$TEMPORARY_LOBS`, and replication port properties with `V$REPEXEC` or replication runtime views.
+
+### Additional SQL Reference DDL and DCL Syntax
+
+Use these compact conversions when the SQL Reference syntax diagram is broader than the common generation patterns above. They keep the railroad-diagram content readable without images.
+
+```text
+alter_database ::=
+  ALTER DATABASE
+  { database_name startup_clause
+  | rename_datafile_clause
+  | create_datafile_clause
+  | create_checkpoint_image_clause
+  | database_name session_clause
+  | archivelog_option
+  | backup_clause
+  | incremental_backup_clause
+  | recover_clause
+  | restore_clause
+  | change_backup_directory_clause
+  | move_backup_clause
+  | delete_backup_clause
+  | change_tracking_clause
+  | snapshot_clause
+  | checkpoint_scale_clause }
+
+startup_clause ::=
+  { CONTROL
+  | SERVICE
+  | META [UPGRADE | RESETLOGS | RESETUNDO]
+  | SHUTDOWN [NORMAL | IMMEDIATE | EXIT] }
+
+archive_backup_recovery_clause ::=
+  { ARCHIVELOG | NOARCHIVELOG
+  | BACKUP {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [backup_option ...]
+  | INCREMENTAL BACKUP {LEVEL integer | CUMULATIVE | DIFFERENTIAL} [WITH TAG tag_name]
+  | RECOVER {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [FROM TAG tag_name] [UNTIL until_option]
+  | RESTORE {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [FROM TAG tag_name] [UNTIL until_option] }
+
+directory_ddl ::=
+  CREATE [OR REPLACE] DIRECTORY [IF NOT EXISTS] directory_name AS 'path_name'
+| DROP DIRECTORY [IF EXISTS] directory_name
+
+synonym_ddl ::=
+  CREATE [OR REPLACE] [PUBLIC] SYNONYM [IF NOT EXISTS] [owner.]synonym_name
+  FOR [owner.]object_name
+| DROP [PUBLIC] SYNONYM [IF EXISTS] [owner.]synonym_name
+
+view_ddl ::=
+  CREATE [OR REPLACE] [FORCE | NO FORCE] VIEW [IF NOT EXISTS] [owner.]view_name
+  [(alias_name [, alias_name ...])]
+  AS subquery
+  [WITH READ ONLY]
+| ALTER VIEW [owner.]view_name COMPILE
+| DROP VIEW [IF EXISTS] [owner.]view_name
+
+materialized_view_ddl ::=
+  CREATE MATERIALIZED VIEW [IF NOT EXISTS] [owner.]mview_name
+  [(column_alias [, column_alias ...])]
+  [MAXROWS integer]
+  [table_partitioning_clause]
+  [TABLESPACE tablespace_name]
+  [physical_attributes_clause]
+  [LOGGING | NOLOGGING]
+  [LOB (lob_column) STORE AS (TABLESPACE tablespace_name)]
+  [{BUILD IMMEDIATE | BUILD DEFERRED}]
+  [{REFRESH {COMPLETE | FAST | FORCE} {ON DEMAND | ON COMMIT} | NEVER REFRESH}]
+  AS subquery
+| ALTER MATERIALIZED VIEW [owner.]mview_name
+  REFRESH [{COMPLETE | FAST | FORCE}] [{ON DEMAND | ON COMMIT}]
+| DROP MATERIALIZED VIEW [IF EXISTS] [owner.]mview_name
+
+trigger_ddl ::=
+  CREATE [OR REPLACE] TRIGGER [IF NOT EXISTS] [owner.]trigger_name
+  { simple_dml_trigger | instead_of_dml_trigger }
+| ALTER TRIGGER [owner.]trigger_name {ENABLE | DISABLE}
+| DROP TRIGGER [IF EXISTS] [owner.]trigger_name
+
+simple_dml_trigger ::=
+  {BEFORE | AFTER} trigger_event ON [owner.]table_name
+  [referencing_clause]
+  FOR EACH {ROW [{ENABLE | DISABLE}] [WHEN (search_condition)] | STATEMENT [{ENABLE | DISABLE}]}
+  psm_body
+
+instead_of_dml_trigger ::=
+  INSTEAD OF {INSERT | DELETE | UPDATE} ON [owner.]view_name
+  [referencing_clause]
+  FOR EACH ROW [{ENABLE | DISABLE}]
+  psm_body
+
+trigger_event ::=
+  INSERT | DELETE | UPDATE [OF column_name [, column_name ...]]
+  [OR trigger_event ...]
+
+referencing_clause ::=
+  REFERENCING {OLD [ROW] [AS] alias_name | NEW [ROW] [AS] alias_name}
+              [, {OLD [ROW] [AS] alias_name | NEW [ROW] [AS] alias_name} ...]
+
+comment_ddl ::=
+  COMMENT ON { TABLE [owner.]table_name
+             | COLUMN [owner.]table_name.column_name
+             | TABLE [owner.]view_name
+             | COLUMN [owner.]view_name.column_name }
+  IS 'comment'
+
+job_ddl ::=
+  CREATE JOB job_name execute_procedure_statement
+  [START start_time] [END end_time]
+  [INTERVAL interval_expr]
+  [{ENABLE | DISABLE}]
+  [COMMENT text]
+| ALTER JOB job_name SET
+  { execute_procedure_statement
+  | START start_time
+  | END end_time
+  | INTERVAL number {YEAR | MONTH | DAY | HOUR | MINUTE}
+  | ENABLE
+  | DISABLE
+  | COMMENT text }
+| DROP JOB job_name
+
+table_maintenance_ddl ::=
+  RENAME [owner.]old_table_name TO new_table_name
+| TRUNCATE TABLE [owner.]table_name
+| PURGE TABLE [owner.]table_name
+| FLASHBACK TABLE [owner.]table_name TO BEFORE DROP [RENAME TO new_table_name]
+| CONJOIN TABLE table_name PARTITION BY
+    { RANGE (column_name [, column_name ...]) (range_table_to_partition_clause [, ...])
+    | LIST (column_name) (list_table_to_partition_clause [, ...]) }
+    [row_movement_clause] [tablespace_clause] [physical_attributes_clause] [logging_clause] [lob_column_properties]
+| DISJOIN TABLE table_name (partition_to_table_clause [, partition_to_table_clause ...])
+
+range_table_to_partition_clause ::=
+  TABLE table_name TO PARTITION partition_name VALUES {LESS THAN (value [, value ...]) | DEFAULT}
+
+list_table_to_partition_clause ::=
+  TABLE table_name TO PARTITION partition_name VALUES {(value [, value ...]) | DEFAULT}
+
+partition_to_table_clause ::=
+  PARTITION partition_name TO TABLE table_name
+
+session_system_control ::=
+  ALTER SESSION SET property_name = property_value
+| ALTER SESSION SET REPLICATION replication_name {DEFAULT | NONE | replication_mode}
+| ALTER SESSION CLOSE DATABASE LINK database_link_name
+| ALTER SYSTEM SET property_name = property_value
+
+audit_control ::=
+  AUDIT {audit_operation_clause | audit_object_clause | audit_ddl_clause}
+  [WHENEVER [NOT] SUCCESSFUL]
+| NOAUDIT {noaudit_operation_clause | noaudit_object_clause | audit_ddl_clause}
+  [WHENEVER [NOT] SUCCESSFUL]
+| DELAUDIT {BY user_name | ALL | ON [owner.]object_name}
+
+audit_operation_clause ::=
+  {ALL | sql_statement_type [, sql_statement_type ...]}
+  [BY user_name]
+  [BY {ACCESS | SESSION}]
+
+audit_object_clause ::=
+  {ALL | sql_operation [, sql_operation ...]}
+  ON [owner.]object_name
+  [BY {ACCESS | SESSION}]
+
+audit_ddl_clause ::=
+  DDL [BY user_name]
+
+noaudit_operation_clause ::=
+  {ALL | sql_statement_type [, sql_statement_type ...]}
+  [BY user_name]
+
+noaudit_object_clause ::=
+  {ALL | sql_operation [, sql_operation ...]}
+  ON [owner.]object_name
+```
+
+Generation notes:
+
+- `IF NOT EXISTS` and `IF EXISTS` forms shown in these additional patterns are 8.1 verified source syntax. Omit them for 7.1 and 7.3 unless the customer verifies support in their exact build.
+- Use `view_ddl` for read-only views. Do not generate unsupported Oracle view clauses such as `WITH CHECK OPTION` unless the customer has verified support.
+- For materialized views, choose `BUILD IMMEDIATE` when the customer expects data at creation time; choose `BUILD DEFERRED` only when the first refresh is scheduled separately.
+- `simple_dml_trigger` is for table DML. `instead_of_dml_trigger` is for view DML. Keep the `psm_body` in Altibase PSM syntax and use attachment 10 for full stored procedure syntax.
+- `ALTER DATABASE` backup, recovery, restore, checkpoint, and archive operations are administrative SQL. Include preflight checks and prefer attachment 02 for operational procedure details.
+- `AUDIT`, `NOAUDIT`, and `DELAUDIT` are security/audit control statements. Use attachment 18 for security policy context and keep generated audit clauses minimal.
 
 ## Complete DDL Examples
 

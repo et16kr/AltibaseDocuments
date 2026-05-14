@@ -63,21 +63,29 @@ flowchart TD
 
 These patterns are generation guides, not full grammar.
 
+Syntax notation used in this attachment:
+
+- `[ ... ]` means optional syntax.
+- `{ A | B }` means choose exactly one alternative.
+- `item [, item ...]` means one or more comma-separated items.
+- `...` after a clause means the clause may repeat.
+- Lowercase names such as `table_name`, `expr`, and `subquery` are placeholders to replace with customer objects or expressions.
+
 ### SELECT Pattern
 
 ```text
 select ::=
   [WITH query_name [(column_alias, ...)] AS (subquery) [, ...]]
-  SELECT [DISTINCT] [TOP (integer_expr)] select_list
+  SELECT [hint] [ALL | DISTINCT] [TOP (integer_expr)] select_list
   [FROM table_reference [, table_reference ...]]
   [WHERE condition]
   [START WITH condition CONNECT BY [NOCYCLE] condition [IGNORE LOOP]]
   [GROUP BY grouping_expr [, ...] [ROLLUP | CUBE | GROUPING SETS]]
   [HAVING condition]
   [{UNION | UNION ALL | INTERSECT | MINUS} subquery ...]
-  [ORDER BY expr_or_position [ASC | DESC] [NULLS FIRST | NULLS LAST] [, ...]]
+  [{ORDER BY | ORDER SIBLINGS BY} expr_or_position [ASC | DESC] [NULLS FIRST | NULLS LAST] [, ...]]
   [LIMIT [row_offset,] row_count]
-  [FOR UPDATE [WAIT integer | NOWAIT]]
+  [FOR UPDATE [{WAIT integer [SEC | MSEC | USEC] | NOWAIT}]]
 ```
 
 Generation notes:
@@ -89,22 +97,92 @@ Generation notes:
 - `LIMIT` can be used in top-level queries and subqueries. Use `TOP (n)` only when a leading row-count expression fits the request.
 - `FOR UPDATE` is only for the main query. It cannot be combined with `DISTINCT`, `GROUP BY`, aggregate functions, or set operators.
 
+### SELECT Subclause Syntax
+
+```text
+table_reference ::=
+  single_table
+| joined_table
+| TABLE (function_name([expr [, expr ...]]))
+
+single_table ::=
+  LATERAL (subquery)
+| [owner.]table_name [PARTITION (partition_name)] [pivot_clause | unpivot_clause] [[AS] alias_name]
+
+joined_table ::=
+  table_reference [join_type] JOIN table_reference ON condition
+| table_reference [apply_type] APPLY single_table
+
+join_type ::=
+  INNER | LEFT [OUTER] | RIGHT [OUTER] | FULL [OUTER]
+
+apply_type ::=
+  CROSS | OUTER
+
+pivot_clause ::=
+  PIVOT (aggregate_function(expr) [[AS] alias] [, aggregate_function(expr) [[AS] alias] ...]
+         pivot_for_clause pivot_in_clause)
+
+pivot_for_clause ::=
+  FOR {column_name | (column_name [, column_name ...])}
+
+pivot_in_clause ::=
+  IN ({expr | (expr [, expr ...])} [[AS] alias] [, {expr | (expr [, expr ...])} [[AS] alias] ...])
+
+unpivot_clause ::=
+  UNPIVOT [{INCLUDE | EXCLUDE} NULLS]
+  ({column_name | (column_name [, column_name ...])}
+   pivot_for_clause unpivot_in_clause)
+
+unpivot_in_clause ::=
+  IN ({column_name | (column_name [, column_name ...])}
+      [[AS] {alias_name | (alias_name [, alias_name ...])}]
+      [, {column_name | (column_name [, column_name ...])}
+         [[AS] {alias_name | (alias_name [, alias_name ...])}] ...])
+
+hierarchical_query_clause ::=
+  CONNECT BY [NOCYCLE] condition [IGNORE LOOP] [START WITH condition]
+| START WITH condition CONNECT BY [NOCYCLE] condition [IGNORE LOOP]
+
+group_by_clause ::=
+  GROUP BY {expr | ROLLUP grouping_expression_list | CUBE grouping_expression_list | grouping_sets_clause}
+           [, {expr | ROLLUP grouping_expression_list | CUBE grouping_expression_list | grouping_sets_clause} ...]
+  [HAVING condition]
+
+grouping_sets_clause ::=
+  GROUPING SETS ({grouping_expression_list | ROLLUP grouping_expression_list | CUBE grouping_expression_list}
+                 [, {grouping_expression_list | ROLLUP grouping_expression_list | CUBE grouping_expression_list} ...])
+```
+
+Generation notes:
+
+- `LATERAL (subquery)` lets the subquery reference preceding `FROM` items.
+- `APPLY` joins a table reference to a single-table expression. Use `CROSS APPLY` for inner-apply behavior and `OUTER APPLY` when unmatched left rows must be retained.
+- `PIVOT` and `UNPIVOT` are not generic Oracle pass-through clauses. Preserve their Altibase syntax and test aliases, null handling, and expression lists.
+- `ORDER SIBLINGS BY` is for hierarchical queries; do not use it as a replacement for top-level `ORDER BY`.
+
 ### INSERT Pattern
 
 ```text
+insert ::=
+  INSERT [hint] {single_table_insert | multi_table_insert} [wait_clause]
+
 single_table_insert ::=
-  INSERT [hint] INTO [owner.]table_or_view_name [PARTITION (partition_name)]
+  INTO [owner.]table_or_view_name [PARTITION (partition_name)]
   [(column_name [, ...])]
   {VALUES (expr [, ...]) [, (expr [, ...]) ...]
    | DEFAULT VALUES
    | subquery}
-  [RETURN expr [, ...] INTO variable [, ...]]
+  [{RETURN | RETURNING} expr [, ...] INTO variable [, ...]]
 
 multi_table_insert ::=
-  INSERT {ALL | FIRST}
+  ALL
     INTO table_name [(column_name, ...)] VALUES (expr, ...)
     [INTO table_name [(column_name, ...)] VALUES (expr, ...)] ...
   subquery
+
+wait_clause ::=
+  {WAIT integer [SEC | MSEC | USEC] | NOWAIT}
 ```
 
 Generation notes:
@@ -120,12 +198,13 @@ Generation notes:
 
 ```text
 update ::=
-  UPDATE [hint] [owner.]table_or_view_name [PARTITION (partition_name)]
+  UPDATE [hint] {[owner.]table_or_view_name | view_name | (subquery)}
+         [PARTITION (partition_name)] [[AS] table_alias]
   SET column_name = {expr | DEFAULT | subquery}
       [, (column_name [, ...]) = (subquery)] ...
   [WHERE condition]
   [LIMIT [row_offset,] row_count]
-  [RETURN expr [, ...] INTO variable [, ...]]
+  [{RETURN | RETURNING} expr [, ...] INTO variable [, ...]]
 ```
 
 Generation notes:
@@ -143,7 +222,7 @@ delete ::=
   DELETE [hint] FROM [owner.]table_or_view_name [PARTITION (partition_name)]
   [WHERE condition]
   [LIMIT [row_offset,] row_count]
-  [RETURN expr [, ...] INTO variable [, ...]]
+  [{RETURN | RETURNING} expr [, ...] INTO variable [, ...]]
 
 multiple_delete ::=
   DELETE table_alias [, table_alias ...]
@@ -157,15 +236,33 @@ Generation notes:
 - Multiple-table `DELETE` can delete rows from aliases listed after `DELETE`. It cannot use `LIMIT`, cannot use `RETURN`, cannot use dictionary tables, and cannot use full outer join.
 - `DELETE FROM table PARTITION (partition_name)` deletes only rows in the named partition.
 
+### MOVE Pattern
+
+```text
+move ::=
+  MOVE [hint] INTO [owner.]target_table [PARTITION (partition_name)]
+       [(column_name [, column_name ...])]
+  FROM [owner.]source_table [(expr [, expr ...])]
+  [WHERE condition]
+  [LIMIT [row_offset,] row_count]
+```
+
+Generation notes:
+
+- `MOVE` inserts selected source rows into the target table and deletes the moved rows from the source table as one statement.
+- Required privileges are `INSERT` on the target table and `DELETE` on the source table.
+- Column and expression counts must match. Use explicit target columns when source and target definitions differ.
+- Use `WHERE` and `LIMIT` to bound the move. Omit them only when moving all rows is intentional.
+
 ### MERGE Pattern
 
 ```text
 merge ::=
-  MERGE [hint] INTO target_table target_alias
-  USING {source_table | source_view | subquery} source_alias
+  MERGE [hint] INTO [owner.]target_table [target_alias]
+  USING {[owner.]source_table | [owner.]source_view | subquery} [source_alias]
   ON (match_condition)
-  [WHEN MATCHED THEN UPDATE SET column = expr [, ...]]
-  [WHEN NOT MATCHED THEN INSERT [(column [, ...])] VALUES (expr [, ...])]
+  [WHEN MATCHED THEN UPDATE SET column = expr [, ...] [LIMIT [row_offset,] row_count]]
+  [WHEN NOT MATCHED THEN INSERT [(column [, ...])] VALUES (expr [, ...]) [WHERE condition]]
   [WHEN NO ROWS THEN INSERT [(column [, ...])] VALUES (expr [, ...])]
 ```
 
@@ -183,11 +280,11 @@ Generation notes:
 lock_table ::=
   LOCK TABLE [owner.]table_name [PARTITION (partition_name)]
   IN {ROW SHARE | SHARE UPDATE | ROW EXCLUSIVE | SHARE ROW EXCLUSIVE | SHARE | EXCLUSIVE} MODE
-  [WAIT integer | NOWAIT]
+  [{WAIT integer | NOWAIT}]
 
 transaction_control ::=
-  COMMIT [WORK]
-  ROLLBACK [TO SAVEPOINT savepoint_name]
+  COMMIT [WORK] [FORCE global_tx_id]
+  ROLLBACK [WORK] [TO SAVEPOINT savepoint_name] [FORCE global_tx_id]
   SAVEPOINT savepoint_name
   SET TRANSACTION {READ ONLY | READ WRITE | ISOLATION LEVEL {READ COMMITTED | REPEATABLE READ | SERIALIZABLE}}
 ```
@@ -358,10 +455,10 @@ ORDER BY dname;
 
 ## DML RETURN Clause
 
-Altibase documentation describes a returning clause, and examples use the keyword `RETURN`.
+Altibase documentation describes a returning clause. Examples commonly use `RETURN`, and the SQL Reference syntax diagram also accepts `RETURNING`.
 
 ```text
-return_clause ::= RETURN expr [, ...] INTO variable [, ...]
+return_clause ::= {RETURN | RETURNING} expr [, ...] INTO variable [, ...]
 ```
 
 Use this clause when DML must return affected-row values to host variables or PSM variables.
@@ -567,6 +664,64 @@ Supported conditions include:
 - `UNIQUE`
 - `IS JSON` in 8.1
 
+### Condition Syntax Diagram Conversions
+
+```text
+logical_condition ::=
+  condition AND condition
+| condition OR condition
+| NOT condition
+| (condition)
+
+simple_comparison_condition ::=
+  {expr | (subquery)}
+  {= | != | <> | > | < | >= | <=}
+  {expr | (subquery)}
+| ({expr [, expr ...]} | (subquery))
+  {= | != | <>}
+  ({expr [, expr ...]} | (subquery))
+
+group_comparison_condition ::=
+  expr {= | != | <> | > | < | >= | <=} {ANY | SOME | ALL}
+  ({expr [, expr ...]} | (subquery))
+| (expr [, expr ...]) {= | != | <>} {ANY | SOME | ALL}
+  ((expr [, expr ...]) [, (expr [, expr ...]) ...] | (subquery))
+
+between_condition ::=
+  expr [NOT] BETWEEN expr AND expr
+
+exists_condition ::=
+  EXISTS (subquery)
+
+in_condition ::=
+  expr [NOT] IN ({expr [, expr ...]} | (subquery))
+| (expr [, expr ...]) [NOT] IN
+  ((expr [, expr ...]) [, (expr [, expr ...]) ...] | (subquery))
+
+inlist_condition ::=
+  [NOT] INLIST(expr, 'comma_separated_values')
+
+is_null_condition ::=
+  expr IS [NOT] NULL
+
+like_condition ::=
+  expr [NOT] LIKE expr [ESCAPE 'escape_character']
+
+regexp_like_condition ::=
+  [NOT] REGEXP_LIKE(source_expr, pattern_expr)
+
+unique_condition ::=
+  UNIQUE (subquery)
+```
+
+Generation notes:
+
+- For row-value comparison, Altibase supports only equality and inequality operators; do not generate row-value `>`, `<`, `>=`, or `<=`.
+- `ANY` and `SOME` are equivalent.
+- `NOT IN` and `!= ALL` can behave unexpectedly when the right side contains `NULL`; prefer `NOT EXISTS` when null-safe anti-join behavior is required.
+- `INLIST` is Altibase-specific and takes a single ASCII comma-separated string, not a normal SQL list.
+- `ESCAPE` in `LIKE` takes a single-character string used to escape literal `%` and `_`.
+
 ### Condition Item: INLIST
 
 `INLIST (expr, 'comma,separated,values')` is Altibase-specific. Each comma-separated value must be an ASCII-only string; values are converted to the type of `expr` for comparison.
@@ -585,6 +740,88 @@ WHERE INLIST(dno, '1003,4001');
 - Altibase regular expression support is partial POSIX BRE/ERE: multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are not supported.
 
 ## SQL Function Compatibility
+
+### Function Syntax Diagram Conversions
+
+```text
+ordered_set_distribution ::=
+  {CUME_DIST | PERCENT_RANK | RANK} (expr [, expr ...])
+  WITHIN GROUP (window_order_clause)
+
+first_last_keep ::=
+  aggregate_function KEEP
+  (DENSE_RANK {FIRST | LAST}
+   ORDER BY expr [ASC | DESC] [NULLS FIRST | NULLS LAST] [, ...])
+  [OVER (PARTITION BY expr [, expr ...])]
+
+stats_one_way_anova ::=
+  STATS_ONE_WAY_ANOVA(
+    expr1,
+    expr2
+    [, {'SIG' | 'F_RATIO' | 'MEAN_SQUARES_WITHIN' | 'MEAN_SQUARES_BETWEEN' |
+        'DF_WITHIN' | 'DF_BETWEEN' | 'SUM_SQUARES_WITHIN' | 'SUM_SQUARES_BETWEEN'}]
+  )
+
+window_function_call ::=
+  window_function([arg_expr [, arg_expr ...]]) [IGNORE NULLS]
+  OVER (window_specification)
+
+window_specification ::=
+  [PARTITION BY expr [, expr ...]]
+  [ORDER BY expr [ASC | DESC] [NULLS FIRST | NULLS LAST] [, ...]]
+  [window_frame_clause]
+
+window_frame_clause ::=
+  {ROWS | RANGE}
+  { BETWEEN frame_bound AND frame_bound
+  | UNBOUNDED PRECEDING
+  | CURRENT ROW
+  | value PRECEDING }
+
+frame_bound ::=
+  UNBOUNDED PRECEDING
+| UNBOUNDED FOLLOWING
+| CURRENT ROW
+| value PRECEDING
+| value FOLLOWING
+
+listagg ::=
+  LISTAGG(expr [, 'separator'])
+  WITHIN GROUP (order_by_clause)
+  [OVER (PARTITION BY expr [, expr ...])]
+
+percentile_cont_disc ::=
+  {PERCENTILE_CONT | PERCENTILE_DISC}(percentile_expr)
+  WITHIN GROUP (ORDER BY expr [ASC | DESC])
+  [OVER (PARTITION BY expr [, expr ...])]
+
+ntile ::=
+  NTILE(expr)
+  OVER ([PARTITION BY expr [, expr ...]] order_by_clause)
+
+ratio_to_report ::=
+  RATIO_TO_REPORT(expr)
+  OVER ([PARTITION BY expr [, expr ...]])
+
+case_expr ::=
+  CASE {simple_case_expr | searched_case_expr} [ELSE else_expr] END
+
+simple_case_expr ::=
+  expr WHEN comparison_expr THEN return_expr
+       [WHEN comparison_expr THEN return_expr ...]
+
+searched_case_expr ::=
+  WHEN condition THEN return_expr
+  [WHEN condition THEN return_expr ...]
+```
+
+Generation notes:
+
+- Analytic functions can appear in a `SELECT` list or `ORDER BY` clause. Do not generate them directly in `WHERE`.
+- Ranking functions require `ORDER BY` in the `OVER` clause. Aggregate window functions may omit `ORDER BY`.
+- If `ROWS` or `RANGE` is omitted for a window function that supports frames, the SQL Reference default is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
+- `PERCENTILE_CONT`, `PERCENTILE_DISC`, `LISTAGG`, and ordered-set distribution functions use `WITHIN GROUP`; add `OVER (...)` only when generating analytic form.
+- In `CASE`, all `return_expr` branches should be type-compatible.
 
 ### Function Item: Oracle-Familiar Functions
 
