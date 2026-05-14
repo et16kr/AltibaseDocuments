@@ -53,6 +53,32 @@ flowchart TD
   G --> H[Record follow-up backup or cleanup]
 ```
 
+## Server Request Path
+
+Use this diagram when explaining how a client request moves through Altibase server process components.
+
+```mermaid
+flowchart TD
+  APP[Application] --> DRV[Altibase driver or client library]
+  DRV --> DISP[Dispatcher]
+  DISP --> POOL[Service thread pool]
+  POOL --> ST[Service thread]
+  ST --> SQL[SQL parser, optimizer, and executor]
+  SQL --> SM[Storage manager]
+  SM --> MEM[Memory tablespace pages]
+  SM --> BUF[Buffer manager]
+  BUF --> DISK[Disk tablespace data files]
+  ST --> LOG[Log manager]
+  LOG --> LBUF[Log buffer]
+  LBUF --> LFILE[Online log files]
+  LFILE --> ARCH[Archive log files when ARCHIVELOG is enabled]
+  CKPT[Checkpoint thread] --> MEM
+  CKPT --> DISK
+  CKPT --> ANCHOR[Log anchor files]
+  FLUSH[Buffer flush thread] --> BUF
+  AGER[Garbage collection thread] --> MEM
+```
+
 ## Core Connection and Phase Commands
 
 Connect as `SYSDBA` for startup, shutdown, backup, recovery, and most database-level maintenance:
@@ -422,6 +448,61 @@ flowchart TD
   USER --> UMEM[Memory data tablespace]
   USER --> UVOL[Volatile data tablespace]
   USER --> UTEMP[Disk temporary tablespace]
+```
+
+Physical and logical storage relationship:
+
+```mermaid
+flowchart TD
+  DB[Database] --> ANCHOR[Log anchor files]
+  DB --> LOGS[Online and archive log files]
+  DB --> TBS[Tablespaces]
+  TBS --> DISKTBS[Disk tablespace]
+  TBS --> MEMTBS[Memory tablespace]
+  TBS --> VOLTBS[Volatile tablespace]
+  DISKTBS --> DATAFILE[One or more data files]
+  DISKTBS --> SEG[Segments]
+  SEG --> EXT[Extents]
+  EXT --> DPAGE[8KB pages]
+  MEMTBS --> MEMSPACE[Linear memory space]
+  MEMSPACE --> PAGELIST[Table page lists]
+  PAGELIST --> MPAGE[Memory pages]
+  MEMTBS --> CKIMG[Checkpoint image files]
+  VOLTBS --> VMEM[Memory pages without checkpoint images]
+```
+
+Disk tablespace structure:
+
+```mermaid
+flowchart TD
+  DTS[Disk tablespace] --> DF1[Data file 1]
+  DTS --> DF2[Data file 2]
+  DTS --> SEG1[Table or index segment]
+  SEG1 --> E1[Extent]
+  SEG1 --> E2[Extent]
+  E1 --> P1[Page]
+  E1 --> P2[Page]
+  E2 --> P3[Page]
+  P1 --> H1[Page header]
+  P1 --> F1[Free space]
+  P1 --> R1[Stored records, index entries, or undo records]
+  P1 --> FT1[Page footer]
+```
+
+Memory tablespace checkpoint structure:
+
+```mermaid
+flowchart TD
+  MTBS[Memory tablespace] --> PAGES[Memory pages]
+  PAGES --> T1[Table page list]
+  PAGES --> T2[Another table page list]
+  MTBS --> CP0[Checkpoint image set 0]
+  MTBS --> CP1[Checkpoint image set 1]
+  CKPT[Checkpoint] --> CP0
+  CKPT --> CP1
+  CP0 -. alternates with .-> CP1
+  CP0 --> FILE0[TablespaceName-0-fileNo]
+  CP1 --> FILE1[TablespaceName-1-fileNo]
 ```
 
 Tablespace type block: disk data tablespace
@@ -1103,6 +1184,19 @@ sequenceDiagram
   DB->>FS: Archive backup-related logs
 ```
 
+Hot-backup media recovery concept:
+
+```mermaid
+flowchart TD
+  FAIL[Data file or memory checkpoint image is lost] --> BACKUP[Restore file from online backup]
+  BACKUP --> HEADER[Read backup checkpoint SCN and recovery LSN]
+  HEADER --> CONTROL[STARTUP CONTROL]
+  CONTROL --> REDO[Apply online and archive redo logs]
+  REDO --> UNDO[Rollback uncommitted work with undo]
+  UNDO --> CURRENT[Recovered file reaches current consistent state]
+  CURRENT --> SERVICE[STARTUP SERVICE]
+```
+
 ## Incremental Backup
 
 Incremental backup block: prerequisites
@@ -1389,6 +1483,51 @@ ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
 - If replication is active, stop automatic sender start with `REPLICATION_SENDER_AUTO_START = 0` before recovery when appropriate, then reset or recreate replication after recovery according to the replication plan.
 - When a tablespace is added, dropped, or renamed, back up `SYS_TBS_MEM_DIC`, the changed tablespace, and log anchors, or take a full database backup.
 
+## Partition Operation Diagrams
+
+Use these diagrams for the operational effect of partition maintenance. Keep exact syntax in SQL Reference answers when the user asks for grammar.
+
+Partition routing with a default partition:
+
+```mermaid
+flowchart TD
+  ROW[Incoming row] --> C1{Matches partition condition 1?}
+  C1 -- Yes --> P1[Partition P1]
+  C1 -- No --> C2{Matches partition condition 2?}
+  C2 -- Yes --> P2[Partition P2]
+  C2 -- No --> PDEF[Default partition]
+```
+
+`SPLIT PARTITION` effect:
+
+```mermaid
+flowchart TD
+  OLD[Existing partition] --> MODE{Split method}
+  MODE -- In-place --> NEW1[Create one new partition]
+  NEW1 --> MOVE[Move matching rows from existing partition]
+  MOVE --> NARROW[Narrow existing partition condition]
+  MODE -- Out-place --> NEW2[Create two replacement partitions]
+  NEW2 --> COPY[Insert rows from old partition into replacements]
+  COPY --> DROPOLD[Physically delete old partition]
+```
+
+`DROP PARTITION` and `MERGE PARTITION` effects:
+
+```mermaid
+flowchart TD
+  DROP[DROP PARTITION] --> DEL[Delete target partition records and metadata]
+  DEL --> DEST{Partitioning method}
+  DEST -- Range --> NEIGHBOR[Expand neighboring partition condition]
+  DEST -- List --> DEFAULT[Move dropped condition to default partition]
+  MERGE[MERGE PARTITION] --> MMODE{Merge method}
+  MMODE -- In-place --> EXTEND[Extend one existing partition condition]
+  EXTEND --> INSERT1[Insert rows from the other partition]
+  INSERT1 --> DELETE1[Delete old source partition]
+  MMODE -- Out-place --> CREATE[Create replacement partition]
+  CREATE --> INSERT2[Insert rows from both old partitions]
+  INSERT2 --> DELETE2[Delete both old partitions]
+```
+
 ## Space Management
 
 Undo space block:
@@ -1447,6 +1586,22 @@ Archive current log file:
 ALTER SYSTEM SWITCH LOGFILE;
 ```
 
+Checkpoint lifecycle:
+
+```mermaid
+flowchart TD
+  START[Checkpoint begins] --> BEGINLOG[Write checkpoint begin log]
+  BEGINLOG --> DIRTY[Flush dirty memory pages]
+  DIRTY --> SCALE[Record checkpoint scale]
+  SCALE --> SYNCDB[Sync database files and checkpoint images]
+  SYNCDB --> ENDLOG[Write checkpoint end log]
+  ENDLOG --> SYNCLOG[Sync log files]
+  SYNCLOG --> OLDLOG[Identify log files no longer needed]
+  OLDLOG --> ANCHOR[Update and flush log anchors]
+  ANCHOR --> REMOVE[Remove obsolete online log files]
+  REMOVE --> DONE[Checkpoint completes]
+```
+
 8.1 checkpoint scale:
 
 ```sql
@@ -1462,6 +1617,34 @@ Version note:
 - For 8.1 memory backup and recovery answers, check `V$LOG.CHECKPOINT_SCALE` before explaining stable checkpoint image selection.
 
 ## Troubleshooting Entry Points
+
+General troubleshooting flow:
+
+```mermaid
+flowchart TD
+  ISSUE[Operational problem] --> CLASSIFY[Classify symptom]
+  CLASSIFY --> STARTUP[Abnormal termination or restart failure]
+  CLASSIFY --> RESPONSE[Poor server responsiveness]
+  CLASSIFY --> DISK[Excessive disk usage]
+  CLASSIFY --> MEMORY[Excessive memory usage]
+  CLASSIFY --> CPU[Excessive CPU usage]
+  CLASSIFY --> REPL[Replication problem]
+  CLASSIFY --> APP[Application or query problem]
+  STARTUP --> LOGS[Check ALTIBASE_HOME/trc administrator logs]
+  RESPONSE --> VIEWS[Check sessions, statements, waits, and performance views]
+  DISK --> SPACE[Check data files, archive logs, temp files, and filesystem capacity]
+  MEMORY --> MEMVIEWS[Check memory views, memory tables, buffer pool, and OS memory]
+  CPU --> SQLCPU[Check active SQL, service threads, and OS CPU usage]
+  REPL --> REPLVIEWS[Check V$REPSENDER and V$REPRECEIVER]
+  APP --> SQLTRACE[Check application errors, SQL, plans, and trace logs]
+  LOGS --> ACTION[Choose recovery, capacity, tuning, or escalation action]
+  VIEWS --> ACTION
+  SPACE --> ACTION
+  MEMVIEWS --> ACTION
+  SQLCPU --> ACTION
+  REPLVIEWS --> ACTION
+  SQLTRACE --> ACTION
+```
 
 Problem block: startup failure after missing data file or checkpoint image
 

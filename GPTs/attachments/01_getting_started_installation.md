@@ -98,6 +98,26 @@ chmod +x altibase-client-<version>-<OS>-<CPU>-64bit-release.run
 
 The package installer runs in interactive command-line mode when `DISPLAY` is not set, and in GUI mode when `DISPLAY` is set. For remote GUI mode, set `DISPLAY` and allow X access from the display host.
 
+Installer mode decision flow:
+
+```mermaid
+flowchart TD
+  A[Select matching package for version, OS, and CPU] --> B{Host will run Altibase server?}
+  B -- Yes --> C[Use altibase-server package]
+  B -- No --> D[Use altibase-client package]
+  C --> E{Existing compatible ALTIBASE_HOME?}
+  E -- No --> F[Full Installation]
+  E -- Yes --> G[Patch Installation]
+  D --> H[Client-only installation]
+  F --> I[Collect server properties and directories]
+  G --> J[Confirm patch version and backup product, data files, and logs]
+  H --> K[Collect ALTIBASE_HOME and client connection port]
+  I --> L[Install files and write environment]
+  J --> L
+  K --> L
+  L --> M[Refresh profile and verify commands]
+```
+
 During server installation, collect these values:
 
 - `ALTIBASE_HOME`: installation directory containing `bin`, `conf`, `lib`, packages, and scripts.
