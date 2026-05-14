@@ -108,6 +108,7 @@ Major additions:
 - Security utilities: `altiEncrypt` encrypts passwords for AKU, dblink, and adapters. Encrypted password files can be used by iSQL, iLoader, aexport, and abm through the `-pf` option.
 - Performance: checkpoint scale single mode, memory index build improvements during startup, shutdown and memory index removal improvements, log file prepare thread improvements, `LOG_FILE_SIZE` default changed from 10 MB to 100 MB, `LOG_CREATE_METHOD` default changed, bulk LOB insert improvement, and page cache handling during memory database startup.
 - External integration: Altibase Handler for MindsDB, .NET 8 support for Altibase ADO.NET and Altibase EF Core, and `node-odbc-altibase` for Node.js.
+- Release-note-only feature scope: `KADA`, Kafka connectors, `abm`, MindsDB, `.NET 8`/EF Core, and `node-odbc-altibase` are summarized here for routing and version awareness. Do not generate implementation procedures for these feature families unless a dedicated attachment or source-backed block provides the procedure.
 - Empty LOB handling: CLI adds `SQLEmptyLob()` and `SQLGetLobLength2()`, iLoader supports empty LOB with `-lob -use_lob_file=yes`, JDBC improves empty LOB handling, and JDBC Adapter and OraAdapter support empty LOB processing.
 - ODBC: updatable dynaset support and improved read performance for `SQL_CURSOR_KEYSET_DRIVEN`.
 - AKU: scale-up to six nodes, multiple replication definitions in `REPLICATIONS`, multithreaded parallel processing, and increased replication target table/user name length from 40 to 128 characters.
@@ -439,4 +440,3 @@ ORDER BY name;
 
 ## Minor Patch & Release Notes Caveats
 - **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific `ReleaseNotes` (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
-

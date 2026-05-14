@@ -16,9 +16,9 @@
 - How should replication compatibility, protocol version, network diagnostics, and replication gaps be checked?
 
 
-## Altibase Active-Active Replication & Sharding Overview
-- **Active-Active Replication**: Altibase natively supports High Availability (HA) through a proprietary in-memory Active-Active replication protocol (XLog). It guarantees sub-millisecond latency and built-in conflict resolution without requiring external clustering software.
-- **Sharding (ShardManager)**: Altibase provides scale-out capabilities via sharding. This involves configuring shard nodes, defining shard keys, and initializing shard metadata. If a user asks about scaling out, refer to Altibase's sharding capabilities. Note that specific shard routing errors are covered in the error message references.
+## Altibase Replication and Scope Overview
+- **Active-Active Replication**: Altibase supports replication topologies through XLog-based Sender and Receiver processing. Active-Active use requires explicit write ownership, conflict avoidance or conflict policy design, replication gap monitoring, and failover/failback planning. Do not promise fixed latency or automatic conflict-free behavior.
+- **Scale-out scope**: Sharding and `ShardManager` setup are outside this attachment's selected replication, HA, CDC, Log Analyzer, and replication SSL source family. Do not generate sharding configuration procedures from this file; use a dedicated sharding source audit if a user asks for scale-out setup.
 
 ## Source Documents
 
@@ -300,15 +300,25 @@ ORDER BY name;
 Use this compact BNF-like form for customer answers.
 
 ```text
-CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
-  [FOR ANALYSIS | FOR PROPAGABLE LOGGING | FOR PROPAGATION | FOR ANALYSIS PROPAGATION]
-  [AS MASTER | AS SLAVE]
-  [OPTIONS option_name [option_name ...]]
-  WITH 'remote_host_ip_or_name', remote_host_port_no [USING conn_type [ib_latency]]
-       [...]
-  FROM user_name.table_name [PARTITION partition_name]
-  TO   user_name.table_name [PARTITION partition_name]
-  [, FROM ... TO ...];
+ordinary_table_replication ::=
+  CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
+    [AS MASTER | AS SLAVE]
+    [OPTIONS option_name [option_name ...]]
+    WITH 'remote_host_ip_or_name', remote_host_port_no [USING conn_type [ib_latency]]
+         [...]
+    FROM user_name.table_name [PARTITION partition_name]
+    TO   user_name.table_name [PARTITION partition_name]
+    [, FROM ... TO ...];
+
+log_analyzer_cdc_replication ::=
+  CREATE REPLICATION replication_name
+    { FOR ANALYSIS | FOR PROPAGABLE LOGGING | FOR PROPAGATION | FOR ANALYSIS PROPAGATION }
+    [OPTIONS option_name [option_name ...]]
+    WITH 'xlog_sender_host_ip_or_name', xlog_sender_port_no
+         [...]
+    FROM user_name.table_name
+    TO   user_name.table_name
+    [, FROM ... TO ...];
 ```
 
 Syntax notes:
@@ -321,7 +331,7 @@ Syntax notes:
 - In non-SSL TCP replication, use the peer `REPLICATION_PORT_NO`. This is the ordinary replication port, not the database service port and not `SSL_PORT_NO`.
 - In Altibase 8.1 verified source SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For InfiniBand, use `USING IB [ib_latency]` and the peer `REPLICATION_IB_PORT_NO`.
-- `FOR ANALYSIS` creates an XLog Sender for Log Analyzer CDC, not ordinary table-to-table apply.
+- `FOR ANALYSIS` and related Log Analyzer CDC forms create an XLog Sender and are not ordinary table-to-table apply syntax. Do not combine them with `EAGER`, `USING SSL`, or `USING IB`; Log Analyzer CDC is LAZY/TCP or UNIX-domain-socket scoped.
 - `AS MASTER` and `AS SLAVE` affect handshaking. Valid pairings are not-set with not-set, master with slave, and slave with master.
 
 ## CREATE REPLICATION Examples: Non-SSL TCP
@@ -519,6 +529,7 @@ Operation block: `START RETRY` and `QUICKSTART RETRY`
 
 - Creates a Sender thread even when the first handshake fails.
 - iSQL can show success even when the initial handshake failed.
+- `RETRY` is not supported for EAGER-mode replication. Verify the replication mode before recommending `START RETRY` or `QUICKSTART RETRY`.
 - Verify with trace logs and `V$REPSENDER`.
 
 Operation block: `STOP`
@@ -816,32 +827,52 @@ DDL restrictions:
 - If increasing a column range, execute DDL first on the node not generating primary transactions.
 - If decreasing a column range, execute DDL first on the node generating primary transactions.
 
-Standard DDL procedure:
+Standard DDL procedure without SQL apply mode:
 
 ```sql
--- 1. Migrate service away from the node where required.
+-- 1. Schedule a maintenance window, stop service traffic or enter the documented admin flow.
 SELECT COUNT(*) FROM V$SESSION WHERE ID <> SESSION_ID();
 
--- 2. Set required properties on both nodes.
-ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1;
-ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1;
+-- 2. Flush replication and verify no remaining gap before DDL.
+ALTER REPLICATION rep1 FLUSH ALL WAIT 60;
+SELECT rep_name, rep_gap, rep_gap_size
+FROM V$REPGAP
+WHERE rep_name = 'REP1';
+
+-- 3. Stop replication and remove the target tables from every affected replication object.
+ALTER REPLICATION rep1 STOP;
+ALTER REPLICATION rep1 DROP TABLE FROM app.t1 TO app.t1;
+
+-- 4. Execute the DDL on every node with identical object names and compatible storage choices.
+-- ALTER TABLE app.t1 ...;
+
+-- 5. Add targets back, then resynchronize or start according to the topology and data ownership.
+ALTER REPLICATION rep1 ADD TABLE FROM app.t1 TO app.t1;
+ALTER REPLICATION rep1 SYNC;
+```
+
+DDL synchronization procedure with SQL apply mode:
+
+```sql
+-- 1. Use this only for documented DDL synchronization cases, not for EAGER targets or RECOVERY-enabled objects.
+-- 2. On the local server that will execute the DDL:
+ALTER SESSION SET REPLICATION_DDL_SYNC = 1;
+
+-- 3. On the remote server, enable DDL sync and SQL apply support for the receiver side.
+ALTER SYSTEM SET REPLICATION_DDL_SYNC = 1;
 ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 1;
 
--- 3. Use the replication object's default mode.
-ALTER SESSION SET REPLICATION = DEFAULT;
+-- 4. Flush before executing the DDL on the local server only.
+ALTER REPLICATION rep1 FLUSH ALL WAIT 60;
+-- ALTER TABLE app.t1 ...;
 
--- 4. Clear gap, run DDL on both nodes, and clear gap again.
-ALTER REPLICATION rep1 FLUSH;
--- Execute the same DDL on both nodes.
-ALTER REPLICATION rep1 FLUSH;
-
--- 5. Verify SQL apply mode ended.
+-- 5. Verify apply completion, then restore properties.
 SELECT rep_name, sql_apply_table_count
-FROM V$REPRECEIVER;
+FROM V$REPRECEIVER
+WHERE rep_name = 'REP1';
 
--- 6. Restore defaults.
-ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 0;
-ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 0;
+ALTER SESSION SET REPLICATION_DDL_SYNC = 0;
+ALTER SYSTEM SET REPLICATION_DDL_SYNC = 0;
 ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 0;
 ```
 

@@ -571,7 +571,7 @@ Cautions:
 - Set Altibase properties `ADMIN_MODE=1` and `REMOTE_SYSDBA_ENABLE=1` as required by the utility procedure.
 - Run `aku -p start` only after the Altibase server has started successfully.
 - Configure a Kubernetes Startup Probe so multiple pods do not run `aku -p start` simultaneously. The `/tmp/aku_start_completed` file can be used as the completion indicator.
-- Set `publishNotReadyAddress` to true for the Kubernetes service.
+- Set `publishNotReadyAddresses: true` for the Kubernetes service.
 - Run `aku -p end` before stopping the Altibase server, and set `terminationGracePeriodSeconds` high enough for `aku -p end` to finish.
 - Do not manually create, drop, or modify replication objects created by `aku`.
 - `aku -p clean` deletes all Altibase replication objects created by `aku` and removes `/tmp/aku_start_completed`; use it only when synchronization is no longer required.

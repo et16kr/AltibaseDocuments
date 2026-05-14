@@ -36,7 +36,8 @@
 
 - 7.1 and 7.3: Core data types are character, numeric, `DATE`, binary, `BLOB`, `CLOB`, and `GEOMETRY`. Native `JSON` and Temporary LOB are not part of these baselines.
 - 8.1: Adds native `JSON`, JSON path-expression support, JSON generation/search/validation functions, and Temporary LOB support.
-- 8.1: Adds or documents new properties including `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `REPLICATION_SSL_PORT_NO`, `PSM_CASE_SENSITIVE_MODE`, `TEMPORARY_LOB_ENABLE`, `TRCLOG_EXPLAIN_TYPE`, and `TRCLOG_JSON_PLAN_INDENT_DEPTH`.
+- 8.1: Adds or documents new properties including `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `REPLICATION_SSL_PORT_NO`, `TEMPORARY_LOB_ENABLE`, `TRCLOG_EXPLAIN_TYPE`, and `TRCLOG_JSON_PLAN_INDENT_DEPTH`.
+- Cross-version property caution: `PSM_CASE_SENSITIVE_MODE` and `REGEXP_MODE` are documented in sampled 7.x and 8.1 sources. Do not label them as 8.1-only unless the customer asks about a target build where the installed documentation proves a narrower scope.
 - 8.1: Release notes record changed defaults or ranges for `CHECKPOINT_INTERVAL_IN_LOG`, `FAST_START_LOGFILE_TARGET`, `LOG_CREATE_METHOD`, `LOG_FILE_SIZE`, `MEMORY_INDEX_BUILD_RUN_SIZE`, `MEMORY_INDEX_BUILD_VALUE_LENGTH_THRESHOLD`, and `OPTIMIZER_FEATURE_ENABLE`.
 - 8.1: Release notes list `INSPECTION_LARGE_HEAP_THRESHOLD` as removed.
 
@@ -94,9 +95,13 @@ binary_type ::=
   | BIT[(size)] [[FIXED |] VARIABLE (IN ROW size)]
   | VARBIT[(size)] [[FIXED |] VARIABLE (IN ROW size)]
 
-lob_type ::=
+lob_type_7_1_7_3 ::=
   BLOB [VARIABLE (IN ROW size)]
   | CLOB [VARIABLE (IN ROW size)]
+
+lob_type_8_1_verified ::=
+  BLOB [IN ROW size]
+  | CLOB [IN ROW size]
 
 json_type_8_1 ::=
   JSON [IN ROW size]
@@ -459,7 +464,11 @@ Purpose: large binary object.
 Syntax:
 
 ```sql
+-- 7.1 and 7.3 source syntax
 BLOB [VARIABLE (IN ROW size)]
+
+-- Altibase 8.1 verified source syntax
+BLOB [IN ROW size]
 ```
 
 Limits and storage:
@@ -483,7 +492,11 @@ Purpose: large character object.
 Syntax:
 
 ```sql
+-- 7.1 and 7.3 source syntax
 CLOB [VARIABLE (IN ROW size)]
+
+-- Altibase 8.1 verified source syntax
+CLOB [IN ROW size]
 ```
 
 Limits, storage, and restrictions: same general LOB rules as `BLOB`.
@@ -1930,7 +1943,7 @@ WHERE name = 'SSL_KEY';
 
 ### Property Item: `PSM_CASE_SENSITIVE_MODE`
 
-Version: 8.1 baseline property.
+Version: 7.1, 7.3, and 8.1 documented property; verify exact behavior against the installed build before treating it as newly introduced.
 
 Meaning: controls case sensitivity when PSM refers to `RECORD` and `ROWTYPE` column names or label names.
 
@@ -1975,7 +1988,7 @@ WHERE name = 'LISTAGG_PRECISION';
 
 ### Property Item: `REGEXP_MODE`
 
-Version: 8.1 verified source property.
+Version: 7.1, 7.3, and 8.1 documented property where PCRE2 regular expression processing is available; verify exact behavior against the installed build.
 
 Meaning: selects regular expression syntax mode.
 

@@ -28,6 +28,7 @@ Usage:
   bash GPTs/scripts/attachment_jobs.sh commit <JOB-ID> [commit message]
   bash GPTs/scripts/attachment_jobs.sh history <JOB-ID>
   bash GPTs/scripts/attachment_jobs.sh mark <JOB-ID> <ToDo|InProgress|Review|Done|Fail|Blocked|Skip>
+  bash GPTs/scripts/attachment_jobs.sh review-fixes [plan|apply|validate] [args...]
   bash GPTs/scripts/attachment_jobs.sh validate
 
 Environment:
@@ -669,7 +670,7 @@ validate() {
   find "$ATTACH_DIR" -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | wc -l
   echo
   echo "Forbidden customer-facing strings in attachments:"
-  rg -n "trunk|C:/|file://" "$ATTACH_DIR" || true
+  rg -n "(?i:\\btrunk\\b|file://|Conversion TODO|AltibaseDocuments|source_inventory|Manuals/|ReleaseNotes/)|(^|[^A-Za-z])[A-Za-z]:[\\\\/]|(^|[^[:alnum:]_])(JOB-[0-9]+|IMG-[0-9]+)([^[:alnum:]_]|$)" "$ATTACH_DIR" || true
   echo
   echo "Job status summary:"
   awk -F'|' "$trim_awk"'
@@ -688,6 +689,12 @@ validate() {
   echo
   echo "Blocked ToDo jobs:"
   blocked_jobs | wc -l
+}
+
+review_fixes() {
+  local script="${ROOT_DIR}/GPTs/scripts/apply_review_fixes.sh"
+  [[ -f "$script" ]] || die "review remediation script not found: $script"
+  bash "$script" "${@:-plan}"
 }
 
 cmd="${1:-}"
@@ -747,6 +754,9 @@ case "$cmd" in
   mark)
     [[ $# -eq 3 ]] || die "mark requires JOB-ID and status"
     JOB_ID="$2" JOB_STATUS="$3" mark_job "$2" "$3"
+    ;;
+  review-fixes)
+    review_fixes "${@:2}"
     ;;
   validate)
     validate

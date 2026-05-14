@@ -1643,6 +1643,12 @@ Shared cache areas:
 - `Stored Procedure Cache`: stores stored procedure execution plans.
 - `Meta Cache`: stores metadata for quick access.
 
+Version-aware plan pinning:
+
+- 7.3 and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN(sql_text_id)` and `DBMS_SQL_PLAN_CACHE.UNKEEP_PLAN(sql_text_id)` for keeping or releasing a specific cached execution plan.
+- Do not present `DBMS_SQL_PLAN_CACHE` as common to 7.1 unless the customer confirms equivalent support in the installed source.
+- Verify pinned plan state with `V$SQL_PLAN_CACHE_SQLTEXT.PLAN_CACHE_KEEP` and `V$SQL_PLAN_CACHE_PCO.PLAN_CACHE_KEEP`.
+
 SQL Plan Cache architecture:
 
 ```mermaid
@@ -1934,8 +1940,8 @@ Initialization pattern:
 ```c
 int rc;
 
-rc = ABISetProperty(ABI_USER, "SYS");
-rc = ABISetProperty(ABI_PASSWD, "MANAGER");
+rc = ABISetProperty(ABI_USER, "<MONITOR_USER>");
+rc = ABISetProperty(ABI_PASSWD, "<MONITOR_PASSWORD>");
 rc = ABISetProperty(ABI_LOGFILE, "altibaseMonitor.log");
 rc = ABIInitialize();
 
@@ -2079,10 +2085,11 @@ SNMP configuration file patterns:
 
 ```text
 # snmpd.conf
-rocommunity public
-rwcommunity private
-trap2sink localhost public <trap-port>
+rocommunity <readonly-community>
+rwcommunity <readwrite-community>
+trap2sink <trap-host> <trap-community> <trap-port>
 master agentx
+# Restrict SNMP ACLs and do not use default community strings in production.
 ```
 
 ```text
@@ -2144,7 +2151,7 @@ Trap code blocks:
 - `10000101`: query timeout when `altiPropertyAlarmQueryTimeout` is enabled. Level `2`.
 - `10000102`: fetch timeout when `altiPropertyAlarmFetchTimeout` is enabled. Level `2`.
 - `10000103`: update transaction timeout when `altiPropertyAlarmUtransTimeout` is enabled. Level `2`.
-- `10000103`: continuous session failure when the configured session failure count threshold is reached. Level `2`.
+- Continuous session failure trap code: sampled SNMP sources conflict between a `10000201` section label and `10000103` example output. Do not hard-code one value in generated alert rules until the target-version `snmptrapd` output is validated. Level `2`.
 
 SNMP troubleshooting checklist:
 

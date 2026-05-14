@@ -28,7 +28,7 @@
 - If the customer specifies a version, generate SQL for that version. If the customer does not specify a version, use the 8.1 baseline and state when a feature might not exist in 7.1 or 7.3.
 - Always identify the storage target before generating DDL: memory data, disk data, volatile data, or temporary disk space.
 - Prefer complete runnable examples with follow-up verification SQL. Do not provide DDL without owner, tablespace, and privilege assumptions when those affect execution.
-- For broad compatibility with 7.1 and 7.3, omit `IF NOT EXISTS` and `IF EXISTS` unless the customer targets 8.1 verified source or explicitly requests idempotent DDL.
+- For broad compatibility with 7.1 and 7.3, omit `IF NOT EXISTS` and `IF EXISTS`. If a 7.1 or 7.3 customer requests idempotent DDL, use metadata pre-check SQL plus script-side conditional execution instead of SQL-level `IF EXISTS` or `IF NOT EXISTS`. Use those clauses only when the customer targets Altibase 8.1 verified source syntax.
 - For property changes, show `V$PROPERTY` before and after the change, use `ALTER SYSTEM` or `ALTER SESSION` only for documented dynamic properties, and add the related performance-view check when one exists.
 - Do not claim Oracle DDL can run unchanged. Convert Oracle storage, tablespace, LOB, sequence, and replication assumptions into Altibase syntax.
 
@@ -573,15 +573,24 @@ Generation notes:
 ### Replication Syntax
 
 ```text
-replication_non_ssl ::=
+replication_table_non_ssl ::=
   CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
-  [FOR ANALYSIS | FOR ANALYSIS PROPAGATION | FOR PROPAGABLE LOGGING | FOR PROPAGATION]
   [AS MASTER | AS SLAVE]
   [OPTIONS option_list]
   WITH 'remote_host_ip_or_name', remote_replication_port [USING TCP | USING IB ib_latency]
        [...]
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
+  [, FROM ... TO ...]
+
+replication_log_analyzer_cdc ::=
+  CREATE REPLICATION replication_name
+  { FOR ANALYSIS | FOR ANALYSIS PROPAGATION | FOR PROPAGABLE LOGGING | FOR PROPAGATION }
+  [OPTIONS option_list]
+  WITH 'xlog_sender_host_ip_or_name', xlog_sender_port
+       [...]
+  FROM [owner.]local_table
+  TO   [owner.]local_table
   [, FROM ... TO ...]
 
 replication_ssl_8_1 ::=
@@ -622,7 +631,8 @@ Generation notes:
 - If `USING` is omitted, ordinary TCP replication is used. `USING TCP` can be shown for clarity, but it is not required.
 - `USING IB ib_latency` is only for InfiniBand environments. Use the peer `REPLICATION_IB_PORT_NO`, and verify `IB_ENABLE`.
 - In Altibase 8.1 verified source, SSL replication uses `USING SSL` and the remote server's `REPLICATION_SSL_PORT_NO`. SSL configuration must already be completed on each replication target server.
-- Do not combine `FOR ANALYSIS` Log Analyzer replication with `USING SSL`.
+- `FOR ANALYSIS` and related Log Analyzer forms are CDC XLog Sender syntax. Do not combine them with `EAGER`, `USING SSL`, or `USING IB`.
+- `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
 
 ### Property SQL Syntax
@@ -1815,8 +1825,6 @@ CREATE REPLICATION rep_app_user
 WITH '192.168.10.20', 35524
 FROM app.app_user TO app.app_user,
 FROM app.app_document TO app.app_document;
-
-ALTER REPLICATION rep_app_user SYNC;
 ```
 
 Remote server `192.168.10.20`, local server `192.168.10.10`:
@@ -1831,7 +1839,12 @@ CREATE REPLICATION rep_app_user
 WITH '192.168.10.10', 25524
 FROM app.app_user TO app.app_user,
 FROM app.app_document TO app.app_document;
+```
 
+After both matching replication objects exist, run synchronization or start from the chosen source direction only:
+
+```sql
+-- Choose the source node based on Active-Standby role, Active-Active ownership, and existing data.
 ALTER REPLICATION rep_app_user SYNC;
 ```
 
@@ -1848,14 +1861,13 @@ WITH '192.168.10.20', 45524 USING SSL
 FROM app.app_user TO app.app_user,
 FROM app.app_document TO app.app_document;
 
-ALTER REPLICATION rep_app_user_ssl SYNC;
-
 -- On Node B, create the object using Node A's REPLICATION_SSL_PORT_NO.
 CREATE REPLICATION rep_app_user_ssl
 WITH '192.168.10.10', 45514 USING SSL
 FROM app.app_user TO app.app_user,
 FROM app.app_document TO app.app_document;
 
+-- After both matching objects exist, run from the chosen source direction only.
 ALTER REPLICATION rep_app_user_ssl SYNC;
 ```
 

@@ -933,7 +933,7 @@ LOB API block: `SQLGetLob`
 - Type: Altibase-specific, non-standard CLI LOB function.
 - Purpose: reads part of a LOB through a locator into an application buffer.
 - Read buffer types: `SQL_C_BINARY` for `BLOB`, `SQL_C_CHAR` for `CLOB`.
-- `fromPosition`: byte-based start point for reading. The source argument text describes positions as byte positions, and the sample loop starts the first chunk with offset `0`; keep offsets consistent with the target version's sample convention.
+- `fromPosition`: byte-based start point for reading. `SQLGetLob()` `fromPosition` is documented as 1-based. If a source sample initializes a first full-read loop with offset `0`, treat that as a sample-specific convention and test against the target client patch before generating partial-read code.
 - `forLength`: byte length requested.
 - Truncation: if returned data is larger than `bufferSize`, returns `SQL_SUCCESS_WITH_INFO` with SQLSTATE `01004` and truncates to the buffer size.
 
@@ -944,7 +944,7 @@ LOB API block: `SQLPutLob`
 - Source buffer types: `SQL_C_BINARY` for `BLOB`, `SQL_C_CHAR` for `CLOB`.
 - `forLength`: present in the function signature, but documented as not used in the source argument table.
 - `valueLength`: must be greater than 0; `SQL_NULL_DATA` is not accepted.
-- Position rule: do not pass a position greater than the current target LOB length. Manual examples use `fromPosition=0` for new or whole-value locator patterns and positive positions for partial overwrite.
+- Position rule: `SQLPutLob()` `fromPosition` is documented as 1-based for partial writes. Do not pass a position greater than the current target LOB length. If a source sample uses `fromPosition=0` for new or whole-value locator patterns, label it as a sample-specific full-value convention rather than the generic partial-write rule.
 - Transaction rule: use non-autocommit mode and commit or roll back explicitly after the LOB operation.
 
 LOB API block: `SQLTrimLob`

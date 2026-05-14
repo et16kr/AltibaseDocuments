@@ -31,7 +31,7 @@
 - Do not expose internal source labels, repository paths, workstation paths, or source-image names in customer answers.
 - Ask for Altibase version, remote DBMS, JDBC driver version, Java version, target host and port, transaction level, connector version, and network/firewall context before giving production-ready integration commands.
 - Treat sample accounts such as `SYS` and `MANAGER` as placeholders. Advise users to use least-privilege accounts and protected secret handling.
-- For SSL/TLS, truststores, certificate verification, and ciphers, use this attachment for connector property names and the SSL/TLS attachment for certificate preparation.
+- For SSL/TLS, truststores, certificate verification, and ciphers, use `11_java_jdbc_spring.md` and `18_security_ssl_tls.md` for Altibase JDBC/SSL parameter names. This attachment gives connector workflow context and should not invent connector-specific TLS placement unless the connector accepts the documented Altibase JDBC URL or properties.
 - For generic JDBC URL attributes, Spring Boot, and Hibernate application code, cross-reference the Java/JDBC/Spring attachment.
 
 ## Fast Decision Map
@@ -1413,9 +1413,10 @@ OpenLDAP setup checklist:
 Example user creation:
 
 ```sql
-DROP USER ldap CASCADE;
-CREATE USER ldap IDENTIFIED BY ldap;
+CREATE USER ldap IDENTIFIED BY '<password>';
 ```
+
+Do not include `DROP USER ... CASCADE` in production setup examples. If a lab reset is required, document the destructive impact, backup requirement, and explicit operator approval outside the copy-ready setup path.
 
 Example data-build commands:
 

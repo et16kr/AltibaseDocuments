@@ -57,7 +57,7 @@ Item: 64-bit support
 Altibase 7.1, 7.3, and 8.1 server and client packages are 64-bit. Windows is client-only for 7.1, 7.3, and 8.1 according to the supported platform and release-note sources.
 
 Item: 8.1 platform baseline
-Altibase 8.1.0.0.1 supports Linux x86-64 on Red Hat Enterprise Linux 7, 8, and 9 for server and client. Windows 2008 and Windows 10 are client-only. Altibase 8.1 requires JDK 1.8 or higher when Java components are used.
+Altibase 8.1.0.0.1 supports Linux x86-64 on Red Hat Enterprise Linux 7, 8, and 9 for server and client, and AIX 7.2 for server and client. Windows 2008 and Windows 10 are client-only. Altibase 8.1 requires JDK 1.8 or higher when Java components are used.
 
 Item: memory and disk
 The installation guide baseline is at least 1 GB memory on 64-bit systems, with 2 GB recommended. Reserve disk space for the software, tablespaces, transaction logs, archive logs if used, and operational growth. The guide recommends at least 12 GB free disk for smooth database operation.
@@ -377,7 +377,7 @@ Use the 7.1 installer and supported platform matrix for OS and package selection
 Use the 7.3 installer and supported platform matrix. 7.3 expands supported Linux distributions and architectures compared with older 7.1 baselines. Some operating systems require minimum 7.3 patch levels.
 
 8.1:
-Use Altibase 8.1 release notes for supported platform, package, and compatibility guidance, and Altibase 8.1 verified source for installation workflow. Altibase 8.1.0.0.1 supports Linux x86-64 server and client on Red Hat Enterprise Linux 7, 8, and 9, supports Windows 2008 and Windows 10 client-only, supports 64-bit packages only, and requires JDK 1.8 or higher for Java components.
+Use Altibase 8.1 release notes for supported platform, package, and compatibility guidance, and Altibase 8.1 verified source for installation workflow. Altibase 8.1.0.0.1 supports Linux x86-64 server and client on Red Hat Enterprise Linux 7, 8, and 9, supports AIX 7.2 server and client, supports Windows 2008 and Windows 10 client-only, supports 64-bit packages only, and requires JDK 1.8 or higher for Java components.
 
 Upgrade caution for 8.1:
 Altibase 8.1 changes database binary and metadata compatibility. Databases prior to 8.1 are not binary-compatible with 8.1, and migration or metadata rebuild planning is required for upgrades. Do not present an in-place package patch as a complete 7.x to 8.1 upgrade procedure.

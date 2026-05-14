@@ -325,7 +325,7 @@ ODBC/CLI setup checklist:
 3. Configure `SSL_CA` or `SSL_CAPATH` when server certificate verification is required.
 4. Configure `SSL_CERT` and `SSL_KEY` when mutual authentication is enabled.
 5. Connect with SSL/TLS by selecting SSL connection type and using the server `SSL_PORT_NO`.
-6. For FIPS on 7.3 or 8.1 verified source, set `ALTIBASE_SSL_LOAD_CONFIG=1` on clients that use OpenSSL and set `SSL_LOAD_CONFIG=1` on the server.
+6. For FIPS on 7.3 or 8.1 verified source, set `ALTIBASE_SSL_LOAD_CONFIG=1` for ODBC/CLI clients and set `SSL_LOAD_CONFIG=1` on the server. For ADO.NET or other clients, use only source-documented SSL connection keys unless a matching guide explicitly documents FIPS config loading.
 
 ODBC/CLI verification commands:
 
@@ -385,6 +385,8 @@ ADO.NET example:
 ```text
 Server=127.0.0.1;Port=20443;User=user;Password=pwd;conn type=ssl;ssl ca=/altibase_home/sample/CERT/ca-cert.pem;ssl cert=/altibase_home/sample/CERT/client-cert.pem;ssl key=/altibase_home/sample/CERT/client-key.pem
 ```
+
+Production server-certificate verification requires `ssl verify=true` plus `ssl ca` or `ssl capath`; do not copy the manual-style example as a complete production verification pattern without that setting.
 
 iSQL and utility port guidance:
 

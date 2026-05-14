@@ -159,7 +159,6 @@ Use these first for DBA checks:
 ```sql
 SELECT server_status,
        archivelog_mode,
-       checkpoint_scale,
        begin_chkpt_file_no,
        begin_chkpt_file_offset,
        end_chkpt_file_no,
@@ -168,7 +167,22 @@ SELECT server_status,
        oldest_logfile_offset,
        transaction_segment_count
 FROM V$LOG;
+```
 
+8.1-only checkpoint-scale check:
+
+```sql
+-- Use this only after confirming the target version or column availability.
+SELECT table_name, column_name
+FROM V$ALLCOLUMN
+WHERE table_name = 'V$LOG'
+  AND column_name = 'CHECKPOINT_SCALE';
+
+SELECT checkpoint_scale
+FROM V$LOG;
+```
+
+```sql
 SELECT lfg_id,
        archive_mode,
        archive_thr_running,

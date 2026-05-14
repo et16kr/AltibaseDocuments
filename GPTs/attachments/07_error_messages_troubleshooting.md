@@ -777,16 +777,49 @@ Immediate Action: Verify the owner-qualified object name and the current connect
 Check SQL or Command:
 
 ```sql
+-- User check.
 SELECT user_name
 FROM SYSTEM_.SYS_USERS_
 WHERE user_name = '<OWNER_NAME>';
 
+-- Table, view, queue, or sequence-style object check.
 SELECT u.user_name, t.table_name, t.table_type
 FROM SYSTEM_.SYS_TABLES_ t,
      SYSTEM_.SYS_USERS_ u
 WHERE t.user_id = u.user_id
   AND u.user_name = '<OWNER_NAME>'
   AND t.table_name = '<OBJECT_NAME>';
+
+-- Column check.
+SELECT u.user_name, t.table_name, c.column_name
+FROM SYSTEM_.SYS_USERS_ u,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_COLUMNS_ c
+WHERE u.user_id = t.user_id
+  AND t.table_id = c.table_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>'
+  AND c.column_name = '<COLUMN_NAME>';
+
+-- Index check.
+SELECT u.user_name, t.table_name, i.index_name
+FROM SYSTEM_.SYS_USERS_ u,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_INDICES_ i
+WHERE u.user_id = t.user_id
+  AND t.table_id = i.table_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>'
+  AND i.index_name = '<INDEX_NAME>';
+
+-- Replication definition and host checks.
+SELECT replication_name, is_started, repl_mode, role
+FROM SYSTEM_.SYS_REPLICATIONS_
+WHERE replication_name = '<REPLICATION_NAME>';
+
+SELECT replication_name, host_ip, port_no, conn_type
+FROM SYSTEM_.SYS_REPL_HOSTS_
+WHERE replication_name = '<REPLICATION_NAME>';
 ```
 
 Version Cautions: Applies across 7.1, 7.3, and 8.1.
@@ -996,7 +1029,7 @@ Symptom: A regular expression statement fails because the server character set i
 
 Primary Causes: `REGEXP_MODE=1` with an unsupported Altibase server character set, invalid pattern, or PCRE2 runtime error.
 
-Immediate Action: Check `REGEXP_MODE`, server character set, and pattern. If the character set is unsupported, set `REGEXP_MODE` to `0` or plan a database recreation with a supported character set.
+Immediate Action: Branch by error code. For `0x2106B`, check `REGEXP_MODE`, server character set, and pattern; if the character set is unsupported, set `REGEXP_MODE` to `0` or plan a database recreation with a supported character set. For `0x2106C`, collect the PCRE2 detail text, Altibase version, SQL text, `REGEXP_MODE`, server character set, and trace context before escalating to Altibase Support.
 
 Check SQL or Command:
 
@@ -1255,20 +1288,27 @@ Immediate Action: Use a different replication name or remove the existing defini
 Check SQL or Command:
 
 ```sql
-SELECT rep_name,
-       status,
-       sender_ip,
-       sender_port,
-       peer_ip,
-       peer_port,
-       net_error_flag
+-- Primary check: replication definitions, including stopped or not-yet-started objects.
+SELECT replication_name, is_started, repl_mode, role
+FROM SYSTEM_.SYS_REPLICATIONS_
+WHERE replication_name = '<REPLICATION_NAME>'
+ORDER BY replication_name;
+
+SELECT replication_name, host_ip, port_no, conn_type
+FROM SYSTEM_.SYS_REPL_HOSTS_
+WHERE replication_name = '<REPLICATION_NAME>'
+   OR (host_ip = '<PEER_HOST>' AND port_no = <PEER_PORT>)
+ORDER BY replication_name, host_ip, port_no;
+
+-- Secondary runtime check after a definition is known to exist.
+SELECT rep_name, status, sender_ip, sender_port, peer_ip, peer_port, net_error_flag
 FROM V$REPSENDER
+WHERE rep_name = '<REPLICATION_NAME>'
 ORDER BY rep_name;
 
-SELECT rep_name,
-       rep_gap,
-       rep_gap_size
+SELECT rep_name, rep_gap, rep_gap_size
 FROM V$REPGAP
+WHERE rep_name = '<REPLICATION_NAME>'
 ORDER BY rep_name;
 ```
 
@@ -1481,6 +1521,6 @@ Use this order:
 - 7.3: Use 7.3 Error Message Reference wording when the customer reports a 7.3 system. SSL, regular expression, replication, and LOB errors should be checked against 7.3 wording.
 - 8.1: Use Altibase 8.1 verified source for JSON, Temporary LOB, replication SSL, sharding, and current SSL/TLS behavior. JSON-specific error blocks such as `mtERR_ABORT_JSON_WITHOUT_TEMPLOB` and `qpERR_ABORT_JSON_*` are 8.1-sensitive.
 
-## Conversion TODO
+## Residual Scope
 
-- None for JOB-042. Future deep-dive jobs may add additional error blocks for specific utilities or connectors while preserving the standardized error format above.
+- Add future error blocks only after source-backed review, and keep the standardized error format above.
