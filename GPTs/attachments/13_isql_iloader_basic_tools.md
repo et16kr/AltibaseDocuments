@@ -1269,7 +1269,7 @@ Answer: No. `-mode replace` deletes existing rows with `DELETE`; `-mode truncate
 
 FAQ: Can iLoader sort export output by primary key?
 
-Answer: iLoader does not have a separate `ORDER BY` command-line option in this source set. Use `DOWNLOAD CONDITION` in the FORM file for supported condition and hint behavior, and verify the generated query with `-displayquery`. If strict ordering is required for a downstream process, validate it with the target client and consider a SQL-based export approach.
+Answer: The documented iLoader command-line options do not include a separate `ORDER BY` option. Use `DOWNLOAD CONDITION` in the FORM file for supported condition and hint behavior, and verify the generated query with `-displayquery`. If strict ordering is required for a downstream process, validate it with the target client and consider a SQL-based export approach.
 
 FAQ: Can iLoader handle `GEOMETRY` data?
 
@@ -1277,4 +1277,4 @@ Answer: Yes. iLoader supports `GEOMETRY` data and stores it in WKB format, eithe
 
 FAQ: What should a GPT answer say when a user asks for a password file?
 
-Answer: The iSQL and iLoader source set documents command-line credentials, interactive prompts, login scripts, secure login failure messages, history cautions, and generated-file permissions. It does not define a dedicated iSQL or iLoader password-file feature in this attachment's source set. Recommend prompting for passwords, protecting shell history, avoiding credentials in `glogin.sql` or `login.sql`, and setting restrictive file permissions.
+Answer: The iSQL and iLoader manuals document command-line credentials, interactive prompts, login scripts, secure login failure messages, history cautions, and generated-file permissions. This attachment does not define a dedicated iSQL or iLoader password-file feature. Recommend prompting for passwords, protecting shell history, avoiding credentials in `glogin.sql` or `login.sql`, and setting restrictive file permissions.

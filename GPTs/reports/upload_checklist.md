@@ -33,21 +33,21 @@ attachments.
 | 2 | `01_getting_started_installation.md` | 16956 bytes | Installation, environment setup, first checks |
 | 3 | `02_administration_operations.md` | 58521 bytes | Startup, shutdown, storage, backup, recovery, operations |
 | 4 | `03_sql_ddl_generation.md` | 77807 bytes | DDL generation, tablespaces, users, constraints, indexes |
-| 5 | `04_sql_dml_oracle_compatibility.md` | 39232 bytes | DML, Oracle compatibility, JSON functions |
+| 5 | `04_sql_dml_oracle_compatibility.md` | 39250 bytes | DML, Oracle compatibility, JSON functions |
 | 6 | `05_data_types_properties.md` | 48470 bytes | Data types, properties, JSON, Temporary LOB |
 | 7 | `06_data_dictionary_performance_views.md` | 47901 bytes | Dictionary views, performance views, verification SQL |
 | 8 | `07_error_messages_troubleshooting.md` | 50159 bytes | Error messages, troubleshooting workflows |
 | 9 | `08_performance_tuning_monitoring.md` | 68575 bytes | Tuning, monitoring, execution plans, diagnostics |
 | 10 | `09_replication_ha_cdc.md` | 61916 bytes | Replication, HA, CDC, protocol compatibility |
-| 11 | `10_psm_stored_external_procedures.md` | 40179 bytes | PSM, stored procedures, external procedures |
+| 11 | `10_psm_stored_external_procedures.md` | 40188 bytes | PSM, stored procedures, external procedures |
 | 12 | `11_java_jdbc_spring.md` | 36653 bytes | Java, JDBC, Spring, Hibernate |
 | 13 | `12_c_cli_odbc_precompiler.md` | 62482 bytes | C, CLI, ODBC, ACI, precompiler |
-| 14 | `13_isql_iloader_basic_tools.md` | 38387 bytes | iSQL, iLoader, basic command-line tools |
-| 15 | `14_utilities_operation_tools.md` | 45965 bytes | Utilities, export, comparison, diagnostics |
+| 14 | `13_isql_iloader_basic_tools.md` | 38369 bytes | iSQL, iLoader, basic command-line tools |
+| 15 | `14_utilities_operation_tools.md` | 46019 bytes | Utilities, export, comparison, diagnostics |
 | 16 | `15_migration_oracle_compatibility.md` | 48153 bytes | Migration, Oracle compatibility, Migration Center |
 | 17 | `16_dblink_external_connectors.md` | 51975 bytes | DB Link, external connectors, third-party integration |
 | 18 | `17_kubernetes_aku_cloud.md` | 26033 bytes | AKU, Kubernetes, cloud deployment notes |
-| 19 | `18_security_ssl_tls.md` | 25361 bytes | SSL/TLS, FIPS-related settings, security operations |
+| 19 | `18_security_ssl_tls.md` | 25368 bytes | SSL/TLS, FIPS-related settings, security operations |
 | 20 | `19_spatial_nifi_tableau_misc.md` | 58306 bytes | Spatial, NiFi, Tableau, miscellaneous connectors |
 
 ## QA Gate Checklist

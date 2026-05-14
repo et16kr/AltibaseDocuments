@@ -1097,5 +1097,5 @@ WHEN NOT MATCHED THEN
 Say:
 
 ```text
-`JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON` are 8.1 features in the verified source set. For 7.1 or 7.3, do not generate these functions unless the customer has a custom compatibility layer.
+`JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON` are Altibase 8.1 features in the Altibase 8.1 verified source. For 7.1 or 7.3, do not generate these functions unless the customer has a custom compatibility layer.
 ```

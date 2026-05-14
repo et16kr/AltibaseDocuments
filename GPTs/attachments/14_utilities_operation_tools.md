@@ -55,7 +55,7 @@ flowchart TD
 Version block: 7.1
 
 - Core utility names and operational roles are stable for the utility families in this attachment.
-- `aexport`, `altiComp`, `aku`, and the other Utilities Manual tools are documented in the 7.1 source set.
+- `aexport`, `altiComp`, `aku`, and the other Utilities Manual tools are documented in the Altibase 7.1 Utilities Manual.
 - The 7.1 `aexport` section documents logical migration, generated scripts, SSL options, and `aexport.properties`; use the installed 7.1 client option list when a local binary differs from the examples here.
 - `dataCompJ` is documented as a separate tool release and supports an Altibase master database at supported versions; validate tool package compatibility before using it in a 7.1 estate.
 
@@ -126,7 +126,7 @@ Key Inputs:
 - `ALTIBASE_PORT_NO`: source server port, unless `-port` is supplied.
 - `ALTIBASE_NLS_USE` or `-nls_use`: character set used for export/import text data.
 - `$ALTIBASE_HOME/conf/aexport.properties`: required property file. Create it from `aexport.properties.sample` if it does not exist.
-- `DBMS_METADATA` package: required by the 7.3 and 8.1 source sets for DDL extraction.
+- `DBMS_METADATA` package: required by the Altibase 7.3 Utilities Manual and Altibase 8.1 verified source for DDL extraction.
 - Source connection information: `-s`, `-port`, `-u`, `-p`.
 - Destination connection information written into generated scripts: `-tserver`, `-tport`.
 

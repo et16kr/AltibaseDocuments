@@ -168,4 +168,4 @@ Dependency behavior:
 | JOB-085 | P8 QA | Done | JOB-006, JOB-024, JOB-083 | Multilingual smoke tests | Test answers in major customer languages | Prompt set, attachments | `GPTs/reports/multilingual_smoke_results.md` | User language response works |
 | JOB-086 | P8 QA | Done | JOB-010, JOB-011, JOB-012, JOB-082, JOB-083 | Source audit | Verify major claims trace to source manuals or release notes | Attachments, source reports | `GPTs/reports/source_audit.md` | High-risk claims sourced |
 | JOB-087 | P8 QA | Done | JOB-080, JOB-081, JOB-082, JOB-083, JOB-084, JOB-085, JOB-086 | Packaging | Prepare final upload package checklist | Attachments | `GPTs/reports/upload_checklist.md` | Upload-ready list produced |
-| JOB-088 | P8 QA | InProgress | JOB-087 | Final review | Final human review pass and status closure | All GPTs files | Updated job list | All required jobs Done or documented |
+| JOB-088 | P8 QA | Done | JOB-087 | Final review | Final human review pass and status closure | All GPTs files | Updated job list | All required jobs Done or documented |

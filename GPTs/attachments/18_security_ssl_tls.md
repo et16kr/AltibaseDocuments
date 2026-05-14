@@ -85,7 +85,7 @@ Version block: 7.3
 - OpenSSL requirement: OpenSSL 3.0.8 is supported; OpenSSL 1.0.x is no longer supported.
 - Java guidance: Java 1.8.0_351 or later is recommended for TLS 1.3 cipher use without extra settings. Java 1.8.0_261 or later supports TLS 1.3 when the client starts with `-Djdk.tls.client.protocols="TLSv1.3"` where needed.
 - Newer SSL properties: `SSL_CIPHER_SUITES` configures TLS 1.3 cipher suites; `SSL_LOAD_CONFIG` loads the OpenSSL configuration file and is used for FIPS module configuration.
-- Replication SSL is not a 7.3 feature in the verified source set for this attachment.
+- Replication SSL is not documented as a 7.3 feature in the customer-facing sources for this attachment.
 
 Version block: 8.1
 
@@ -398,7 +398,7 @@ Use this section only for Altibase-to-Altibase replication communication.
 
 Scope:
 
-- Replication SSL is an Altibase 8.1 feature in the verified source set for this attachment.
+- Replication SSL is an Altibase 8.1 feature in the Altibase 8.1 verified source.
 - It is separate from the ordinary client/server `SSL_PORT_NO`.
 - It uses `REPLICATION_SSL_PORT_NO` for the local replication Receiver SSL port.
 - It uses `USING SSL` in `CREATE REPLICATION` to select SSL/TLS replication communication.
