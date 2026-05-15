@@ -349,7 +349,7 @@ Generation notes:
 - Do not generate ad hoc `ALTER TABLE` for replication targets. For replication-target DDL, use the standard remove/re-add flow or the documented DDL synchronization procedure in `09_replication_ha_cdc.md`.
 - `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns or explicit target data types; expression columns need aliases.
 - `PCTFREE` and `PCTUSED` are meaningful for disk-based table pages. Do not copy Oracle storage clauses without checking Altibase syntax and storage target.
-- `JSON` columns are an 8.1 baseline feature. Use `JSON [IN ROW size]` when needed, ensure `TEMPORARY_LOB_ENABLE=1`, and avoid JSON columns for 7.1 or 7.3 unless the customer confirms support.
+- `JSON` columns are an 8.1 baseline feature. Use `JSON [IN ROW size]` when needed, ensure `TEMPORARY_LOB_ENABLE=1`, and avoid JSON columns for 7.1 or 7.3 unless a later Altibase source for the exact target version and patch explicitly documents native `JSON` support.
 
 Table DDL item blocks:
 
@@ -592,7 +592,7 @@ replication_table_non_ssl ::=
 
 replication_log_analyzer_cdc ::=
   CREATE REPLICATION replication_name
-  { FOR ANALYSIS | FOR ANALYSIS PROPAGATION | FOR PROPAGABLE LOGGING | FOR PROPAGATION }
+  { FOR ANALYSIS | FOR ANALYSIS PROPAGATION }
   [OPTIONS option_list]
   { WITH 'xlog_sender_host_ip_or_name', xlog_sender_port
          [...]
@@ -601,8 +601,20 @@ replication_log_analyzer_cdc ::=
   TO   [owner.]local_table
   [, FROM ... TO ...]
 
+replication_propagation ::=
+  CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
+  { FOR PROPAGABLE LOGGING | FOR PROPAGATION }
+  [AS MASTER | AS SLAVE]
+  [OPTIONS option_list]
+  WITH 'remote_host_ip_or_name', remote_replication_port [USING TCP | USING SSL | USING IB ib_latency]
+       [...]
+  FROM [owner.]local_table [PARTITION local_partition]
+  TO   [owner.]remote_table [PARTITION remote_partition]
+  [, FROM ... TO ...]
+
 replication_ssl_8_1 ::=
   CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
+  [FOR PROPAGABLE LOGGING | FOR PROPAGATION]
   [AS MASTER | AS SLAVE]
   [OPTIONS option_list]
   WITH 'remote_host_ip_or_name', remote_ssl_replication_port USING SSL
@@ -639,7 +651,8 @@ Generation notes:
 - If `USING` is omitted, ordinary TCP replication is used. `USING TCP` can be shown for clarity, but it is not required.
 - `USING IB ib_latency` is only for InfiniBand environments. Use the peer `REPLICATION_IB_PORT_NO`, and verify `IB_ENABLE`.
 - In Altibase 8.1 verified source, SSL replication uses `USING SSL` and the remote server's `REPLICATION_SSL_PORT_NO`. SSL configuration must already be completed on each replication target server.
-- `FOR ANALYSIS` and related Log Analyzer forms are CDC XLog Sender syntax. Do not combine them with `EAGER`, `USING SSL`, or `USING IB`.
+- `FOR ANALYSIS` and `FOR ANALYSIS PROPAGATION` are Log Analyzer CDC XLog Sender syntax. Do not combine those Log Analyzer forms with `EAGER`, `USING SSL`, or `USING IB`.
+- `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
@@ -848,7 +861,7 @@ noaudit_object_clause ::=
 
 Generation notes:
 
-- `IF NOT EXISTS` and `IF EXISTS` forms shown in these additional patterns are 8.1 verified source syntax. Omit them for 7.1 and 7.3 unless the customer verifies support in their exact build.
+- `IF NOT EXISTS` and `IF EXISTS` forms shown in these additional patterns are 8.1 verified source syntax. Omit them for 7.1 and 7.3 unless a later Altibase source for the exact target version and patch explicitly documents support.
 - Use `view_ddl` for read-only views. Do not generate unsupported Oracle view clauses such as `WITH CHECK OPTION` unless the customer has verified support.
 - For materialized views, choose `BUILD IMMEDIATE` when the customer expects data at creation time; choose `BUILD DEFERRED` only when the first refresh is scheduled separately.
 - `simple_dml_trigger` is for table DML. `instead_of_dml_trigger` is for view DML. Keep the `psm_body` in Altibase PSM syntax and use attachment 10 for full stored procedure syntax.
@@ -1315,7 +1328,7 @@ CREATE TABLE app.app_event (
 
 - Treat `JSON` as an 8.1 baseline feature.
 - JSON processing uses Temporary LOB internally; check `TEMPORARY_LOB_ENABLE` when a JSON workload fails or when memory use is being reviewed.
-- Avoid generating the `JSON` column type for 7.1 or 7.3 unless the customer provides version-specific confirmation.
+- Avoid generating the `JSON` column type for 7.1 or 7.3 unless a later Altibase source for the exact target version and patch explicitly documents native `JSON` support.
 - Do not create partition keys or indexes on JSON columns. Treat JSON columns as LOB-like for DDL restrictions.
 
 Alter table examples:
@@ -1945,8 +1958,8 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
 ## Version Differences
 
-- 7.1: Use 7.1 SQL Reference syntax. Avoid `IF NOT EXISTS`, `IF EXISTS`, native `JSON`, Temporary LOB checks, and `USING SSL` replication unless the customer provides version-specific confirmation.
-- 7.3: Use 7.3 SQL Reference syntax. Treat ordinary DDL patterns as close to 7.1, but check 7.3-specific SQL, Spatial, and Replication improvements when relevant.
+- 7.1: Use 7.1 SQL Reference syntax. Avoid `IF NOT EXISTS`, `IF EXISTS`, native `JSON`, Temporary LOB checks, and `USING SSL` replication unless a later Altibase source for the exact 7.1 target patch explicitly documents support.
+- 7.3: Use 7.3 SQL Reference syntax. Treat ordinary DDL patterns as close to 7.1, but check 7.3-specific SQL, Spatial, and Replication improvements when relevant; apply 8.1-only syntax or features only when a later Altibase source for the exact 7.3 target patch explicitly documents support.
 - 8.1: Use Altibase 8.1 verified source for `IF NOT EXISTS` in supported `CREATE` statements, `IF EXISTS` in supported `DROP` statements, native `JSON`, Temporary LOB, `TEMPORARY_LOB_ENABLE`, `V$TEMPORARY_LOBS`, `USING SSL` replication, and `REPLICATION_SSL_PORT_NO`.
 
 ## Attachment Cross-References
