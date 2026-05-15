@@ -96,11 +96,7 @@ binary_type ::=
   | BIT[(size)] [[FIXED |] VARIABLE (IN ROW size)]
   | VARBIT[(size)] [[FIXED |] VARIABLE (IN ROW size)]
 
-lob_type_7_1_7_3 ::=
-  BLOB [VARIABLE (IN ROW size)]
-  | CLOB [VARIABLE (IN ROW size)]
-
-lob_type_8_1_verified ::=
+lob_type ::=
   BLOB [IN ROW size]
   | CLOB [IN ROW size]
 
@@ -119,7 +115,7 @@ Use when: the column is short and predictable, or when avoiding variable-area lo
 Notes:
 
 - For disk tables, user-specified `FIXED` or `VARIABLE` is ignored and columns are treated as fixed.
-- LOB columns are always treated as variable in the broader sense, with small values controlled by `IN ROW`.
+- LOB column data is treated as variable storage behavior, but do not write `VARIABLE` in `BLOB` or `CLOB` type syntax; control small LOB placement with `IN ROW`.
 
 ### Modifier Item: `VARIABLE`
 
@@ -127,7 +123,7 @@ Purpose: store column payload separately from the fixed part of a record, while 
 
 Use when: values vary widely or can be large.
 
-Supported types: `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `BYTE`, `VARBYTE`, `NIBBLE`, `BIT`, `VARBIT`, `BLOB`, and `CLOB`.
+Supported types: `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `BYTE`, `VARBYTE`, `NIBBLE`, `BIT`, and `VARBIT`.
 
 ### Modifier Item: `IN ROW`
 
@@ -465,10 +461,6 @@ Purpose: large binary object.
 Syntax:
 
 ```sql
--- 7.1 and 7.3 source syntax
-BLOB [VARIABLE (IN ROW size)]
-
--- Altibase 8.1 verified source syntax
 BLOB [IN ROW size]
 ```
 
@@ -482,6 +474,7 @@ Limits and storage:
 Restrictions:
 
 - LOB columns cannot be used in volatile tables or disk temporary tablespaces.
+- LOB columns cannot be used in cursors.
 - LOB columns cannot be partition key columns.
 - Indexes cannot be created on LOB columns.
 - Avoid `NOT NULL` on LOB columns unless the application and driver behavior are tested.
@@ -493,10 +486,6 @@ Purpose: large character object.
 Syntax:
 
 ```sql
--- 7.1 and 7.3 source syntax
-CLOB [VARIABLE (IN ROW size)]
-
--- Altibase 8.1 verified source syntax
 CLOB [IN ROW size]
 ```
 
