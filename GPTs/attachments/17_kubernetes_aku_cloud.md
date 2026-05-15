@@ -651,6 +651,13 @@ Template: lifecycle order
 The container should start Altibase first, then run aku -p start. Kubernetes startupProbe should wait for /tmp/aku_start_completed. On termination, the container should run aku -p end before server stop, and terminationGracePeriodSeconds must be long enough for AKU to finish.
 ```
 
+## Attachment Cross-References
+
+- Use `02_administration_operations.md` for startup, shutdown, backup, recovery, archive log, and tablespace operations around Kubernetes incidents.
+- Use `06_data_dictionary_performance_views.md` for SQL checks that verify server, session, tablespace, replication, and runtime state from a Pod.
+- Use `09_replication_ha_cdc.md` for replication object design, state interpretation, failover, gap handling, and CDC context behind AKU.
+- Use `18_security_ssl_tls.md` for secrets, listener exposure, certificate, TLS, audit, and security policy decisions in Kubernetes deployments.
+
 ## Residual Scope
 
 - Kubernetes examples are limited to Altibase and AKU behavior from the selected source set. Production platform design still needs environment-specific review for storage, fencing, backup, secrets, licensing, observability, and Kubernetes version support.

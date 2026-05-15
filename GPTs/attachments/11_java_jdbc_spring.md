@@ -1419,6 +1419,13 @@ Template: Adapter for JDBC setup
 
 Install `jdbcAdapter` on Linux x86-64bit with a compatible JRE and target database JDBC driver. Configure `JDBC_ADAPTER_HOME`, `ALTIBASE_NLS_USE`, `jdbcAdapter.conf`, `ALA_*` properties, source `ALTIBASE_*` properties, target `OTHER_DATABASE_JDBC_*` properties, and DML behavior properties. Create `CREATE REPLICATION ... FOR ANALYSIS`, start `jdbcAdapter`, then run `ALTER REPLICATION ... START`.
 
+## Attachment Cross-References
+
+- Use `05_data_types_properties.md` for LOB, JSON, numeric, datetime, character-set, and property behavior behind JDBC bind and fetch choices.
+- Use `07_error_messages_troubleshooting.md` for SQLSTATE, Altibase error-code, login, network, LOB, and driver troubleshooting.
+- Use `09_replication_ha_cdc.md` when Adapter for JDBC behavior depends on replication topology, ALA, Log Analyzer, or CDC context.
+- Use `18_security_ssl_tls.md` for SSL/TLS certificate, truststore, cipher, OpenSSL, and security policy details beyond the JDBC URL keys.
+
 ## Residual Scope
 
 - JDBC type, API, and SQLSTATE blocks focus on high-risk driver behavior. For a method, class, SQLSTATE, or driver patch not listed here, verify against the target Altibase JDBC driver and its source-backed documentation before promising support.

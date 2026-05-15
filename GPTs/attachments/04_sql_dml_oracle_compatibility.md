@@ -99,6 +99,8 @@ Generation notes:
 
 ### SELECT Subclause Syntax
 
+#### Table Reference and Join Syntax
+
 ```text
 table_reference ::=
   single_table
@@ -118,7 +120,11 @@ join_type ::=
 
 apply_type ::=
   CROSS | OUTER
+```
 
+#### Pivot and Unpivot Syntax
+
+```text
 pivot_clause ::=
   PIVOT (aggregate_function(expr) [[AS] alias] [, aggregate_function(expr) [[AS] alias] ...]
          pivot_for_clause pivot_in_clause)
@@ -139,7 +145,11 @@ unpivot_in_clause ::=
       [[AS] {alias_name | (alias_name [, alias_name ...])}]
       [, {column_name | (column_name [, column_name ...])}
          [[AS] {alias_name | (alias_name [, alias_name ...])}] ...])
+```
 
+#### Hierarchical and Grouping Syntax
+
+```text
 hierarchical_query_clause ::=
   CONNECT BY [NOCYCLE] condition [IGNORE LOOP] [START WITH condition]
 | START WITH condition CONNECT BY [NOCYCLE] condition [IGNORE LOOP]
@@ -666,6 +676,8 @@ Supported conditions include:
 
 ### Condition Syntax Diagram Conversions
 
+#### Logical and Comparison Conditions
+
 ```text
 logical_condition ::=
   condition AND condition
@@ -686,7 +698,11 @@ group_comparison_condition ::=
   ({expr [, expr ...]} | (subquery))
 | (expr [, expr ...]) {= | != | <>} {ANY | SOME | ALL}
   ((expr [, expr ...]) [, (expr [, expr ...]) ...] | (subquery))
+```
 
+#### Range, Existence, and Membership Conditions
+
+```text
 between_condition ::=
   expr [NOT] BETWEEN expr AND expr
 
@@ -700,7 +716,11 @@ in_condition ::=
 
 inlist_condition ::=
   [NOT] INLIST(expr, 'comma_separated_values')
+```
 
+#### Pattern, Null, and Unique Conditions
+
+```text
 is_null_condition ::=
   expr IS [NOT] NULL
 
@@ -752,17 +772,34 @@ ALTER SESSION SET REGEXP_MODE=1;
 
 ### Function Syntax Diagram Conversions
 
+#### Ordered-Set Distribution and Percentile Functions
+
 ```text
 ordered_set_distribution ::=
   {CUME_DIST | PERCENT_RANK | RANK} (expr [, expr ...])
   WITHIN GROUP (window_order_clause)
 
+percentile_cont_disc ::=
+  {PERCENTILE_CONT | PERCENTILE_DISC}(percentile_expr)
+  WITHIN GROUP (ORDER BY expr [ASC | DESC])
+  [OVER (PARTITION BY expr [, expr ...])]
+```
+
+Generation note: `PERCENTILE_CONT`, `PERCENTILE_DISC`, and ordered-set distribution functions use `WITHIN GROUP`; add `OVER (...)` only when generating analytic form.
+
+#### KEEP Dense-Rank Aggregate
+
+```text
 first_last_keep ::=
   aggregate_function KEEP
   (DENSE_RANK {FIRST | LAST}
    ORDER BY expr [ASC | DESC] [NULLS FIRST | NULLS LAST] [, ...])
   [OVER (PARTITION BY expr [, expr ...])]
+```
 
+#### Statistical Function
+
+```text
 stats_one_way_anova ::=
   STATS_ONE_WAY_ANOVA(
     expr1,
@@ -770,7 +807,11 @@ stats_one_way_anova ::=
     [, {'SIG' | 'F_RATIO' | 'MEAN_SQUARES_WITHIN' | 'MEAN_SQUARES_BETWEEN' |
         'DF_WITHIN' | 'DF_BETWEEN' | 'SUM_SQUARES_WITHIN' | 'SUM_SQUARES_BETWEEN'}]
   )
+```
 
+#### Analytic Window Syntax
+
+```text
 window_function_call ::=
   window_function([arg_expr [, arg_expr ...]]) [IGNORE NULLS]
   OVER (window_specification)
@@ -793,17 +834,28 @@ frame_bound ::=
 | CURRENT ROW
 | value PRECEDING
 | value FOLLOWING
+```
 
+Generation notes:
+
+- Analytic functions can appear in a `SELECT` list or `ORDER BY` clause. Do not generate them directly in `WHERE`.
+- Ranking functions require `ORDER BY` in the `OVER` clause. Aggregate window functions may omit `ORDER BY`.
+- If `ROWS` or `RANGE` is omitted for a window function that supports frames, the SQL Reference default is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
+
+#### LISTAGG Syntax
+
+```text
 listagg ::=
   LISTAGG(expr [, 'separator'])
   WITHIN GROUP (order_by_clause)
   [OVER (PARTITION BY expr [, expr ...])]
+```
 
-percentile_cont_disc ::=
-  {PERCENTILE_CONT | PERCENTILE_DISC}(percentile_expr)
-  WITHIN GROUP (ORDER BY expr [ASC | DESC])
-  [OVER (PARTITION BY expr [, expr ...])]
+Generation note: `LISTAGG` uses `WITHIN GROUP`; add `OVER (...)` only when generating analytic form.
 
+#### NTILE and RATIO_TO_REPORT Syntax
+
+```text
 ntile ::=
   NTILE(expr)
   OVER ([PARTITION BY expr [, expr ...]] order_by_clause)
@@ -811,7 +863,11 @@ ntile ::=
 ratio_to_report ::=
   RATIO_TO_REPORT(expr)
   OVER ([PARTITION BY expr [, expr ...]])
+```
 
+#### CASE Expression Syntax
+
+```text
 case_expr ::=
   CASE {simple_case_expr | searched_case_expr} [ELSE else_expr] END
 
@@ -824,13 +880,7 @@ searched_case_expr ::=
   [WHEN condition THEN return_expr ...]
 ```
 
-Generation notes:
-
-- Analytic functions can appear in a `SELECT` list or `ORDER BY` clause. Do not generate them directly in `WHERE`.
-- Ranking functions require `ORDER BY` in the `OVER` clause. Aggregate window functions may omit `ORDER BY`.
-- If `ROWS` or `RANGE` is omitted for a window function that supports frames, the SQL Reference default is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
-- `PERCENTILE_CONT`, `PERCENTILE_DISC`, `LISTAGG`, and ordered-set distribution functions use `WITHIN GROUP`; add `OVER (...)` only when generating analytic form.
-- In `CASE`, all `return_expr` branches should be type-compatible.
+Generation note: In `CASE`, all `return_expr` branches should be type-compatible.
 
 ### Function Item: Oracle-Familiar Functions
 

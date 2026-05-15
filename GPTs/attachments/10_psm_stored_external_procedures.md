@@ -1049,6 +1049,13 @@ END;
 - External procedure fails: verify `.so` location under `$ALTIBASE_HOME/lib`, `CREATE LIBRARY`, `entryfunction`, `PARAMETERS` order, `LENGTH` and `MAXLEN`, external mode agent properties, and `V$EXTPROC_AGENT`.
 - 8.1 Temporary LOB memory issue: check `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, and `V$TEMPORARY_LOBS`.
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for surrounding object DDL, grants, synonyms, jobs, triggers, and table structures that stored logic depends on.
+- Use `05_data_types_properties.md` for exact data type limits, property names, VARRAY memory, Temporary LOB behavior, and conversion constraints.
+- Use `07_error_messages_troubleshooting.md` when a PSM, package, cursor, dynamic SQL, or external procedure answer starts from an Altibase error code.
+- Use `12_c_cli_odbc_precompiler.md` when native C/C++ clients, CLI, ODBC, or precompiler code must call or complement stored logic.
+
 ## Residual Scope
 
 - This attachment covers core PSM generation and external procedure patterns. It is not a complete built-in package or PL/SQL compatibility catalog; use target-version PSM sources when an answer depends on an unlisted built-in, pragma, or external-procedure edge case.

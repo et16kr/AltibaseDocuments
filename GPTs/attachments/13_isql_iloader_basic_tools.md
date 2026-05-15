@@ -1296,6 +1296,13 @@ FAQ: What should a GPT answer say when a user asks for a password file?
 
 Answer: The iSQL and iLoader manuals document command-line credentials, interactive prompts, login scripts, secure login failure messages, history cautions, and generated-file permissions. This attachment does not define a dedicated iSQL or iLoader password-file feature. Recommend prompting for passwords, protecting shell history, avoiding credentials in `glogin.sql` or `login.sql`, and setting restrictive file permissions.
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for target table, index, constraint, tablespace, user, and privilege DDL before iLoader import.
+- Use `05_data_types_properties.md` for data type limits, date/time formats, LOB behavior, GEOMETRY handling, and property names that affect load results.
+- Use `14_utilities_operation_tools.md` for utility workflows that complement iSQL and iLoader, including `aexport`, diagnostics, and operational tools.
+- Use `15_migration_oracle_compatibility.md` when iLoader is part of an Oracle or heterogeneous migration workflow.
+
 ## Residual Scope
 
 - iSQL and iLoader syntax blocks preserve high-retrieval commands and options, but they are not a complete option catalog. For less common client switches, patch-level behavior, or generated file formats, verify with the target client manual or runtime help.

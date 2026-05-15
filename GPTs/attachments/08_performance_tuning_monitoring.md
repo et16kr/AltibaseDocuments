@@ -1198,46 +1198,62 @@ Join category block: `Merge`
 
 Join method plan-pattern blocks:
 
+#### Plan Pattern: Full Nested Loop
+
 ```text
-Full nested loop:
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: NL)
    SCAN (TABLE: T1, FULL SCAN)
    SCAN (TABLE: T2, FULL SCAN)
+```
 
-Full store nested loop:
+#### Plan Pattern: Full Store Nested Loop
+
+```text
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: STORE_NL)
    SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
    STORE
     SCAN (TABLE: T2, FULL SCAN)
+```
 
-Index nested loop:
+#### Plan Pattern: Index Nested Loop
+
+```text
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: INDEX_NL)
    SCAN (TABLE: T1, INDEX: IDX3)
    SCAN (TABLE: T2, INDEX: IDX1)
+```
 
-Inverse index nested loop:
+#### Plan Pattern: Inverse Index Nested Loop
+
+```text
 PROJECT
  GROUP-AGGREGATION
   SEMI-JOIN INVERSE (METHOD: INDEX_NL)
    HASH
     SCAN (TABLE: T2, VIEW SCAN)
    SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
+```
 
-One-pass sort join:
+#### Plan Pattern: One-Pass Sort Join
+
+```text
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: SORT)
    SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
    SORT
     SCAN (TABLE: T2, FULL SCAN)
+```
 
-Two-pass sort join:
+#### Plan Pattern: Two-Pass Sort Join
+
+```text
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: SORT)
@@ -1245,24 +1261,33 @@ PROJECT
     SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
    SORT
     SCAN (TABLE: T2, FULL SCAN)
+```
 
-Inverse sort join:
+#### Plan Pattern: Inverse Sort Join
+
+```text
 PROJECT
  GROUP-AGGREGATION
   SEMI-JOIN INVERSE (METHOD: SORT)
    SCAN (TABLE: T1, VIEW SCAN)
    SORT
     SCAN (TABLE: T2, FULL SCAN)
+```
 
-One-pass hash join:
+#### Plan Pattern: One-Pass Hash Join
+
+```text
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: HASH)
    SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
    HASH
     SCAN (TABLE: T2, FULL SCAN)
+```
 
-Two-pass hash join:
+#### Plan Pattern: Two-Pass Hash Join
+
+```text
 PROJECT
  GROUP-AGGREGATION
   JOIN (METHOD: HASH)
@@ -1270,8 +1295,11 @@ PROJECT
     SCAN (TABLE: T1, INDEX: IDX3, RANGE SCAN)
    HASH
     SCAN (TABLE: T2, FULL SCAN)
+```
 
-Inverse hash join:
+#### Plan Pattern: Inverse Hash Join
+
+```text
 PROJECT
  GROUP-AGGREGATION
   SEMI-JOIN INVERSE (METHOD: HASH)

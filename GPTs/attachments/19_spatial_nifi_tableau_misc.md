@@ -1587,6 +1587,13 @@ Tableau cannot sign in:
 - Confirm `TIMESTAMP_TO_DATE = 1` is set and the Altibase server was restarted.
 - Confirm `mysql_date_function.sql` was executed successfully.
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for executable spatial table, R-Tree index, user, privilege, and object DDL.
+- Use `05_data_types_properties.md` for `GEOMETRY`, LOB, character, datetime, and property behavior that affects spatial or integration data.
+- Use `11_java_jdbc_spring.md` for JDBC driver class, URL, Java compatibility, SSL URL keys, connection attributes, and third-party JDBC troubleshooting.
+- Use `16_dblink_external_connectors.md` when the question involves DB Link, external connectors, Hadoop connectors, or integration boundaries outside NiFi and Tableau.
+
 ## Residual Scope
 
 - Spatial coverage emphasizes common geometry, SRID, altiShapeLoader, NiFi, and Tableau questions. For full GIS semantics, complete third-party UI workflows, or tool-version behavior not shown here, verify the target manuals before generating final steps.

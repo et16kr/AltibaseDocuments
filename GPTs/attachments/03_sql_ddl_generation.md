@@ -231,6 +231,8 @@ WHERE space_name = 'APP_VOL_TBS';
 
 ### Table Syntax
 
+#### Table Create and Drop Syntax
+
 ```text
 drop_if_exists ::=
   IF EXISTS           -- 8.1 verified source only; omit for 7.1 and 7.3
@@ -252,6 +254,13 @@ table ::=
   [PARALLEL integer | NOPARALLEL]
   [AS SELECT ...]
 
+drop_table ::=
+  DROP TABLE [drop_if_exists] [owner.]table_name
+```
+
+#### Column and Constraint Syntax
+
+```text
 column_definition ::=
   column_name data_type
   [DEFAULT expression]
@@ -276,10 +285,11 @@ constraint_index_options ::=
     [LOCAL [(PARTITION index_partition_name ON table_partition_name [TABLESPACE tablespace_name], ...)]]
     [LOGGING | NOLOGGING [FORCE | NOFORCE]]
     [PARALLEL integer]]
+```
 
-drop_table ::=
-  DROP TABLE [drop_if_exists] [owner.]table_name
+#### Alter Table Core Syntax
 
+```text
 alter_table_core ::=
   ALTER TABLE [owner.]table_name
   { ADD COLUMN (column_definition [, column_definition ...])
@@ -296,6 +306,16 @@ alter_table_core ::=
   | ALLOCATE EXTENT (SIZE size)
   | COMPACT
   | TOUCH }
+```
+
+#### Table Partitioning Syntax
+
+```text
+table_partitioning_clause ::=
+  partition_by_range
+| partition_by_list
+| partition_by_hash
+| range_partitioning_using_hash
 
 partition_by_range ::=
   PARTITION BY RANGE (partition_key [, partition_key ...])
@@ -315,7 +335,11 @@ range_partitioning_using_hash ::=
   PARTITION BY RANGE_USING_HASH (single_partition_key)
   ( PARTITION partition_name VALUES LESS THAN (hash_mod_1000_value) [TABLESPACE tablespace_name] [, ...]
     , PARTITION partition_name VALUES DEFAULT [TABLESPACE tablespace_name] )
+```
 
+#### Alter Table Partition Syntax
+
+```text
 alter_table_partition ::=
   ALTER TABLE [owner.]table_name
   { ADD PARTITION partition_name [VALUES LESS THAN (value [, ...])] [TABLESPACE tablespace_name] [INDEX (...)]
@@ -493,6 +517,8 @@ flowchart TD
 
 ### User and Privilege Syntax
 
+#### User Account Syntax
+
 ```text
 create_user ::=
   CREATE USER [IF NOT EXISTS] user_name IDENTIFIED BY password create_user_option ...
@@ -524,11 +550,19 @@ alter_user_option ::=
 
 drop_user ::=
   DROP USER [IF EXISTS] user_name [CASCADE]
+```
 
+#### Role Syntax
+
+```text
 role_ddl ::=
   CREATE ROLE role_name
   DROP ROLE role_name
+```
 
+#### Grant and Revoke Syntax
+
+```text
 grant_system ::=
   GRANT {system_privilege | role_name | ALL PRIVILEGES}
         [, {system_privilege | role_name | ALL PRIVILEGES} ...]
@@ -591,6 +625,8 @@ Generation notes:
 
 ### Replication Syntax
 
+#### Ordinary Replication Syntax
+
 ```text
 replication_table_non_ssl ::=
   CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
@@ -601,7 +637,11 @@ replication_table_non_ssl ::=
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
   [, FROM ... TO ...]
+```
 
+#### Log Analyzer CDC Replication Syntax
+
+```text
 replication_log_analyzer_cdc ::=
   CREATE REPLICATION replication_name
   { FOR ANALYSIS | FOR ANALYSIS PROPAGATION }
@@ -612,7 +652,11 @@ replication_log_analyzer_cdc ::=
   FROM [owner.]local_table
   TO   [owner.]local_table
   [, FROM ... TO ...]
+```
 
+#### Propagation Replication Syntax
+
+```text
 replication_propagation ::=
   CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
   { FOR PROPAGABLE LOGGING | FOR PROPAGATION }
@@ -623,7 +667,11 @@ replication_propagation ::=
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
   [, FROM ... TO ...]
+```
 
+#### SSL Replication Syntax
+
+```text
 replication_ssl_8_1 ::=
   CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
   [FOR PROPAGABLE LOGGING | FOR PROPAGATION]
@@ -634,7 +682,11 @@ replication_ssl_8_1 ::=
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
   [, FROM ... TO ...]
+```
 
+#### Alter and Drop Replication Syntax
+
+```text
 alter_replication ::=
   ALTER REPLICATION replication_name SYNC [PARALLEL parallel_factor]
     [TABLE [owner.]table_name [PARTITION partition_name], ...]
@@ -705,6 +757,8 @@ Generation notes:
 
 Use these compact conversions when the SQL Reference syntax diagram is broader than the common generation patterns above. They keep the railroad-diagram content readable without images.
 
+#### ALTER DATABASE Lifecycle Syntax
+
 ```text
 alter_database ::=
   ALTER DATABASE
@@ -730,7 +784,11 @@ startup_clause ::=
   | SERVICE
   | META [UPGRADE | RESETLOGS | RESETUNDO]
   | SHUTDOWN [NORMAL | IMMEDIATE | EXIT] }
+```
 
+#### ALTER DATABASE Backup and Recovery Syntax
+
+```text
 archive_backup_recovery_clause ::=
   { ARCHIVELOG | NOARCHIVELOG
   | BACKUP {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [backup_option ...]
@@ -738,16 +796,28 @@ archive_backup_recovery_clause ::=
   | BACKUP INCREMENTAL LEVEL 1 [CUMULATIVE] {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [WITH TAG tag_name]
   | RECOVER DATABASE [FROM TAG tag_name | UNTIL TIME time_literal | UNTIL CANCEL]
   | RESTORE DATABASE [FROM TAG tag_name | UNTIL TIME time_literal] }
+```
 
+#### Directory DDL Syntax
+
+```text
 directory_ddl ::=
   CREATE [OR REPLACE] DIRECTORY [IF NOT EXISTS] directory_name AS 'path_name'
 | DROP DIRECTORY [IF EXISTS] directory_name
+```
 
+#### Synonym DDL Syntax
+
+```text
 synonym_ddl ::=
   CREATE [OR REPLACE] [PUBLIC] SYNONYM [IF NOT EXISTS] [owner.]synonym_name
   FOR [owner.]object_name
 | DROP [PUBLIC] SYNONYM [IF EXISTS] [owner.]synonym_name
+```
 
+#### View DDL Syntax
+
+```text
 view_ddl ::=
   CREATE [OR REPLACE] [FORCE | NO FORCE] VIEW [IF NOT EXISTS] [owner.]view_name
   [(alias_name [, alias_name ...])]
@@ -755,7 +825,11 @@ view_ddl ::=
   [WITH READ ONLY]
 | ALTER VIEW [owner.]view_name COMPILE
 | DROP VIEW [IF EXISTS] [owner.]view_name
+```
 
+#### Materialized View DDL Syntax
+
+```text
 materialized_view_ddl ::=
   CREATE MATERIALIZED VIEW [IF NOT EXISTS] [owner.]mview_name
   [(column_alias [, column_alias ...])]
@@ -771,7 +845,11 @@ materialized_view_ddl ::=
 | ALTER MATERIALIZED VIEW [owner.]mview_name
   REFRESH [{COMPLETE | FAST | FORCE}] [{ON DEMAND | ON COMMIT}]
 | DROP MATERIALIZED VIEW [IF EXISTS] [owner.]mview_name
+```
 
+#### Trigger DDL Syntax
+
+```text
 trigger_ddl ::=
   CREATE [OR REPLACE] TRIGGER [IF NOT EXISTS] [owner.]trigger_name
   { simple_dml_trigger | instead_of_dml_trigger }
@@ -797,14 +875,22 @@ trigger_event ::=
 referencing_clause ::=
   REFERENCING {OLD [ROW] [AS] alias_name | NEW [ROW] [AS] alias_name}
               [, {OLD [ROW] [AS] alias_name | NEW [ROW] [AS] alias_name} ...]
+```
 
+#### Comment DDL Syntax
+
+```text
 comment_ddl ::=
   COMMENT ON { TABLE [owner.]table_name
              | COLUMN [owner.]table_name.column_name
              | TABLE [owner.]view_name
              | COLUMN [owner.]view_name.column_name }
   IS 'comment'
+```
 
+#### Job DDL Syntax
+
+```text
 job_ddl ::=
   CREATE JOB job_name execute_procedure_statement
   [START start_time] [END end_time]
@@ -820,7 +906,11 @@ job_ddl ::=
   | DISABLE
   | COMMENT text }
 | DROP JOB job_name
+```
 
+#### Table Maintenance Syntax
+
+```text
 table_maintenance_ddl ::=
   RENAME [owner.]old_table_name TO new_table_name
 | TRUNCATE TABLE [owner.]table_name
@@ -840,13 +930,21 @@ list_table_to_partition_clause ::=
 
 partition_to_table_clause ::=
   PARTITION partition_name TO TABLE table_name
+```
 
+#### Session and System Control Syntax
+
+```text
 session_system_control ::=
   ALTER SESSION SET property_name = property_value
 | ALTER SESSION SET REPLICATION replication_name {DEFAULT | NONE | replication_mode}
 | ALTER SESSION CLOSE DATABASE LINK database_link_name
 | ALTER SYSTEM SET property_name = property_value
+```
 
+#### Audit Control Syntax
+
+```text
 audit_control ::=
   AUDIT {audit_operation_clause | audit_object_clause | audit_ddl_clause}
   [WHENEVER [NOT] SUCCESSFUL]
