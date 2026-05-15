@@ -19,7 +19,7 @@ For Altibase 8.1, the internally verified source set is the current 8.1 verified
 - Tool manuals, release source: `Manuals/Tools/Altibase_release/kor` authoritative, `Manuals/Tools/Altibase_release/eng` English extraction/reference
 - Tool manuals, Altibase 8.1 verified source: `Manuals/Tools/Altibase_trunk/kor` authoritative, `Manuals/Tools/Altibase_trunk/eng` English extraction/reference
 - Technical documents: `Technical Documents/kor` authoritative when paired or Korean-only, `Technical Documents/eng` English extraction/reference
-- Third-party guides: `3rd Party Guide for Altibase/eng`
+- Third-party guides: `3rd Party Guide for Altibase/kor` authoritative when present, `3rd Party Guide for Altibase/eng` English extraction/reference
 
 ## Inventory Summary
 
@@ -442,8 +442,12 @@ Source purpose: DB Link, DB Link Java compatibility, Hadoop Connector, third-par
   - `Manuals/Tools/Altibase_trunk/kor/Altibase 3rd Party Connector Guide.md`
 - Korean source authority/check:
   - `Manuals/Altibase_7.1/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_7.1/kor/Hadoop Connector User's Manual.md`
   - `Manuals/Altibase_7.3/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/Hadoop Connector User's Manual.md`
   - `Manuals/Altibase_trunk/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/Hadoop Connector User's Manual.md`
+  - `3rd Party Guide for Altibase/kor/Spring Data JPA with Hibernate 6.4 User's Guide for Altibase.md`
   - `Technical Documents/kor/JavaCompatibility.md`
   - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
@@ -465,6 +469,14 @@ Source purpose: Kubernetes deployment, AKU samples, container operations, releas
   - `3rd Party Guide for Altibase/eng/Kubernetes User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/eng/Altibase aku Sample Guide for Kubernetes.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Utilities Manual.md`
+  - `Manuals/Altibase_7.3/kor/Utilities Manual.md`
+  - `Manuals/Altibase_trunk/kor/Utilities Manual.md`
+  - `3rd Party Guide for Altibase/kor/Kubernetes User's Guide for Altibase.md`
+  - `3rd Party Guide for Altibase/kor/Altibase aku Sample Guide for Kubernetes.md`
+  - `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 18_security_ssl_tls.md
 

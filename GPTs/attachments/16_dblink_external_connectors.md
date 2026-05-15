@@ -179,6 +179,7 @@ TARGETS = (
     PASSWORD = "remote_password"
     XADATASOURCE_CLASS_NAME = "Altibase.jdbc.driver.AltibaseXADataSource"
     XADATASOURCE_URL_SETTER_NAME = "setURL"
+    NLS_BYTE_PER_CHAR = 1
   )
 )
 ```
@@ -206,6 +207,8 @@ Cautions:
 - If user names or passwords are case-sensitive or contain special characters, quote them in `CREATE DATABASE LINK`.
 - A database link object targets exactly one remote server.
 - `PRIVATE` links are usable by the creator and `SYS`; `PUBLIC` links are usable by all users, but only the creator or `SYS` can drop them.
+- Set `TARGETS/NLS_BYTE_PER_CHAR` deliberately for remote `CHAR` and `VARCHAR` columns. Default is `0`; the documented range is `0` to `3`; use `1` when the remote server is Altibase or the remote `CHAR`/`VARCHAR` length unit is `BYTE`.
+- If the local character set uses two or more bytes per character, an incorrect `TARGETS/NLS_BYTE_PER_CHAR` setting can cause conversion-size errors when `REMOTE_TABLE` or `REMOTE_TABLE_STORE` reads remote `CHAR`/`VARCHAR` data, or when cursor logic inserts remote `CHAR`/`VARCHAR` data into the local server.
 
 Verification:
 
@@ -285,7 +288,13 @@ SELECT *
 FROM REMOTE_TABLE(link1, 'select c1, c2 from t1 where c1 = 10');
 ```
 
-- Cautions: `REMOTE_TABLE` accepts only `SELECT`; it does not bind parameter markers. For repeated access to remote query results, use `REMOTE_TABLE_STORE` behavior where appropriate.
+- Cautions: `REMOTE_TABLE` accepts only `SELECT`; it does not bind parameter markers. A remote result fetched with `REMOTE_TABLE` is stored in a memory buffer, passed to the query processor, and then discarded; if a local query needs to repeatedly access that discarded result, the remote query may be re-executed.
+
+Method block: `REMOTE_TABLE_STORE`
+
+- Purpose: support repeated access to a `REMOTE_TABLE` remote query result by storing the result in a disk temporary table.
+- When to Use: local joins, subqueries, or other query shapes need to read the same remote result repeatedly.
+- Cautions: this behavior exists to avoid repeated remote execution for the same remote result, but it uses disk temporary table space; keep the remote `SELECT` narrow and predicate-pushed where possible.
 
 Method block: location descriptor `@`
 
@@ -507,6 +516,7 @@ Property group: `TARGETS`
 - `TARGETS/PASSWORD`: remote database password.
 - `TARGETS/XADATASOURCE_CLASS_NAME`: XADataSource class name for two-phase commit support.
 - `TARGETS/XADATASOURCE_URL_SETTER_NAME`: setter method for the XADataSource URL, commonly `setURL`.
+- `TARGETS/NLS_BYTE_PER_CHAR`: remote `CHAR` and `VARCHAR` length-unit conversion setting. Default is `0`; the documented range is `0` to `3`; set `1` when the remote server is Altibase or the remote `CHAR`/`VARCHAR` length unit is `BYTE`.
 
 Monitoring views:
 
