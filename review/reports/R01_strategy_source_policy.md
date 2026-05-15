@@ -2,7 +2,7 @@
 
 Date: 2026-05-14
 Reviewer: Codex
-Verdict: Review Required
+Verdict: Pass With Follow-Up
 
 ## Scope
 
@@ -40,7 +40,7 @@ No Blocker findings were found. High and Medium findings are listed first.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/17_kubernetes_aku_cloud.md` | 5 | The 7.1 metadata and body assert `aku` utility guidance and a 7.1 AKU scale limit of 4 replicas, repeated at lines 58 and 392, but the source inventory for this attachment lists only 7.1 Installation, Administrator, and Replication manuals for 7.1 (`GPTs/reports/source_inventory.md:302`). That leaves an operational version claim without traceability to the selected 7.1 source set. | Source-audit the 7.1 AKU claims before upload. Either add the verified 7.1 AKU/Utilities source to the inventory and keep the claim, or narrow 7.1 Kubernetes answers to general operation/replication guidance and remove the 7.1 AKU replica-count claim from this attachment. |
+| Resolved High | `GPTs/attachments/17_kubernetes_aku_cloud.md` | 5 | The 7.1 metadata and body assert `aku` utility guidance and a 7.1 AKU scale limit of 4 replicas, repeated at lines 58 and 392, but the source inventory for this attachment lists only 7.1 Installation, Administrator, and Replication manuals for 7.1 (`GPTs/reports/source_inventory.md:302`). That leaves an operational version claim without traceability to the selected 7.1 source set. | Resolved by H01. The AKU traceability issue is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
 | Medium | `GPTs/attachments/11_java_jdbc_spring.md` | 5 | The 7.1 metadata lists Spring Data JPA, Hibernate, and Java compatibility as 7.1 sources, and the body gives 7.1 Maven/Java compatibility details at lines 60 and 63. The source inventory lists only 7.1 JDBC and Adapter for JDBC manuals for this attachment; Spring guides are listed under 7.3 and 8.1, and Java compatibility is Korean-only supplemental (`GPTs/reports/source_inventory.md:201`). | Align the 7.1 source metadata and claims with the source inventory. If the Spring/Hibernate and Java compatibility notes are valid for 7.1, document that source basis safely; otherwise phrase them as driver-patch examples requiring target driver verification. |
 | Medium | `GPTs/attachments/05_data_types_properties.md` | 1989 | Customer-facing text cites "sampled 7.3 Korean source" for `LISTAGG_PRECISION`, with the same pattern for `VARRAY_MEMORY_MAXIMUM` at line 2034. The approved Korean fallback register is for specific 8.1 gaps and supplemental technical docs, not customer-visible 7.3 source labels. | Move Korean/source-sampling traceability out of the attachment text. Use customer-safe version labels, and source-audit exact 7.1/7.3/8.1 availability for these properties before keeping cross-version claims. |
 | Medium | `GPTs/attachments/02_administration_operations.md` | 18 | The architecture section uses broad marketing-style claims: "uniquely combines", "extreme high-performance (microsecond latency)", and "requires no external caching layer." This is not framed as a source-backed operational fact and could cause overconfident performance answers. | Rewrite as source-backed hybrid-storage guidance: Altibase supports memory and disk tables in one engine, and storage choice affects performance and capacity. Avoid latency guarantees unless a cited source and workload scope are added. |

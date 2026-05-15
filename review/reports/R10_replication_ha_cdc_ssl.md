@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Review Required
+Verdict: Pass With Follow-Up
 
 ## Scope
 
@@ -58,11 +58,11 @@ rg -n "trunk|Manuals/|ReleaseNotes|Technical Documents|/home/|file://|C:/|ALTIBA
 
 ## Findings
 
-No Blocker findings were identified. The High issue below should be corrected before upload.
+No Blocker findings were identified. The original High issue below has been resolved; remaining rows are Medium follow-up remediation items.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The DDL synchronization procedure is incomplete. It sets `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but omits required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on both local and remote servers. It also omits the local `ALTER SESSION SET REPLICATION = DEFAULT` step and says to flush before DDL on the local server only, while the source procedure requires flushing on both local and remote servers. This was also reported in `R03` and remains unresolved. | Replace the DDL synchronization procedure with the full source sequence: verify required conditions, set `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` on both servers, set local `REPLICATION_DDL_SYNC` with `ALTER SESSION`, set remote `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE` with `ALTER SYSTEM`, run `ALTER SESSION SET REPLICATION = DEFAULT`, flush both sides, execute DDL once on the local server, then reset every changed property. Add `REPLICATION_DDL_SYNC` to the properties list. |
+| Resolved High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The DDL synchronization procedure was incomplete. It set `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but omitted required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on both local and remote servers. It also omitted the local `ALTER SESSION SET REPLICATION = DEFAULT` step and said to flush before DDL on the local server only, while the source procedure requires flushing on both local and remote servers. This was also reported in `R03`. | Resolved by H02. The DDL synchronization sequence is no longer an open High gate item; remaining rows in this report are Medium follow-ups. |
 | Medium | `GPTs/attachments/03_sql_ddl_generation.md`<br>`GPTs/attachments/09_replication_ha_cdc.md` | 593<br>313 | The compact CDC XLog Sender syntax blocks omit the `WITH UNIX_DOMAIN` alternative. `09_replication_ha_cdc.md` later has a UNIX-domain example, but the top syntax block and central DDL-generation attachment can still steer answers toward TCP-only CDC syntax. | Add `WITH UNIX_DOMAIN` as an alternative in both compact syntax blocks, with the existing same-host UNIX/Linux and `$ALTIBASE_HOME` cautions. Keep `USING SSL` and `USING IB` excluded from `FOR ANALYSIS`. |
 | Medium | `GPTs/attachments/09_replication_ha_cdc.md` | 1378 | The XLog Sender host-change caution says "Host changes are TCP-only when a UNIX domain connection is used", which is ambiguous. The source says `ADD HOST` is impossible when `UNIX_DOMAIN` was specified, and `ADD HOST`, `DROP HOST`, and `SET HOST` apply only to TCP/IP hosts. | Replace the caution with explicit rules: a UNIX-domain XLog Sender cannot add hosts; host add/drop/set operations are for TCP/IP XLog Collector endpoints only; `SET HOST` takes effect after restart. |
 | Medium | `GPTs/attachments/03_sql_ddl_generation.md` | 349 | The table DDL rule says not to generate any `ALTER TABLE` that changes a replication target. That is safe as a default, but too broad for the documented Altibase procedures that allow DDL execution or DDL synchronization under strict properties, protocol, gap, and service-migration conditions. | Reword as "Do not generate ad hoc `ALTER TABLE` for replication targets." Then point to `09_replication_ha_cdc.md` for the standard remove/re-add procedure and the documented DDL synchronization procedure. |
@@ -109,13 +109,13 @@ No Blocker findings were identified. The High issue below should be corrected be
   - The replication attachment has customer-answer templates, topology diagrams, operational check SQL, compatibility guidance, network troubleshooting, and Log Analyzer API blocks.
   - Literal tokens such as `CREATE REPLICATION`, `USING SSL`, `REPLICATION_SSL_PORT_NO`, `FOR ANALYSIS`, `ALA_Handshake`, and `V$REPSENDER` are preserved.
 - Risks:
-  - A GPT could generate an incomplete DDL synchronization procedure because the high-risk property sequence is missing.
+  - Closed by H02: the high-risk DDL synchronization property sequence is no longer missing.
   - A GPT could miss or mishandle UNIX-domain Log Analyzer CDC if it retrieves the compact syntax block instead of the later example.
   - A GPT could over-reject replication-target `ALTER TABLE` requests instead of routing them to the documented Altibase procedure.
 
 ## Required Follow-Up
 
-- Fix the DDL synchronization procedure in `09_replication_ha_cdc.md`.
+- Closed by H02: DDL synchronization procedure in `09_replication_ha_cdc.md`.
 - Add `WITH UNIX_DOMAIN` to the compact CDC syntax in `03_sql_ddl_generation.md` and `09_replication_ha_cdc.md`.
 - Clarify XLog Sender host-change rules for `UNIX_DOMAIN` versus TCP/IP endpoints in `09_replication_ha_cdc.md`.
 - Reword the broad replication-target `ALTER TABLE` prohibition in `03_sql_ddl_generation.md` to point to the documented procedures in `09_replication_ha_cdc.md`.

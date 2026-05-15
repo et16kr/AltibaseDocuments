@@ -2,7 +2,7 @@
 
 Date: 2026-05-14
 Reviewer: Codex
-Verdict: Review Required
+Verdict: Pass With Follow-Up
 
 ## Scope
 - Attachments:
@@ -55,7 +55,7 @@ No Blocker issues were found.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 740 | The `REGEXP_LIKE` note says Altibase regular expression support is partial POSIX BRE/ERE and that multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are unsupported. That describes only the default Altibase regular expression library. The 7.1 SQL Reference documents a selectable PCRE2 library from Altibase 7.1.0.7.7, and 7.3/trunk property manuals plus 7.3 release notes document `REGEXP_MODE`/PCRE2 compatibility mode. As written, the attachment can make the GPT incorrectly reject valid PCRE2-mode regex answers. | Split the note into default Altibase regex mode versus PCRE2-compatible mode. Mention `REGEXP_MODE=1`, `ALTER SYSTEM SET REGEXP_MODE=1`, `ALTER SESSION SET REGEXP_MODE=1`, the `US7ASCII` or `UTF-8` server character set requirement, and that syntax differs between the two libraries. Keep it compact and cross-reference `05_data_types_properties.md` and `07_error_messages_troubleshooting.md` rather than adding a full regex manual. |
+| Resolved High | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 740 | The `REGEXP_LIKE` note says Altibase regular expression support is partial POSIX BRE/ERE and that multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are unsupported. That describes only the default Altibase regular expression library. The 7.1 SQL Reference documents a selectable PCRE2 library from Altibase 7.1.0.7.7, and 7.3/trunk property manuals plus 7.3 release notes document `REGEXP_MODE`/PCRE2 compatibility mode. As written, the attachment can make the GPT incorrectly reject valid PCRE2-mode regex answers. | Resolved by H03. The regex mode split is no longer an open High gate item; the remaining row in this report is a Medium follow-up. |
 | Medium | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 858 | The 8.1 JSON function section preserves `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON`, but it does not carry the DML-side native `JSON` column cautions that are important for generated SQL: `JSON` processing uses Temporary LOB, `TEMPORARY_LOB_ENABLE` must be `1`, and `JSON` cannot be used with `SELECT FOR UPDATE`. Those cautions are present in `03_sql_ddl_generation.md` and `05_data_types_properties.md`, but a DML/JSON retrieval may land on this attachment alone. | Add a short "JSON column DML cautions" block to `04_sql_dml_oracle_compatibility.md`: native `JSON` is 8.1 only, check `TEMPORARY_LOB_ENABLE`, treat JSON columns as LOB-like for restrictions, and do not generate `SELECT FOR UPDATE` against `JSON` columns. Cross-reference `05_data_types_properties.md` for details. |
 
 ## Source Checks
@@ -80,13 +80,13 @@ No Blocker issues were found.
 - Too much generic Oracle material:
   - No material bloat found in the sampled DML or migration sections.
 - Missing Altibase-specific difference:
-  - `REGEXP_MODE=1` PCRE2-compatible regex mode is missing from the `REGEXP_LIKE` compatibility note.
+- Closed by H03: `REGEXP_MODE=1` PCRE2-compatible regex mode has been added to the `REGEXP_LIKE` compatibility note.
   - `04_sql_dml_oracle_compatibility.md` does not locally carry the 8.1 native `JSON` column DML restrictions.
 
 ## Version Checks
 - 7.1:
   - Core DML coverage is consistent with sampled SQL Reference behavior.
-  - Regex guidance must distinguish the default Altibase regex library from the PCRE2 library available from Altibase 7.1.0.7.7.
+- Closed by H03: regex guidance now distinguishes the default Altibase regex library from the PCRE2 library available from Altibase 7.1.0.7.7.
   - 8.1 JSON functions are correctly excluded.
 - 7.3:
   - Core DML baseline is treated consistently with 7.1.

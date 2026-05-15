@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Review Required
+Verdict: Pass With Follow-Up
 
 ## Scope
 
@@ -45,8 +45,8 @@ rg -n 'trunk|file://|/home/et16|media/|\.gif|\.png|\.jpg|C:\\' GPTs/attachments/
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/02_administration_operations.md` | 805 | The disk datafile move runbook shows `OFFLINE`, `RENAME DATAFILE`, and `ONLINE`, but it does not include the required OS-level move/copy before the rename/online step. The note about moving the physical file appears after the SQL block and after `ONLINE`, so a GPT may produce an unsafe or failing command order. Source wording also needs reconciliation: the Administrator's Manual allows service-phase rename for offline tablespaces, while the SQL Reference says `ALTER TABLESPACE ... RENAME DATAFILE` is only during `CONTROL`. | Split this into explicit runbooks: planned service/offline move if accepted by source policy, and recovery/`CONTROL` move. In both, include precheck, stop/offline or `STARTUP CONTROL`, OS copy/move to the target path, ownership/permission check, `ALTER ... RENAME DATAFILE`, `V$DATAFILES` verification, then `ONLINE` or `SERVICE`. Add a source-audit note for the Admin Manual vs SQL Reference phase difference. |
-| High | `GPTs/attachments/02_administration_operations.md` | 1354 | Incremental restore/recovery coverage lists the basic `RESTORE DATABASE` and `RECOVER DATABASE` commands but omits the source-required handling for incomplete incremental recovery: restoring historical `loganchor*` and `backupInfo`, disabling invalid change tracking in `PROCESS`, then using `RESETLOGS`. This can produce an incomplete recovery answer that fails or leaves backup metadata inconsistent. | Add separate incremental recovery runbooks for complete recovery, incomplete recovery by tag, and incomplete recovery by `UNTIL TIME` or `UNTIL CANCEL`. Include when to restore old `loganchor*` and `backupInfo`, when to run `ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING` in `PROCESS`, tag matching rules, temporary-file recreation, `META RESETLOGS`, and the required full backup afterward. |
+| Resolved High | `GPTs/attachments/02_administration_operations.md` | 805 | The disk datafile move runbook shows `OFFLINE`, `RENAME DATAFILE`, and `ONLINE`, but it does not include the required OS-level move/copy before the rename/online step. The note about moving the physical file appears after the SQL block and after `ONLINE`, so a GPT may produce an unsafe or failing command order. Source wording also needs reconciliation: the Administrator's Manual allows service-phase rename for offline tablespaces, while the SQL Reference says `ALTER TABLESPACE ... RENAME DATAFILE` is only during `CONTROL`. | Resolved by H04. The datafile move runbook is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
+| Resolved High | `GPTs/attachments/02_administration_operations.md` | 1354 | Incremental restore/recovery coverage lists the basic `RESTORE DATABASE` and `RECOVER DATABASE` commands but omits the source-required handling for incomplete incremental recovery: restoring historical `loganchor*` and `backupInfo`, disabling invalid change tracking in `PROCESS`, then using `RESETLOGS`. This can produce an incomplete recovery answer that fails or leaves backup metadata inconsistent. | Resolved by H05. The incremental recovery runbook gap is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
 | Medium | `GPTs/attachments/02_administration_operations.md` | 1073 | Offline physical backup says to copy memory checkpoint directories, log anchors, needed logs, and disk data files, but it does not say to preserve the exact `$ALTIBASE_HOME/conf/altibase.properties` used at backup time. The source recovery section states that the properties file used when the database was backed up must be used during recovery. | Add `$ALTIBASE_HOME/conf/altibase.properties` to the offline backup manifest, or explicitly state that it must be retained and restored with the backup set. Also add a post-`server stop` verification step before copying files so the backup is not taken while logs are still changing. |
 | Medium | `GPTs/attachments/02_administration_operations.md` | 1176 | The archive log mode change block starts at `STARTUP CONTROL` and runs `ALTER DATABASE ARCHIVELOG` or `ALTER DATABASE NOARCHIVELOG`, but it does not show the full service-impact sequence or verification. Since phases only move forward and mode changes require `CONTROL`, a production answer needs shutdown planning, archive destination capacity checks, transition back to service, and mode verification. | Convert this block into a runbook: confirm current `V$LOG.ARCHIVELOG_MODE` and `V$ARCHIVE`, plan downtime, cleanly stop service, connect `SYSDBA`, `STARTUP CONTROL`, alter mode, verify, `STARTUP SERVICE`, and confirm archive destination behavior. Add backup follow-up guidance after changing mode if local policy requires a new baseline. |
 | Medium | `GPTs/attachments/01_getting_started_installation.md` | 331 | Patch rollback notes correctly warn that installer rollback does not cover data or logs, but the meta downgrade section only says to stop the server first. The Installation Guide also says that after `server downgrade`, the user must delete the patch; otherwise running the server can trigger meta upgrade again. | Add the missing post-downgrade rollback/delete-patch step and make the order explicit: backup product/data/logs, `server stop`, run `server downgrade` when needed, run the APatch patch uninstaller/delete step, then verify binary and meta versions. |
@@ -65,7 +65,7 @@ rg -n 'trunk|file://|/home/et16|media/|\.gif|\.png|\.jpg|C:\\' GPTs/attachments/
   - 7.3 and 8.1 were checked for corresponding Administrator's Manual, SQL Reference, data dictionary, and release-note markers where version behavior differs.
   - `GPTs/reports/version_coverage_validation.md` reports pass-level marker coverage for all 20 attachments.
 - Source gaps:
-  - Disk datafile rename phase behavior needs source-policy resolution because the Administrator's Manual and SQL Reference wording differ. The attachment should not leave this ambiguous in a production move runbook.
+- Closed by H04: disk datafile rename phase behavior is now split into explicit service/offline and `CONTROL` runbooks with source-policy cautioning.
 
 ## Oracle-Overlap Decision
 
@@ -95,12 +95,12 @@ rg -n 'trunk|file://|/home/et16|media/|\.gif|\.png|\.jpg|C:\\' GPTs/attachments/
   - `02_administration_operations.md` is rich enough for retrieval on backup, recovery, tablespaces, and operational views.
   - Upload-boundary validation found 20 attachment Markdown files, excluding `README.md`; the three stage attachments had no matches for `trunk`, `file://`, local workspace paths, or raw image references in the validation regex.
 - Risks:
-  - High-risk code blocks may be retrieved without nearby notes. The datafile move and recovery command blocks need to include safety steps inside the procedure, not only in surrounding prose.
+  - The original High datafile move and recovery command-block risks are closed by H04 and H05; remaining operational risks are Medium/Low follow-ups.
   - Incremental recovery is complex enough that a compact command block can mislead unless it separates complete, incomplete, and tag-based cases.
 
 ## Required Follow-Up
 
-- Fix the two High findings in `02_administration_operations.md` before upload.
+- Closed by H04 and H05: the two original High findings in `02_administration_operations.md`.
 - Add the Medium operational-safety improvements for offline backup, archive log mode changes, and patch rollback.
 - Resolve or explicitly document the source-policy decision for `ALTER TABLESPACE ... RENAME DATAFILE` phase requirements.
 - After edits, rerun focused validation for the same stage and re-review the changed sections only.

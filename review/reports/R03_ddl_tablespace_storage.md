@@ -2,7 +2,7 @@
 
 Date: 2026-05-14
 Reviewer: Codex
-Verdict: Review Required
+Verdict: Pass With Follow-Up
 
 ## Scope
 
@@ -35,11 +35,11 @@ nl -ba GPTs/attachments/03_sql_ddl_generation.md | sed -n '1060,1098p'
 
 ## Findings
 
-No Blocker findings were identified. High and Medium issues below should be corrected before the attachments are uploaded.
+No Blocker findings were identified. The original High issue below has been resolved; remaining Medium/Low issues are follow-up remediation items.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The SQL apply DDL synchronization procedure is incomplete. It sets `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but it omits the required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on the local and remote servers. The properties list also omits `REPLICATION_DDL_SYNC`, even though the procedure uses it. The source Replication Manual procedure requires local `ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1`, `ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1`, and `ALTER SESSION SET REPLICATION_DDL_SYNC = 1`; remote `ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1`, `ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1`, `ALTER SYSTEM SET REPLICATION_DDL_SYNC = 1`, and `ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 1`; then matching resets after completion. | Replace the SQL apply DDL synchronization example with the full local and remote property sequence from the source manual. Add `REPLICATION_DDL_SYNC` to the property list. Include the reset sequence for all changed properties, and keep the local `ALTER SESSION` versus remote `ALTER SYSTEM` distinction explicit. |
+| Resolved High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The SQL apply DDL synchronization procedure is incomplete. It sets `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but it omits the required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on the local and remote servers. The properties list also omits `REPLICATION_DDL_SYNC`, even though the procedure uses it. The source Replication Manual procedure requires local `ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1`, `ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1`, and `ALTER SESSION SET REPLICATION_DDL_SYNC = 1`; remote `ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1`, `ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1`, `ALTER SYSTEM SET REPLICATION_DDL_SYNC = 1`, and `ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 1`; then matching resets after completion. | Resolved by H02. The DDL synchronization sequence is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
 | Medium | `GPTs/attachments/02_administration_operations.md` | 990 | The drop tablespace runbook says `AND DATAFILES` removes disk data files or memory checkpoint image files, but it does not warn that `AND DATAFILES` cannot be used when dropping a volatile tablespace. The nearby generic examples can be copied into a volatile-tablespace answer and produce invalid SQL. | Add type-specific drop rules and examples: disk and memory drops may use `INCLUDING CONTENTS AND DATAFILES`; volatile drops must omit `AND DATAFILES`; temporary/system tablespace caveats should remain separate. |
 | Medium | `GPTs/attachments/02_administration_operations.md` | 665 | The tablespace drop syntax omits 8.1 `DROP TABLESPACE IF EXISTS`, while `03_sql_ddl_generation.md` only provides a broad version note that 8.1 supports `IF EXISTS` in supported `DROP` statements. For this stage, tablespace drop syntax should be directly version-aware. | Add `[IF EXISTS]` to the 8.1-only `DROP TABLESPACE` syntax and examples, and state that 7.1 and 7.3 must omit it and use metadata pre-checks for idempotent scripts. |
 | Low | `GPTs/attachments/02_administration_operations.md` | 755 | The preflight note groups memory and volatile tablespaces together and tells the user to choose `SIZE`, `NEXT`, and `SPLIT EACH` values. `SPLIT EACH` applies to memory checkpoint image splitting, not volatile tablespaces. | Split the note: memory tablespaces should size `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH`; volatile tablespaces should size only `SIZE` and `AUTOEXTEND NEXT` against the same allocation-unit rule. |
@@ -93,14 +93,14 @@ No Blocker findings were identified. High and Medium issues below should be corr
   - The examples usually preserve literal object names, properties, views, and version labels.
   - The SQL generation QA report shows broad prompt coverage, but it also confirms that no SQL was executed against a live Altibase server.
 - Risks:
-  - The High replication issue could cause the GPT to generate an incomplete operational procedure for DDL synchronization.
+  - The original High replication issue has been closed by H02; remaining risks are Medium/Low follow-ups.
   - The volatile tablespace drop gap could produce invalid `DROP TABLESPACE ... AND DATAFILES` SQL.
   - The missing 8.1 `DROP TABLESPACE IF EXISTS` syntax reduces version-aware completeness for tablespace DDL generation.
   - The password case note is small but relevant for examples that users may copy directly.
 
 ## Required Follow-Up
 
-- Fix the replication DDL synchronization property sequence in `GPTs/attachments/09_replication_ha_cdc.md` before upload.
+- Closed by H02: replication DDL synchronization property sequence in `GPTs/attachments/09_replication_ha_cdc.md`.
 - Add volatile-specific `DROP TABLESPACE` guidance and 8.1 `DROP TABLESPACE IF EXISTS` syntax in the relevant tablespace sections of `GPTs/attachments/02_administration_operations.md` and, if appropriate, `GPTs/attachments/03_sql_ddl_generation.md`.
 - Correct the memory/volatile preflight wording around `SPLIT EACH`.
 - Add a concise `CREATE USER` password case-sensitivity note.

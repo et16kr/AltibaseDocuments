@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Review Required
+Verdict: Pass With Follow-Up
 
 ## Scope
 
@@ -47,8 +47,8 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1731 | The SQL plan cache join selects `b.child_pco_count` and orders by `b.child_pco_count`, but `CHILD_PCO_COUNT` belongs to `V$SQL_PLAN_CACHE_SQLTEXT`, not `V$SQL_PLAN_CACHE_PCO`. The generated check SQL will fail or teach the GPT an invalid column ownership. | Change both references to `a.child_pco_count`, or remove the alias only if the query remains unambiguous. Keep `b.hit_count` and `b.rebuild_count` on `V$SQL_PLAN_CACHE_PCO`. |
-| High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1648 | The attachment says only 7.3 and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN` and `UNKEEP_PLAN`, then warns not to present the package as common to 7.1. The sampled 7.1 Stored Procedures Manual also documents `DBMS_SQL_PLAN_CACHE`, `KEEP_PLAN`, and `UNKEEP_PLAN`. This is wrong version guidance for 7.1 customers. | State that the selected 7.1, 7.3, and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN(sql_text_id)` and `DBMS_SQL_PLAN_CACHE.UNKEEP_PLAN(sql_text_id)`, while still advising users to verify `V$SQL_PLAN_CACHE_SQLTEXT.PLAN_CACHE_KEEP` and `V$SQL_PLAN_CACHE_PCO.PLAN_CACHE_KEEP` on the target server. |
+| Resolved High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1731 | The SQL plan cache join selects `b.child_pco_count` and orders by `b.child_pco_count`, but `CHILD_PCO_COUNT` belongs to `V$SQL_PLAN_CACHE_SQLTEXT`, not `V$SQL_PLAN_CACHE_PCO`. The generated check SQL will fail or teach the GPT an invalid column ownership. | Resolved by H07. The plan-cache alias bug is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
+| Resolved High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1648 | The attachment says only 7.3 and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN` and `UNKEEP_PLAN`, then warns not to present the package as common to 7.1. The sampled 7.1 Stored Procedures Manual also documents `DBMS_SQL_PLAN_CACHE`, `KEEP_PLAN`, and `UNKEEP_PLAN`. This is wrong version guidance for 7.1 customers. | Resolved by H08. The plan-cache package version note is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
 | Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1743 | `CREATE_REASON` value spelling is source-inconsistent. The Performance Tuning Guide example output shows `CREATED_BY_CACHE_MISS`, but the General Reference data dictionary value list says `CREATE_BY_CACHE_MISS`, `CREATE_BY_PLAN_INVALIDATION`, and `CREATE_BY_PLAN_TOO_OLD`. The attachment hard-codes only `CREATED_BY_CACHE_MISS`. | Prefer the data dictionary spelling in explanatory text, or phrase the interpretation around the actual `CREATE_REASON` values returned by the target server. Do not build alert rules that require the `CREATED_BY_*` spelling without target-version validation. |
 | Low | `GPTs/attachments/08_performance_tuning_monitoring.md` | 2110 | The SNMP run-pattern example uses `-c private` even though the same section correctly warns not to use default community strings in production. This can weaken generated SNMP examples. | Replace the literal community with a placeholder such as `-c <community>` and keep the ACL/default-community warning. |
 
@@ -96,13 +96,13 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
   - The response rules require evidence before recommending indexes, hints, or property changes, which reduces generic optimizer overclaims.
   - `06_data_dictionary_performance_views.md` complements the performance attachment with concrete runtime and metadata SQL.
 - Risks:
-  - The invalid `b.child_pco_count` alias can cause the GPT to generate a broken diagnostic query.
-  - The incorrect 7.1 `DBMS_SQL_PLAN_CACHE` version warning can make the GPT deny or hedge a documented 7.1 capability.
+  - Closed by H07: the `child_pco_count` alias bug is no longer an open risk.
+  - Closed by H08: the 7.1 `DBMS_SQL_PLAN_CACHE` version warning is no longer an open risk.
   - The `CREATE_REASON` spelling conflict may cause brittle generated monitoring rules unless target output is checked.
 
 ## Required Follow-Up
 
-- Fix the `V$SQL_PLAN_CACHE_SQLTEXT` / `V$SQL_PLAN_CACHE_PCO` alias issue in `08_performance_tuning_monitoring.md`.
-- Correct the `DBMS_SQL_PLAN_CACHE` version note to include documented 7.1 support.
+- Closed by H07: the `V$SQL_PLAN_CACHE_SQLTEXT` / `V$SQL_PLAN_CACHE_PCO` alias issue in `08_performance_tuning_monitoring.md`.
+- Closed by H08: the `DBMS_SQL_PLAN_CACHE` version note now includes documented 7.1 support.
 - Resolve or soften the `CREATE_REASON` value spelling in plan-cache interpretation text.
 - Replace default SNMP community strings in examples with placeholders.
