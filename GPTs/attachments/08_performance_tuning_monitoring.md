@@ -1867,19 +1867,24 @@ Server issue block: `Service thread overload`
 - Check SQL or Command:
 
 ```sql
-SELECT RPAD(type, 30) AS thread_type, COUNT(*) AS thread_count
+SELECT TYPE,
+       RUN_MODE,
+       COUNT(*) AS thread_count,
+       SUM(TASK_COUNT) AS assigned_task_count,
+       SUM(READY_TASK_COUNT) AS ready_task_count
 FROM V$SERVICE_THREAD
-GROUP BY type
-UNION ALL
-SELECT RPAD(name, 30), value1
+GROUP BY TYPE, RUN_MODE
+ORDER BY TYPE, RUN_MODE;
+
+SELECT name, value1, min, max
 FROM V$PROPERTY
-WHERE name LIKE 'MULTIPLEXING%_THREAD_COUNT';
+WHERE name = 'MULTIPLEXING_THREAD_COUNT';
 ```
 
-- Immediate Action: Tune or cancel long-running SQL before changing thread properties. If the thread count evidence still shows service-thread saturation, consider a bounded increase to `MULTIPLEXING_THREAD_COUNT` after confirming service impact and retaining the previous value.
-- Verification: Repeat the `V$SERVICE_THREAD` and `V$PROPERTY` check during a comparable workload window. Thread growth and user-visible waits should stabilize after the SQL or property action.
-- Version Cautions: `V$SERVICE_THREAD` type values and multiplexing properties can vary by server version and configuration; verify the view and property names on the target server.
-- Escalation: If waits continue after SQL tuning and bounded thread review, collect Altibase version, session count, `V$SERVICE_THREAD` snapshots, `MULTIPLEXING%_THREAD_COUNT` values, active statement evidence, and trace log excerpts.
+- Immediate Action: Tune or cancel long-running SQL before changing thread properties. Treat nonzero or rising `READY_TASK_COUNT` as the queue signal, then compare `MULTIPLEXING_THREAD_COUNT` only with the multiplexing/shared rows (`RUN_MODE = 'SHARED'` and `TYPE` reported as `SOCKET (MULTIPLEXING)` or the target server's equivalent spelling). Do not count `SOCKET (DEDICATED)`, IPC, IPCDA, or `RUN_MODE = 'DEDICATED'` rows against the multiplexing setting. If shared service-thread pressure remains after SQL triage, plan a bounded `MULTIPLEXING_THREAD_COUNT` review only after confirming the target version's property attributes, service impact, previous value, and restart requirements.
+- Verification: Repeat the `V$SERVICE_THREAD` and `V$PROPERTY` check during a comparable workload window. `READY_TASK_COUNT` should flatten or return to zero on shared/multiplexing rows, thread growth should stabilize, and user-visible waits should fall after the SQL or property action.
+- Version Cautions: `V$SERVICE_THREAD` type spellings and multiplexing property attributes can vary by server version and configuration; verify `TYPE`, `RUN_MODE`, `READY_TASK_COUNT`, and `MULTIPLEXING_THREAD_COUNT` on the target server before recommending a property change.
+- Escalation: If waits continue after SQL tuning and bounded thread review, collect Altibase version, session count, grouped `V$SERVICE_THREAD` snapshots with `TYPE`, `RUN_MODE`, `TASK_COUNT`, and `READY_TASK_COUNT`, `MULTIPLEXING_THREAD_COUNT` values and attributes, active statement evidence, and trace log excerpts.
 
 Server issue block: `MVCC garbage collector pressure`
 
