@@ -666,12 +666,18 @@ Drop tablespace:
 drop_if_exists ::=
   IF EXISTS           -- 8.1 verified source only; omit for 7.1 and 7.3
 
-drop_tablespace ::=
+disk_or_memory_drop_tablespace ::=
   DROP TABLESPACE [drop_if_exists] tablespace_name
   [INCLUDING CONTENTS [AND DATAFILES] [CASCADE CONSTRAINTS]]
+
+volatile_drop_tablespace ::=
+  DROP TABLESPACE [drop_if_exists] tablespace_name
+  [INCLUDING CONTENTS [CASCADE CONSTRAINTS]]
 ```
 
 Version rule: `DROP TABLESPACE IF EXISTS` is available only in the Altibase 8.1 verified source. For 7.1 and 7.3, omit `IF EXISTS`; make idempotent drop scripts use a metadata pre-check plus script-side conditional execution before running ordinary `DROP TABLESPACE`.
+
+Type rule: Use `AND DATAFILES` only for disk or memory tablespaces. It removes disk data files for disk tablespaces and checkpoint image files for memory tablespaces. Volatile tablespace drops must omit `AND DATAFILES`.
 
 Alter tablespace:
 
@@ -1091,25 +1097,40 @@ WHERE name = 'APP_DATA';
 ```
 
 ```sql
+-- Empty user-defined tablespace:
 DROP TABLESPACE app_data;
 
+-- Non-empty disk, memory, or volatile tablespace when files are kept:
 DROP TABLESPACE app_data INCLUDING CONTENTS;
 
+-- Disk data tablespace: drop objects and physical data files:
 DROP TABLESPACE app_data
 INCLUDING CONTENTS AND DATAFILES;
 
-DROP TABLESPACE app_data
+-- Memory tablespace: drop objects and checkpoint image files:
+DROP TABLESPACE app_mem_tbs
 INCLUDING CONTENTS AND DATAFILES
 CASCADE CONSTRAINTS;
+
+-- Volatile tablespace: drop objects; do not specify AND DATAFILES:
+DROP TABLESPACE app_vol_tbs
+INCLUDING CONTENTS;
+
+-- Volatile tablespace with blocking external referential constraints:
+DROP TABLESPACE app_vol_tbs
+INCLUDING CONTENTS CASCADE CONSTRAINTS;
 ```
 
 Rules:
 
 - Without `INCLUDING CONTENTS`, the tablespace must contain no objects.
 - `INCLUDING CONTENTS` drops objects in the tablespace but does not remove physical data files or checkpoint image files.
-- `AND DATAFILES` removes disk data files or memory checkpoint image files.
+- For disk tablespaces, `INCLUDING CONTENTS AND DATAFILES` removes disk data files.
+- For memory tablespaces, `INCLUDING CONTENTS AND DATAFILES` removes checkpoint image files; checkpoint path directories remain an operating-system cleanup item.
+- For volatile tablespaces, omit `AND DATAFILES`; there are no data files or checkpoint image files to remove.
+- Keep temporary tablespace handling separate from volatile tablespace handling. Temporary tablespaces are disk work space, and temporary files must pass the in-use and extent checks before file-level changes.
 - `CASCADE CONSTRAINTS` removes external referential constraints that block the drop.
-- System tablespaces cannot be dropped by ordinary users.
+- Do not generate `DROP TABLESPACE` for system tablespaces, including `SYS_TBS_DISK_TEMP`.
 
 Runbook: discard unrecoverable tablespace
 
