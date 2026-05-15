@@ -763,7 +763,8 @@ Preflight notes:
 
 - For 8.1, decide whether `IF NOT EXISTS` is appropriate. It suppresses a duplicate-name error but does not prove that the existing tablespace has the requested files, size, or autoextend settings.
 - For disk and temporary files, confirm filesystem free space and Altibase OS user permissions before running DDL.
-- For memory and volatile tablespaces, calculate the allocation unit from `EXPAND_CHUNK_PAGE_COUNT * 32KB` and choose `SIZE`, `NEXT`, and `SPLIT EACH` values accordingly.
+- For memory tablespaces, calculate the allocation unit from `EXPAND_CHUNK_PAGE_COUNT * 32KB` and choose `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` values accordingly.
+- For volatile tablespaces, calculate the allocation unit from `EXPAND_CHUNK_PAGE_COUNT * 32KB` and choose `SIZE` and `AUTOEXTEND NEXT` values accordingly.
 
 Runbook: create disk data tablespace
 
