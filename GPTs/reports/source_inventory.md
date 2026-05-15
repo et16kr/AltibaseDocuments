@@ -87,7 +87,7 @@ Source purpose: administration, accounts, backup/recovery, tablespaces, server o
 
 ### 03_sql_ddl_generation.md
 
-Source purpose: DDL/DCL generation, tablespaces, tables, indexes, users, replication SQL, property checks.
+Source purpose: DDL/DCL generation, tablespaces, tables, indexes, users, replication SQL, Log Analyzer CDC syntax, property checks.
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/SQL Reference.md`
@@ -104,10 +104,16 @@ Source purpose: DDL/DCL generation, tablespaces, tables, indexes, users, replica
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 - Korean source authority/check:
   - `Manuals/Altibase_7.1/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.1/kor/Replication Manual.md`
+  - `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`
   - `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
   - `Manuals/Altibase_7.3/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/Replication Manual.md`
+  - `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`
   - `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
   - `Manuals/Altibase_trunk/kor/SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/Replication Manual.md`
+  - `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`
   - `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
   - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
 - R03 source-drift note: Korean SQL Reference and General Reference differ on omitted user disk datafile `SIZE` defaults; the attachment now directs generated DDL to emit explicit disk datafile `SIZE`, `NEXT`, and `MAXSIZE` values instead of relying on omitted defaults.
@@ -204,6 +210,16 @@ Source purpose: replication, HA, CDC/log analysis, compatibility, network checks
   - `Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/Replication Manager User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.1/kor/Replication Manual.md`
+  - `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/Replication Manual.md`
+  - `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/Replication Manual.md`
+  - `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`
 - Korean supplemental technical documents:
   - `Technical Documents/kor/ReplicationCompatibility.md`
   - `Technical Documents/kor/Replication network check.md`

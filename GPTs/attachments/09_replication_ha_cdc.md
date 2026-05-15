@@ -314,7 +314,7 @@ log_analyzer_cdc_replication ::=
   CREATE REPLICATION replication_name
     { FOR ANALYSIS | FOR ANALYSIS PROPAGATION }
     [OPTIONS option_name [option_name ...]]
-    { WITH 'xlog_sender_host_ip_or_name', xlog_sender_port_no
+    { WITH 'xlog_collector_host_ip_or_name', xlog_collector_port_no
            [...]
     | WITH UNIX_DOMAIN }
     FROM user_name.table_name
@@ -337,6 +337,7 @@ Syntax notes:
 
 - If `LAZY` or `EAGER` is omitted, LAZY mode is used.
 - `IF NOT EXISTS` is available for `CREATE REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
+- `IF EXISTS` is available for `DROP REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
 - `replication_name` must be the same on both nodes.
 - `remote_host_port_no` is the peer Receiver port.
 - If the `USING` clause is omitted, ordinary TCP replication is used.
@@ -344,6 +345,7 @@ Syntax notes:
 - In Altibase 8.1 verified source SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For InfiniBand, use `USING IB [ib_latency]` and the peer `REPLICATION_IB_PORT_NO`.
 - `FOR ANALYSIS` and `FOR ANALYSIS PROPAGATION` create a Log Analyzer XLog Sender and are not ordinary table-to-table apply syntax. Do not combine those Log Analyzer forms with `EAGER`, `USING SSL`, or `USING IB`; Log Analyzer CDC is LAZY/TCP or UNIX-domain-socket scoped.
+- For Log Analyzer TCP, the `WITH` endpoint is the XLog Collector IP address or host name and port. The XLog Collector must already be listening before `ALTER REPLICATION ... START`.
 - `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `AS MASTER` and `AS SLAVE` affect handshaking. Valid pairings are not-set with not-set, master with slave, and slave with master.
@@ -632,11 +634,12 @@ ORDER BY rep_name;
 Syntax:
 
 ```sql
-DROP REPLICATION replication_name;
+DROP REPLICATION [IF EXISTS] replication_name;
 ```
 
 Rules:
 
+- `IF EXISTS` is Altibase 8.1 verified source syntax only. Omit it for 7.1 and 7.3.
 - Stop replication first with `ALTER REPLICATION replication_name STOP`.
 - After `DROP REPLICATION`, `ALTER REPLICATION ... START` cannot be used for that object.
 - Recreate matching objects on both nodes if replication is needed again.
@@ -835,8 +838,9 @@ DDL Level 1 examples:
 
 DDL restrictions:
 
-- DDL on replication objects with `RECOVERY` enabled is not supported by this procedure; delete and recreate replication instead.
-- DDL on EAGER-mode replication targets requires the standard DDL procedure rather than SQL apply mode.
+- Do not use the DDL synchronization procedure for EAGER-mode replication objects, `RECOVERY`-enabled replication objects, `FOR PROPAGATION` replication objects, `RECEIVE_ONLY` replication objects, or partitioned tables with global non-partitioned indexes.
+- Do not use the DDL synchronization procedure for index partition rebuilds, grants/revokes, or trigger create/drop.
+- For unsupported replication objects or DDL types, remove the target from replication and perform DDL on both nodes, drop and recreate replication where required, or use a source-specific documented procedure.
 - Clear replication gaps before DDL.
 - DDL locks the target table; a primary transaction during the lock can block receiver apply.
 - If increasing a column range, execute DDL first on the node not generating primary transactions.
@@ -1005,6 +1009,9 @@ FROM user_name.seq_name$seq TO user_name.seq_name$seq;
 ALTER REPLICATION repl_name START;
 ALTER REPLICATION repl_name STOP;
 
+ALTER REPLICATION repl_name DROP TABLE
+FROM user_name.seq_name$seq TO user_name.seq_name$seq;
+
 ALTER SEQUENCE user_name.seq_name DISABLE SYNC TABLE;
 ```
 
@@ -1014,6 +1021,7 @@ Cautions:
 - Active-Active sequence replication can produce duplicate values when a replication gap exists.
 - Cache size should usually be at least `100`.
 - Change the cache size before the sequence synchronization table is created.
+- Before `DISABLE SYNC TABLE`, remove `user_name.seq_name$seq` from every replication object on each server that includes it, or drop those replication objects.
 - Replication recreation, sequence recreation, and sequence modification must be applied equivalently on all servers.
 - After failover, gaps in generated key values can occur because the peer begins from the next cache range.
 

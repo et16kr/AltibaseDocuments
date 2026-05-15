@@ -594,7 +594,7 @@ replication_log_analyzer_cdc ::=
   CREATE REPLICATION replication_name
   { FOR ANALYSIS | FOR ANALYSIS PROPAGATION }
   [OPTIONS option_list]
-  { WITH 'xlog_sender_host_ip_or_name', xlog_sender_port
+  { WITH 'xlog_collector_host_ip_or_name', xlog_collector_port_no
          [...]
   | WITH UNIX_DOMAIN }
   FROM [owner.]local_table
@@ -639,12 +639,15 @@ alter_replication ::=
     FROM [owner.]local_table [PARTITION local_partition]
     TO   [owner.]remote_table [PARTITION remote_partition]
 | ALTER REPLICATION replication_name FLUSH [ALL] [WAIT timeout_sec]
+
+drop_replication ::=
+  DROP REPLICATION [IF EXISTS] replication_name
 ```
 
 Generation notes:
 
 - Only `SYS` can execute replication-related statements.
-- `IF NOT EXISTS` is available for `CREATE REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3; it also does not verify that an existing replication object has the desired endpoints or target items.
+- `IF NOT EXISTS` for `CREATE REPLICATION` and `IF EXISTS` for `DROP REPLICATION` are available in Altibase 8.1 verified source. Omit them for 7.1 and 7.3; `CREATE REPLICATION IF NOT EXISTS` also does not verify that an existing replication object has the desired endpoints or target items.
 - The replication object name must be the same on both servers.
 - The port in `WITH 'host', port` is the remote server's replication receiver port. For ordinary replication, check `REPLICATION_PORT_NO` on the remote server.
 - Non-SSL replication and SSL replication are separate generation cases. Do not mix ordinary TCP ports and SSL replication ports in the same example.
@@ -652,6 +655,7 @@ Generation notes:
 - `USING IB ib_latency` is only for InfiniBand environments. Use the peer `REPLICATION_IB_PORT_NO`, and verify `IB_ENABLE`.
 - In Altibase 8.1 verified source, SSL replication uses `USING SSL` and the remote server's `REPLICATION_SSL_PORT_NO`. SSL configuration must already be completed on each replication target server.
 - `FOR ANALYSIS` and `FOR ANALYSIS PROPAGATION` are Log Analyzer CDC XLog Sender syntax. Do not combine those Log Analyzer forms with `EAGER`, `USING SSL`, or `USING IB`.
+- For Log Analyzer TCP, the `WITH` endpoint is the XLog Collector IP address or host name and port. The XLog Collector must already be listening before `ALTER REPLICATION ... START`.
 - `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
