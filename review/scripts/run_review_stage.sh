@@ -235,6 +235,7 @@ Project objective:
 - The GPT must answer about Altibase 7.1, 7.3, and 8.1.
 - Keep ordinary Oracle-overlapping DML brief.
 - Prioritize Altibase-specific DDL, storage, properties, data dictionary, operations, troubleshooting, structure, replication, HA, performance, security, and tool behavior.
+- Source precedence: Korean Altibase manuals are the authoritative latest manual source. If English and Korean manuals differ, use the Korean manual as the technical basis and report the English-source drift. Final attachment prose should still be normalized into English.
 - Preserve literal SQL object names, SQL keywords, function names, error codes, property names, commands, paths, API names, connector names, and version labels.
 
 Read first:

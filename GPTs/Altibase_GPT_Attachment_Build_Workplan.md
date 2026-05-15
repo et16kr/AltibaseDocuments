@@ -208,6 +208,8 @@ Each attachment should follow this structure until final cleanup.
 ## Attachment Writing Policy
 
 - Write final attachment files in canonical English.
+- Use Korean manuals as the source of truth for technical behavior when paired Korean
+  and English manuals differ; keep final attachment language English.
 - The GPT should answer in the user's language whenever possible, but literal technical
   tokens must stay unchanged in every answer language.
 - Keep SQL object names, function names, error codes, property names, commands, file paths,
@@ -280,7 +282,8 @@ Mermaid readability rules:
 
 - Confirm that `GPTs/attachments/*.md` contains exactly 20 files excluding
   `GPTs/attachments/README.md`.
-- Confirm that attachment files are English canonical and ready for multilingual answers.
+- Confirm that attachment files are English canonical and ready for multilingual answers,
+  while Korean manuals remain the default source authority for technical conflicts.
 - Confirm that customer-facing attachment files do not contain `trunk`.
 - Confirm that every attachment has applicable versions, source documents, answerable
   questions, and conversion TODOs until final cleanup removes those scaffolding sections.

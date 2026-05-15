@@ -135,3 +135,6 @@ Examples:
 - Write attachment files in canonical English so the GPT can answer in any user language
   while preserving literal SQL object names, function names, error codes, property names,
   commands, and file paths.
+- Use Korean Altibase manuals as the authoritative technical source when Korean and
+  English manuals differ; translate and normalize the Korean basis into English
+  attachment prose.

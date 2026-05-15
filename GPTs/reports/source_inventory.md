@@ -4,20 +4,20 @@ Job: `JOB-010`
 Phase: P1 Inventory
 Status: Complete
 
-This report inventories source availability for the 20 GPT attachment files. English manuals are the preferred extraction source when present. Korean sources are listed when they are the only local source or when they should be checked for parity in later jobs.
+This report inventories source availability for the 20 GPT attachment files. Korean Altibase manuals are the authoritative latest manual source. English manuals can be used for convenient extraction and English wording, but when English and Korean manuals differ, the Korean manual is the source of truth and English-facing artifacts should be updated or normalized from the Korean source.
 
 For Altibase 8.1, the internally verified source set is the current 8.1 verified manual tree plus the 8.1 release notes. Customer-facing attachments must label this as "Altibase 8.1 verified source" or equivalent wording, not by the internal directory name.
 
 ## Source Roots
 
-- Altibase 7.1 manuals: `Manuals/Altibase_7.1/eng`
-- Altibase 7.3 manuals: `Manuals/Altibase_7.3/eng`
-- Altibase 8.1 verified source manuals: `Manuals/Altibase_trunk/eng`
+- Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
+- Altibase 7.3 manuals: `Manuals/Altibase_7.3/kor` authoritative, `Manuals/Altibase_7.3/eng` English extraction/reference
+- Altibase 8.1 verified source manuals: `Manuals/Altibase_trunk/kor` authoritative, `Manuals/Altibase_trunk/eng` English extraction/reference
 - Release notes, English: `ReleaseNotes/eng`
-- Release notes, Korean fallback: `ReleaseNotes/kor`
-- Tool manuals, release source: `Manuals/Tools/Altibase_release/eng`
-- Tool manuals, Altibase 8.1 verified source: `Manuals/Tools/Altibase_trunk/eng`
-- Technical documents: `Technical Documents/eng`, `Technical Documents/kor`
+- Release notes, Korean: `ReleaseNotes/kor` authoritative if release-note content differs from English
+- Tool manuals, release source: `Manuals/Tools/Altibase_release/kor` authoritative, `Manuals/Tools/Altibase_release/eng` English extraction/reference
+- Tool manuals, Altibase 8.1 verified source: `Manuals/Tools/Altibase_trunk/kor` authoritative, `Manuals/Tools/Altibase_trunk/eng` English extraction/reference
+- Technical documents: `Technical Documents/kor` authoritative when paired or Korean-only, `Technical Documents/eng` English extraction/reference
 - Third-party guides: `3rd Party Guide for Altibase/eng`
 
 ## Inventory Summary
@@ -27,7 +27,7 @@ For Altibase 8.1, the internally verified source set is the current 8.1 verified
 - Attachments with 7.3 source paths: 20
 - Attachments with Altibase 8.1 verified source paths: 20
 - Missing blocking source paths: none
-- Korean-only supplemental sources: `Technical Documents/kor/JavaCompatibility.md`, `Technical Documents/kor/ReplicationCompatibility.md`, `Technical Documents/kor/Replication network check.md`
+- Korean supplemental technical documents: `Technical Documents/kor/JavaCompatibility.md`, `Technical Documents/kor/ReplicationCompatibility.md`, `Technical Documents/kor/Replication network check.md`
 
 ## Attachment Source Inventory
 
@@ -44,7 +44,7 @@ Source purpose: release history, version differences, supported platforms, upgra
 - Altibase 8.1 verified source:
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
   - `Technical Documents/eng/Supported Platforms.md`
-- Parity/fallback:
+- Korean source authority/check:
   - `ReleaseNotes/kor/Altibase_7_1_0_1_2_Release_Notes.md`
   - `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
   - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
@@ -188,7 +188,7 @@ Source purpose: replication, HA, CDC/log analysis, compatibility, network checks
   - `Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/Replication Manager User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
-- Korean-only supplemental:
+- Korean supplemental technical documents:
   - `Technical Documents/kor/ReplicationCompatibility.md`
   - `Technical Documents/kor/Replication network check.md`
 
@@ -224,7 +224,7 @@ Source purpose: JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, Hib
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
   - `3rd Party Guide for Altibase/eng/Spring Data JPA User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/eng/Spring Data JPA With Hibernate 6.4 User's Guide for Altibase.md`
-- Korean-only supplemental:
+- Korean supplemental technical documents:
   - `Technical Documents/kor/JavaCompatibility.md`
 
 ### 12_c_cli_odbc_precompiler.md
@@ -365,5 +365,5 @@ Source purpose: Spatial SQL, `GEOMETRY`, altiShapeLoader, NiFi, Tableau.
 ## Follow-Up Notes
 
 - JOB-011 should verify the 8.1-specific source claims against `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`, especially JSON, Temporary LOB, replication SSL, JSON plan output, new properties, and new performance views.
-- JOB-012 should decide whether each English manual is sufficient as canonical source or whether Korean parity review is needed for individual sections.
+- JOB-012 records that Korean manuals are authoritative when English and Korean manuals differ; later jobs should check Korean manuals for version-sensitive claims and record any English-source drift.
 - JOB-013 and JOB-014 should start from the manuals listed here, especially SQL Reference, Performance Tuning Guide, Replication Manual, Installation Guide, Administrator manual, and the third-party UI-heavy guides.

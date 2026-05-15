@@ -102,6 +102,8 @@ The remediation runner records failures for `mark`, `finish`, and `run-all` path
 
 Altibase version-sensitive claims must be source-backed.
 
+- Korean Altibase manuals are the authoritative latest manual source. If Korean and English manuals differ, treat the Korean manual as the source of truth and update or normalize English-facing artifacts from the Korean source.
+- Keep customer-facing attachments in clear English unless the file explicitly requires otherwise; do not copy Korean prose directly into `GPTs/attachments/` without translating and normalizing it.
 - Use the selected manuals, release notes, technical documents, and source inventory already present in the repository.
 - For 8.1-only material, preserve the established `Altibase 8.1 verified source` wording where the attachment set uses it.
 - For 7.1 and 7.3 claims, check the corresponding manuals or approved supporting documents before broadening a statement.

@@ -23,6 +23,9 @@ The review bias is:
 - Spend more review depth on Altibase-specific DDL, tablespaces, storage behavior,
   properties, data dictionary views, operation, troubleshooting, replication, HA,
   performance, security, and tool behavior.
+- Treat Korean Altibase manuals as the authoritative latest manual source. If an
+  English manual and its Korean counterpart differ, review against the Korean manual
+  and call out any English-source drift as a source issue.
 - Check that Altibase 8.1 material is based on the verified source policy and that
   customer-facing attachments do not expose internal source labels.
 - Confirm that images and screenshots have been converted into searchable Markdown,
@@ -105,6 +108,7 @@ Verdict: Pass | Review Required | Fail
 
 - Claims checked:
 - Source coverage:
+- Korean/English source conflicts:
 - Source gaps:
 
 ## Oracle-Overlap Decision
@@ -154,9 +158,10 @@ Goal: confirm the attachment set follows the intended content strategy.
 Checks:
 
 - The attachment set matches the selection document.
-- English is the canonical attachment language.
-- Korean fallback content is used only for documented 8.1 gaps or supplemental technical
-  documents.
+- English is the canonical attachment language, but Korean manuals are the authoritative
+  source when paired Korean and English manuals differ.
+- Korean-source content must be translated and normalized into English attachment prose
+  without exposing internal source labels.
 - Claims that matter for customer correctness are traceable to selected sources.
 - Oracle-overlapping DML is intentionally compressed; Altibase-specific behavior is not
   lost.
@@ -213,6 +218,8 @@ Checks:
 - Each file has useful headings, question-oriented sections, compact item blocks, and
   source-safe wording.
 - Literal technical tokens remain unchanged in multilingual answer scenarios.
+- Korean manuals remain the default source authority for the final repeated review; any
+  Korean/English manual conflict is recorded and judged from the Korean manual.
 - The final upload checklist maps every expected customer question area to one or more
   attachments.
 - Remaining review reports are resolved or explicitly accepted as residual risk.
@@ -246,4 +253,6 @@ The attachment set is ready for upload when:
   customer.
 - Multilingual and retrieval review confirms that answer language can change while SQL
   tokens, property names, commands, paths, error codes, and object names remain literal.
+- The final repeated review explicitly uses Korean manuals as the default source
+  authority when Korean and English manuals differ.
 - The final upload checklist references exactly the 20 attachment Markdown files.
