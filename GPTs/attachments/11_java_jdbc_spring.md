@@ -79,6 +79,7 @@ Version block: 8.1
 - Altibase 8.1 verified source keeps the 7.3-and-later Hibernate LOB guidance: `lob_null_select` default is `off`.
 - Altibase 8.1 adds a native `JSON` data type, JSON path support, and JSON functions such as `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, and `JSON_VALID`. JDBC-specific JSON binding details are not expanded in the English JDBC guide; answer JSON/JDBC binding questions conservatively and ask for the exact driver version.
 - Altibase 8.1 adds Temporary LOB support and `V$TEMPORARY_LOBS`; do not assume older JDBC LOB sections cover Temporary LOB behavior unless the answer is limited to ordinary `BLOB` and `CLOB` handling.
+- Altibase 8.1 verified source adds improved JDBC behavior for Empty LOB values, meaning `BLOB` or `CLOB` data with length 0. Do not apply older 7.1/7.3 zero-length LOB guidance to 8.1 Empty LOB behavior without checking the target 8.1 driver.
 
 ## Core JDBC Cookbook
 
@@ -604,6 +605,12 @@ LOB handling rules:
 - Prefer `Reader` or `Writer` for `CLOB`.
 - If the LOB size is equal to or less than `8192` bytes, tune `lob_cache_threshold` appropriately.
 - Explicitly free many obtained LOB objects; commit alone is not a substitute for freeing client-side LOB resources.
+
+Altibase 8.1 Empty LOB note:
+
+- Altibase 8.1 verified source improves JDBC Empty LOB processing for LOB data with length 0.
+- Treat this as 8.1-specific behavior. Older 7.1/7.3 zero-length LOB guidance, especially tool guidance that stores zero-length LOB data like `NULL`, should not be assumed for 8.1 JDBC Empty LOB answers.
+- If the distinction between `NULL` and Empty LOB affects application logic, ask for the exact server and JDBC driver version before giving code-level behavior claims.
 
 Freeing LOB resources:
 

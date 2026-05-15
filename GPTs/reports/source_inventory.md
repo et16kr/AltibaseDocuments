@@ -221,6 +221,7 @@ Source purpose: JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, Hib
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/JDBC User's Manual.md`
   - `Manuals/Altibase_trunk/eng/Adapter for JDBC User's Manual.md`
+  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
   - `3rd Party Guide for Altibase/eng/Spring Data JPA User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/eng/Spring Data JPA With Hibernate 6.4 User's Guide for Altibase.md`
 - Korean-only supplemental:
@@ -245,6 +246,7 @@ Source purpose: C client interfaces, CLI, ODBC, C Interface, Precompiler, LOB AP
   - `Manuals/Altibase_trunk/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_trunk/eng/Altibase C Interface Manual.md`
   - `Manuals/Altibase_trunk/eng/Precompiler User's Manual.md`
+  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 13_isql_iloader_basic_tools.md
 
@@ -259,6 +261,7 @@ Source purpose: iSQL, iLoader, export/import, first-line operational tool usage.
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_trunk/eng/iLoader User's Manual.md`
+  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 14_utilities_operation_tools.md
 

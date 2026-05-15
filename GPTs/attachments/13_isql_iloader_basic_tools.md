@@ -69,6 +69,8 @@ Version block: 8.1
 
 - Use `Altibase 8.1 verified source` wording for 8.1-specific statements.
 - The 8.1 verified source keeps the same practical iSQL and iLoader cookbook model: connect or run SQL with iSQL, create a FORM file with `formout`, export with `out`, import with `in`, and verify results.
+- Altibase 8.1 verified source improves iLoader Empty LOB processing for LOB data with length 0, supported only when the `-lob` option uses `use_lob_file=yes`.
+- Do not apply older 7.1/7.3 zero-length LOB guidance to 8.1 Empty LOB behavior without checking the target 8.1 client package.
 - For SSL/TLS setup details beyond the iSQL and iLoader connection options, use the SSL/TLS attachment.
 
 ## iSQL Command-Line Syntax
@@ -998,6 +1000,12 @@ LOB cautions:
 - `use_separate_files=yes` cannot be combined with `lob_file_size`.
 - If a LOB column is imported with `use_lob_file=yes` and the LOB value does not start with the configured `lob_indicator`, the row is treated as an error.
 - For LOB tables, performance options are restricted. On upload, `-array` becomes `1`, `-commit` becomes `1`, `-atomic` is ignored, `-direct` is ignored, and `-parallel` becomes `1`. On download, `-array` and `-parallel` become `1`.
+
+Altibase 8.1 Empty LOB note:
+
+- Altibase 8.1 verified source improves iLoader Empty LOB processing for LOB data with length 0 only when `-lob` is used with `use_lob_file=yes`.
+- Preserve both literals when answering 8.1 iLoader Empty LOB questions: `-lob` and `use_lob_file=yes`.
+- Older 7.1/7.3 manuals document zero-length LOB data as stored like `NULL`; do not assume that older zero-length guidance for 8.1 Empty LOB behavior.
 
 ## iLoader Performance Cookbook
 

@@ -99,6 +99,8 @@ Version block: 8.1
 
 - Use `Altibase 8.1 verified source` wording for 8.1-specific behavior.
 - Ordinary `BLOB` and `CLOB` CLI LOB locator guidance remains aligned with 7.1 and 7.3.
+- Altibase 8.1 verified source adds Empty LOB CLI interface support for LOB data with length 0 through `SQLEmptyLob()` and `SQLGetLobLength2()`.
+- Do not apply older 7.1/7.3 zero-length LOB guidance to 8.1 Empty LOB behavior without checking the target 8.1 client package.
 - Altibase 8.1 verified source adds JSON-related LOB cleanup guidance: when `SQLPutLob()` is used to update JSON data through a LOB locator, call `SQLFreeLob2(stmt, locator)` after the JSON update to release the JSON-related LOB locator resources.
 - `SQLFreeLob2()` does not commit or roll back changes. Use transaction control such as `SQLEndTran()` separately.
 
@@ -961,6 +963,22 @@ LOB API block: `SQLFreeLob`
 - Does not: commit or roll back LOB changes.
 - Transaction end: `SQLEndTran()` automatically releases locators, but explicit `SQLFreeLob()` is the clean resource-release pattern for ordinary `BLOB` and `CLOB` locator work.
 
+LOB API block: `SQLEmptyLob()`
+
+- Version: Altibase 8.1 verified source.
+- Type: Empty LOB interface function.
+- Purpose: supports Empty LOB handling for LOB data with length 0.
+- Use when: an 8.1 CLI application must preserve Empty LOB behavior instead of treating zero-length LOB values as older 7.1/7.3 NULL-like guidance.
+- Scope note: check the exact 8.1 client headers or manual for the function signature before generating compile-ready C code.
+
+LOB API block: `SQLGetLobLength2()`
+
+- Version: Altibase 8.1 verified source.
+- Type: Empty LOB length interface function.
+- Purpose: supports 8.1 Empty LOB length handling for LOB data with length 0.
+- Use when: an 8.1 CLI application must distinguish Empty LOB handling from older `SQLGetLobLength` guidance.
+- Scope note: older 7.1/7.3 zero-length LOB guidance should not be assumed for 8.1 Empty LOB behavior.
+
 LOB API block: `SQLFreeLob2`
 
 - Version: Altibase 8.1 verified source.
@@ -1005,6 +1023,11 @@ SQLPutLob(stmt, locatorCType, locator, position, reservedForLength, sourceCType,
 SQLFreeLob2(stmt, locator)
 SQLEndTran(SQL_HANDLE_DBC, dbc, SQL_COMMIT or SQL_ROLLBACK)
 ```
+
+Empty LOB interface note for Altibase 8.1 verified source:
+
+- For LOB data with length 0, use 8.1 Empty LOB guidance and preserve the interface literals `SQLEmptyLob()` and `SQLGetLobLength2()`.
+- Do not answer 8.1 Empty LOB questions by reusing older 7.1/7.3 zero-length LOB guidance unless the target client package explicitly documents the same behavior.
 
 ODBC Driver Manager LOB compatibility:
 
