@@ -589,22 +589,22 @@ Verification Method:
 flowchart TD
   A[Pod starts Altibase] --> B[Run aku -p start]
   B --> C{Pod number}
-  C -- pod-0 --> D[Create replication objects]
-  C -- pod-1..N --> E[Connect to existing pods]
-  E --> F[Create or reuse replication objects]
-  F --> G[Truncate replication target tables when needed]
-  G --> H[Sync from master pod]
-  H --> I[Start replication]
-  D --> I
-  I --> J[Set ADMIN_MODE to allow access]
-  J --> K[Create /tmp/aku_start_completed]
-  K --> L[Pod serves workload]
-  L --> M[Run aku -p end before termination]
-  M --> N[Flush replication]
-  N --> O[Stop and reset replication if configured]
-  O --> P[Delete /tmp/aku_start_completed]
-  P --> Q[Stop Altibase and terminate pod]
+  C -- pod-0 --> D[Initialize master-side replication]
+  C -- pod-1..N --> E[Join and synchronize slave Pod]
+  D --> F[Mark AKU start completed]
+  E --> F
+  F --> G[Pod serves workload]
+  G --> H[Run aku -p end before termination]
+  H --> I[Flush, stop, reset, and clean up as configured]
+  I --> J[Stop Altibase and terminate pod]
 ```
+
+Lifecycle phase details:
+
+1. On pod 0, `aku -p start` creates AKU-managed replication objects and starts replication for connected Pods.
+2. On pod 1 through pod N, `aku -p start` connects to existing Pods, creates or reuses replication objects, truncates replication target tables when needed, synchronizes from the master Pod, and starts replication.
+3. A successful start sets `ADMIN_MODE` to allow access and creates `/tmp/aku_start_completed`.
+4. Before termination, `aku -p end` flushes replication, stops and resets replication if configured, deletes `/tmp/aku_start_completed`, and then Altibase can stop.
 
 Troubleshooting block: unreset replication information
 

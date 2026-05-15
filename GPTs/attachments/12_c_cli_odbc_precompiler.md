@@ -111,33 +111,17 @@ sequenceDiagram
   participant App as C application
   participant CLI as Altibase CLI driver
   participant DB as Altibase server
-  App->>CLI: SQLAllocHandle(SQL_HANDLE_ENV)
-  App->>CLI: SQLSetEnvAttr(...)
-  App->>CLI: SQLAllocHandle(SQL_HANDLE_DBC)
-  App->>CLI: SQLDriverConnect(...) or SQLConnect(...)
+  App->>CLI: Allocate environment and connection handles
+  App->>CLI: Connect and set connection attributes
   CLI->>DB: establish session
-  App->>CLI: SQLSetConnectAttr(...)
-  App->>CLI: SQLAllocHandle(SQL_HANDLE_STMT)
-  App->>CLI: SQLPrepare(...) or SQLExecDirect(...)
-  App->>CLI: SQLBindParameter(...) when needed
-  App->>CLI: SQLExecute(...)
+  App->>CLI: Allocate statement handle
+  App->>CLI: Prepare or execute SQL
   alt SELECT or catalog function
-    App->>CLI: SQLNumResultCols / SQLDescribeCol
-    App->>CLI: SQLBindCol
-    loop rows
-      App->>CLI: SQLFetch or SQLFetchScroll
-      App->>CLI: SQLGetData for long unbound data
-    end
-    App->>CLI: SQLCloseCursor or SQLFreeStmt(SQL_CLOSE)
+    App->>CLI: Bind, fetch, and read result data
   else DML
-    App->>CLI: SQLRowCount
-    App->>CLI: SQLMoreResults if array or multiple results
+    App->>CLI: Read row count or more results
   end
-  App->>CLI: SQLEndTran(SQL_COMMIT or SQL_ROLLBACK)
-  App->>CLI: SQLFreeHandle(SQL_HANDLE_STMT)
-  App->>CLI: SQLDisconnect
-  App->>CLI: SQLFreeHandle(SQL_HANDLE_DBC)
-  App->>CLI: SQLFreeHandle(SQL_HANDLE_ENV)
+  App->>CLI: End transaction and close handles
 ```
 
 CLI flow checklist:
@@ -1276,21 +1260,23 @@ flowchart TD
   C --> D{Execution style}
   D -- Direct SQL --> E[altibase_query]
   E --> F{Result set?}
-  F -- yes --> G[altibase_use_result or altibase_store_result]
-  G --> H[altibase_fetch_row and altibase_fetch_lengths]
-  H --> I[altibase_free_result]
-  F -- no --> J[altibase_affected_rows]
+  F -- yes --> G[Fetch rows then free result]
+  F -- no --> H[Read affected rows]
   D -- Prepared SQL --> K[altibase_stmt_init]
-  K --> L[altibase_stmt_prepare]
-  L --> M[altibase_stmt_bind_param]
-  M --> N[altibase_stmt_execute]
-  N --> O[altibase_stmt_bind_result and altibase_stmt_fetch]
-  O --> P[altibase_stmt_free_result and altibase_stmt_close]
-  I --> Q[altibase_commit or altibase_rollback]
-  J --> Q
+  K --> P[Prepare, bind, execute, fetch, and close statement]
+  G --> Q[altibase_commit or altibase_rollback]
+  H --> Q
   P --> Q
   Q --> R[altibase_close]
 ```
+
+ACI call order details:
+
+1. Optional `altibase_set_option()` or `altibase_set_charset()` calls belong between `altibase_init()` and `altibase_connect()`.
+2. Direct SQL with a result set uses `altibase_use_result()` or `altibase_store_result()`, then `altibase_fetch_row()` and `altibase_fetch_lengths()`, then `altibase_free_result()`.
+3. Direct SQL without a result set uses `altibase_affected_rows()`.
+4. Prepared SQL uses `altibase_stmt_prepare()`, `altibase_stmt_bind_param()`, `altibase_stmt_execute()`, `altibase_stmt_bind_result()` and `altibase_stmt_fetch()`, then `altibase_stmt_free_result()` and `altibase_stmt_close()`.
+5. Finish transaction work with `altibase_commit()` or `altibase_rollback()` before `altibase_close()`.
 
 ACI handle block: `ALTIBASE`
 

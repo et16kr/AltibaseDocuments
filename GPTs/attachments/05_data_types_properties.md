@@ -46,23 +46,24 @@
 ```mermaid
 flowchart TD
   A[Choose column type] --> B{Stores JSON document?}
-  B -->|Yes, 8.1| C[Use JSON and enable Temporary LOB]
-  B -->|Yes, 7.1 or 7.3| D[Use character or LOB design, not native JSON]
-  B -->|No| E{Large text or binary object?}
-  E -->|Yes| F[Use CLOB or BLOB]
-  E -->|No| G{Text?}
-  G -->|Yes| H[Use CHAR, VARCHAR, NCHAR, or NVARCHAR]
-  G -->|No| I{Exact numeric?}
-  I -->|Yes| J[Use NUMERIC, DECIMAL, NUMBER(p,s), INTEGER, BIGINT, or SMALLINT]
-  I -->|No| K{Approximate numeric?}
-  K -->|Yes| L[Use FLOAT, DOUBLE, REAL, or NUMBER without precision]
-  K -->|No| M{Date/time?}
-  M -->|Yes| N[Use DATE]
-  M -->|No| O{Binary or bit string?}
-  O -->|Yes| P[Use BYTE, VARBYTE, NIBBLE, BIT, or VARBIT]
-  O -->|No| Q{Spatial?}
-  Q -->|Yes| R[Use GEOMETRY]
+  B -->|Yes, 8.1| C[Use JSON]
+  B -->|Yes, 7.1 or 7.3| D[Use character or LOB design]
+  B -->|No| E{Value family}
+  E --> F[Large object]
+  E --> G[Text]
+  E --> H[Numeric]
+  E --> I[Date, binary, bit, or spatial]
 ```
+
+Selection details:
+
+1. Use `JSON` for native JSON documents on 8.1 and enable Temporary LOB behavior when the JSON workflow requires it.
+2. Use character or LOB design, not native `JSON`, for JSON-like data on 7.1 or 7.3.
+3. Use `CLOB` or `BLOB` for large text or binary objects.
+4. Use `CHAR`, `VARCHAR`, `NCHAR`, or `NVARCHAR` for ordinary text.
+5. Use exact numeric types such as `NUMERIC`, `DECIMAL`, `NUMBER(p,s)`, `INTEGER`, `BIGINT`, or `SMALLINT` when exact scale matters.
+6. Use approximate numeric types such as `FLOAT`, `DOUBLE`, `REAL`, or `NUMBER` without precision when approximate values are acceptable.
+7. Use `DATE` for date/time values, `BYTE`, `VARBYTE`, `NIBBLE`, `BIT`, or `VARBIT` for binary or bit strings, and `GEOMETRY` for spatial values.
 
 ## Compact Data Type Syntax
 

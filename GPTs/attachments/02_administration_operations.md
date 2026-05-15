@@ -68,23 +68,21 @@ Use this diagram when explaining how a client request moves through Altibase ser
 flowchart TD
   APP[Application] --> DRV[Altibase driver or client library]
   DRV --> DISP[Dispatcher]
-  DISP --> POOL[Service thread pool]
-  POOL --> ST[Service thread]
+  DISP --> ST[Service thread]
   ST --> SQL[SQL parser, optimizer, and executor]
   SQL --> SM[Storage manager]
-  SM --> MEM[Memory tablespace pages]
-  SM --> BUF[Buffer manager]
-  BUF --> DISK[Disk tablespace data files]
   ST --> LOG[Log manager]
-  LOG --> LBUF[Log buffer]
-  LBUF --> LFILE[Online log files]
-  LFILE --> ARCH[Archive log files when ARCHIVELOG is enabled]
-  CKPT[Checkpoint thread] --> MEM
-  CKPT --> DISK
-  CKPT --> ANCHOR[Log anchor files]
-  FLUSH[Buffer flush thread] --> BUF
-  AGER[Garbage collection thread] --> MEM
+  SM --> DATA[Memory and disk tablespaces]
+  LOG --> LOGS[Log buffers and log files]
+  MAINT[Checkpoint, flush, and garbage collection threads] --> DATA
 ```
+
+Component detail:
+
+1. The dispatcher routes client work to service threads.
+2. The storage manager works with memory tablespace pages and the buffer manager for disk tablespace data files.
+3. The log manager writes to the log buffer, online log files, and archive log files when `ARCHIVELOG` is enabled.
+4. Checkpoint, buffer flush, and garbage collection threads maintain stable data images, dirty-buffer flushing, log anchors, and memory cleanup.
 
 ## Core Connection and Phase Commands
 
@@ -1952,28 +1950,25 @@ General troubleshooting flow:
 ```mermaid
 flowchart TD
   ISSUE[Operational problem] --> CLASSIFY[Classify symptom]
-  CLASSIFY --> STARTUP[Abnormal termination or restart failure]
-  CLASSIFY --> RESPONSE[Poor server responsiveness]
-  CLASSIFY --> DISK[Excessive disk usage]
-  CLASSIFY --> MEMORY[Excessive memory usage]
-  CLASSIFY --> CPU[Excessive CPU usage]
+  CLASSIFY --> STARTUP[Startup or abnormal termination]
+  CLASSIFY --> RESOURCE[Responsiveness, disk, memory, or CPU]
   CLASSIFY --> REPL[Replication problem]
   CLASSIFY --> APP[Application or query problem]
-  STARTUP --> LOGS[Check ALTIBASE_HOME/trc administrator logs]
-  RESPONSE --> VIEWS[Check sessions, statements, waits, and performance views]
-  DISK --> SPACE[Check data files, archive logs, temp files, and filesystem capacity]
-  MEMORY --> MEMVIEWS[Check memory views, memory tables, buffer pool, and OS memory]
-  CPU --> SQLCPU[Check active SQL, service threads, and OS CPU usage]
-  REPL --> REPLVIEWS[Check V$REPSENDER and V$REPRECEIVER]
-  APP --> SQLTRACE[Check application errors, SQL, plans, and trace logs]
-  LOGS --> ACTION[Choose recovery, capacity, tuning, or escalation action]
-  VIEWS --> ACTION
-  SPACE --> ACTION
-  MEMVIEWS --> ACTION
-  SQLCPU --> ACTION
-  REPLVIEWS --> ACTION
-  SQLTRACE --> ACTION
+  STARTUP --> ACTION[Choose recovery, capacity, tuning, or escalation action]
+  RESOURCE --> ACTION
+  REPL --> ACTION
+  APP --> ACTION
 ```
+
+Symptom routing:
+
+1. Startup failure or abnormal termination: check `ALTIBASE_HOME/trc` administrator logs before choosing recovery or escalation.
+2. Poor responsiveness: check sessions, statements, waits, and performance views.
+3. Excessive disk usage: check data files, archive logs, temp files, and filesystem capacity.
+4. Excessive memory usage: check memory views, memory tables, buffer pool, and OS memory.
+5. Excessive CPU usage: check active SQL, service threads, and OS CPU usage.
+6. Replication problem: check `V$REPSENDER` and `V$REPRECEIVER`.
+7. Application or query problem: check application errors, SQL text, plans, and trace logs.
 
 Problem block: startup failure after missing data file or checkpoint image
 

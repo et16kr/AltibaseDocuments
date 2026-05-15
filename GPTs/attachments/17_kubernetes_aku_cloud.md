@@ -294,24 +294,24 @@ Overall StatefulSet lifecycle:
 ```mermaid
 flowchart TD
   A[StatefulSet creates Pod by ordinal] --> B[Container starts]
-  B --> C[Set Altibase environment]
-  C --> D[Start Altibase server]
-  D --> E[Run aku -p start]
-  E --> F{AKU completed?}
-  F -- No --> G[startupProbe keeps Pod unready]
-  G --> E
-  F -- Yes --> H[Create /tmp/aku_start_completed]
-  H --> I[startupProbe succeeds]
-  I --> J[Next ordered Pod may start]
-  J --> K[Service traffic and replication continue]
-  K --> L{Pod terminating?}
-  L -- No --> K
-  L -- Yes --> M[Run aku -p end]
-  M --> N[Flush, stop, and reset configured replication]
-  N --> O[Delete /tmp/aku_start_completed]
-  O --> P[Stop Altibase server]
-  P --> Q[Pod exits]
+  B --> C[Start Altibase server]
+  C --> D[Run aku -p start]
+  D --> E{AKU completed?}
+  E -- No --> F[startupProbe keeps Pod unready]
+  F --> D
+  E -- Yes --> G[startupProbe succeeds]
+  G --> H[Serve workload until termination]
+  H --> I[Run aku -p end]
+  I --> J[Stop Altibase server and exit]
 ```
+
+Lifecycle details:
+
+1. Container startup sets the Altibase environment before starting the Altibase server.
+2. `aku -p start` creates `/tmp/aku_start_completed` when AKU startup completes; until then, the startup probe keeps the Pod unready.
+3. After the startup probe succeeds, the next ordered Pod may start and service traffic plus replication continue.
+4. On termination, `aku -p end` flushes, stops, and resets configured replication, then deletes `/tmp/aku_start_completed`.
+5. Stop the Altibase server after AKU termination handling finishes.
 
 `aku -p start` on the master Pod:
 
