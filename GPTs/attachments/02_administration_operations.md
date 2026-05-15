@@ -1453,27 +1453,118 @@ ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
 
 Recovery type block: incremental restore and recovery
 
+Metadata repair before incremental restore:
+
+1. Confirm that the selected incremental backup directory contains the needed backup files, `backupInfo`, and any saved `loganchor*` files for the recovery point.
+2. For ordinary complete recovery, use the current `loganchor*` files whenever possible.
+3. If `$ALTIBASE_HOME/dbs/changeTracking` or `$ALTIBASE_HOME/dbs/backupInfo` is missing and the server cannot enter `CONTROL`, start only to `PROCESS`, disable invalid page change tracking, restore `backupInfo` from the latest usable incremental backup tag directory, then continue to `CONTROL`.
+4. For planned incomplete recovery to a past tag, time, or cancel point, restore the historical `loganchor*` and matching `backupInfo` from the backup tag directory for the point being recovered to. After historical `loganchor*` files are restored, page change tracking is invalid; disable incremental chunk change tracking in `PROCESS` before continuing.
+5. After disabling or losing page change tracking, do not resume level 1 incremental backups until change tracking is re-enabled and a new level 0 incremental backup is taken.
+
+```sql
+STARTUP PROCESS;
+ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING;
+STARTUP CONTROL;
+```
+
+```bash
+cp /backup/altibase/incremental/SUNDAY/backupInfo $ALTIBASE_HOME/dbs/backupInfo
+cp /backup/altibase/incremental/WEDNESDAY/loganchor* $ALTIBASE_HOME/logs/
+cp /backup/altibase/incremental/WEDNESDAY/backupInfo $ALTIBASE_HOME/dbs/backupInfo
+```
+
+Runbook: incremental complete recovery to current point
+
+Use this when the latest usable incremental backup chain and all required archive or online logs are available.
+
+1. Keep the current `loganchor*` files in place unless a source-backed recovery plan requires historical metadata.
+2. Repair `changeTracking` or `backupInfo` in `PROCESS` only if startup to `CONTROL` fails because those files are missing or invalid.
+3. In `CONTROL`, restore the latest incremental chain.
+4. Apply archive and online logs to the current point.
+5. Recreate missing system temporary tablespace files because temporary files are not backed up.
+6. Start service and verify the database.
+
 ```sql
 STARTUP CONTROL;
 ALTER DATABASE RESTORE DATABASE;
 ALTER DATABASE RECOVER DATABASE;
 ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
-STARTUP SERVICE;
+ALTER DATABASE mydb SERVICE;
 ```
 
-Restore from a backup tag:
+Runbook: incremental incomplete recovery by backup tag
+
+Use this when the target recovery point is an incremental backup tag, not the current point.
+
+1. Stop service and preserve a copy of the current `loganchor*`, `backupInfo`, and log files before replacing any files.
+2. Restore the historical `loganchor*` and `backupInfo` from the tag directory for the target point.
+3. Start `PROCESS` and disable incremental chunk change tracking because the restored historical `loganchor*` makes the existing `changeTracking` file invalid.
+4. Continue to `CONTROL`.
+5. Restore and recover with the same tag name. Do not restore from one tag and recover from another tag; tag mismatch fails.
+6. Recreate missing temporary data files before returning to service.
+7. Execute `META RESETLOGS`, start service, and take a full backup immediately because the database has been rewound.
+
+```bash
+cp /backup/altibase/incremental/WEDNESDAY/loganchor* $ALTIBASE_HOME/logs/
+cp /backup/altibase/incremental/WEDNESDAY/backupInfo $ALTIBASE_HOME/dbs/backupInfo
+```
 
 ```sql
+STARTUP PROCESS;
+ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING;
+STARTUP CONTROL;
+ALTER DATABASE RESTORE DATABASE FROM TAG 'WEDNESDAY';
+ALTER DATABASE RECOVER DATABASE FROM TAG 'WEDNESDAY';
+ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
+ALTER DATABASE mydb META RESETLOGS;
+ALTER DATABASE mydb SERVICE;
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
+```
+
+Runbook: incremental incomplete recovery with `UNTIL TIME` or `UNTIL CANCEL`
+
+Use this when the database must be recovered to a past time or to the last valid log before a missing or corrupt log. This runbook can start from the latest incremental chain or from a selected tag and then recover to a later point with logs.
+
+1. Stop service and preserve current recovery files.
+2. Restore the historical `loganchor*` and matching `backupInfo` for the intended past recovery point.
+3. Start `PROCESS`, disable incremental chunk change tracking, then continue to `CONTROL`.
+4. Restore the database from the selected incremental backup chain. Use `RESTORE DATABASE FROM TAG '<tag>'` if the recovery plan starts from a specific tag.
+5. Recover with exactly one incomplete recovery target: `UNTIL TIME '<yyyy-mm-dd:hh24:mi:ss>'` or `UNTIL CANCEL`.
+6. Recreate missing temporary data files.
+7. Execute `META RESETLOGS`, start service, and take a full backup immediately.
+
+```sql
+STARTUP PROCESS;
+ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING;
+STARTUP CONTROL;
 ALTER DATABASE RESTORE DATABASE FROM TAG 'TUESDAY';
-ALTER DATABASE RECOVER DATABASE FROM TAG 'TUESDAY';
+ALTER DATABASE RECOVER DATABASE UNTIL TIME '2026-05-13:17:55:00';
+ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
+ALTER DATABASE mydb META RESETLOGS;
+ALTER DATABASE mydb SERVICE;
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
+```
+
+```sql
+STARTUP PROCESS;
+ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING;
+STARTUP CONTROL;
+ALTER DATABASE RESTORE DATABASE;
+ALTER DATABASE RECOVER DATABASE UNTIL CANCEL;
+ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
+ALTER DATABASE mydb META RESETLOGS;
+ALTER DATABASE mydb SERVICE;
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
 ```
 
 Rules:
 
 - `ALTER DATABASE RESTORE DATABASE` restores data files from incremental backup files.
 - `ALTER DATABASE RECOVER DATABASE` applies archive logs after restoration.
-- If using tag-based incomplete restoration and recovery, use the same tag unless intentionally recovering from that tag to a later point with `UNTIL TIME` or `UNTIL CANCEL`.
+- For tag-based incomplete restoration and recovery, the `RESTORE DATABASE FROM TAG` and `RECOVER DATABASE FROM TAG` values must match.
+- If restoring from a tag and recovering beyond that tag with logs, restore from the tag and then use `RECOVER DATABASE UNTIL TIME` or `RECOVER DATABASE UNTIL CANCEL`.
 - `ALTER DATABASE RESTORE DATABASE UNTIL CANCEL` is not supported for incremental backup restoration.
+- After any incomplete recovery and `META RESETLOGS`, take a full backup before relying on later media recovery.
 
 ```mermaid
 flowchart TD
