@@ -321,7 +321,7 @@ Limits and defaults:
 
 - Precision is `1` through `38`.
 - Default precision is `38`.
-- Value range is approximately `-1E+120` through `1E+120`.
+- Value range for 7.1, 7.3, and 8.1 is approximately `-1E-120` through `1E+120`.
 
 Use when: approximate numeric behavior is acceptable.
 
@@ -1156,7 +1156,7 @@ Meaning: default `IN ROW` threshold, in bytes, for non-LOB variable columns in m
 
 Default: `32`.
 
-Dynamic Change Support: read-write; can be changed while Altibase is running.
+Dynamic Change Support: read-only/static; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
 
 Range: `[0, 4000]`.
 
@@ -1335,7 +1335,7 @@ WHERE name = 'SORT_AREA_SIZE';
 
 Meaning: maximum memory, in bytes, available to execute a single query statement.
 
-Default: `1G`.
+Default: 7.1 `1073741824` (`1G`); 7.3 and 8.1 `2147483648` (`2G`).
 
 Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
 
@@ -1353,7 +1353,7 @@ WHERE name = 'EXECUTE_STMT_MEMORY_MAXIMUM';
 
 Meaning: maximum memory, in bytes, available to prepare a query statement.
 
-Default: `100M`.
+Default: `200M`.
 
 Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
 
@@ -1560,7 +1560,7 @@ Default: `0`.
 
 Dynamic Change Support: read-only property default.
 
-Range: `[0, 3]`.
+Range: `[0, 2]`.
 
 Values:
 
@@ -1883,7 +1883,7 @@ Meaning: SSL/TLS listener port for client/server communication.
 
 Default: `20443`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`. After changing it, verify SSL/TLS listener and client connection behavior.
 
 Range: `[1024, 65535]`.
 
@@ -1955,7 +1955,7 @@ Version: 7.1, 7.3, and 8.1 documented property; verify exact behavior against th
 
 Meaning: controls case sensitivity when PSM refers to `RECORD` and `ROWTYPE` column names or label names.
 
-Default: `1`.
+Default: 7.1 `0`; 7.3 and 8.1 `1`.
 
 Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
 
@@ -1976,7 +1976,7 @@ WHERE name = 'PSM_CASE_SENSITIVE_MODE';
 
 ### Property Item: `LISTAGG_PRECISION`
 
-Version: documented in Altibase 7.3 supplemental source and Altibase 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
+Version: documented in Altibase 7.1, 7.3, and 8.1.
 
 Meaning: size of the `VARCHAR` returned by `LISTAGG`.
 
@@ -1984,7 +1984,7 @@ Default: `4000`.
 
 Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
 
-Range: `[1, 32000]`.
+Range: 7.1 `[0, 32000]`; 7.3 and 8.1 `[1, 32000]`.
 
 Check SQL:
 

@@ -40,6 +40,7 @@ Compared top-level Markdown manuals under these source roots:
 ## Source Quality Findings
 
 - English manual coverage is complete for the core manual set used by the 20 planned attachments, but English is not authoritative when a paired Korean manual differs.
+- Known conflict decision: Korean 7.1, 7.3, and Altibase 8.1 verified source General Reference manuals list the `FLOAT` range as `-1E-120` through `1E+120`, while English extraction had used `-1E+120` as the lower bound. Attachment `05_data_types_properties.md` should use the Korean-source lower bound for the covered versions.
 - Korean manuals generally pair with the same document families and are often slightly longer. Korean manual authority comes from the project source policy, not from line count alone.
 - Checked English manual roots had no `C:/` or `file://` matches.
 - Korean source roots contain absolute Windows or `file://` links in these files and should not be copied directly into attachments:
