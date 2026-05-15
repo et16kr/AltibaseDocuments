@@ -304,14 +304,17 @@ Source purpose: DB Link, Hadoop Connector, third-party connector setup and proce
 - 7.1:
   - `Manuals/Altibase_7.1/eng/DB Link User's Manual.md`
   - `Manuals/Altibase_7.1/eng/Hadoop Connector User's Manual.md`
+  - `Manuals/Tools/Altibase_release/kor/Altibase 3rd Party Connector Guide.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/DB Link User's Manual.md`
   - `Manuals/Altibase_7.3/eng/Hadoop Connector User's Manual.md`
   - `Manuals/Tools/Altibase_release/eng/Altibase 3rd Party Connector Guide.md`
+  - `Manuals/Tools/Altibase_release/kor/Altibase 3rd Party Connector Guide.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/DB Link User's Manual.md`
   - `Manuals/Altibase_trunk/eng/Hadoop Connector User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/Altibase 3rd Party Connector Guide.md`
+  - `Manuals/Tools/Altibase_trunk/kor/Altibase 3rd Party Connector Guide.md`
 
 ### 17_kubernetes_aku_cloud.md
 

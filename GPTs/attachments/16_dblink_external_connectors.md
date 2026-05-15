@@ -2,7 +2,7 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 DB Link and Altibase Hadoop Connector guidance.
+- 7.1: Based on Altibase 7.1 DB Link, Altibase Hadoop Connector guidance, and third-party connector guidance where the guide states an Altibase 7.1 or later baseline.
 - 7.3: Based on Altibase 7.3 DB Link, Altibase Hadoop Connector, and third-party connector guidance.
 - 8.1: Based on Altibase 8.1 verified source DB Link, Altibase Hadoop Connector, and third-party connector guidance.
 
@@ -16,12 +16,13 @@
 - How should DBeaver connect to Altibase, and how are common DBeaver issues handled?
 - How should Hibernate use `AltibaseDialect` and the Altibase JDBC driver?
 - How does OpenLDAP `back-sql` connect to Altibase through ODBC metadata mapping?
+- How should Oracle GoldenGate for Big Data target Altibase through its JDBC Handler?
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 DB Link User's Manual; Hadoop Connector User's Manual.
-- 7.3: Altibase 7.3 DB Link User's Manual; Hadoop Connector User's Manual; Altibase 3rd Party Connector Guide.
-- 8.1: Altibase 8.1 verified source DB Link User's Manual; Hadoop Connector User's Manual; Altibase 3rd Party Connector Guide.
+- 7.1: Altibase 7.1 DB Link User's Manual; Hadoop Connector User's Manual; Korean Altibase 3rd Party Connector Guide for 7.1-or-later and GoldenGate baseline statements.
+- 7.3: Altibase 7.3 DB Link User's Manual; Hadoop Connector User's Manual; Altibase 3rd Party Connector Guide, including Korean GoldenGate source.
+- 8.1: Altibase 8.1 verified source DB Link User's Manual; Hadoop Connector User's Manual; Altibase 3rd Party Connector Guide, including Korean GoldenGate source.
 
 ## Response Rules
 
@@ -33,6 +34,7 @@
 - Treat sample accounts such as `SYS` and `MANAGER` as placeholders. Advise users to use least-privilege accounts and protected secret handling.
 - For SSL/TLS, truststores, certificate verification, and ciphers, use `11_java_jdbc_spring.md` and `18_security_ssl_tls.md` for Altibase JDBC/SSL parameter names. This attachment gives connector workflow context and should not invent connector-specific TLS placement unless the connector accepts the documented Altibase JDBC URL or properties.
 - For generic JDBC URL attributes, Spring Boot, and Hibernate application code, cross-reference the Java/JDBC/Spring attachment.
+- GoldenGate scope is limited to Altibase as the target database through the Oracle GoldenGate for Big Data JDBC Handler. Do not provide Oracle GoldenGate or Oracle GoldenGate for Big Data installation and product-level configuration steps beyond the Altibase JDBC Handler properties shown here; the source says to use the Oracle GoldenGate product manuals for that material.
 
 ## Fast Decision Map
 
@@ -44,6 +46,7 @@ flowchart TD
   B -- GUI SQL client --> E[DBeaver]
   B -- ORM --> F[Hibernate]
   B -- LDAP directory backed by RDBMS --> G[OpenLDAP back-sql]
+  B -- changed data delivery to Altibase --> P[Oracle GoldenGate for Big Data]
   C --> H{Remote access style}
   H -- SELECT pushdown --> I[REMOTE_TABLE]
   H -- DML DDL DCL pass-through --> J[REMOTE_EXECUTE_IMMEDIATE]
@@ -64,11 +67,12 @@ Version block: 7.1
 - Hadoop Connector requirements are `JRE` or `JDK` 1.6 or later, Hadoop 1.0, Sqoop 1.4.4 or later, and Altibase 5.0 or later.
 - For DBeaver, the third-party connector guide states compatibility with Altibase Server 7.1.0 and later.
 - For Hibernate 6.4 Spring guidance, the dedicated Spring guide uses Altibase server 7.1.0.9.3 or later and Altibase JDBC driver 7.1.0.9.0 or later. With the 7.1 JDBC driver, add `lob_null_select=off` when Hibernate LOB features are used.
+- Oracle GoldenGate source guidance is based on a tested baseline of Oracle Database 12.2.0.1.0, Oracle GoldenGate 12.3.0.1.4, Oracle GoldenGate for Big Data 12.3.2.1, and Altibase 7.1.0.4.6.
 
 Version block: 7.3
 
 - `DB Link` and Hadoop Connector behavior is stable from 7.1 for the covered procedures.
-- Third-party connector guidance covers DBeaver and OpenLDAP; the 8.1 verified source adds a concise Hibernate connector chapter.
+- Third-party connector guidance covers DBeaver, OpenLDAP, and Oracle GoldenGate; the 8.1 verified source adds a concise Hibernate connector chapter.
 - For Hibernate 6.4 Spring guidance, the Altibase JDBC driver is available from Maven Central starting with Altibase 7.3.0.0.2, and `lob_null_select` defaults to `off`.
 
 Version block: 8.1
@@ -77,7 +81,7 @@ Version block: 8.1
 - `CREATE DATABASE LINK` supports `IF NOT EXISTS` in the Altibase 8.1 verified source.
 - `DROP DATABASE LINK` supports `IF EXISTS` in the Altibase 8.1 verified source.
 - The Altibase 8.1 verified source keeps the same DB Link architecture, AltiLinker configuration model, Hadoop Connector command model, and DBeaver/OpenLDAP connector guidance unless otherwise stated.
-- The Altibase 8.1 verified source third-party connector guide includes Hibernate connector guidance for `AltibaseDialect`.
+- The Altibase 8.1 verified source third-party connector guide includes Hibernate connector guidance for `AltibaseDialect` and Oracle GoldenGate for Big Data JDBC Handler guidance for Altibase as the target database.
 
 ## Connector Block Format
 
@@ -1441,6 +1445,77 @@ Verification:
 - Confirm `slapd` starts without SQL backend errors.
 - Run LDAP search/add/delete operations and verify corresponding Altibase table rows change as expected.
 
+## Connector Block: Oracle GoldenGate for Big Data
+
+Purpose: Oracle GoldenGate for Big Data can deliver source database changes to Altibase through the Generic JDBC API JDBC Handler.
+
+When to Use:
+
+- Use this block when Altibase is the target database for changes delivered by Oracle GoldenGate for Big Data.
+- Use Oracle GoldenGate product manuals for Oracle GoldenGate and Oracle GoldenGate for Big Data installation and product-level configuration.
+
+Required Pieces:
+
+- Source database supported by Oracle GoldenGate.
+- Oracle GoldenGate for the source database.
+- Oracle GoldenGate for Big Data.
+- Altibase target database.
+- Altibase JDBC driver JAR in the Oracle GoldenGate for Big Data Java Adapter classpath.
+
+Source-documented layouts:
+
+1. `[source database + Oracle GoldenGate] / [Oracle GoldenGate for Big Data] / [Altibase]`
+2. `[source database + Oracle GoldenGate + Oracle GoldenGate for Big Data] / [Altibase]`
+
+Setup:
+
+1. Configure Oracle GoldenGate and Oracle GoldenGate for Big Data with their product manuals.
+2. Configure the Replicat properties file, for example `dirprm/rjdbc.prm`, so `TARGETDB` loads `libggjava.so` and points to the Altibase JDBC handler properties file.
+3. In the `MAP` clause, double-quote the Altibase target user and table names.
+4. Configure the Java Adapter properties file, for example `dirprm/jdbc_altibase.props`, with the Altibase JDBC driver, JDBC URL, Altibase user, password, classpath, Java writer, logging, report interval, and boot options.
+
+Replicat properties shape:
+
+```bash
+TARGETDB LIBFILE libggjava.so SET property=dirprm/jdbc_altibase.props
+REPORTCOUNT EVERY 1 MINUTES, RATE
+GROUPTRANSOPS 1000
+MAP orclpdb.ogg_test.tablea, TARGET "<ALTIBASE_USER>"."<ALTIBASE_TABLE>";
+```
+
+Java Adapter properties shape:
+
+```properties
+gg.handlerlist=jdbcwriter
+gg.handler.jdbcwriter.type=jdbc
+gg.handler.jdbcwriter.DriverClass=Altibase.jdbc.driver.AltibaseDriver
+gg.handler.jdbcwriter.connectionURL=jdbc:Altibase://<host>:<port>/<database>
+gg.handler.jdbcwriter.userName=<altibase_user>
+gg.handler.jdbcwriter.password=<altibase_password>
+gg.classpath=<altibase_jdbc_jar_path>
+goldengate.userexit.writers=javawriter
+javawriter.stats.display=TRUE
+javawriter.stats.full=TRUE
+gg.log=log4j
+gg.log.level=INFO
+gg.report.time=30sec
+javawriter.bootoptions=-Xmx512m -Xms32m -Djava.class.path=.:ggjava/ggjava.jar:./dirprm
+```
+
+Cautions:
+
+- The source-tested versions are Oracle Database 12.2.0.1.0, Oracle GoldenGate 12.3.0.1.4, Oracle GoldenGate for Big Data 12.3.2.1, and Altibase 7.1.0.4.6.
+- Treat GoldenGate guidance as a tested connector baseline, not a general compatibility guarantee for all Oracle GoldenGate versions or source database types.
+- The source flags Oracle-to-Altibase data type compatibility as a test result. Verify character length semantics, `VARCHAR2` or `NVARCHAR2` values larger than Altibase `VARCHAR` or `NVARCHAR` limits, `TIMESTAMP` fractional-second precision, and `NCLOB` conversion to `NVARCHAR(10666)` before production use.
+- Do not reuse sample accounts or passwords. Use least-privilege Altibase target users and protected secret handling.
+
+Verification:
+
+- Confirm Oracle GoldenGate for Big Data can load the Java Adapter properties file and the Altibase JDBC driver.
+- Confirm the JDBC URL, target user, password, and classpath are correct for the Altibase target.
+- Confirm replicated rows reach the quoted Altibase target table.
+- Compare values for source columns that use character-length-sensitive, timestamp, LOB, or NCLOB data types before broadening the connector mapping.
+
 ## Troubleshooting Checklist
 
 DB Link failures:
@@ -1488,3 +1563,10 @@ OpenLDAP failures:
 - Confirm `dbuser` and `dbpasswd` are valid Altibase credentials.
 - Confirm mapping metadata uses schema names loaded in OpenLDAP.
 - Enable ODBC trace only while diagnosing; turn it off when done.
+
+Oracle GoldenGate failures:
+
+- Confirm Oracle GoldenGate for Big Data can load `libggjava.so` and the Java Adapter properties file named by `TARGETDB`.
+- Confirm `gg.handler.jdbcwriter.DriverClass`, `gg.handler.jdbcwriter.connectionURL`, `gg.handler.jdbcwriter.userName`, `gg.handler.jdbcwriter.password`, and `gg.classpath`.
+- Confirm the Altibase target user and table names in the `MAP` clause are double-quoted.
+- For missing, truncated, or rounded values, check the source-documented Oracle-to-Altibase data type compatibility cautions before changing connector settings.
