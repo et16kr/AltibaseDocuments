@@ -109,11 +109,17 @@ Required Pieces:
 
 - Local Altibase server.
 - Remote database server reachable from the local server host.
-- `AltiLinker` process for heterogeneous links.
+- `AltiLinker` process for DB Link access in the 7.1, 7.3, and Altibase 8.1 verified source target set.
 - Remote DBMS JDBC driver installed on the same host where `AltiLinker` runs.
 - `JRE` compatible with `AltiLinker` and the remote JDBC driver.
 - `altibase.properties` and `dblink.conf` configured.
 - `CREATE DATABASE LINK` privilege for link creation; `DROP DATABASE LINK` privilege for link deletion.
+
+DB Link Java compatibility note:
+
+- Altibase 7.1 DB Link is listed for Java 5 through Java 17-21. Java 9 or later requires Altibase 7.1.0.2.5 or later.
+- Altibase 7.3 DB Link is listed for Java 8 through Java 17-21; Java 5, Java 6, and Java 7 are not supported for DB Link.
+- Altibase 8.1 verified source uses Java SE 1.8 examples for DB Link, and `AltiLinker` requires JRE 1.8 or later. Altibase 8.1 release notes state JDK 1.8 or later compatibility. Also match the remote JDBC driver's Java requirement.
 
 DB Link architecture:
 
@@ -137,12 +143,12 @@ Core process:
 
 Link types:
 
-- Homogeneous Link: remote server is an Altibase server using the same protocol version. It does not pass through `AltiLinker` and is faster for frequent remote access. Altibase 6.5.1 does not support Homogeneous Links.
-- Heterogeneous Link: remote server is a heterogeneous DBMS, or an Altibase server whose version differs from the local server. It uses `AltiLinker` and JDBC.
+- Homogeneous Link: historical same-protocol Altibase-to-Altibase path that bypasses `AltiLinker`. Altibase 6.5.1 or later does not support Homogeneous Link, so do not plan it for Altibase 7.1, 7.3, or Altibase 8.1 verified source.
+- Heterogeneous Link: documented path for the current target versions. It uses `AltiLinker` and JDBC for heterogeneous DBMSs and for Altibase remote servers, including same-version Altibase links in the 7.1, 7.3, and Altibase 8.1 verified source target set.
 
 Setup:
 
-1. Install a compatible `JRE` on the local server host.
+1. Install a compatible `JRE` on the local server host, using the DB Link Java compatibility note above.
 2. Install the remote DBMS JDBC driver on the local server host where `AltiLinker` runs.
 3. Set Java environment variables, for example:
 

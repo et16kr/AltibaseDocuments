@@ -321,6 +321,13 @@ Source purpose: JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, Hib
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
   - `3rd Party Guide for Altibase/eng/Spring Data JPA User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/eng/Spring Data JPA With Hibernate 6.4 User's Guide for Altibase.md`
+- Korean manual authority/check:
+  - `Manuals/Altibase_7.1/kor/JDBC User's Manual.md`
+  - `Manuals/Altibase_7.1/kor/Adapter for JDBC User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/JDBC User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/Adapter for JDBC User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/JDBC User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/Adapter for JDBC User's Manual.md`
 - Korean supplemental technical documents:
   - `Technical Documents/kor/JavaCompatibility.md`
 
@@ -403,7 +410,7 @@ Source purpose: Migration Center, Adapter for Oracle, Oracle-to-Altibase convers
 
 ### 16_dblink_external_connectors.md
 
-Source purpose: DB Link, Hadoop Connector, third-party connector setup and procedures.
+Source purpose: DB Link, DB Link Java compatibility, Hadoop Connector, third-party connector setup and procedures.
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/DB Link User's Manual.md`
@@ -419,6 +426,12 @@ Source purpose: DB Link, Hadoop Connector, third-party connector setup and proce
   - `Manuals/Altibase_trunk/eng/Hadoop Connector User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/Altibase 3rd Party Connector Guide.md`
   - `Manuals/Tools/Altibase_trunk/kor/Altibase 3rd Party Connector Guide.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/DB Link User's Manual.md`
+  - `Technical Documents/kor/JavaCompatibility.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 17_kubernetes_aku_cloud.md
 

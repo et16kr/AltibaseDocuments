@@ -297,8 +297,8 @@ props.put("sessionfailover", "on");
 Failover attribute block: `alternateservers`
 
 - Purpose: server list used for connection failover.
-- Format: `(host_name:port_number[/dbname], host_name:port_number[/dbname])`.
-- Limit: up to two alternate servers.
+- Format: `[ host_name:port_number[/dbname] [, host_name:port_number[/dbname] ]*`.
+- Example value: `(db1.example.com:20300, db2.example.com:20300)`.
 
 Failover attribute block: `connectionretrycount`, `connectionretrydelay`
 
@@ -358,10 +358,12 @@ Search order for `altibase_cli.ini`:
 DataSource URL examples:
 
 ```text
-jdbc:Altibase://appdb
-jdbc:Altibase://appdb:20301
-jdbc:Altibase://appdb:20301?user=app_user&password=secret
+jdbc:Altibase://datasource_name
+jdbc:Altibase://datasource_name:20301
+jdbc:Altibase://datasource_name:20301?sys=user&password=pwd
 ```
+
+The third form preserves the documented literal DSN URL example. For ordinary application login properties, use `user` and `password` or a Java `Properties` object as shown above.
 
 `AltibaseConnectionPoolDataSource` properties:
 
@@ -1361,7 +1363,8 @@ Adapter DDL rule:
 
 Adapter LOB rules:
 
-- LOB support starts from Adapter for JDBC 7.1.0.7.0.
+- For Altibase 7.1, LOB support starts from Adapter for JDBC 7.1.0.6.9.
+- For Altibase 7.3 and Altibase 8.1 verified source, LOB support starts from Adapter for JDBC 7.1.0.7.0.
 - Set `ADAPTER_LOB_TYPE_SUPPORT=1` to replicate `CLOB` or `BLOB`.
 - Tables containing LOB columns are constrained by `OTHER_DATABASE_ERROR_RETRY_COUNT`, `OTHER_DATABASE_SKIP_ERROR`, and `OTHER_DATABASE_BATCH_DML_MAX_SIZE`.
 - When LOB data is modified through `SELECT FOR UPDATE` on the source Altibase server, commit the transaction before relying on replication.
