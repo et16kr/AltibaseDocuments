@@ -681,63 +681,540 @@ Atomic Batch:
 
 SQLSTATE structure:
 
+- Read SQLSTATE from `SQLException.getSQLState()`. Do not derive SQLSTATE from the Altibase vendor error number.
 - First two characters: class.
 - Last three characters: subclass.
+- The JDBC SQL States table is organized as class plus subclass. For example, class `08` plus subclass `S01` is SQLSTATE `08S01`.
 
 SQLSTATE block: class `08` connection exception
 
-- `08S01`: communication link failure.
-- `08F01`: failover completed.
-- `08F02`: invalid format for alternate servers.
-- `08U01`: invalid connection URL.
-- `08H01`: unknown host.
-- `08D01`: no available DataSource configurations.
-- `08K01` through `08K08`: SSL/TLS keystore, algorithm, or key-management errors.
-- `08M01`: mandatory properties supported by the client version are not supported by the server version.
+- Class meaning: connection exception.
+- Troubleshooting focus: capture JDBC URL, host, port, alternate-server or failover settings, DataSource configuration, SSL/TLS properties, driver version, and server version.
+
+SQLSTATE subclass block: `08001`
+
+- Class/subclass: `08` / `001`.
+- Meaning: SQL-client unable to establish SQL-connection.
+
+SQLSTATE subclass block: `08006`
+
+- Class/subclass: `08` / `006`.
+- Meaning: connection failure.
+
+SQLSTATE subclass block: `08S01`
+
+- Class/subclass: `08` / `S01`.
+- Meaning: communication link failure.
+
+SQLSTATE subclass block: `08P01`
+
+- Class/subclass: `08` / `P01`.
+- Meaning: invalid packet header version.
+
+SQLSTATE subclass block: `08F01`
+
+- Class/subclass: `08` / `F01`.
+- Meaning: failover completed.
+
+SQLSTATE subclass block: `08F02`
+
+- Class/subclass: `08` / `F02`.
+- Meaning: invalid format for alternate servers.
+
+SQLSTATE subclass block: `08P02`
+
+- Class/subclass: `08` / `P02`.
+- Meaning: invalid packet next header type.
+
+SQLSTATE subclass block: `08P03`
+
+- Class/subclass: `08` / `P03`.
+- Meaning: invalid packet sequence number.
+
+SQLSTATE subclass block: `08P04`
+
+- Class/subclass: `08` / `P04`.
+- Meaning: invalid packet serial number.
+
+SQLSTATE subclass block: `08P05`
+
+- Class/subclass: `08` / `P05`.
+- Meaning: invalid packet module ID.
+
+SQLSTATE subclass block: `08P06`
+
+- Class/subclass: `08` / `P06`.
+- Meaning: invalid packet module version.
+
+SQLSTATE subclass block: `08P07`
+
+- Class/subclass: `08` / `P07`.
+- Meaning: invalid operation protocol.
+
+SQLSTATE subclass block: `08P08`
+
+- Class/subclass: `08` / `P08`.
+- Meaning: invalid property ID.
+
+SQLSTATE subclass block: `08U01`
+
+- Class/subclass: `08` / `U01`.
+- Meaning: invalid connection URL.
+
+SQLSTATE subclass block: `08H01`
+
+- Class/subclass: `08` / `H01`.
+- Meaning: unknown host.
+
+SQLSTATE subclass block: `08D01`
+
+- Class/subclass: `08` / `D01`.
+- Meaning: no available DataSource configurations.
+
+SQLSTATE subclass block: `08K01`
+
+- Class/subclass: `08` / `K01`.
+- Meaning: unsupported algorithm.
+
+SQLSTATE subclass block: `08K02`
+
+- Class/subclass: `08` / `K02`.
+- Meaning: could not create keystore instance.
+
+SQLSTATE subclass block: `08K03`
+
+- Class/subclass: `08` / `K03`.
+- Meaning: could not load keystore.
+
+SQLSTATE subclass block: `08K04`
+
+- Class/subclass: `08` / `K04`.
+- Meaning: invalid keystore URL.
+
+SQLSTATE subclass block: `08K05`
+
+- Class/subclass: `08` / `K05`.
+- Meaning: could not open keystore file.
+
+SQLSTATE subclass block: `08K06`
+
+- Class/subclass: `08` / `K06`.
+- Meaning: key management exception occurred.
+
+SQLSTATE subclass block: `08K07`
+
+- Class/subclass: `08` / `K07`.
+- Meaning: could not retrieve key from keystore.
+
+SQLSTATE subclass block: `08K08`
+
+- Class/subclass: `08` / `K08`.
+- Meaning: default algorithm definition invalid.
+
+SQLSTATE subclass block: `08M01`
+
+- Class/subclass: `08` / `M01`.
+- Meaning: mandatory properties supported by the client version are not supported by the server version.
 
 SQLSTATE block: class `07` dynamic SQL error
 
-- `07R01`: statement returns result sets.
-- `07Q01`: invalid query string.
-- `07S01`: statement has not been executed yet.
+- Class meaning: dynamic SQL error.
+- Troubleshooting focus: capture the exact SQL string, statement object type, and whether the statement was executed before result access.
+
+SQLSTATE subclass block: `07R01`
+
+- Class/subclass: `07` / `R01`.
+- Meaning: statement returns result sets.
+
+SQLSTATE subclass block: `07Q01`
+
+- Class/subclass: `07` / `Q01`.
+- Meaning: invalid query string.
+
+SQLSTATE subclass block: `07S01`
+
+- Class/subclass: `07` / `S01`.
+- Meaning: statement has not been executed yet.
+
+SQLSTATE block: class `02` no data
+
+- Class meaning: no data.
+- Troubleshooting focus: capture whether the JDBC method expected a result set or update count.
+
+SQLSTATE subclass block: `02001`
+
+- Class/subclass: `02` / `001`.
+- Meaning: the SQL statement does not produce a result set.
 
 SQLSTATE block: class `01` warning
 
-- `01S00`: invalid connection string attribute.
-- `01B00`: batch update exception.
-- `01B01`: no batch jobs.
-- `01B02`: existing batch jobs.
-- `01B03`: query cannot be executed while batch jobs are executing.
-- `01B04`: binding cannot be performed while batch jobs are executing.
-- `01B05`: fetch cannot be executed during batch update.
-- `01C01`: statement already closed.
-- `01C02`: result set already closed.
-- `01C03`: stream already closed.
-- `01R02`: too many rows requested in one fetch operation.
+- Class meaning: warning.
+- Troubleshooting focus: capture connection attributes, batch state, cursor/result-set state, stream state, and fetch size.
+
+SQLSTATE subclass block: `01001`
+
+- Class/subclass: `01` / `001`.
+- Meaning: cursor operation conflict.
+
+SQLSTATE subclass block: `01S00`
+
+- Class/subclass: `01` / `S00`.
+- Meaning: invalid connection string attribute.
+
+SQLSTATE subclass block: `01B00`
+
+- Class/subclass: `01` / `B00`.
+- Meaning: batch update exception occurred.
+
+SQLSTATE subclass block: `01B01`
+
+- Class/subclass: `01` / `B01`.
+- Meaning: no batch jobs.
+
+SQLSTATE subclass block: `01B02`
+
+- Class/subclass: `01` / `B02`.
+- Meaning: existing batch jobs.
+
+SQLSTATE subclass block: `01B03`
+
+- Class/subclass: `01` / `B03`.
+- Meaning: query cannot be executed while batch jobs are executing.
+
+SQLSTATE subclass block: `01B04`
+
+- Class/subclass: `01` / `B04`.
+- Meaning: binding cannot be performed while batch jobs are executing.
+
+SQLSTATE subclass block: `01B05`
+
+- Class/subclass: `01` / `B05`.
+- Meaning: fetch operation cannot be executed during batch update.
+
+SQLSTATE subclass block: `01B31`
+
+- Class/subclass: `01` / `B31`.
+- Meaning: too many added batch jobs.
+
+SQLSTATE subclass block: `01C01`
+
+- Class/subclass: `01` / `C01`.
+- Meaning: statement has already been closed.
+
+SQLSTATE subclass block: `01C02`
+
+- Class/subclass: `01` / `C02`.
+- Meaning: result set has already been closed.
+
+SQLSTATE subclass block: `01C03`
+
+- Class/subclass: `01` / `C03`.
+- Meaning: stream has already been closed.
+
+SQLSTATE subclass block: `0100D`
+
+- Class/subclass: `01` / `00D`.
+- Meaning: additional result sets returned.
+
+SQLSTATE subclass block: `01R01`
+
+- Class/subclass: `01` / `R01`.
+- Meaning: result set does not retain data.
+
+SQLSTATE subclass block: `01R02`
+
+- Class/subclass: `01` / `R02`.
+- Meaning: too many rows requested in one fetch operation.
+
+SQLSTATE subclass block: `01S02`
+
+- Class/subclass: `01` / `S02`.
+- Meaning: option value changed.
+
+SQLSTATE subclass block: `01V01`
+
+- Class/subclass: `01` / `V01`.
+- Meaning: invalid value for bitset.
 
 SQLSTATE block: class `0A` feature not supported
 
-- `0A000`: feature not supported.
-- Common causes: `NCLOB` APIs such as `createNClob()`, unsupported ResultSet mode, or JDBC specification violation.
+- Class meaning: feature not supported.
+- Troubleshooting focus: capture the JDBC method, cursor mode, transaction mode, and target driver version.
+
+SQLSTATE subclass block: `0A000`
+
+- Class/subclass: `0A` / `000`.
+- Meaning: feature not supported.
+
+SQLSTATE subclass block: `0AC01`
+
+- Class/subclass: `0A` / `C01`.
+- Meaning: cannot change the name of the database.
+
+SQLSTATE subclass block: `0AC02`
+
+- Class/subclass: `0A` / `C02`.
+- Meaning: read-only mode in transaction is not supported.
+
+SQLSTATE subclass block: `0AT01`
+
+- Class/subclass: `0A` / `T01`.
+- Meaning: operation is not supported on forward-only mode.
+
+SQLSTATE subclass block: `0AT02`
+
+- Class/subclass: `0A` / `T02`.
+- Meaning: operation is not supported on read-only mode.
+
+SQLSTATE subclass block: `0AV01`
+
+- Class/subclass: `0A` / `V01`.
+- Meaning: JDBC specification violation.
+
+SQLSTATE block: class `42` syntax error or access rule violation
+
+- Class meaning: syntax error or access rule violation.
+- Troubleshooting focus: capture the SQL text, parameter binding types, and column names used by getters or setters.
+
+SQLSTATE subclass block: `42001`
+
+- Class/subclass: `42` / `001`.
+- Meaning: invalid type conversion.
+
+SQLSTATE subclass block: `42S22`
+
+- Class/subclass: `42` / `S22`.
+- Meaning: column not found.
+
+SQLSTATE block: class `JI` JDBC internal error
+
+- Class meaning: JDBC internal error.
+- Troubleshooting focus: capture the driver version, method call sequence, packet/protocol context, and a reproducible call stack before escalating.
+
+SQLSTATE subclass block: `JI000`
+
+- Class/subclass: `JI` / `000`.
+- Meaning: JDBC internal error.
+
+SQLSTATE subclass block: `JID01`
+
+- Class/subclass: `JI` / `D01`.
+- Meaning: overflow occurred on a dynamic array defined by JDBC.
+
+SQLSTATE subclass block: `JID02`
+
+- Class/subclass: `JI` / `D02`.
+- Meaning: underflow occurred on a dynamic array defined by JDBC.
+
+SQLSTATE subclass block: `JID03`
+
+- Class/subclass: `JI` / `D03`.
+- Meaning: result set was created by the JDBC driver's internal statement.
+
+SQLSTATE subclass block: `JID04`
+
+- Class/subclass: `JI` / `D04`.
+- Meaning: connection thread is interrupted.
+
+SQLSTATE subclass block: `JID05`
+
+- Class/subclass: `JI` / `D05`.
+- Meaning: remaining data exceeds the maximum size of the primitive type.
+
+SQLSTATE subclass block: `JIP01`
+
+- Class/subclass: `JI` / `P01`.
+- Meaning: packet operation has been twisted.
+
+SQLSTATE subclass block: `JII01`
+
+- Class/subclass: `JI` / `I01`.
+- Meaning: invalid method invocation.
+
+SQLSTATE block: class `21` cardinality violation
+
+- Class meaning: cardinality violation.
+- Troubleshooting focus: compare the INSERT target column list with the value list.
+
+SQLSTATE subclass block: `21S01`
+
+- Class/subclass: `21` / `S01`.
+- Meaning: insert value list does not match column list.
 
 SQLSTATE block: class `22` data exception
 
-- `22000`: data exception.
-- `22004`: null value not allowed.
-- `22023`: invalid parameter value.
-- `22P01`: insufficient number of parameters.
-- `22P02`: `IN` type parameter needed.
-- `22P03`: `OUT` type parameter needed.
-- `22L01`: actual LOB data length differs from written LOB data length.
+- Class meaning: data exception.
+- Troubleshooting focus: capture Java source type, target SQL type, parameter index or column name, LOB length, stream source, and binding direction.
+
+SQLSTATE subclass block: `22000`
+
+- Class/subclass: `22` / `000`.
+- Meaning: data exception.
+
+SQLSTATE subclass block: `22004`
+
+- Class/subclass: `22` / `004`.
+- Meaning: null value not allowed.
+
+SQLSTATE subclass block: `22023`
+
+- Class/subclass: `22` / `023`.
+- Meaning: invalid parameter value.
+
+SQLSTATE subclass block: `22P01`
+
+- Class/subclass: `22` / `P01`.
+- Meaning: insufficient number of parameters.
+
+SQLSTATE subclass block: `22P02`
+
+- Class/subclass: `22` / `P02`.
+- Meaning: `IN` type parameter needed.
+
+SQLSTATE subclass block: `22P03`
+
+- Class/subclass: `22` / `P03`.
+- Meaning: `OUT` type parameter needed.
+
+SQLSTATE subclass block: `22P04`
+
+- Class/subclass: `22` / `P04`.
+- Meaning: no column needs a bind parameter.
+
+SQLSTATE subclass block: `22V01`
+
+- Class/subclass: `22` / `V01`.
+- Meaning: statement ID mismatch.
+
+SQLSTATE subclass block: `22S01`
+
+- Class/subclass: `22` / `S01`.
+- Meaning: error occurred from `InputStream`.
+
+SQLSTATE subclass block: `22L01`
+
+- Class/subclass: `22` / `L01`.
+- Meaning: actual LOB data length differs from the LOB data length written into the communication buffer.
+
+SQLSTATE block: class `25` invalid transaction state
+
+- Class meaning: invalid transaction state.
+- Troubleshooting focus: capture transaction mode, branch transaction state, and XA context if used.
+
+SQLSTATE subclass block: `25002`
+
+- Class/subclass: `25` / `002`.
+- Meaning: branch transaction already active.
+
+SQLSTATE block: class `3B` savepoint exception
+
+- Class meaning: savepoint exception.
+- Troubleshooting focus: capture autocommit mode, savepoint name, and whether the savepoint is named or unnamed.
+
+SQLSTATE subclass block: `3BS01`
+
+- Class/subclass: `3B` / `S01`.
+- Meaning: cannot set savepoint at auto-commit mode.
+
+SQLSTATE subclass block: `3BV01`
+
+- Class/subclass: `3B` / `V01`.
+- Meaning: invalid savepoint name.
+
+SQLSTATE subclass block: `3BV02`
+
+- Class/subclass: `3B` / `V02`.
+- Meaning: invalid savepoint.
+
+SQLSTATE subclass block: `3BN01`
+
+- Class/subclass: `3B` / `N01`.
+- Meaning: operation is not supported on named savepoint.
+
+SQLSTATE subclass block: `3BN02`
+
+- Class/subclass: `3B` / `N02`.
+- Meaning: operation is not supported on unnamed savepoint.
+
+SQLSTATE block: class `3F` invalid schema name
+
+- Class meaning: invalid schema name.
+- Troubleshooting focus: capture schema-related calls and explain-plan mode before assuming a server-side schema object issue.
+
+SQLSTATE subclass block: `3F000`
+
+- Class/subclass: `3F` / `000`.
+- Meaning: invalid schema name.
+
+SQLSTATE subclass block: class `3F`, listed subclass `EP`
+
+- Class/subclass: `3F` / `EP` as listed in the JDBC SQL States table. Because SQLSTATE is normally five characters, preserve the exact driver-reported value instead of padding or rewriting this source-listed subclass.
+- Meaning: explain plan error.
+
+SQLSTATE subclass block: `3FS01`
+
+- Class/subclass: `3F` / `S01`.
+- Meaning: `EXPLAIN PLAN` is set to `OFF`.
 
 SQLSTATE block: class `HY` general error
 
-- `HY000`: too many allocated statements.
-- `HY007`: associated statement is not prepared.
-- `HY011`: attribute cannot be set now.
-- `HY090`: invalid string or buffer length.
-- `HY109`: invalid cursor position.
-- `HYT00`: timeout expired.
+- Class meaning: general error.
+- Troubleshooting focus: capture statement allocation count, preparation state, attribute-setting sequence, buffer length, cursor position, result-set emptiness, and timeout settings.
+
+SQLSTATE subclass block: `HY000`
+
+- Class/subclass: `HY` / `000`.
+- Meaning: too many allocated statements.
+
+SQLSTATE subclass block: `HY007`
+
+- Class/subclass: `HY` / `007`.
+- Meaning: associated statement is not prepared.
+
+SQLSTATE subclass block: `HY011`
+
+- Class/subclass: `HY` / `011`.
+- Meaning: attribute cannot be set now.
+
+SQLSTATE subclass block: `HY090`
+
+- Class/subclass: `HY` / `090`.
+- Meaning: invalid string or buffer length.
+
+SQLSTATE subclass block: `HY109`
+
+- Class/subclass: `HY` / `109`.
+- Meaning: invalid cursor position.
+
+SQLSTATE subclass block: `HYR01`
+
+- Class/subclass: `HY` / `R01`.
+- Meaning: empty `ResultSet`.
+
+SQLSTATE subclass block: `HYT00`
+
+- Class/subclass: `HY` / `T00`.
+- Meaning: timeout expired.
+
+SQLSTATE block: class `XA` XA error
+
+- Class meaning: XA error.
+- Troubleshooting focus: capture XA open, close, or recover call context and transaction manager logs.
+
+SQLSTATE subclass block: `XAF01`
+
+- Class/subclass: `XA` / `F01`.
+- Meaning: XA open failed.
+
+SQLSTATE subclass block: `XAF02`
+
+- Class/subclass: `XA` / `F02`.
+- Meaning: XA close failed.
+
+SQLSTATE subclass block: `XAF03`
+
+- Class/subclass: `XA` / `F03`.
+- Meaning: XA recover failed.
 
 ## Adapter For JDBC
 
