@@ -105,7 +105,7 @@ Generation notes:
 - Only `SYS` or a user with `CREATE TABLESPACE` can create these tablespaces. `ALTER TABLESPACE` and `DROP TABLESPACE` require the matching system privilege.
 - Disk tablespaces store permanent disk tables and disk indexes. If `DISK` and `DATA` are omitted, the ordinary permanent form is still a disk data tablespace.
 - Disk `DATAFILE` and temporary `TEMPFILE` paths should be absolute paths. Use `REUSE` only when overwriting the existing file is intentional.
-- If disk `SIZE`, `NEXT`, or `MAXSIZE` is omitted, Altibase derives defaults from `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE`. If temporary file values are omitted, check `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
+- Always generate explicit disk datafile `SIZE`, `NEXT`, and `MAXSIZE` values instead of relying on omitted-size defaults. If temporary file values are omitted, check `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
 - Disk `EXTENTSIZE` must align with the disk page size. `SEGMENT MANAGEMENT` defaults from `DEFAULT_SEGMENT_MANAGEMENT_TYPE` when omitted.
 - Memory tablespace `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. `AUTOEXTEND OFF` is the default.
 - Memory `MAXSIZE UNLIMITED` is still bounded by available memory and `MEM_MAX_DB_SIZE`. If `CHECKPOINT PATH` is omitted, Altibase uses `MEM_DB_DIR`.
@@ -118,7 +118,7 @@ Tablespace generation checklist:
 
 - Version: if target is 7.1 or 7.3, omit `IF NOT EXISTS`; if target is 8.1, `IF NOT EXISTS` is allowed but still does not validate that an existing tablespace has the intended attributes.
 - Storage target: use disk for persistent large tables and disk indexes, memory for persistent hot data, volatile for restart-discardable high-speed data and `GLOBAL TEMPORARY TABLE` storage, and temporary for disk work space.
-- Size units: keep explicit units (`K`, `M`, `G`) in generated SQL. For memory and volatile tablespaces, choose values that are multiples of the allocation unit.
+- Size units: keep explicit units (`K`, `M`, `G`) in generated SQL. For memory and volatile tablespaces, query `EXPAND_CHUNK_PAGE_COUNT` and choose `SIZE`, `AUTOEXTEND NEXT`, and memory `SPLIT EACH` values that are multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. The examples below use 100M-aligned values, which match the documented default allocation unit; recalculate if the database was created with a different value.
 - Filesystem: use absolute `DATAFILE` and `TEMPFILE` paths, confirm free space for initial size plus autoextend growth, and confirm the Altibase OS user can create or reuse the files.
 - Checkpoint paths: for memory tablespaces, confirm checkpoint directories exist and are writable before `CREATE MEMORY TABLESPACE` or checkpoint path `ALTER TABLESPACE`.
 - User assignment: after creating application tablespaces, set `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, and `ACCESS tablespace_name ON` with `CREATE USER` or `ALTER USER`.
@@ -949,14 +949,14 @@ EXTENTSIZE 512K
 SEGMENT MANAGEMENT AUTO;
 
 CREATE MEMORY DATA TABLESPACE app_mem_tbs
-SIZE 512M
-AUTOEXTEND ON NEXT 128M MAXSIZE 4G
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE 4000M
 CHECKPOINT PATH '/data/altibase/chkpt01', '/data/altibase/chkpt02'
-SPLIT EACH 512M;
+SPLIT EACH 500M;
 
 CREATE VOLATILE DATA TABLESPACE app_vol_tbs
-SIZE 256M
-AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE 1000M;
 
 CREATE TEMPORARY TABLESPACE app_temp_tbs
 TEMPFILE '/data/altibase/dbs/app_temp01.tmp' SIZE 512M
@@ -973,14 +973,14 @@ AUTOEXTEND ON NEXT 256M MAXSIZE 20G
 SEGMENT MANAGEMENT AUTO;
 
 CREATE MEMORY DATA TABLESPACE IF NOT EXISTS app_mem_tbs
-SIZE 512M
-AUTOEXTEND ON NEXT 128M MAXSIZE 4G
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE 4000M
 CHECKPOINT PATH '/data/altibase/chkpt01', '/data/altibase/chkpt02'
-SPLIT EACH 512M;
+SPLIT EACH 500M;
 
 CREATE VOLATILE DATA TABLESPACE IF NOT EXISTS app_vol_tbs
-SIZE 256M
-AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE 1000M;
 
 CREATE TEMPORARY TABLESPACE IF NOT EXISTS app_temp_tbs
 TEMPFILE '/data/altibase/dbs/app_temp01.tmp' SIZE 512M
@@ -1011,10 +1011,10 @@ Alter memory and volatile growth, and manage memory checkpoint paths:
 
 ```sql
 ALTER TABLESPACE app_mem_tbs
-ALTER AUTOEXTEND ON NEXT 256M MAXSIZE 8G;
+ALTER AUTOEXTEND ON NEXT 100M MAXSIZE 8000M;
 
 ALTER TABLESPACE app_vol_tbs
-ALTER AUTOEXTEND ON NEXT 128M MAXSIZE 2G;
+ALTER AUTOEXTEND ON NEXT 100M MAXSIZE 2000M;
 
 STARTUP PROCESS;
 STARTUP CONTROL;
@@ -1085,6 +1085,8 @@ Create an application schema, assign default storage, and grant only required DD
 
 Password case note: unquoted lowercase passwords are uppercased by default. Case-sensitive lowercase or mixed-case passwords require `CASE_SENSITIVE_PASSWORD = 1` and a quoted password in `CREATE USER` or `ALTER USER`.
 
+Executor prerequisites: run these user, role, and grant examples as `SYS`, or as an account with `CREATE USER`, `CREATE ROLE`, `GRANT ANY PRIVILEGES`, `GRANT ANY ROLE`, and object-owner or object privilege `WITH GRANT OPTION` authority for the named object grants.
+
 ```sql
 CREATE USER app IDENTIFIED BY app_password
 DEFAULT TABLESPACE app_mem_tbs
@@ -1127,9 +1129,11 @@ For a strict runtime account, audit the automatically granted baseline privilege
 ```sql
 REVOKE CREATE TABLE, CREATE SEQUENCE, CREATE PROCEDURE, CREATE VIEW,
        CREATE TRIGGER, CREATE SYNONYM, CREATE MATERIALIZED VIEW,
-       CREATE LIBRARY
+       CREATE DATABASE LINK, CREATE LIBRARY
 FROM app_runtime;
 ```
+
+Altibase automatically grants new general users `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, `CREATE DATABASE LINK`, and `CREATE LIBRARY`. For runtime accounts, keep `CREATE SESSION` only when possible and revoke unused DDL privileges.
 
 Verify users and grants:
 
@@ -1181,6 +1185,21 @@ ORDER BY t.table_name, p.priv_name;
 Least-privilege review queries:
 
 ```sql
+SELECT grantee.user_name AS grantee_name, p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+  AND grantee.user_name = 'APP_RUNTIME'
+  AND p.priv_name IN (
+      'CREATE TABLE', 'CREATE SEQUENCE', 'CREATE PROCEDURE',
+      'CREATE VIEW', 'CREATE TRIGGER', 'CREATE SYNONYM',
+      'CREATE MATERIALIZED VIEW', 'CREATE DATABASE LINK',
+      'CREATE LIBRARY'
+  )
+ORDER BY p.priv_name;
+
 SELECT grantee.user_name AS grantee_name, p.priv_name
 FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
      SYSTEM_.SYS_USERS_ grantee,

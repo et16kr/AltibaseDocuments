@@ -309,6 +309,8 @@ Use `CASCADE` only when the user's schema objects should also be removed.
 
 Role operation block:
 
+Executor prerequisites: run role and grant examples as `SYS`, or as an account with the needed authority. Role creation requires `CREATE ROLE`; system privilege grants require `GRANT ANY PRIVILEGES`; role grants require `GRANT ANY ROLE`; object grants require the object owner or object privilege `WITH GRANT OPTION`.
+
 ```sql
 CREATE ROLE app_runtime_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON app_owner.orders TO app_runtime_role;
@@ -344,6 +346,8 @@ Object privilege support blocks:
 
 Privilege operation block: grant and revoke
 
+Executor prerequisites are the same as for the role operation block. Confirm the grantor authority before running operational grant scripts.
+
 ```sql
 CREATE ROLE app_dba_role;
 GRANT CREATE TABLESPACE, ALTER TABLESPACE TO app_dba_role;
@@ -366,7 +370,7 @@ Revocation rules:
 - Use `CASCADE CONSTRAINTS` when revoking `REFERENCES` or `ALL` must also drop dependent referential constraints.
 - Review dependent sessions and application behavior before revoking a role used by active users.
 
-When a general user is created, Altibase automatically grants baseline privileges such as `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, and `CREATE LIBRARY`. Still state explicit grants in operational answers so the final privilege model is auditable. For a strict runtime account, audit the automatically granted baseline privileges and revoke unused DDL privileges.
+When a general user is created, Altibase automatically grants baseline privileges such as `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, `CREATE DATABASE LINK`, and `CREATE LIBRARY`. Still state explicit grants in operational answers so the final privilege model is auditable. For a strict runtime account, audit the automatically granted baseline privileges and revoke unused DDL privileges such as `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, `CREATE DATABASE LINK`, and `CREATE LIBRARY`.
 
 Least-privilege notes:
 
@@ -427,6 +431,20 @@ ORDER BY grantee.user_name, owner.user_name, t.table_name, p.priv_name;
 Audit broad or public grants:
 
 ```sql
+SELECT grantee.user_name AS grantee_name, p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+  AND p.priv_name IN (
+      'CREATE TABLE', 'CREATE SEQUENCE', 'CREATE PROCEDURE',
+      'CREATE VIEW', 'CREATE TRIGGER', 'CREATE SYNONYM',
+      'CREATE MATERIALIZED VIEW', 'CREATE DATABASE LINK',
+      'CREATE LIBRARY'
+  )
+ORDER BY grantee.user_name, p.priv_name;
+
 SELECT grantee.user_name AS grantee_name, p.priv_name
 FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
      SYSTEM_.SYS_USERS_ grantee,
@@ -717,7 +735,7 @@ alter_tablespace ::=
 DDL rules:
 
 - `AUTOEXTEND OFF` is the default for disk files, temporary files, memory tablespaces, and volatile tablespaces.
-- Disk data file defaults are controlled by `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE`.
+- For disk data files, emit explicit `SIZE`, `NEXT`, and `MAXSIZE`; when reviewing omitted-value scripts, inspect file-size properties such as `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE` for the target version.
 - Disk temporary file defaults are controlled by `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
 - Memory and volatile `SIZE` and `AUTOEXTEND NEXT` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`.
 - Memory growth is bounded by `MEM_MAX_DB_SIZE`; volatile growth is bounded by `VOLATILE_MAX_DB_SIZE`.
@@ -936,10 +954,10 @@ Runbook: create memory tablespace
 
 ```sql
 CREATE MEMORY DATA TABLESPACE app_mem_tbs
-SIZE 512M
-AUTOEXTEND ON NEXT 128M MAXSIZE 4G
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE 4000M
 CHECKPOINT PATH '/data/altibase/chkpt01', '/data/altibase/chkpt02'
-SPLIT EACH 512M;
+SPLIT EACH 500M;
 
 SELECT space_name,
        space_status,
@@ -962,7 +980,7 @@ ORDER BY p.checkpoint_path;
 
 Rules:
 
-- `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`.
+- `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. The examples use 100M-aligned values, which match the documented default allocation unit; recalculate if the database was created with a different value.
 - If `CHECKPOINT PATH` is omitted, paths from `MEM_DB_DIR` are used.
 - The DBA must create checkpoint directories and grant write and execute permissions to the Altibase OS user before creating or changing the tablespace.
 - Relative checkpoint paths are interpreted relative to `$ALTIBASE_HOME`.
@@ -998,13 +1016,13 @@ Runbook: change memory or volatile autoextend
 
 ```sql
 ALTER TABLESPACE app_mem_tbs
-ALTER AUTOEXTEND ON NEXT 128M MAXSIZE 4G;
+ALTER AUTOEXTEND ON NEXT 100M MAXSIZE 4000M;
 
 ALTER TABLESPACE app_mem_tbs
 ALTER AUTOEXTEND OFF;
 
 ALTER TABLESPACE app_vol_tbs
-ALTER AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
+ALTER AUTOEXTEND ON NEXT 100M MAXSIZE 1000M;
 ```
 
 Rules:
@@ -1017,8 +1035,8 @@ Runbook: create volatile tablespace
 
 ```sql
 CREATE VOLATILE DATA TABLESPACE app_vol_tbs
-SIZE 256M
-AUTOEXTEND ON NEXT 64M MAXSIZE 1G;
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE 1000M;
 
 SELECT space_name,
        space_status,

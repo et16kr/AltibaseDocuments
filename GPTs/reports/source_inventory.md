@@ -77,6 +77,13 @@ Source purpose: administration, accounts, backup/recovery, tablespaces, server o
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Administrator’s Manual.md`
   - `Manuals/Altibase_trunk/eng/SQL Reference.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
+  - `Manuals/Altibase_7.3/kor/SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
 
 ### 03_sql_ddl_generation.md
 
@@ -95,6 +102,15 @@ Source purpose: DDL/DCL generation, tablespaces, tables, indexes, users, replica
   - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_trunk/eng/Replication Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
+  - `Manuals/Altibase_7.3/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- R03 source-drift note: Korean SQL Reference and General Reference differ on omitted user disk datafile `SIZE` defaults; the attachment now directs generated DDL to emit explicit disk datafile `SIZE`, `NEXT`, and `MAXSIZE` values instead of relying on omitted defaults.
 
 ### 04_sql_dml_oracle_compatibility.md
 
