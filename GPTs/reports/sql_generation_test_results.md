@@ -182,7 +182,7 @@ Accepted answer:
 - Uses `ALTER TABLE ... ADD COLUMN`.
 - Uses `ALTER TABLE ... ALTER TABLESPACE ... LOB (...)` for disk table and LOB movement.
 - Uses `SPLIT PARTITION ... AT (...) INTO (...)` for a range partition.
-- Uses `ADD PARTITION` and `COALESCE PARTITION` only for hash partitioning.
+- Uses `ADD PARTITION` and `COALESCE PARTITION` for the hash-partition example, without applying hash-only `COALESCE PARTITION` to range or list partitions.
 - Notes that table-definition changes should not be generated for a table that is a replication target.
 
 Result: Pass

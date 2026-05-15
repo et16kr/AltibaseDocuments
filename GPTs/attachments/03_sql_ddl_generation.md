@@ -291,7 +291,7 @@ alter_table_core ::=
 partition_by_range ::=
   PARTITION BY RANGE (partition_key [, partition_key ...])
   ( PARTITION partition_name VALUES LESS THAN (value [, value ...]) [TABLESPACE tablespace_name] [LOB (...)] [, ...]
-    , PARTITION partition_name VALUES DEFAULT [TABLESPACE tablespace_name] [LOB (...)] )
+    [, PARTITION partition_name VALUES DEFAULT [TABLESPACE tablespace_name] [LOB (...)] ] )
 
 partition_by_list ::=
   PARTITION BY LIST (partition_key)
@@ -309,7 +309,7 @@ range_partitioning_using_hash ::=
 
 alter_table_partition ::=
   ALTER TABLE [owner.]table_name
-  { ADD PARTITION partition_name [INDEX (...)]
+  { ADD PARTITION partition_name [VALUES LESS THAN (value [, ...])] [TABLESPACE tablespace_name] [INDEX (...)]
   | COALESCE PARTITION
   | DROP PARTITION partition_name
   | MERGE PARTITIONS partition_name, partition_name INTO PARTITION new_partition_name [TABLESPACE tablespace_name] [INDEX (...)] [LOB (...)]
@@ -331,9 +331,11 @@ Generation notes:
 - A `PRIMARY KEY` is equivalent to `UNIQUE` plus `NOT NULL`; all primary-key columns must be non-null.
 - Do not define `PRIMARY KEY` and `UNIQUE` on the same column list in the same table. Use one named constraint for the intended rule.
 - A `FOREIGN KEY` must reference a parent `PRIMARY KEY` or `UNIQUE` key. If the referenced column list is omitted, Altibase uses the parent table's primary key.
+- Before generating a `FOREIGN KEY`, verify that child key columns and referenced key columns have the same count and matching corresponding data types. If the referenced column list is omitted, verify the parent primary-key column list and types.
 - `ON DELETE NO ACTION` is the default foreign-key action. `ON DELETE SET NULL` requires nullable child columns.
 - A `TIMESTAMP` column is generated internally and only one `TIMESTAMP` column can be created in one table. Do not specify an explicit `DEFAULT` for it.
 - `CHECK` constraints cannot contain subqueries, sequences, pseudo columns such as `LEVEL` or `ROWNUM`, non-deterministic functions such as `SYSDATE` or `USER_ID`, the `PRIOR` operator, or LOB data.
+- A column-level `CHECK` condition can reference only that column. Use a table-level `CHECK` constraint for cross-column rules.
 - Multiple `CHECK` constraints may be defined on one column, but Altibase does not guarantee their evaluation order or prove that they are mutually compatible.
 - Be explicit with full date literals in `CHECK` constraints. If the year or month is omitted in a `DATE` constant, Altibase can derive it from the current date.
 - LOB columns in disk tables can be stored in a separate disk LOB tablespace. LOB columns in memory tables cannot be stored separately from the table; memory LOB `IN ROW` sizing belongs in the data type definition.
@@ -342,12 +344,13 @@ Generation notes:
 - For `GLOBAL TEMPORARY TABLE`, specify a volatile tablespace in the table `TABLESPACE` clause, not a disk temporary tablespace.
 - Temporary table definitions are shared metadata, but rows are private to the session that inserts them. Session-specific temporary table DDL is allowed only when the session is not bound to the table; transaction-specific temporary table DDL causes the internal DDL commit behavior to remove transaction-level rows.
 - Temporary tables cannot be partitioned, cannot have foreign keys, and do not support distributed transactions. Do not generate `FOREIGN KEY` clauses for them.
-- Range and list partitioned tables require a `DEFAULT` partition. Range and hash partition keys can use up to 32 columns; list partitioning uses a single partition key column.
+- For 7.1 range partitioned tables, include a `DEFAULT` partition. For 7.3 and Altibase 8.1 verified source, range partitioning may omit `DEFAULT`; only default-less range tables can be extended with range `ADD PARTITION`.
+- List partitioned tables require a `DEFAULT` partition. Range and hash partition keys can use up to 32 columns; list partitioning uses a single partition key column.
 - `ENABLE ROW MOVEMENT` allows updates that move rows between partitions when partition key values change. If omitted, `DISABLE ROW MOVEMENT` is the default.
-- `ADD PARTITION` and `COALESCE PARTITION` are for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
+- `ADD PARTITION` is for hash partitioning, and for 7.3 or Altibase 8.1 verified source default-less range tables when appending the last range with `VALUES LESS THAN (...)`. Do not use `ADD PARTITION` to add a range `DEFAULT` partition or insert a middle range; use `SPLIT PARTITION` for middle/default range changes. `COALESCE PARTITION` is for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
 - Moving a non-partitioned table with `ALTER TABLE ... ALTER TABLESPACE` moves records. Moving a partitioned table's table-level tablespace does not move existing partition records; use partition-level clauses to move partition data.
 - Do not generate ad hoc `ALTER TABLE` for replication targets. For replication-target DDL, use the standard remove/re-add flow or the documented DDL synchronization procedure in `09_replication_ha_cdc.md`.
-- `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns or explicit target data types; expression columns need aliases.
+- `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns, explicit target data types, or `CHECK` constraints; expression columns need aliases. If CTAS output needs validation, review existing rows and then use `ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)`.
 - `PCTFREE` and `PCTUSED` are meaningful for disk-based table pages. Do not copy Oracle storage clauses without checking Altibase syntax and storage target.
 - `JSON` columns are an 8.1 baseline feature. Use `JSON [IN ROW size]` when needed, ensure `TEMPORARY_LOB_ENABLE=1`, and avoid JSON columns for 7.1 or 7.3 unless a later Altibase source for the exact target version and patch explicitly documents native `JSON` support.
 
@@ -1970,7 +1973,7 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 - Temporary tables: Oracle `GLOBAL TEMPORARY TABLE` syntax is similar only at a high level. In Altibase, temporary table rows are stored in a volatile tablespace, temporary tables cannot be partitioned, foreign keys are not allowed, and ordinary LOB columns should not be placed in the volatile temporary-table design.
 - LOB storage: Oracle `LOB (...) STORE AS` clauses must be rewritten. In Altibase, separate LOB tablespace placement is for disk tables. Do not copy Oracle `SECUREFILE`, `BASICFILE`, `RETENTION`, `CACHE`, or similar LOB storage attributes as Altibase syntax.
 - JSON: Oracle JSON constraints and JSON column designs are not portable. Use Altibase native `JSON` only for 8.1 and check `TEMPORARY_LOB_ENABLE`; for 7.1 and 7.3, use `VARCHAR` or `CLOB` plus application validation or plan an upgrade.
-- Partitioning: Oracle range/list/hash clauses need Altibase checks. Altibase range and list tables require a `DEFAULT` partition, list partitioning uses one key column, LOB columns cannot be partition keys, and `MAXROWS` cannot be used with partitioned tables.
+- Partitioning: Oracle range/list/hash clauses need Altibase checks. Altibase 7.1 range tables and all list tables require a `DEFAULT` partition; 7.3 and Altibase 8.1 verified source range tables may omit `DEFAULT` only when that design is intentional. List partitioning uses one key column, LOB columns cannot be partition keys, and `MAXROWS` cannot be used with partitioned tables.
 - Physical attributes: Oracle storage, compression, segment, and organization clauses are not drop-in compatible. In Altibase, `PCTFREE` and `PCTUSED` are disk-page tuning knobs; `STORAGE (INITEXTENTS ... NEXTEXTENTS ... MINEXTENTS ... MAXEXTENTS ...)` uses Altibase extent semantics.
 - Queues: Oracle Advanced Queuing package and queue-table DDL are not portable. Generate Altibase `CREATE QUEUE`, `ALTER QUEUE`, `DROP QUEUE`, `ENQUEUE`, and `DEQUEUE` syntax instead.
 - Data types: Use `05_data_types_properties.md` for exact type mapping. Do not map Oracle `CLOB`, `BLOB`, `NUMBER`, or `VARCHAR2` blindly without checking Altibase limits and semantics.

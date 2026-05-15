@@ -1036,6 +1036,7 @@ Constraint tuning notes:
 
 - `PRIMARY KEY` and `UNIQUE` constraints create supporting unique indexes and provide reliable uniqueness rules. Do not add a second index with the same key columns.
 - `FOREIGN KEY` constraints protect referential integrity but do not remove the need to tune child-table lookups. If parent deletes, cascading deletes, or child joins are slow, check whether the child foreign-key columns have an index.
+- Before recommending or generating a `FOREIGN KEY`, verify that child key columns and referenced key columns have the same count and matching corresponding data types. If the referenced column list is omitted, verify the parent primary-key column list and types.
 - `ON DELETE SET NULL` requires nullable child columns. If child columns are `NOT NULL`, use `NO ACTION` or redesign the delete rule.
 - `CHECK` constraints are validation rules, not access paths. They can prevent bad data but should not be recommended as a performance fix.
 - On replicated tables, changing constraints or unique indexes can affect replication compatibility. Verify replication design before recommending DDL.
