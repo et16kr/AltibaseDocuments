@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 
@@ -70,13 +70,13 @@ rg -n "Heartbleed|OPENSSL_NO_HEARTBEATS|Intel-Linux|ssl_protocols|TLS 1\.3|SSL_L
 
 ## Findings
 
-No Blocker findings were identified. The original High issues below have been resolved; the remaining row is a Medium follow-up.
+No Blocker findings were identified. V02 re-review confirms that the original High issues and the later Medium follow-up finding are closed by the remediation tasks named in the recommendation column.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/18_security_ssl_tls.md` | 76 | The 7.1 version block says Altibase 7.1 uses TLS 1.0 with OpenSSL `0.9.4` through `1.0.2`, but omits the source warning to verify that the installed OpenSSL version is not affected by Heartbleed and the `OPENSSL_NO_HEARTBEATS` check. In a security attachment, this makes legacy 7.1 OpenSSL guidance look less risky than the source manual states. | Resolved by H09. The 7.1 OpenSSL/Heartbleed caution is no longer an open High gate item; the remaining row in this report is a Medium follow-up. |
-| Resolved High | `GPTs/attachments/18_security_ssl_tls.md` | 101 | The server/client SSL setup is written as a generic procedure but does not preserve the SSL/TLS guide's platform caveat that Altibase JDBC and ODBC SSL connections are currently supported only on Intel-Linux. The attachment asks for OS information at line 31, but retrieval against the setup checklist can still produce production guidance for unsupported OS combinations. | Resolved by H10. The SSL/TLS client platform-support caution is no longer an open High gate item; the remaining row in this report is a Medium follow-up. |
-| Medium | `GPTs/attachments/11_java_jdbc_spring.md` | 229 | The JDBC attribute block lists `ssl_protocols` generically beside `ciphersuite_list`. The SSL/TLS guides show `ssl_protocols` in 7.3 and 8.1-era SSL guidance, but not in the 7.1 SSL/TLS guide or 7.1 JDBC manual. This can lead a GPT to suggest protocol pinning with `ssl_protocols` for Altibase 7.1. | Qualify `ssl_protocols` as 7.3 and 8.1 verified-source guidance in the JDBC attachment. For 7.1, keep JDBC SSL guidance to `ssl_enable`, `port`, `ciphersuite_list`, truststore/keystore properties, and the TLS 1.0/OpenSSL limitations in `18_security_ssl_tls.md`. |
+| Resolved High | `GPTs/attachments/18_security_ssl_tls.md` | 76 | The 7.1 version block says Altibase 7.1 uses TLS 1.0 with OpenSSL `0.9.4` through `1.0.2`, but omits the source warning to verify that the installed OpenSSL version is not affected by Heartbleed and the `OPENSSL_NO_HEARTBEATS` check. In a security attachment, this makes legacy 7.1 OpenSSL guidance look less risky than the source manual states. | Resolved by H09. The 7.1 OpenSSL/Heartbleed caution is no longer an open High gate item. |
+| Resolved High | `GPTs/attachments/18_security_ssl_tls.md` | 101 | The server/client SSL setup is written as a generic procedure but does not preserve the SSL/TLS guide's platform caveat that Altibase JDBC and ODBC SSL connections are currently supported only on Intel-Linux. The attachment asks for OS information at line 31, but retrieval against the setup checklist can still produce production guidance for unsupported OS combinations. | Resolved by H10. The SSL/TLS client platform-support caution is no longer an open High gate item. |
+| Resolved Medium | `GPTs/attachments/11_java_jdbc_spring.md` | 229 | The JDBC attribute block listed `ssl_protocols` generically beside `ciphersuite_list`, even though sampled 7.1 SSL/TLS and JDBC manuals did not show `ssl_protocols`. | Resolved by M19. The JDBC attachment now scopes `ssl_protocols` to 7.3 and 8.1 verified-source guidance and keeps 7.1 SSL guidance to the 7.1-supported keys plus the TLS/OpenSSL cautions in `18_security_ssl_tls.md`. |
 
 ## Source Checks
 
@@ -130,10 +130,11 @@ No Blocker findings were identified. The original High issues below have been re
 - Risks:
   - Closed by H09: retrieval against the 7.1 version block now includes the old-OpenSSL vulnerability warning.
   - Closed by H10: retrieval against the setup checklist now includes platform support checks.
-  - Retrieval against the Java/JDBC attachment can over-apply `ssl_protocols` to 7.1.
+  - Closed by M19: Java/JDBC `ssl_protocols` guidance is scoped away from 7.1.
 
-## Required Follow-Up
+## V02 Closure
 
 - Closed by H09: 7.1 Heartbleed and `OPENSSL_NO_HEARTBEATS` caution in `18_security_ssl_tls.md`.
 - Closed by H10: Intel-Linux/platform support caveat for SSL/TLS JDBC and ODBC guidance in `18_security_ssl_tls.md`.
-- Version-scope `ssl_protocols` in `11_java_jdbc_spring.md`, and optionally restate that qualifier in the `18_security_ssl_tls.md` JDBC troubleshooting block.
+- Closed by M19: `ssl_protocols` is version-scoped in `11_java_jdbc_spring.md`.
+- No open R11 finding remains after V02 re-review of the changed sections.

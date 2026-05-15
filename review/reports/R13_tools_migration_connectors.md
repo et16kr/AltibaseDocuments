@@ -60,8 +60,8 @@ No Blocker, High, or Medium issues were found. The reviewed attachments are task
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Low | `GPTs/attachments/16_dblink_external_connectors.md` | 9 | The document selection scope mentions GoldenGate as part of the external connector set, but the attachment has no GoldenGate section and local source searches did not find source material for it. This is a coverage risk only if GoldenGate was intended to be answerable. | Either confirm GoldenGate is out of scope for this attachment set, or add a small source-backed GoldenGate section once an approved source is available. Do not synthesize connector guidance without a source. |
-| Low | `GPTs/attachments/19_spatial_nifi_tableau_misc.md` | 1436 | The NiFi setup uses `/home/altibase/NiFi/nifi-1.12.1/lib` as an example driver path. It is source-derived and labeled as a setup path, but validation flags it as a Unix home path that could be misread as environment-specific. | Consider rewriting the example as `$NIFI_HOME/lib` with the source path kept only as an example value, so GPT answers generalize the procedure while preserving the literal source example where needed. |
+| Resolved Low | `GPTs/attachments/16_dblink_external_connectors.md` | 9 | The document selection scope mentioned GoldenGate as part of the external connector set, but the attachment had no GoldenGate section and local source searches did not find source material for it. | Resolved by L08. GoldenGate is confirmed out of scope unless an approved source is added; the attachment does not synthesize connector guidance without a source. |
+| Resolved Low | `GPTs/attachments/19_spatial_nifi_tableau_misc.md` | 1436 | The NiFi setup used `/home/altibase/NiFi/nifi-1.12.1/lib` as an example driver path that could be misread as environment-specific. | Resolved by L09. The attachment now generalizes the driver location to `$NIFI_HOME/lib` while preserving the source path only as an example value where needed. |
 
 ## Source Checks
 - Claims checked:
@@ -103,11 +103,11 @@ No Blocker, High, or Medium issues were found. The reviewed attachments are task
   - Screenshot-dependent guides were converted into procedure steps with field names, expected values, and validation points.
   - The migration and connector sections are explicit about caveats rather than over-promising compatibility.
 - Risks:
-  - GoldenGate may be a retrieval miss if users ask for it because it appears in the selection intent but is not covered in the reviewed attachment.
-  - Example paths such as the NiFi `/home/altibase/...` driver path may need answer-time framing as examples, not universal install paths.
+  - GoldenGate is now treated as out of scope unless an approved source is added.
+  - The NiFi driver path example is generalized to `$NIFI_HOME/lib` by L09.
   - Some third-party connector details are necessarily version-bound to the sampled guide versions, so future connector UI changes may require refresh.
 
-## Required Follow-Up
-- No attachment changes are required for pass.
-- Decide whether GoldenGate is intentionally out of scope for the GPT attachment set. If it is in scope, add only source-backed guidance after an approved source is added.
-- Optionally generalize the NiFi driver path example to `$NIFI_HOME/lib` while preserving the literal source path as an example.
+## V02 Closure
+- Closed by L08: GoldenGate is treated as out of scope unless an approved source is added.
+- Closed by L09: the NiFi driver path is generalized to `$NIFI_HOME/lib`.
+- No open R13 finding remains after V02 re-review of the changed sections.

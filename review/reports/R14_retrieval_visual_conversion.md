@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 
@@ -33,24 +33,24 @@ rg -n 'Attachment Cross-References|Cross-reference|Cross-References|See `|relate
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/06_data_dictionary_performance_views.md` | 1526 | The file has a `Searchable Object Blocks` section, but it does not decompose several top-priority dictionary/performance table families identified in `table_inventory.md`, including `V$STATNAME`, `V$MEMSTAT`, `V$BUFFPOOL_STAT`, `V$INTERNAL_SESSION`, and detailed column-level blocks for large views. `rg` found no `V$STATNAME` or `V$MEMSTAT` occurrences in the attachments. This weakens answerability for statistic identifiers, memory modules, buffer pool counters, and exact view-column questions. | Resolved by H13. The missing high-priority performance-view block gap is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Resolved High | `GPTs/attachments/11_java_jdbc_spring.md` | 542 | The JDBC type/API material is reduced to "Basic data type mapping blocks" and "JDBC 4.2 API support highlights" instead of the method-level and type-level decompositions expected for the P0/P1 JDBC matrices. Specific `ResultSet` and `CallableStatement` support details are only highlighted around lines 573-578. | Resolved by H14. The JDBC type/API matrix decomposition gap is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Resolved High | `GPTs/attachments/11_java_jdbc_spring.md` | 630 | The source inventory flags the JDBC SQL state table as P0, but the attachment condenses it into a small set of SQLSTATE class blocks. This is useful for common cases, but not enough for direct lookup of many specific SQLSTATE values. | Resolved by H15. The JDBC SQLSTATE subclass lookup gap is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Medium | Multiple attachments | 65 | Several Mermaid blocks exceed the project's compact diagram guideline of roughly 12 nodes or 16 edges. Examples include `02_administration_operations.md:65` with 18 edge lines, `02_administration_operations.md:1670` with 22 edge lines, `12_c_cli_odbc_precompiler.md:107` with a 31-line sequence, `12_c_cli_odbc_precompiler.md:1249` with 19 edge lines, `14_utilities_operation_tools.md:588` with 17 edge lines, and `17_kubernetes_aku_cloud.md:294` with 18 edge lines. They are readable, but less retrieval-friendly than smaller diagrams plus item blocks. | Split the largest diagrams into phase-specific diagrams or replace linear portions with ordered item blocks. Keep diagrams for relationships and put long procedure/detail text outside Mermaid. |
-| Medium | Multiple attachments | 1246 | Cross-reference coverage is uneven. `15_migration_oracle_compatibility.md:1246` has a useful `Attachment Cross-References` section, and a few inline references exist in `03` and `16`, but most high-overlap files do not provide a local cross-reference block. This reduces retrieval help for questions that span DDL, properties, performance views, troubleshooting, replication, SSL/TLS, and tools. | Add short `Attachment Cross-References` sections to high-overlap files, especially `02`, `03`, `05`, `06`, `07`, `08`, `09`, `12`, `14`, and `18`. Keep each section to 3-6 links with the concrete reason to use the related attachment. |
-| Low | Multiple attachments | 3 | All 20 attachments have `Applicable Versions`, `Questions This File Can Answer`, and `Source Documents`, but section naming is not fully uniform. Many files use `Response Rules`, `Version Notes`, or topic-specific headings instead of the common template, and only `07_error_messages_troubleshooting.md:1532` has a `Residual Scope` section. | Before upload, normalize only the retrieval-critical top-level headings that help GPT routing. At minimum, add a short residual-scope note where source coverage is intentionally partial or condensed. |
+| Resolved High | `GPTs/attachments/06_data_dictionary_performance_views.md` | 1526 | The file has a `Searchable Object Blocks` section, but it does not decompose several top-priority dictionary/performance table families identified in `table_inventory.md`, including `V$STATNAME`, `V$MEMSTAT`, `V$BUFFPOOL_STAT`, `V$INTERNAL_SESSION`, and detailed column-level blocks for large views. `rg` found no `V$STATNAME` or `V$MEMSTAT` occurrences in the attachments. This weakens answerability for statistic identifiers, memory modules, buffer pool counters, and exact view-column questions. | Resolved by H13. The missing high-priority performance-view block gap is no longer an open High gate item. |
+| Resolved High | `GPTs/attachments/11_java_jdbc_spring.md` | 542 | The JDBC type/API material is reduced to "Basic data type mapping blocks" and "JDBC 4.2 API support highlights" instead of the method-level and type-level decompositions expected for the P0/P1 JDBC matrices. Specific `ResultSet` and `CallableStatement` support details are only highlighted around lines 573-578. | Resolved by H14. The JDBC type/API matrix decomposition gap is no longer an open High gate item. |
+| Resolved High | `GPTs/attachments/11_java_jdbc_spring.md` | 630 | The source inventory flags the JDBC SQL state table as P0, but the attachment condenses it into a small set of SQLSTATE class blocks. This is useful for common cases, but not enough for direct lookup of many specific SQLSTATE values. | Resolved by H15. The JDBC SQLSTATE subclass lookup gap is no longer an open High gate item. |
+| Resolved Medium | Multiple attachments | 65 | Several Mermaid blocks exceeded the project's compact diagram guideline of roughly 12 nodes or 16 edges. | Resolved by M21. The largest diagrams were split or simplified, or linear procedure detail was moved into ordered text blocks. |
+| Resolved Medium | Multiple attachments | 1246 | Cross-reference coverage was uneven across high-overlap files. | Resolved by M22. Short `Attachment Cross-References` sections were added to the high-overlap attachments with concrete reasons to use each related attachment. |
+| Resolved Low | Multiple attachments | 3 | All 20 attachments had required routing headings, but section naming and residual-scope notes were not fully uniform. | Resolved by L10. Retrieval-critical headings and residual-scope notes are normalized where coverage is intentionally partial or condensed. |
 
 ## Source Checks
 
 - Claims checked: upload file count, image/link cleanup, internal-label cleanup, required question sections, heading density, Mermaid block size, remaining table blocks, BNF-like syntax presence, and selected high-risk table-decomposition targets.
 - Source coverage: The review used the selection/build design documents plus image, table, and link inventories. It did not re-audit primary manual claims line by line.
-- Source gaps: The missing or condensed P0/P1 table-family items in `06_data_dictionary_performance_views.md` and `11_java_jdbc_spring.md` should be checked against the source manuals before being filled in.
+- Source gaps: The prior missing or condensed P0/P1 table-family items in `06_data_dictionary_performance_views.md` and `11_java_jdbc_spring.md` are closed by H13, H14, and H15.
 
 ## Oracle-Overlap Decision
 
 - Correctly compressed: `04_sql_dml_oracle_compatibility.md` keeps generic Oracle-overlapping DML brief and focuses on Altibase-specific syntax, row limiting, DML `RETURN`, `MERGE`, hints, conditions, queue DML, and 8.1 JSON behavior.
 - Too much generic Oracle material: No broad blocker found. The remaining generic content generally supports Altibase-specific differences or examples.
-- Missing Altibase-specific difference: No single Oracle-overlap blocker found in this stage, but missing cross-reference blocks make it easier for retrieval to miss related Altibase-specific material in `03`, `05`, `06`, `09`, and `18`.
+- Missing Altibase-specific difference: No single Oracle-overlap blocker found in this stage. The prior cross-reference gap is closed by M22.
 
 ## Version Checks
 
@@ -61,12 +61,13 @@ rg -n 'Attachment Cross-References|Cross-reference|Cross-References|See `|relate
 ## Retrieval And GPT Answer Quality
 
 - Strengths: The attachment set has the expected 20 upload files; every file has a question-oriented section with 5-8 bullets; headings are generally dense and topic-specific; raw image dependencies are absent; large source tables have mostly been converted into item blocks or small lookup tables; BNF-like syntax is present for SQL, PSM, replication, data type, spatial, and command syntax.
-- Risks: A few high-priority table inventories appear under-decomposed rather than merely compressed; several diagrams are near or beyond the compactness policy; cross-file retrieval cues are inconsistent; residual scope is rarely stated, which makes intentional omissions harder to distinguish from accidental gaps.
+- Risks: The high-priority table inventory, oversized diagram, cross-reference, and residual-scope findings are closed by H13, H14, H15, M21, M22, and L10.
 
-## Required Follow-Up
+## V02 Closure
 
 - Closed by H13: high-priority dictionary/performance view blocks in `06_data_dictionary_performance_views.md`.
 - Closed by H14 and H15: JDBC SQLSTATE, method-support, and type-conversion blocks in `11_java_jdbc_spring.md`.
-- Split or simplify the largest Mermaid diagrams listed in the findings.
-- Add concise cross-reference blocks to the high-overlap attachments.
-- Add residual-scope notes where content is intentionally partial, sampled, or condensed.
+- Closed by M21: largest Mermaid diagrams were split or simplified.
+- Closed by M22: cross-reference blocks were added to high-overlap attachments.
+- Closed by L10: retrieval-critical headings and residual-scope notes were normalized where needed.
+- No open R14 finding remains after V02 re-review of the changed sections.

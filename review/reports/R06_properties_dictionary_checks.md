@@ -2,7 +2,7 @@
 
 Date: 2026-05-14
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 
@@ -49,12 +49,12 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | sort 
 
 ## Findings
 
-No Blocker or High issues were found.
+No Blocker or High issues were found. V02 re-review confirms that the Medium and Low findings are closed by the remediation tasks named in the recommendation column.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Medium | `GPTs/attachments/07_error_messages_troubleshooting.md` | 1114 | The LOB autocommit version caution says LOB autocommit errors appear in 7.3 and 8.1 sources. Source sampling found `0x5112C` / `ulERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR` and `0x91101` / `utERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR` in the 7.1 Error Message Reference too; only the SQL-level `0x314B4` / `qpERR_ABORT_QMX_LOB_AUTOCOMMIT_MODE` was not found in 7.1 English source. This could cause a 7.1 customer answer to understate applicable client or utility LOB autocommit diagnostics. | Split the version caution by code: state that `0x5112C` and `0x91101` are present in sampled 7.1, 7.3, and 8.1 sources, while `0x314B4` should be treated as 7.3/8.1 unless confirmed in a target 7.1 build. |
-| Low | `GPTs/attachments/05_data_types_properties.md` | 1989 | The property blocks for `LISTAGG_PRECISION` and `VARRAY_MEMORY_MAXIMUM` use process wording: "sampled 7.3 Korean source". The names and cautions are searchable, but this wording is not ideal for customer-facing GPT knowledge and slightly exposes the review/build method. | Reword to customer-safe source labels, for example "documented in Altibase 7.3 supplemental source and Altibase 8.1 verified source; verify exact availability in the installed build." Apply the same cleanup to the matching `VARRAY_MEMORY_MAXIMUM` line and the broader "sampled 7.x" wording near the version notes. |
+| Resolved Medium | `GPTs/attachments/07_error_messages_troubleshooting.md` | 1114 | The LOB autocommit version caution said LOB autocommit errors appear in 7.3 and 8.1 sources even though `0x5112C` and `0x91101` are also present in sampled 7.1 sources. | Resolved by M07. The troubleshooting attachment now scopes `0x5112C` and `0x91101` across sampled 7.1/7.3/8.1 sources and treats `0x314B4` as 7.3/8.1 unless confirmed in the target 7.1 build. |
+| Resolved Low | `GPTs/attachments/05_data_types_properties.md` | 1989 | The property blocks for `LISTAGG_PRECISION` and `VARRAY_MEMORY_MAXIMUM` used process wording: "sampled 7.3 Korean source". | Resolved by M02. The attachment now uses customer-safe supplemental-source wording and keeps target-build verification cautions. |
 
 ## Source Checks
 
@@ -86,10 +86,10 @@ No Blocker or High issues were found.
 
 - 7.1:
   - Core data type, property, dictionary, and performance-view names sampled from 7.1 sources are mostly preserved.
-  - The LOB autocommit troubleshooting block should be adjusted because 7.1 includes the client/utility LOB autocommit error codes.
+  - The LOB autocommit troubleshooting block now distinguishes 7.1 client/utility codes from later SQL-level code by M07.
 - 7.3:
   - Common property and dictionary structures match sampled 7.3 source. `V$LOCK_TABLE_STATS` is present in sampled 7.3 General Reference 2.
-  - Some property availability notes are intentionally cautious but should avoid "sampled Korean source" wording in customer-facing text.
+  - Property availability notes now avoid customer-facing "sampled Korean source" wording by M02.
 - 8.1:
   - New 8.1 properties and performance views are represented with customer-safe `Altibase 8.1 verified source` labeling.
   - `V$MEM_STABLE`, `V$TEMPORARY_LOBS`, `JSON`, and Temporary LOB checks are version-scoped and generally plausible.
@@ -101,11 +101,10 @@ No Blocker or High issues were found.
   - Literal property names, view names, error codes, SQL keywords, and check SQL identifiers are preserved.
   - The `V$TABLE` and `V$ALLCOLUMN` availability-check pattern is useful for version-sensitive view/column answers.
 - Risks:
-  - A GPT may repeat the LOB autocommit version caution too narrowly for Altibase 7.1 unless the block is corrected.
-  - "sampled ... Korean source" wording can leak build/review provenance into customer answers and should be converted to product/version source labels.
+  - The LOB autocommit version-scope and customer-facing source-label risks are closed by M07 and M02.
 
-## Required Follow-Up
+## V02 Closure
 
-- Update the `07_error_messages_troubleshooting.md` LOB autocommit version caution to distinguish 7.1 client/utility codes from the later SQL-level code.
-- Clean the two `05_data_types_properties.md` property availability notes that mention "sampled 7.3 Korean source" and the broader "sampled 7.x" wording.
-- No attachment changes were made during this review stage.
+- Closed by M07: LOB autocommit version caution in `07_error_messages_troubleshooting.md`.
+- Closed by M02: customer-safe property availability wording in `05_data_types_properties.md`.
+- No open R06 finding remains after V02 re-review of the changed sections.

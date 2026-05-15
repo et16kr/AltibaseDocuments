@@ -2,7 +2,7 @@
 
 Date: 2026-05-14
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 - Attachments:
@@ -51,12 +51,12 @@ nl -ba GPTs/attachments/15_migration_oracle_compatibility.md | sed -n '445,557p'
 ```
 
 ## Findings
-No Blocker issues were found.
+No Blocker issues were found. V02 re-review confirms that all previously listed findings are closed by the remediation tasks named in the recommendation column.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 740 | The `REGEXP_LIKE` note says Altibase regular expression support is partial POSIX BRE/ERE and that multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are unsupported. That describes only the default Altibase regular expression library. The 7.1 SQL Reference documents a selectable PCRE2 library from Altibase 7.1.0.7.7, and 7.3/trunk property manuals plus 7.3 release notes document `REGEXP_MODE`/PCRE2 compatibility mode. As written, the attachment can make the GPT incorrectly reject valid PCRE2-mode regex answers. | Resolved by H03. The regex mode split is no longer an open High gate item; the remaining row in this report is a Medium follow-up. |
-| Medium | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 858 | The 8.1 JSON function section preserves `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON`, but it does not carry the DML-side native `JSON` column cautions that are important for generated SQL: `JSON` processing uses Temporary LOB, `TEMPORARY_LOB_ENABLE` must be `1`, and `JSON` cannot be used with `SELECT FOR UPDATE`. Those cautions are present in `03_sql_ddl_generation.md` and `05_data_types_properties.md`, but a DML/JSON retrieval may land on this attachment alone. | Add a short "JSON column DML cautions" block to `04_sql_dml_oracle_compatibility.md`: native `JSON` is 8.1 only, check `TEMPORARY_LOB_ENABLE`, treat JSON columns as LOB-like for restrictions, and do not generate `SELECT FOR UPDATE` against `JSON` columns. Cross-reference `05_data_types_properties.md` for details. |
+| Resolved High | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 740 | The `REGEXP_LIKE` note says Altibase regular expression support is partial POSIX BRE/ERE and that multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are unsupported. That describes only the default Altibase regular expression library. The 7.1 SQL Reference documents a selectable PCRE2 library from Altibase 7.1.0.7.7, and 7.3/trunk property manuals plus 7.3 release notes document `REGEXP_MODE`/PCRE2 compatibility mode. As written, the attachment can make the GPT incorrectly reject valid PCRE2-mode regex answers. | Resolved by H03. The regex mode split is no longer an open High gate item. |
+| Resolved Medium | `GPTs/attachments/04_sql_dml_oracle_compatibility.md` | 858 | The 8.1 JSON function section preserved JSON function literals but did not carry the DML-side native `JSON` column cautions for Temporary LOB processing, `TEMPORARY_LOB_ENABLE`, and `SELECT FOR UPDATE`. | Resolved by M06. The DML attachment now includes compact native `JSON` column DML cautions and cross-references the data type attachment. |
 
 ## Source Checks
 - Claims checked:
@@ -69,8 +69,8 @@ No Blocker issues were found.
   - `15_migration_oracle_compatibility.md` has strong migration-focused coverage for JSON mapping, oversized strings, `BINARY_DOUBLE`, `NaN`/`INF`, `NCLOB`, `ROWID`, empty strings, defaults, PSM conversion, and tool scope.
   - `03_sql_ddl_generation.md` preserves the DDL-side JSON, LOB, temporary table, partition, storage, and Oracle conversion cautions needed by this stage.
 - Source gaps:
-  - The regex issue is an attachment synthesis gap, not a source gap. The PCRE2/`REGEXP_MODE` source signal is present and cross-version.
-  - The JSON DML caution is covered elsewhere, but `04_sql_dml_oracle_compatibility.md` should carry a compact copy or pointer because it is the primary DML retrieval target.
+  - The regex issue was an attachment synthesis gap, not a source gap; it is closed by H03.
+  - The JSON DML caution is now carried in `04_sql_dml_oracle_compatibility.md` by M06.
 
 ## Oracle-Overlap Decision
 - Correctly compressed:
@@ -80,13 +80,13 @@ No Blocker issues were found.
 - Too much generic Oracle material:
   - No material bloat found in the sampled DML or migration sections.
 - Missing Altibase-specific difference:
-- Closed by H03: `REGEXP_MODE=1` PCRE2-compatible regex mode has been added to the `REGEXP_LIKE` compatibility note.
-  - `04_sql_dml_oracle_compatibility.md` does not locally carry the 8.1 native `JSON` column DML restrictions.
+  - Closed by H03: `REGEXP_MODE=1` PCRE2-compatible regex mode has been added to the `REGEXP_LIKE` compatibility note.
+  - Closed by M06: `04_sql_dml_oracle_compatibility.md` locally carries the 8.1 native `JSON` column DML restrictions.
 
 ## Version Checks
 - 7.1:
   - Core DML coverage is consistent with sampled SQL Reference behavior.
-- Closed by H03: regex guidance now distinguishes the default Altibase regex library from the PCRE2 library available from Altibase 7.1.0.7.7.
+  - Closed by H03: regex guidance now distinguishes the default Altibase regex library from the PCRE2 library available from Altibase 7.1.0.7.7.
   - 8.1 JSON functions are correctly excluded.
 - 7.3:
   - Core DML baseline is treated consistently with 7.1.
@@ -94,7 +94,7 @@ No Blocker issues were found.
   - 8.1 JSON functions are correctly excluded.
 - 8.1:
   - JSON function names and `IS JSON` are preserved in `04_sql_dml_oracle_compatibility.md`.
-  - The DML file should connect JSON function usage with native `JSON` column restrictions already present in `03_sql_ddl_generation.md` and `05_data_types_properties.md`.
+  - The DML file now connects JSON function usage with native `JSON` column restrictions already present in `03_sql_ddl_generation.md` and `05_data_types_properties.md`.
 
 ## Retrieval And GPT Answer Quality
 - Strengths:
@@ -102,10 +102,9 @@ No Blocker issues were found.
   - The compact syntax blocks expose high-value Altibase differences without expanding into full SQL Reference duplication.
   - Migration content in `15_migration_oracle_compatibility.md` is practical and answer-oriented, especially for tool options and conversion risks.
 - Risks:
-  - Regex answers can be wrong for users using `REGEXP_MODE=1` or asking about Korean regex search, backreferences, lookaheads, or lookbehinds.
-  - JSON DML answers generated from `04_sql_dml_oracle_compatibility.md` alone may miss `TEMPORARY_LOB_ENABLE` and `SELECT FOR UPDATE` restrictions.
+  - The regex and JSON DML retrieval risks are closed by H03 and M06.
 
-## Required Follow-Up
-- Update `GPTs/attachments/04_sql_dml_oracle_compatibility.md` to correct the `REGEXP_LIKE`/PCRE2 compatibility guidance.
-- Add a compact native `JSON` column DML caution block to `GPTs/attachments/04_sql_dml_oracle_compatibility.md`.
-- Re-run focused validation searches for `REGEXP_MODE`, `PCRE2`, `TEMPORARY_LOB_ENABLE`, `SELECT FOR UPDATE`, and JSON function names after remediation.
+## V02 Closure
+- Closed by H03: `REGEXP_LIKE` and PCRE2 compatibility guidance.
+- Closed by M06: native `JSON` column DML cautions in `GPTs/attachments/04_sql_dml_oracle_compatibility.md`.
+- No open R05 finding remains after V02 re-review of the changed sections.

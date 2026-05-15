@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 
@@ -58,14 +58,14 @@ rg -n "trunk|Manuals/|ReleaseNotes|Technical Documents|/home/|file://|C:/|ALTIBA
 
 ## Findings
 
-No Blocker findings were identified. The original High issue below has been resolved; remaining rows are Medium follow-up remediation items.
+No Blocker findings were identified. V02 re-review confirms that the original High issue and the later Medium follow-up findings are closed by the remediation tasks named in the recommendation column.
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The DDL synchronization procedure was incomplete. It set `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but omitted required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on both local and remote servers. It also omitted the local `ALTER SESSION SET REPLICATION = DEFAULT` step and said to flush before DDL on the local server only, while the source procedure requires flushing on both local and remote servers. This was also reported in `R03`. | Resolved by H02. The DDL synchronization sequence is no longer an open High gate item; remaining rows in this report are Medium follow-ups. |
-| Medium | `GPTs/attachments/03_sql_ddl_generation.md`<br>`GPTs/attachments/09_replication_ha_cdc.md` | 593<br>313 | The compact CDC XLog Sender syntax blocks omit the `WITH UNIX_DOMAIN` alternative. `09_replication_ha_cdc.md` later has a UNIX-domain example, but the top syntax block and central DDL-generation attachment can still steer answers toward TCP-only CDC syntax. | Add `WITH UNIX_DOMAIN` as an alternative in both compact syntax blocks, with the existing same-host UNIX/Linux and `$ALTIBASE_HOME` cautions. Keep `USING SSL` and `USING IB` excluded from `FOR ANALYSIS`. |
-| Medium | `GPTs/attachments/09_replication_ha_cdc.md` | 1378 | The XLog Sender host-change caution says "Host changes are TCP-only when a UNIX domain connection is used", which is ambiguous. The source says `ADD HOST` is impossible when `UNIX_DOMAIN` was specified, and `ADD HOST`, `DROP HOST`, and `SET HOST` apply only to TCP/IP hosts. | Replace the caution with explicit rules: a UNIX-domain XLog Sender cannot add hosts; host add/drop/set operations are for TCP/IP XLog Collector endpoints only; `SET HOST` takes effect after restart. |
-| Medium | `GPTs/attachments/03_sql_ddl_generation.md` | 349 | The table DDL rule says not to generate any `ALTER TABLE` that changes a replication target. That is safe as a default, but too broad for the documented Altibase procedures that allow DDL execution or DDL synchronization under strict properties, protocol, gap, and service-migration conditions. | Reword as "Do not generate ad hoc `ALTER TABLE` for replication targets." Then point to `09_replication_ha_cdc.md` for the standard remove/re-add procedure and the documented DDL synchronization procedure. |
+| Resolved High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The DDL synchronization procedure was incomplete. It set `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but omitted required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on both local and remote servers. It also omitted the local `ALTER SESSION SET REPLICATION = DEFAULT` step and said to flush before DDL on the local server only, while the source procedure requires flushing on both local and remote servers. This was also reported in `R03`. | Resolved by H02. The DDL synchronization sequence is no longer an open High gate item. |
+| Resolved Medium | `GPTs/attachments/03_sql_ddl_generation.md`<br>`GPTs/attachments/09_replication_ha_cdc.md` | 593<br>313 | The compact CDC XLog Sender syntax blocks omitted the `WITH UNIX_DOMAIN` alternative. | Resolved by M16. Both compact syntax blocks now include `WITH UNIX_DOMAIN` with same-host UNIX/Linux and `$ALTIBASE_HOME` cautions, while keeping `USING SSL` and `USING IB` excluded from `FOR ANALYSIS`. |
+| Resolved Medium | `GPTs/attachments/09_replication_ha_cdc.md` | 1378 | The XLog Sender host-change caution used ambiguous wording for UNIX-domain and TCP/IP host changes. | Resolved by M17. The host-change rules now state that a UNIX-domain XLog Sender cannot add hosts, that add/drop/set operations are for TCP/IP XLog Collector endpoints, and that `SET HOST` takes effect after restart. |
+| Resolved Medium | `GPTs/attachments/03_sql_ddl_generation.md` | 349 | The table DDL rule said not to generate any `ALTER TABLE` that changes a replication target, which was safe but too broad for documented procedures. | Resolved by M18. The rule now says not to generate ad hoc `ALTER TABLE` for replication targets and routes standard remove/re-add and DDL synchronization procedures to `09_replication_ha_cdc.md`. |
 
 ## Source Checks
 
@@ -90,7 +90,7 @@ No Blocker findings were identified. The original High issue below has been reso
 - Too much generic Oracle material:
   - None found in the reviewed stage files.
 - Missing Altibase-specific difference:
-  - The allowed-but-controlled DDL synchronization path needs to be represented more accurately, instead of only a broad "do not alter replication targets" rule in the DDL generation file.
+  - The allowed-but-controlled DDL synchronization and replication-target DDL routing gaps are closed by H02 and M18.
 
 ## Version Checks
 
@@ -110,12 +110,13 @@ No Blocker findings were identified. The original High issue below has been reso
   - Literal tokens such as `CREATE REPLICATION`, `USING SSL`, `REPLICATION_SSL_PORT_NO`, `FOR ANALYSIS`, `ALA_Handshake`, and `V$REPSENDER` are preserved.
 - Risks:
   - Closed by H02: the high-risk DDL synchronization property sequence is no longer missing.
-  - A GPT could miss or mishandle UNIX-domain Log Analyzer CDC if it retrieves the compact syntax block instead of the later example.
-  - A GPT could over-reject replication-target `ALTER TABLE` requests instead of routing them to the documented Altibase procedure.
+  - Closed by M16 and M17: compact CDC syntax and XLog Sender host-change rules now cover UNIX-domain behavior.
+  - Closed by M18: replication-target `ALTER TABLE` requests are routed to documented procedures.
 
-## Required Follow-Up
+## V02 Closure
 
 - Closed by H02: DDL synchronization procedure in `09_replication_ha_cdc.md`.
-- Add `WITH UNIX_DOMAIN` to the compact CDC syntax in `03_sql_ddl_generation.md` and `09_replication_ha_cdc.md`.
-- Clarify XLog Sender host-change rules for `UNIX_DOMAIN` versus TCP/IP endpoints in `09_replication_ha_cdc.md`.
-- Reword the broad replication-target `ALTER TABLE` prohibition in `03_sql_ddl_generation.md` to point to the documented procedures in `09_replication_ha_cdc.md`.
+- Closed by M16: compact CDC syntax includes `WITH UNIX_DOMAIN`.
+- Closed by M17: XLog Sender host-change rules distinguish UNIX-domain from TCP/IP endpoints.
+- Closed by M18: replication-target DDL guidance now points to documented procedures.
+- No open R10 finding remains after V02 re-review of the changed sections.

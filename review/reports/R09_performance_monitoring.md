@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 
@@ -47,10 +47,10 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1731 | The SQL plan cache join selects `b.child_pco_count` and orders by `b.child_pco_count`, but `CHILD_PCO_COUNT` belongs to `V$SQL_PLAN_CACHE_SQLTEXT`, not `V$SQL_PLAN_CACHE_PCO`. The generated check SQL will fail or teach the GPT an invalid column ownership. | Resolved by H07. The plan-cache alias bug is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Resolved High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1648 | The attachment says only 7.3 and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN` and `UNKEEP_PLAN`, then warns not to present the package as common to 7.1. The sampled 7.1 Stored Procedures Manual also documents `DBMS_SQL_PLAN_CACHE`, `KEEP_PLAN`, and `UNKEEP_PLAN`. This is wrong version guidance for 7.1 customers. | Resolved by H08. The plan-cache package version note is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1743 | `CREATE_REASON` value spelling is source-inconsistent. The Performance Tuning Guide example output shows `CREATED_BY_CACHE_MISS`, but the General Reference data dictionary value list says `CREATE_BY_CACHE_MISS`, `CREATE_BY_PLAN_INVALIDATION`, and `CREATE_BY_PLAN_TOO_OLD`. The attachment hard-codes only `CREATED_BY_CACHE_MISS`. | Prefer the data dictionary spelling in explanatory text, or phrase the interpretation around the actual `CREATE_REASON` values returned by the target server. Do not build alert rules that require the `CREATED_BY_*` spelling without target-version validation. |
-| Low | `GPTs/attachments/08_performance_tuning_monitoring.md` | 2110 | The SNMP run-pattern example uses `-c private` even though the same section correctly warns not to use default community strings in production. This can weaken generated SNMP examples. | Replace the literal community with a placeholder such as `-c <community>` and keep the ACL/default-community warning. |
+| Resolved High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1731 | The SQL plan cache join selects `b.child_pco_count` and orders by `b.child_pco_count`, but `CHILD_PCO_COUNT` belongs to `V$SQL_PLAN_CACHE_SQLTEXT`, not `V$SQL_PLAN_CACHE_PCO`. The generated check SQL will fail or teach the GPT an invalid column ownership. | Resolved by H07. The plan-cache alias bug is no longer an open High gate item. |
+| Resolved High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1648 | The attachment says only 7.3 and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN` and `UNKEEP_PLAN`, then warns not to present the package as common to 7.1. The sampled 7.1 Stored Procedures Manual also documents `DBMS_SQL_PLAN_CACHE`, `KEEP_PLAN`, and `UNKEEP_PLAN`. This is wrong version guidance for 7.1 customers. | Resolved by H08. The plan-cache package version note is no longer an open High gate item. |
+| Resolved Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1743 | `CREATE_REASON` value spelling is source-inconsistent, and the attachment hard-coded only `CREATED_BY_CACHE_MISS`. | Resolved by M15. The plan-cache interpretation now avoids brittle alert rules tied to only `CREATED_BY_*` spelling and tells users to interpret the actual target-server values. |
+| Resolved Low | `GPTs/attachments/08_performance_tuning_monitoring.md` | 2110 | The SNMP run-pattern example used `-c private` even though the same section correctly warned not to use default community strings in production. | Resolved by L06. The SNMP example now uses a community placeholder while retaining the ACL/default-community warning. |
 
 ## Source Checks
 
@@ -67,7 +67,7 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
   - The 8.1 JSON plan text is appropriately narrow and does not invent JSON schema, field names, property values, or sample JSON output.
 - Source gaps:
   - No live Altibase server was available, so SQL snippets were checked against manuals, not executed.
-  - `CREATE_REASON` spelling conflicts between source manuals; this should be resolved conservatively in attachment wording.
+  - The `CREATE_REASON` spelling conflict is now handled conservatively in attachment wording by M15.
 
 ## Oracle-Overlap Decision
 
@@ -76,13 +76,12 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
 - Too much generic Oracle material:
   - None found in this stage.
 - Missing Altibase-specific difference:
-  - The plan-cache package version note misses documented 7.1 support.
+  - The plan-cache package 7.1 support gap is closed by H08.
 
 ## Version Checks
 
 - 7.1:
-  - Performance tuning fundamentals, plan nodes, SQL plan cache views, Monitoring API, and SNMP concepts are covered.
-  - `DBMS_SQL_PLAN_CACHE` support is incorrectly treated as not common to 7.1.
+  - Performance tuning fundamentals, plan nodes, SQL plan cache views, Monitoring API, SNMP concepts, and `DBMS_SQL_PLAN_CACHE` support are covered.
 - 7.3:
   - Source checks align well for optimizer, plan cache, Result Cache, Monitoring API, and SNMP.
 - 8.1:
@@ -98,11 +97,12 @@ find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
 - Risks:
   - Closed by H07: the `child_pco_count` alias bug is no longer an open risk.
   - Closed by H08: the 7.1 `DBMS_SQL_PLAN_CACHE` version warning is no longer an open risk.
-  - The `CREATE_REASON` spelling conflict may cause brittle generated monitoring rules unless target output is checked.
+  - Closed by M15: `CREATE_REASON` guidance is target-server oriented to avoid brittle generated monitoring rules.
 
-## Required Follow-Up
+## V02 Closure
 
 - Closed by H07: the `V$SQL_PLAN_CACHE_SQLTEXT` / `V$SQL_PLAN_CACHE_PCO` alias issue in `08_performance_tuning_monitoring.md`.
 - Closed by H08: the `DBMS_SQL_PLAN_CACHE` version note now includes documented 7.1 support.
-- Resolve or soften the `CREATE_REASON` value spelling in plan-cache interpretation text.
-- Replace default SNMP community strings in examples with placeholders.
+- Closed by M15: `CREATE_REASON` spelling interpretation is target-server oriented.
+- Closed by L06: SNMP examples use a community placeholder.
+- No open R09 finding remains after V02 re-review of the changed sections.

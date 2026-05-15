@@ -2,7 +2,7 @@
 
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 
@@ -41,12 +41,12 @@ rg -n 'qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE|rpERR_ABORT_RP_READ_SOCKET|rp
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/07_error_messages_troubleshooting.md` | 11 | The file says it can answer cause and action for a specific Altibase error code, but the attachment contains only 32 searchable error blocks while each sampled Error Message Reference has roughly 2,900-3,000 entries. The safety rules at lines 28 and 53 reduce hallucination risk, but there is no explicit "uncovered error code" answer path. A GPT could infer cause/action from prefix/module when the exact code is not in the attachment. | Resolved by H06. The uncovered-error-code behavior is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Medium | `GPTs/attachments/07_error_messages_troubleshooting.md` | 34 | The standard response format requires `Escalation`, but most error blocks omit an explicit escalation line. Only the temporary-table DDL and client SSL blocks include concrete escalation text; production-sensitive blocks such as FATAL listener bind, replication socket/handshake, server SSL, and DB Link do not. | Add an `Escalation:` field to every error block, or add a module/severity default that every block inherits. Include exact evidence to collect and when to stop giving corrective actions. |
-| Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1808 | Server tuning blocks are useful but not consistently organized as symptom, cause, diagnostic check, bounded action, verification, and escalation. Several actions involve operational property changes without rollback limits or a post-change verification query. | Rewrite each `Server issue block` with the same troubleshooting fields used in attachment 07: `Symptom`, `Primary Causes`, `Check SQL or Command`, `Immediate Action`, `Verification`, `Version Cautions`, and `Escalation`. |
-| Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1839 | `VICTIM_SEARCH_WARP` is interpreted as page flushing being deprioritized, but the 7.3 source describes it as continued replacement-buffer searches after failing to find replacement targets. The current interpretation could lead to wrong buffer-pressure diagnosis. | Rephrase as replacement-buffer search pressure. Pair it with `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, `READ_PAGES`, and time-window snapshots before recommending `BUFFER_AREA_SIZE` or SQL/index changes. |
-| Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1858 | The service-thread action compares a generic `SOCKET` count with `MULTIPLEXING_THREAD_COUNT`, but `V$SERVICE_THREAD.TYPE` distinguishes `SOCKET (MULTIPLEXING)` and `SOCKET (DEDICATED)`, and `READY_TASK_COUNT` is the more direct queue signal. The current wording can over-recommend increasing `MULTIPLEXING_THREAD_COUNT`. | Count `TYPE` and `RUN_MODE` explicitly, inspect `READY_TASK_COUNT`, and compare only multiplexing/shared load with `MULTIPLEXING_THREAD_COUNT`. Include a verification query and version/property check before recommending a property change. |
-| Low | `GPTs/attachments/06_data_dictionary_performance_views.md` | 1797 | The runtime and replication answer templates stop after listing diagnostic views. They do not point the GPT back to the error/performance files for action and escalation after the data is collected. | Add one final step to each troubleshooting template: map the observed condition to the relevant 07 or 08 response block before recommending an action. |
+| Resolved High | `GPTs/attachments/07_error_messages_troubleshooting.md` | 11 | The file says it can answer cause and action for a specific Altibase error code, but the attachment contains only 32 searchable error blocks while each sampled Error Message Reference has roughly 2,900-3,000 entries. The safety rules at lines 28 and 53 reduce hallucination risk, but there is no explicit "uncovered error code" answer path. A GPT could infer cause/action from prefix/module when the exact code is not in the attachment. | Resolved by H06. The uncovered-error-code behavior is no longer an open High gate item. |
+| Resolved Medium | `GPTs/attachments/07_error_messages_troubleshooting.md` | 34 | The standard response format required `Escalation`, but most error blocks omitted an explicit escalation line or inherited default. | Resolved by M11. The error-response guidance now includes escalation coverage and evidence/stop conditions for production-sensitive responses. |
+| Resolved Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1808 | Server tuning blocks were not consistently organized as symptom, cause, diagnostic check, bounded action, verification, and escalation. | Resolved by M12. The server issue blocks now use the common troubleshooting fields, including verification, version cautions, and escalation. |
+| Resolved Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1839 | `VICTIM_SEARCH_WARP` was interpreted as page flushing being deprioritized, but the source describes continued replacement-buffer searches after failing to find replacement targets. | Resolved by M13. The attachment now describes replacement-buffer search pressure and pairs the signal with related counters and time-window snapshots. |
+| Resolved Medium | `GPTs/attachments/08_performance_tuning_monitoring.md` | 1858 | The service-thread action compared a generic `SOCKET` count with `MULTIPLEXING_THREAD_COUNT`, risking over-recommendation of property changes. | Resolved by M14. The diagnostic now counts `TYPE` and `RUN_MODE`, inspects `READY_TASK_COUNT`, and compares only multiplexing/shared load with `MULTIPLEXING_THREAD_COUNT`. |
+| Resolved Low | `GPTs/attachments/06_data_dictionary_performance_views.md` | 1797 | The runtime and replication answer templates stopped after listing diagnostic views and did not route collected evidence back to the error/performance response blocks. | Resolved by L05. The templates now map observed conditions to the relevant `07` or `08` response block before recommending action. |
 
 ## Source Checks
 
@@ -60,8 +60,8 @@ rg -n 'qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE|rpERR_ABORT_RP_READ_SOCKET|rp
   - The sampled 07 error blocks are mostly source-backed and are organized around symptom, cause, action, and check SQL/commands.
   - The 8.1 JSON and Temporary LOB cautions are appropriately limited to 8.1 verified source and release-note-backed behavior.
 - Source gaps:
-  - Error coverage is curated, not comprehensive. The attachment needs an explicit unsupported/uncovered-code behavior to avoid inferred cause/action for thousands of unlisted codes.
-  - Escalation guidance is not itemized for most individual error blocks.
+  - Error coverage remains curated, not comprehensive, but H06 added the explicit unsupported/uncovered-code behavior needed to avoid inferred cause/action for unlisted codes.
+  - Escalation guidance is covered by M11.
 
 ## Oracle-Overlap Decision
 
@@ -70,7 +70,7 @@ rg -n 'qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE|rpERR_ABORT_RP_READ_SOCKET|rp
 - Too much generic Oracle material:
   - None found in this stage.
 - Missing Altibase-specific difference:
-  - The main gap is not Oracle overlap; it is Altibase-specific operational escalation and uncovered error-code behavior.
+  - Prior operational escalation and uncovered error-code gaps are closed by H06 and M11.
 
 ## Version Checks
 
@@ -88,13 +88,13 @@ rg -n 'qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE|rpERR_ABORT_RP_READ_SOCKET|rp
   - Attachment 06 provides useful operational SQL for sessions, locks, replication, tablespaces, backup/log state, and Temporary LOB checks.
   - Attachment 08 correctly warns against recommending indexes, hints, and property changes before evidence is collected.
 - Risks:
-  - Closed by H06: uncovered error codes now have an explicit response path; remaining risks are Medium/Low escalation and troubleshooting-structure follow-ups.
-  - Missing escalation fields make answers less consistent for production incidents.
-  - A few performance troubleshooting actions need tighter source wording and verification steps before property changes.
+  - Uncovered error-code handling is closed by H06.
+  - Escalation and performance troubleshooting structure risks are closed by M11, M12, M13, and M14.
 
-## Required Follow-Up
+## V02 Closure
 
 - Closed by H06: source-safe "uncovered error code" response pattern in `07_error_messages_troubleshooting.md`.
-- Add explicit `Escalation:` fields, or inherited escalation defaults, to the individual 07 error blocks.
-- Normalize 08 server issue blocks to the symptom/cause/check/action/verification/escalation structure.
-- Correct the `VICTIM_SEARCH_WARP` interpretation and refine the service-thread overload diagnostic before upload.
+- Closed by M11: escalation coverage in `07_error_messages_troubleshooting.md`.
+- Closed by M12, M13, and M14: normalized server issue blocks, `VICTIM_SEARCH_WARP`, and service-thread overload diagnostics in `08_performance_tuning_monitoring.md`.
+- Closed by L05: runtime and replication templates route observations to the relevant action/escalation blocks.
+- No open R08 finding remains after V02 re-review of the changed sections.

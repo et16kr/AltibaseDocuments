@@ -1,7 +1,7 @@
 # R12 Development Interfaces Review
 Date: 2026-05-15
 Reviewer: Codex
-Verdict: Pass With Follow-Up
+Verdict: Pass
 
 ## Scope
 - Attachments:
@@ -49,10 +49,10 @@ git status --short -- GPTs/attachments review/reports/R12_development_interfaces
 ## Findings
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Resolved High | `GPTs/attachments/12_c_cli_odbc_precompiler.md`; `GPTs/attachments/11_java_jdbc_spring.md`; `GPTs/attachments/13_isql_iloader_basic_tools.md` | 98; 81; 70 | Altibase 8.1 Empty LOB interface changes are not captured. The 8.1 release notes add CLI `SQLEmptyLob()` and `SQLGetLobLength2()`, improved iLoader Empty LOB support only with `-lob -use_lob_file=yes`, and improved JDBC Empty LOB support. The current attachments cover ordinary LOBs, Temporary LOBs, and `SQLFreeLob2()`, but do not distinguish this 8.1 Empty LOB behavior from older 7.1/7.3 guidance where zero-length LOB data is documented as handled like `NULL`. | Resolved by H11. The 8.1 Empty LOB interface gap is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Resolved High | `GPTs/attachments/13_isql_iloader_basic_tools.md` | 727 | The CSV cookbook examples use `-rule csv` together with `-f target_table.fmt`, but the 7.1 and 7.3 iLoader manuals state that `-rule csv` cannot be used with delimiter-related options including `-f`, `-t`, `-r`, and `-e`; the caution at line 733 omits `-f`. This makes the user-facing example potentially not version-safe. | Resolved by H12. The iLoader `-rule csv` copy-ready example risk is no longer an open High gate item; remaining rows in this report are Medium/Low follow-ups. |
-| Medium | `GPTs/attachments/13_isql_iloader_basic_tools.md` | 527 | The compact iLoader syntax omits documented literal options that are likely retrieval targets: `-dry-run`, `-lightmode`, and 7.1-documented `-stmt_prefix` and `-extra_col_delimiter`. The version block mentions `-lightmode`, but the command syntax and option blocks do not preserve these literals in the main iLoader section. | Add the omitted options with version scope, or label the compact syntax as intentionally partial and add small option blocks for `-dry-run`, `-lightmode`, `-stmt_prefix`, and `-extra_col_delimiter`. |
-| Low | `GPTs/attachments/11_java_jdbc_spring.md` | 144 | The SSL/TLS JDBC URL example enables `verify_server_certificate=true` but does not show the truststore attributes needed for private CA deployments. The truststore properties are listed later, so the issue is example completeness rather than a missing literal. | Add an inline note under the SSL/TLS URL example that server verification requires a configured default truststore or explicit `truststore_url` and `truststore_password`, and keep detailed certificate procedure in the SSL/TLS attachment. |
+| Resolved High | `GPTs/attachments/12_c_cli_odbc_precompiler.md`; `GPTs/attachments/11_java_jdbc_spring.md`; `GPTs/attachments/13_isql_iloader_basic_tools.md` | 98; 81; 70 | Altibase 8.1 Empty LOB interface changes are not captured. The 8.1 release notes add CLI `SQLEmptyLob()` and `SQLGetLobLength2()`, improved iLoader Empty LOB support only with `-lob -use_lob_file=yes`, and improved JDBC Empty LOB support. The current attachments cover ordinary LOBs, Temporary LOBs, and `SQLFreeLob2()`, but do not distinguish this 8.1 Empty LOB behavior from older 7.1/7.3 guidance where zero-length LOB data is documented as handled like `NULL`. | Resolved by H11. The 8.1 Empty LOB interface gap is no longer an open High gate item. |
+| Resolved High | `GPTs/attachments/13_isql_iloader_basic_tools.md` | 727 | The CSV cookbook examples use `-rule csv` together with `-f target_table.fmt`, but the 7.1 and 7.3 iLoader manuals state that `-rule csv` cannot be used with delimiter-related options including `-f`, `-t`, `-r`, and `-e`; the caution at line 733 omits `-f`. This makes the user-facing example potentially not version-safe. | Resolved by H12. The iLoader `-rule csv` copy-ready example risk is no longer an open High gate item. |
+| Resolved Medium | `GPTs/attachments/13_isql_iloader_basic_tools.md` | 527 | The compact iLoader syntax omitted documented literal options that are likely retrieval targets: `-dry-run`, `-lightmode`, and 7.1-documented `-stmt_prefix` and `-extra_col_delimiter`. | Resolved by M20. The iLoader section now preserves those option literals with version scope or an explicit compact-syntax boundary. |
+| Resolved Low | `GPTs/attachments/11_java_jdbc_spring.md` | 144 | The SSL/TLS JDBC URL example enabled `verify_server_certificate=true` but did not show the truststore attributes needed for private CA deployments. | Resolved by L07. The JDBC SSL/TLS URL guidance now notes that server verification requires a configured default truststore or explicit `truststore_url` and `truststore_password`. |
 
 ## Source Checks
 - Claims checked:
@@ -66,7 +66,7 @@ git status --short -- GPTs/attachments review/reports/R12_development_interfaces
   - Adequate for 8.1 interface deltas where release notes and verified trunk sources expose the relevant literals.
 - Source gaps:
   - 8.1 full English interface manuals are not available in the sampled set, so some 8.1 interface details rely on release notes and verified-source/trunk material.
-  - The iLoader `-rule csv` source language appears internally surprising because it names `-f` as incompatible even though format files are central to many iLoader examples. This needs a targeted maintainer or runtime check before upload.
+  - The iLoader `-rule csv` source-language conflict is now handled conservatively by H12.
   - C Interface and APRE were sampled for API/order/literal preservation, not exhaustively line-by-line.
 
 ## Oracle-Overlap Decision
@@ -75,19 +75,19 @@ git status --short -- GPTs/attachments review/reports/R12_development_interfaces
 - Too much generic Oracle material:
   - No significant issue found in this stage.
 - Missing Altibase-specific difference:
-  - 8.1 Empty LOB interface behavior is missing from the development-interface attachments.
-  - The iLoader CSV option compatibility needs Altibase-specific correction before examples are copy-ready.
+  - The 8.1 Empty LOB interface behavior gap is closed by H11.
+  - The iLoader CSV option compatibility gap is closed by H12.
 
 ## Version Checks
 - 7.1:
   - JDBC, CLI, ODBC, APRE, iSQL, and iLoader literals are mostly preserved.
-  - Older LOB handling around zero-length LOBs should be protected from being applied to 8.1 Empty LOB answers.
+  - Older LOB handling around zero-length LOBs is now protected from being applied to 8.1 Empty LOB answers by H11.
 - 7.3:
   - Java compatibility, Maven availability, Hibernate LOB defaults, `socket_immediate_close`, iSQL permissions, and iLoader option families are mostly represented.
-  - `-lightmode` is mentioned but not included in the iLoader syntax block.
+  - `-lightmode` and related less-common iLoader options are covered by M20.
 - 8.1:
   - Temporary LOB and `SQLFreeLob2()` are represented.
-  - Empty LOB interface changes are not represented for JDBC, CLI, or iLoader and should be added before pass.
+  - Empty LOB interface changes for JDBC, CLI, and iLoader are represented by H11.
 
 ## Retrieval And GPT Answer Quality
 - Strengths:
@@ -97,10 +97,11 @@ git status --short -- GPTs/attachments review/reports/R12_development_interfaces
 - Risks:
   - Closed by H11: 8.1 Empty LOB answers no longer need to inherit 7.1/7.3 zero-length LOB guidance.
   - Closed by H12: iLoader CSV commands are no longer presented in conflict with manual-stated `-rule csv` option restrictions.
-  - Less common iLoader options may be hard to retrieve because some literals are absent from the compact syntax and option blocks.
+  - Closed by M20: less common iLoader option literals are available for retrieval.
 
-## Required Follow-Up
+## V02 Closure
 - Closed by H11: 8.1 Empty LOB guidance in `11_java_jdbc_spring.md`, `12_c_cli_odbc_precompiler.md`, and `13_isql_iloader_basic_tools.md`.
 - Closed by H12: `-rule csv` cookbook commands in `13_isql_iloader_basic_tools.md`.
-- Add version-scoped iLoader option literals for `-dry-run`, `-lightmode`, `-stmt_prefix`, and `-extra_col_delimiter`, or clearly mark the compact syntax as partial.
-- Optionally clarify the JDBC SSL URL example with truststore requirements while keeping the full SSL/TLS procedure in the dedicated security attachment.
+- Closed by M20: version-scoped iLoader option literals for `-dry-run`, `-lightmode`, `-stmt_prefix`, and `-extra_col_delimiter`.
+- Closed by L07: JDBC SSL URL example clarifies truststore requirements.
+- No open R12 finding remains after V02 re-review of the changed sections.
