@@ -663,10 +663,15 @@ tempfile_spec ::=
 Drop tablespace:
 
 ```text
+drop_if_exists ::=
+  IF EXISTS           -- 8.1 verified source only; omit for 7.1 and 7.3
+
 drop_tablespace ::=
-  DROP TABLESPACE tablespace_name
+  DROP TABLESPACE [drop_if_exists] tablespace_name
   [INCLUDING CONTENTS [AND DATAFILES] [CASCADE CONSTRAINTS]]
 ```
+
+Version rule: `DROP TABLESPACE IF EXISTS` is available only in the Altibase 8.1 verified source. For 7.1 and 7.3, omit `IF EXISTS`; make idempotent drop scripts use a metadata pre-check plus script-side conditional execution before running ordinary `DROP TABLESPACE`.
 
 Alter tablespace:
 
@@ -1070,6 +1075,20 @@ Rules:
 - State changes such as `ONLINE`, `OFFLINE`, and `DISCARD` do not apply to temporary tablespaces.
 
 Runbook: drop tablespace
+
+For 8.1-only idempotent drops:
+
+```sql
+DROP TABLESPACE IF EXISTS app_data;
+```
+
+For 7.1 and 7.3 idempotent scripts, use a metadata pre-check and run `DROP TABLESPACE` only when the target exists:
+
+```sql
+SELECT name
+FROM v$tablespaces
+WHERE name = 'APP_DATA';
+```
 
 ```sql
 DROP TABLESPACE app_data;
