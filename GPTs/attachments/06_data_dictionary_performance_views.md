@@ -2109,6 +2109,7 @@ Use this when the user asks "what is running/blocked/slow":
 3. Query `V$SESSION_WAIT`.
 4. Query `V$LOCK_WAIT` and `V$LOCK_STATEMENT` if blocking is suspected.
 5. Query `V$TRANSACTION` when transaction state or update size matters.
+6. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
 
 ### Template: Replication Health Request
 
@@ -2119,6 +2120,7 @@ Use this when the user asks "is replication delayed or failing":
 3. Query `V$REPGAP` or `V$REPGAP_PARALLEL`.
 4. Query `V$REPSENDER` and `V$REPRECEIVER`.
 5. Treat `NET_ERROR_FLAG = 1`, large `REP_GAP_SIZE`, and receiver failure counts as investigation triggers.
+6. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
 
 ### Template: Version-Sensitive 8.1 Request
 
