@@ -279,12 +279,29 @@ Source purpose: PSM, stored procedures/functions, external procedures, PL/SQL co
 - 7.1:
   - `Manuals/Altibase_7.1/eng/Stored Procedures Manual.md`
   - `Manuals/Altibase_7.1/eng/External Procedures Manual.md`
+  - `Manuals/Altibase_7.1/eng/General Reference-1.Data Types & Altibase Properties.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/Stored Procedures Manual.md`
   - `Manuals/Altibase_7.3/eng/External Procedures Manual.md`
+  - `Manuals/Altibase_7.3/eng/General Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/eng/Altibase_7_3_0_0_1_Release_Notes.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Stored Procedures Manual.md`
   - `Manuals/Altibase_trunk/eng/External Procedures Manual.md`
+  - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Stored Procedures Manual.md`
+  - `Manuals/Altibase_7.1/kor/External Procedures Manual.md`
+  - `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_7.3/kor/Stored Procedures Manual.md`
+  - `Manuals/Altibase_7.3/kor/External Procedures Manual.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
+  - `Manuals/Altibase_trunk/kor/Stored Procedures Manual.md`
+  - `Manuals/Altibase_trunk/kor/External Procedures Manual.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 11_java_jdbc_spring.md
 

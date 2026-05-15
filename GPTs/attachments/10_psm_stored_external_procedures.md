@@ -2,8 +2,8 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 Stored Procedures Manual and External Procedures Manual.
-- 7.3: Based on Altibase 7.3 Stored Procedures Manual, External Procedures Manual, and release-note coverage for VARRAY.
+- 7.1: Based on Altibase 7.1 Stored Procedures Manual, External Procedures Manual, and General Reference.
+- 7.3: Based on Altibase 7.3 Stored Procedures Manual, External Procedures Manual, General Reference, and release-note coverage for VARRAY.
 - 8.1: Based on Altibase 8.1 verified source Stored Procedures Manual, External Procedures Manual, General Reference, and release-note coverage for Temporary LOB.
 
 ## Questions This File Can Answer
@@ -17,8 +17,8 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Stored Procedures Manual; External Procedures Manual.
-- 7.3: Altibase 7.3 Stored Procedures Manual; External Procedures Manual; Altibase 7.3 Release Notes for VARRAY.
+- 7.1: Altibase 7.1 Stored Procedures Manual; External Procedures Manual; General Reference.
+- 7.3: Altibase 7.3 Stored Procedures Manual; External Procedures Manual; General Reference; Altibase 7.3 Release Notes for VARRAY.
 - 8.1: Altibase 8.1 verified source Stored Procedures Manual; External Procedures Manual; General Reference; Altibase 8.1 Release Notes.
 
 ## Core Guidance
@@ -37,10 +37,10 @@
 | Core PSM | Procedures, functions, anonymous blocks, cursors, exceptions, packages, typesets, dynamic SQL, and external procedures are covered. Anonymous block support is documented from 7.1.0.2.3. | Same core PSM model. | Same core model plus verified 8.1 property and Temporary LOB guidance. |
 | Idempotent DDL | Do not assume `IF EXISTS` or `IF NOT EXISTS` for PSM objects. | Do not assume `IF EXISTS` or `IF NOT EXISTS` for PSM objects. | PSM object DDL includes `IF NOT EXISTS` for `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE TYPESET`, `CREATE PACKAGE`, and `CREATE PACKAGE BODY`; `IF EXISTS` for related `DROP` statements where documented. External library DDL includes `CREATE LIBRARY IF NOT EXISTS` and `DROP LIBRARY IF EXISTS`. |
 | VARRAY | Not part of the 7.1 baseline. | Release notes add PSM `VARRAY` as a user-defined type and `VARRAY_MEMORY_MAXIMUM`. | Treat VARRAY as supported in the Altibase 8.1 verified source; use the 7.3+ VARRAY rules below. |
-| External procedure mode | External and internal modes are described, but the 7.1 external procedure syntax does not document explicit `EXTERNAL` or `INTERNAL` in `call_spec`. | `call_spec` documents `EXTERNAL` or `INTERNAL`; omitted mode defaults to external mode. | Same explicit mode guidance as 7.3. |
+| External procedure mode | `call_spec` supports `LANGUAGE [EXTERNAL | INTERNAL] C`; `EXTERNAL` or omission uses external mode, and `INTERNAL` uses internal mode. | Same explicit mode guidance as 7.1. | Same explicit mode guidance as 7.1. |
 | Temporary LOB | Not part of the 7.1 baseline. | Not part of the 7.3 baseline. | Temporary LOB is supported. PSM LOB variables and LOB collections can create transaction or session Temporary LOBs. |
-| PSM case sensitivity | Use documented 7.1 behavior. | Use documented 7.3 behavior. | `PSM_CASE_SENSITIVE_MODE` controls case sensitivity for `RECORD` and `%ROWTYPE` field names and label names. Default is `1`. |
-| Open cursor with rollback | 7.1 guidance warns that `ROLLBACK` while a cursor is open and not committed closes the cursor. | 7.3 source states `COMMIT` and `ROLLBACK` can execute while a cursor is open. | Use the verified source behavior for 8.1. |
+| PSM case sensitivity | `PSM_CASE_SENSITIVE_MODE` default is `0`. `0` is case-insensitive and `1` is case-sensitive for `RECORD` and `%ROWTYPE` field names and label names. | `PSM_CASE_SENSITIVE_MODE` default is `1`; use the same `0`/`1` behavior. | `PSM_CASE_SENSITIVE_MODE` default is `1`; use the same `0`/`1` behavior. |
+| Open cursor with rollback | `COMMIT` and `ROLLBACK` can execute while a cursor is open. | `COMMIT` and `ROLLBACK` can execute while a cursor is open. | `COMMIT` and `ROLLBACK` can execute while a cursor is open. |
 
 ## PSM Generation Flow
 
@@ -615,12 +615,13 @@ alter_package ::=
   ALTER PACKAGE [user_name.]package_name COMPILE [SPECIFICATION | BODY | PACKAGE];
 
 drop_package ::=
-  DROP PACKAGE [IF EXISTS] [BODY] [user_name.]package_name;
+  DROP PACKAGE [BODY] [IF EXISTS] [user_name.]package_name;
 ```
 
 Generation notes:
 
 - A package has a specification and, when needed, a body.
+- For 7.1 and 7.3, do not generate package `IF EXISTS`; use `DROP PACKAGE [BODY] [user_name.]package_name`. For 8.1, when dropping a package body idempotently, place `BODY` before `IF EXISTS`, for example `DROP PACKAGE BODY IF EXISTS pkg1`.
 - The specification is the public API: types, variables, constants, cursors, exceptions, procedures, and functions declared there can be referenced from outside.
 - The body defines package cursors and subprograms and can include private declarations.
 - Package body initialization runs once per session on first package use.
@@ -815,7 +816,7 @@ parameter_declaration ::=
 
 Generation notes:
 
-- In 7.3 and 8.1 syntax, omitting `EXTERNAL` or `INTERNAL` defaults to external mode.
+- In 7.1, 7.3, and 8.1 syntax, `call_spec` supports `EXTERNAL` and `INTERNAL`; `EXTERNAL` or omission defaults to external mode.
 - `NAME` and `LIBRARY` can appear in any order, but each should appear only once.
 - `PARAMETERS` maps SQL arguments and argument properties to the C/C++ function arguments.
 - For external functions, `RETURN` in the `PARAMETERS` list must be last. Omitting return property parameters is equivalent to not specifying `RETURN` in that list.
@@ -882,7 +883,7 @@ Entry function notes:
 | `SMALLINT`, `INTEGER` | `int` | `int *` | `int` |  |
 | `REAL` | `float` | `float *` | `float` |  |
 | `DOUBLE` | `double` | `double *` | `double` |  |
-| `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR` | `char *` | `char *` | `char *` | Add `LENGTH` and `MAXLEN` parameters where needed. |
+| `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `BYTE`, `VARBYTE` | `char *` | `char *` | `char *` | Add `LENGTH` and `MAXLEN` parameters where needed for string or binary buffers. |
 | `NUMERIC`, `DECIMAL`, `NUMBER`, `FLOAT` | `double` | `double *` | `double` | Precision can be lost when high-precision values are converted to `double`. |
 | `DATE`, `INTERVAL` | `SQL_TIMESTAMP_STRUCT` | `SQL_TIMESTAMP_STRUCT *` | `SQL_TIMESTAMP_STRUCT` |  |
 
@@ -934,7 +935,7 @@ These properties do not affect internal mode, because internal mode does not cre
 - Altibase stored functions called from SQL have DML and transaction-control restrictions.
 - Oracle packages are not automatically available. Map to Altibase packages such as `DBMS_SQL`, `DBMS_OUTPUT`, `DBMS_STATS`, `UTL_FILE`, `UTL_RAW`, `UTL_SMTP`, and `UTL_TCP`, and verify signatures.
 - Oracle collection code may need conversion to Altibase `ASSOCIATIVE ARRAY`, `VARRAY` in 7.3+, or `TYPESET`.
-- For 8.1, PSM field and label case sensitivity can depend on `PSM_CASE_SENSITIVE_MODE`.
+- PSM field and label case sensitivity depends on `PSM_CASE_SENSITIVE_MODE`: default `0` in 7.1, default `1` in 7.3 and 8.1.
 - For external native code, Altibase requires `LANGUAGE C`, a library object, `entryfunction`, and deployment to `$ALTIBASE_HOME/lib`.
 
 ### Needs Alternative Design or Explicit Review
