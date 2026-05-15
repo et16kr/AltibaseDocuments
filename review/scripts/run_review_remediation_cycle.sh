@@ -448,8 +448,9 @@ run_stage_cycle() {
     echo "==> remediating $id (attempt $attempt/$MAX_RETRIES)"
     set_cycle_status "$id" Remediating
     if ! run_remediation "$id"; then
+      set_cycle_status "$id" Fail
       append_failure "$id" "remediation command exited nonzero on attempt $attempt"
-      echo "==> $id remediation exited nonzero; leaving status as Remediating."
+      echo "==> $id remediation exited nonzero; marked status as Fail."
       return 1
     fi
 
