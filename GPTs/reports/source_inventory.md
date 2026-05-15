@@ -255,12 +255,15 @@ Source purpose: iSQL, iLoader, export/import, first-line operational tool usage.
 - 7.1:
   - `Manuals/Altibase_7.1/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_7.1/eng/iLoader User's Manual.md`
+  - `Manuals/Altibase_7.1/kor/iLoader User's Manual.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_7.3/eng/iLoader User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/iLoader User's Manual.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_trunk/eng/iLoader User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/iLoader User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 14_utilities_operation_tools.md
