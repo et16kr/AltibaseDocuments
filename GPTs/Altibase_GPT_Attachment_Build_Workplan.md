@@ -9,62 +9,30 @@ Altibase 7.1, 7.3, or 8.1.
 
 ## Execution Management
 
-Long work is split into jobs.
+The initial attachment build jobs are complete. Current pre-upload verification is
+managed by the staged review/remediation cycle.
 
-- Job list: `GPTs/Altibase_GPT_Attachment_Job_List.md`
-- Runner script: `GPTs/scripts/attachment_jobs.sh`
+Current review-cycle files:
 
-Each job has one status: `ToDo`, `InProgress`, `Review`, `Done`, `Fail`, `Blocked`, or
-`Skip`. Each step is designed so the runner can pass an independent job prompt to the
-Codex CLI.
-
-Commit and recovery rules:
-
-- Each job should leave a Git commit at the start and at the finish.
-- Start a job with `bash GPTs/scripts/attachment_jobs.sh start JOB-ID`. This changes
-  the job status to `InProgress` and commits only changes under `GPTs/`.
-- `run JOB-ID` automatically starts a `ToDo` job before running the Codex CLI.
-- Finish a job with `bash GPTs/scripts/attachment_jobs.sh finish JOB-ID Done "summary"`,
-  or use `Review`, `Fail`, `Blocked`, or `Skip` when appropriate. The finish command
-  commits the status change and outputs together.
-- For long jobs, use `bash GPTs/scripts/attachment_jobs.sh commit JOB-ID "intermediate summary"`
-  when an intermediate save point is useful.
-- If token exhaustion, session closure, or CLI failure interrupts a job, use
-  `bash GPTs/scripts/attachment_jobs.sh history JOB-ID` to find job commits and resume.
-- The runner commit scope is `GPTs/` by default. Source manuals and other directories
-  are not included in job commits.
-- Close failed jobs with `finish JOB-ID Fail "failure reason"` so the reason is captured
-  in the commit message. Other ready jobs that do not depend on the failed job may continue.
-- `start` and `run` check for uncommitted changes under `GPTs/` before starting, because
-  those changes could otherwise mix with the next job commit.
-- Use `ALLOW_DIRTY_COMMIT_SCOPE=1` only for manual recovery when a dirty `GPTs/` scope is
-  intentional.
-- `DRY_RUN=1` previews status changes, Codex execution, staging, and commits without
-  making changes.
+- Stage definitions: `review/review_stages.tsv`
+- Cycle runner: `review/scripts/run_review_remediation_cycle.sh`
+- Review stage runner: `review/scripts/run_review_stage.sh`
+- Cycle status: `review/review_remediation_cycle_status.tsv`
+- Review status: `review/review_stage_status.tsv`
+- Stage reports: `review/reports/R*.md`
 
 Automated execution:
 
-- `bash GPTs/scripts/attachment_jobs.sh run-all` runs ready `ToDo` jobs whose dependencies
-  are all `Done`.
-- `bash GPTs/scripts/attachment_jobs.sh run-all "P3 SQL Core"` runs ready jobs only for
-  that phase.
-- `MAX_JOBS=3` limits a long run to three jobs.
-- `STOP_ON_FAIL=1` stops the run immediately after a job fails. By default, failed jobs
-  are marked `Fail` and unrelated ready jobs continue.
-- `AUTO_ACCEPT_REVIEW=1` promotes jobs that finish as `Review` to `Done` during `run-all`.
-- `ALLOW_FAILURES=1` allows `run-all` to exit successfully even when failures occurred.
-- `ALLOW_INCOMPLETE=1` allows `run-all` to exit successfully when no more jobs are ready
-  but blocked `ToDo` jobs remain.
+- `bash review/scripts/run_review_remediation_cycle.sh run-all` runs remaining review
+  stages in stage order.
+- Each stage follows: review, remediate if needed, validate, re-review, commit, then
+  move to the next stage.
+- `DRY_RUN=1 bash review/scripts/run_review_remediation_cycle.sh run-all` previews the
+  planned stage sequence without changing status or running Codex.
+- Optional group execution uses `bash review/scripts/run_review_remediation_cycle.sh run-all GROUP`.
 
-Dependency rules:
-
-- `next` and `run` only target jobs whose dependencies are all `Done`.
-- If a job becomes `Fail` or `Blocked`, unrelated `ToDo` jobs may still continue.
-- Document conversion jobs run only after the required source inventory, language policy,
-  header conversion, and label cleanup jobs have succeeded.
-- Mermaid conversion jobs run only after image inventory and related attachment conversion
-  jobs have succeeded.
-- QA jobs run only after the conversion jobs they check have succeeded.
+Review-cycle source reports under `GPTs/reports/` are retained only where they are
+referenced by `review/review_stages.tsv` or the detailed review design.
 
 ## Source Version Mapping
 
