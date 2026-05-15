@@ -63,6 +63,13 @@ Source purpose: installation, database creation, startup, shutdown, first-run ch
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Getting Started Guide.md`
   - `Manuals/Altibase_trunk/eng/Installation Guide.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Getting Started Guide.md`
+  - `Manuals/Altibase_7.1/kor/Installation Guide.md`
+  - `Manuals/Altibase_7.3/kor/Getting Started Guide.md`
+  - `Manuals/Altibase_7.3/kor/Installation Guide.md`
+  - `Manuals/Altibase_trunk/kor/Getting Started Guide.md`
+  - `Manuals/Altibase_trunk/kor/Installation Guide.md`
 
 ### 02_administration_operations.md
 

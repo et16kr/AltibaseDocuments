@@ -38,9 +38,9 @@ flowchart TD
   E --> F[Set database name, port, memory, buffer, character sets, and directories]
   F --> G[Register license or place license in ALTIBASE_HOME/conf]
   G --> H[Apply environment from altibase_user.env or login profile]
-  H --> I{Create database during installation?}
-  I -- Yes --> J[Installer runs database creation and optional PSM script]
-  I -- No --> K[Run post_install.sh dbcreate or server create]
+  H --> I{Generate DB creation script during installation?}
+  I -- Yes --> J[After installation, run sh post_install.sh dbcreate]
+  I -- No --> K[After installation, run server create with DB and national character sets]
   J --> L[server start]
   K --> L
   L --> M[Verify with iSQL connection]
@@ -70,6 +70,9 @@ Check user limits with `ulimit`. For Unix-like systems, the manuals recommend se
 
 Item: kernel parameters
 Configure shared memory, semaphore, file-cache, and related OS settings before running Altibase. The installer shows recommended values, and `$ALTIBASE_HOME/install/pre_install.sh` contains the post-installation reference for minimum kernel settings.
+
+Item: Linux `RemoveIPC`
+On Red Hat 7.2 or later, check `/etc/systemd/logind.conf` and set `RemoveIPC=no`. The default `yes` can leave Altibase short of semaphores and cause abnormal termination. Restart the OS after changing this setting.
 
 Item: Linux THP
 For Linux, set Transparent Huge Pages to `never` for optimized Altibase operation. Verify with `/sys/kernel/mm/transparent_hugepage/enabled` or `/sys/kernel/mm/redhat_transparent_hugepage/enabled`.
@@ -260,11 +263,23 @@ The installation quick guide also shows:
 isql -s localhost -u sys -p manager
 ```
 
+Run a version smoke test after connecting:
+
+```sql
+SELECT product_version,
+       meta_version,
+       protocol_version,
+       repl_protocol_version
+FROM V$VERSION;
+```
+
+Compare the result with the installed package and target version before treating the instance as ready.
+
 Treat connection success as the minimum first-run verification. For a more complete smoke test, verify these items:
 
 - `server start` completes without license, kernel, memory, or listener errors.
 - iSQL connects to the expected host and port.
-- The iSQL prompt accepts SQL.
+- The iSQL prompt accepts SQL and `V$VERSION` returns the expected product and protocol versions.
 - `$ALTIBASE_HOME/trc` does not show startup failure messages.
 - Application users can connect through the required client protocol after network and firewall rules are opened.
 
@@ -392,6 +407,9 @@ Check that the package file matches the host operating system, 64-bit mode, and 
 
 Symptom: server does not start after installation
 Check that `$ALTIBASE_HOME/conf/license` exists and is valid, kernel parameters are applied, user limits are sufficient, and the Altibase account sourced the environment profile.
+
+Symptom: semaphore shortage or abnormal termination on Red Hat 7.2 or later
+Check `/etc/systemd/logind.conf` for `RemoveIPC=no`. If this value was changed from the default, restart the OS before retrying Altibase startup.
 
 Symptom: command not found for `server` or `isql`
 Source the profile that sets `ALTIBASE_HOME` and updates `PATH`, or run the command by absolute path under `$ALTIBASE_HOME/bin`.

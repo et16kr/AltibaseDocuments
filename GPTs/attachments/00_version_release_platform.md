@@ -305,7 +305,8 @@ Server and client supported:
 
 Client-only on Windows x64:
 
-- Microsoft Windows 10: server is not supported; client is supported.
+- Microsoft Windows 10: server is not supported; client is supported in the current supported-platform table.
+- Microsoft Windows 2008: 7.3.0.0.1 release notes and the 7.3 Installation Guide list server not supported and client supported, but the current supported-platform table does not list Windows 2008 for 7.3. Use this only for exact patch-level or source-specific answers; do not generalize Windows 2008 support to current 7.3 platform guidance.
 
 7.3 library and tool support:
 
