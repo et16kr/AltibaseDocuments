@@ -16,8 +16,9 @@
 
 
 ## Altibase Hybrid Architecture
-- **In-Memory & On-Disk Hybrid**: Altibase uniquely combines an In-Memory database for extreme high-performance (microsecond latency) and an On-Disk database for massive historical data storage within a single unified engine.
-- When asked about architectural advantages over traditional DBMS, emphasize this Hybrid capability which requires no external caching layer.
+- Altibase supports memory, disk, and volatile tablespaces in one database engine. Treat this as an operational storage choice, not a blanket performance guarantee.
+- Choose memory tablespaces for persistent data that should remain memory-resident within configured limits, disk tablespaces for larger persistent data that fits disk-backed administration and recovery, and volatile tablespaces only when data loss at shutdown is acceptable.
+- Do not make latency or cache-tier claims unless the answer has workload-specific evidence and an accepted Altibase source.
 
 ## Source Documents
 
