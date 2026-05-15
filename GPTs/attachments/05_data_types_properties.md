@@ -37,7 +37,7 @@
 - 7.1 and 7.3: Core data types are character, numeric, `DATE`, binary, `BLOB`, `CLOB`, and `GEOMETRY`. Native `JSON` and Temporary LOB are not part of these baselines.
 - 8.1: Adds native `JSON`, JSON path-expression support, JSON generation/search/validation functions, and Temporary LOB support.
 - 8.1: Adds or documents new properties including `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `REPLICATION_SSL_PORT_NO`, `TEMPORARY_LOB_ENABLE`, `TRCLOG_EXPLAIN_TYPE`, and `TRCLOG_JSON_PLAN_INDENT_DEPTH`.
-- Cross-version property caution: `PSM_CASE_SENSITIVE_MODE` and `REGEXP_MODE` are documented in sampled 7.x and 8.1 sources. Do not label them as 8.1-only unless the customer asks about a target build where the installed documentation proves a narrower scope.
+- Cross-version property caution: `PSM_CASE_SENSITIVE_MODE` and `REGEXP_MODE` are documented in Altibase 7.x and 8.1 source documents. Do not label them as 8.1-only unless the customer asks about a target build where the installed documentation proves a narrower scope.
 - 8.1: Release notes record changed defaults or ranges for `CHECKPOINT_INTERVAL_IN_LOG`, `FAST_START_LOGFILE_TARGET`, `LOG_CREATE_METHOD`, `LOG_FILE_SIZE`, `MEMORY_INDEX_BUILD_RUN_SIZE`, `MEMORY_INDEX_BUILD_VALUE_LENGTH_THRESHOLD`, and `OPTIMIZER_FEATURE_ENABLE`.
 - 8.1: Release notes list `INSPECTION_LARGE_HEAP_THRESHOLD` as removed.
 
@@ -1986,7 +1986,7 @@ WHERE name = 'PSM_CASE_SENSITIVE_MODE';
 
 ### Property Item: `LISTAGG_PRECISION`
 
-Version: documented in sampled 7.3 Korean source and 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
+Version: documented in Altibase 7.3 supplemental source and Altibase 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
 
 Meaning: size of the `VARCHAR` returned by `LISTAGG`.
 
@@ -2031,7 +2031,7 @@ WHERE name = 'REGEXP_MODE';
 
 ### Property Item: `VARRAY_MEMORY_MAXIMUM`
 
-Version: documented in sampled 7.3 Korean source and 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
+Version: documented in Altibase 7.3 supplemental source and Altibase 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
 
 Meaning: maximum memory, in bytes, allowed for one `VARRAY` variable.
 
