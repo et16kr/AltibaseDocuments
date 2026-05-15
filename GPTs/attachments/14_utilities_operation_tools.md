@@ -1296,3 +1296,7 @@ Verification Method:
 - For generated scripts, inspect contents before execution and run on a staging system first when possible.
 - For Kubernetes, keep `aku` lifecycle commands inside the pod lifecycle flow rather than running ad hoc from unrelated containers.
 - For customer answers, translate the explanation but keep commands, options, properties, XML tags, file names, and SQL literal.
+
+## Residual Scope
+
+- Utility blocks cover the selected tools most likely to be used in customer answers. For unlisted options, utility output fields, or patch-specific command behavior, verify the installed utility manual or command help before producing a final runbook.

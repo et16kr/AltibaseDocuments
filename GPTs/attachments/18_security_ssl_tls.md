@@ -625,3 +625,7 @@ Template: monitoring SSL/TLS sessions
 ```text
 Use `SELECT id, db_username, comm_name FROM V$SESSION WHERE comm_name LIKE 'SSL%';` to find current SSL/TLS sessions. If a session must be forcibly disconnected, connect as `SYSDBA` and run `ALTER DATABASE database_name SESSION CLOSE session_number;`.
 ```
+
+## Residual Scope
+
+- SSL/TLS guidance covers Altibase server, client, JDBC, ODBC/CLI, audit, and replication surfaces documented in the selected sources. For connector-specific TLS placement or external PKI policy, verify the connector and security documentation rather than inventing property names.

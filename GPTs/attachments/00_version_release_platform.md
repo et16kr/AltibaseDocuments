@@ -440,3 +440,7 @@ ORDER BY name;
 
 ## Minor Patch & Release Notes Caveats
 - **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific Altibase release notes (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
+
+## Residual Scope
+
+- Release-note-only feature families are kept to version awareness and routing. Do not turn those bullets into operational procedures unless a dedicated source-backed block provides the procedure.

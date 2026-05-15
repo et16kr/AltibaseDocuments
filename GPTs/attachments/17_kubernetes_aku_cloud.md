@@ -639,3 +639,7 @@ Template: lifecycle order
 ```text
 The container should start Altibase first, then run aku -p start. Kubernetes startupProbe should wait for /tmp/aku_start_completed. On termination, the container should run aku -p end before server stop, and terminationGracePeriodSeconds must be long enough for AKU to finish.
 ```
+
+## Residual Scope
+
+- Kubernetes examples are limited to Altibase and AKU behavior from the selected source set. Production platform design still needs environment-specific review for storage, fencing, backup, secrets, licensing, observability, and Kubernetes version support.

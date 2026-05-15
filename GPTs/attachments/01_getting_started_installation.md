@@ -433,3 +433,7 @@ server start
 isql -s 127.0.0.1 -u sys -p manager
 server stop
 ```
+
+## Residual Scope
+
+- This attachment covers first installation, first database creation, startup, connection verification, and patch rollback notes. For production sizing, advanced platform hardening, or site-specific automation, use the target-version manuals and environment evidence before generating final commands.

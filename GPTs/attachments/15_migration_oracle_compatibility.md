@@ -1250,3 +1250,7 @@ Offline constraints:
 - Use `05_data_types_properties.md` for detailed Altibase data type limits and property descriptions.
 - Use `10_psm_stored_external_procedures.md` for Altibase PSM syntax, package behavior, dynamic SQL, cursors, exceptions, and external procedures.
 - Use `13_isql_iloader_basic_tools.md` and `14_utilities_operation_tools.md` when Migration Center `DB to File` output must be loaded with iSQL or iLoader, or when Altibase-to-Altibase logical migration is required.
+
+## Residual Scope
+
+- Migration rules are condensed around Oracle-to-Altibase differences and the documented migration tools. Always reconcile generated scripts, conversion reports, data counts, and application tests before treating a migration answer as complete.

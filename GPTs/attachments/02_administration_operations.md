@@ -14,18 +14,17 @@
 - What checks should be run before and after operational SQL?
 - What differs between memory tablespaces, disk tablespaces, volatile tablespaces, archive log mode, and noarchive log mode?
 
-
-## Altibase Hybrid Architecture
-- Altibase supports memory, disk, and volatile tablespaces in one database engine. Treat this as an operational storage choice, not a blanket performance guarantee.
-- Choose memory tablespaces for persistent data that should remain memory-resident within configured limits, disk tablespaces for larger persistent data that fits disk-backed administration and recovery, and volatile tablespaces only when data loss at shutdown is acceptable.
-- Do not make latency or cache-tier claims unless the answer has workload-specific evidence and an accepted Altibase source.
-
 ## Source Documents
 
 - 7.1: Altibase 7.1 Administrator's Manual.
 - 7.3: Altibase 7.3 Administrator's Manual.
 - 8.1: Altibase 8.1 verified source Administrator's Manual.
 - SQL Reference: datafile rename phase wording for 7.1, 7.3, and Altibase 8.1 verified source.
+
+## Altibase Hybrid Architecture
+- Altibase supports memory, disk, and volatile tablespaces in one database engine. Treat this as an operational storage choice, not a blanket performance guarantee.
+- Choose memory tablespaces for persistent data that should remain memory-resident within configured limits, disk tablespaces for larger persistent data that fits disk-backed administration and recovery, and volatile tablespaces only when data loss at shutdown is acceptable.
+- Do not make latency or cache-tier claims unless the answer has workload-specific evidence and an accepted Altibase source.
 
 ## Response Rules
 
@@ -2068,3 +2067,7 @@ Template: discard tablespace
 4. Start `SERVICE`.
 5. Drop the discarded tablespace with `INCLUDING CONTENTS` and usually `AND DATAFILES`.
 6. Recreate objects from logical backup or application deployment if required.
+
+## Residual Scope
+
+- This attachment covers core administration and recovery runbooks. For unusual media failure, patch-specific recovery behavior, or site-specific storage layout, verify the target-version manuals and the customer's backup evidence before issuing production commands.

@@ -2130,3 +2130,7 @@ Use this when the user asks about 8.1 dictionary or performance view changes:
 2. Query `V$TABLE` for `V$MEM_STABLE`, `V$TEMPORARY_LOBS`, and `V$LOCK_TABLE_STATS`.
 3. Query `V$ALLCOLUMN` for the exact columns before generating version-specific SQL.
 4. For Temporary LOB, also query `V$PROPERTY` for `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, and `MEMORY_TEMPLOB_PIECE_SIZE`.
+
+## Residual Scope
+
+- Cookbook queries and searchable object blocks cover common dictionary and performance-view questions. They are not a full column-by-column catalog; for an exact view layout, query `V$ALLCOLUMN` or the target-version dictionary source before generating final SQL.

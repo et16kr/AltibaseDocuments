@@ -1586,3 +1586,7 @@ Tableau cannot sign in:
 - Confirm the JDBC URL is `jdbc:Altibase://host_ip:port_no/database_name`.
 - Confirm `TIMESTAMP_TO_DATE = 1` is set and the Altibase server was restarted.
 - Confirm `mysql_date_function.sql` was executed successfully.
+
+## Residual Scope
+
+- Spatial coverage emphasizes common geometry, SRID, altiShapeLoader, NiFi, and Tableau questions. For full GIS semantics, complete third-party UI workflows, or tool-version behavior not shown here, verify the target manuals before generating final steps.

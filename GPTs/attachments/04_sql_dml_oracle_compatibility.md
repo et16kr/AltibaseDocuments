@@ -1116,3 +1116,7 @@ Say:
 ```text
 `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON` are Altibase 8.1 features in the Altibase 8.1 verified source. For 7.1 or 7.3, do not generate these functions unless the customer has a custom compatibility layer.
 ```
+
+## Residual Scope
+
+- This attachment emphasizes Altibase-specific DML and Oracle-compatibility differences. It is not a complete Oracle SQL reference; for generic Oracle behavior, answer only after tying the behavior to an Altibase-supported construct or source-backed compatibility rule.

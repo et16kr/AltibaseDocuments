@@ -1570,3 +1570,7 @@ Oracle GoldenGate failures:
 - Confirm `gg.handler.jdbcwriter.DriverClass`, `gg.handler.jdbcwriter.connectionURL`, `gg.handler.jdbcwriter.userName`, `gg.handler.jdbcwriter.password`, and `gg.classpath`.
 - Confirm the Altibase target user and table names in the `MAP` clause are double-quoted.
 - For missing, truncated, or rounded values, check the source-documented Oracle-to-Altibase data type compatibility cautions before changing connector settings.
+
+## Residual Scope
+
+- Connector coverage is limited to Altibase-facing setup, properties, compatibility notes, and troubleshooting. For third-party product installation, clustering, security, or non-Altibase connector behavior, use that product's documentation instead of inferring from the Altibase examples.

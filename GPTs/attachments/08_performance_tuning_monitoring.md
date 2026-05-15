@@ -2299,3 +2299,7 @@ SNMP answer pattern:
 5. Check altiStatus for status and altiPropertyTable for alarm settings.
 6. Check altiTrap fields and trap code for asynchronous events.
 ```
+
+## Residual Scope
+
+- Tuning and monitoring blocks are condensed around repeatable diagnostic paths. Do not treat plan-node, hint, SNMP, or subsystem examples as exhaustive; verify the target SQL, plan, metric snapshots, and installed-version behavior before recommending a production change.

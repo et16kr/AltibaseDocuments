@@ -1415,3 +1415,7 @@ Use `alternateservers`, `connectionretrycount`, and `connectionretrydelay` for C
 Template: Adapter for JDBC setup
 
 Install `jdbcAdapter` on Linux x86-64bit with a compatible JRE and target database JDBC driver. Configure `JDBC_ADAPTER_HOME`, `ALTIBASE_NLS_USE`, `jdbcAdapter.conf`, `ALA_*` properties, source `ALTIBASE_*` properties, target `OTHER_DATABASE_JDBC_*` properties, and DML behavior properties. Create `CREATE REPLICATION ... FOR ANALYSIS`, start `jdbcAdapter`, then run `ALTER REPLICATION ... START`.
+
+## Residual Scope
+
+- JDBC type, API, and SQLSTATE blocks focus on high-risk driver behavior. For a method, class, SQLSTATE, or driver patch not listed here, verify against the target Altibase JDBC driver and its source-backed documentation before promising support.

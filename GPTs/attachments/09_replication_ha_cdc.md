@@ -15,17 +15,16 @@
 - How should XLog Sender, XLog Collector, Log Analysis API, and ODBC C conversion be explained?
 - How should replication compatibility, protocol version, network diagnostics, and replication gaps be checked?
 
-
-## Altibase Replication and Scope Overview
-- **Active-Active Replication**: Altibase supports replication topologies through XLog-based Sender and Receiver processing. Active-Active use requires explicit write ownership, conflict avoidance or conflict policy design, replication gap monitoring, and failover/failback planning. Do not promise fixed latency or automatic conflict-free behavior.
-- **Scale-out scope**: Sharding and `ShardManager` setup are outside this attachment's selected replication, HA, CDC, Log Analyzer, and replication SSL source family. Do not generate sharding configuration procedures from this file; use a dedicated sharding source audit if a user asks for scale-out setup.
-
 ## Source Documents
 
 - 7.1: Altibase 7.1 Replication Manual; Altibase 7.1 Log Analyzer User's Manual; Replication Manager User's Manual.
 - 7.3: Altibase 7.3 Replication Manual; Altibase 7.3 Log Analyzer User's Manual; Replication Manager User's Manual.
 - 8.1: Altibase 8.1 verified source Replication Manual; Altibase 8.1 verified source Log Analyzer User's Manual; Altibase 8.1 release notes.
 - Supplemental compatibility and network-check documents: Replication Compatibility; Replication Network Check.
+
+## Altibase Replication and Scope Overview
+- **Active-Active Replication**: Altibase supports replication topologies through XLog-based Sender and Receiver processing. Active-Active use requires explicit write ownership, conflict avoidance or conflict policy design, replication gap monitoring, and failover/failback planning. Do not promise fixed latency or automatic conflict-free behavior.
+- **Scale-out scope**: Sharding and `ShardManager` setup are outside this attachment's selected replication, HA, CDC, Log Analyzer, and replication SSL source family. Do not generate sharding configuration procedures from this file; use a dedicated sharding source audit if a user asks for scale-out setup.
 
 ## Response Rules
 
@@ -1614,3 +1613,7 @@ Template: answer a failover question
 ```text
 For planned failover, first verify replication health and clear the gap with `ALTER REPLICATION replication_name FLUSH ALL WAIT n` if the service can wait. For unplanned failure, check whether the standby has all required changes. If the active node had unsent logs and `META_LOGGING` was enabled, evaluate offline replication before accepting writes on the standby. Use failover callbacks to validate application-specific consistency.
 ```
+
+## Residual Scope
+
+- Sharding, `ShardManager`, and full scale-out design are outside this attachment. For those topics, require a dedicated source-backed review instead of extending replication or Log Analyzer guidance by analogy.

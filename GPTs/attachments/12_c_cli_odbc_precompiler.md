@@ -1709,3 +1709,7 @@ Additional API families exist, but they have version, platform, package, and uns
 - **ADO.NET**: Native Altibase ADO.NET data provider is available for .NET framework applications; verify framework/runtime version, provider package, and unsupported interfaces.
 - **XA Interface (Distributed Transactions)**: Altibase supports the X/Open XA standard for distributed transaction processing, but TP monitor configuration and transaction-boundary behavior must be source-checked for the target environment.
 - **CheckServer API & iLoader API**: Use these only with the API User's Manual constraints. CheckServer has local/single-process restrictions, and iLoader API behavior should not be assumed equivalent to the command-line utility without source-backed option coverage.
+
+## Residual Scope
+
+- Function, conversion, and APRE blocks are condensed for common client-development answers. For an unlisted API, attribute, diagnostic record, or patch-specific LOB behavior, verify the exact client manual or runtime header before generating production code.

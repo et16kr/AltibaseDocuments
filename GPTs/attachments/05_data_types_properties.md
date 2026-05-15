@@ -2071,3 +2071,7 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 - For 8.1 JSON or Temporary LOB issues, also include `V$TEMPORARY_LOBS`.
 - For SSL replication, distinguish `REPLICATION_SSL_PORT_NO` from ordinary `REPLICATION_PORT_NO` and ordinary client `SSL_PORT_NO`.
 - If the verified source does not define values, say to verify with `V$PROPERTY` instead of inventing defaults or ranges.
+
+## Residual Scope
+
+- Data type and property blocks focus on high-retrieval items and version-sensitive differences. When a property, default, range, or dynamic-change rule is not listed here, verify it with the installed target version and `V$PROPERTY` instead of extrapolating from adjacent properties.
