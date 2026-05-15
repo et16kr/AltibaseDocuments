@@ -360,7 +360,8 @@ clear_reports() {
 
 validate() {
   require_files
-  local missing=0
+  local attachment_count=0
+  local validation_failed=0
   local id output
 
   echo "Stage definitions:"
@@ -368,25 +369,36 @@ validate() {
 
   echo
   echo "Attachment count excluding README:"
-  find "$ROOT_DIR/GPTs/attachments" -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | wc -l
+  attachment_count="$(find "$ROOT_DIR/GPTs/attachments" -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | awk 'END { print NR }')"
+  echo "$attachment_count"
+  if [[ "$attachment_count" != "20" ]]; then
+    echo "expected exactly 20 upload attachments, found $attachment_count" >&2
+    validation_failed=1
+  fi
 
   echo
   echo "Residual image references in attachments:"
-  rg -n '!\[|<img|\.png|\.jpg|\.jpeg|\.gif|\.svg|Images/|image::' "$ROOT_DIR/GPTs/attachments" || true
+  if rg -n '!\[|<img|\.png|\.jpg|\.jpeg|\.gif|\.svg|Images/|image::' "$ROOT_DIR/GPTs/attachments"; then
+    echo "residual image references found in attachments" >&2
+    validation_failed=1
+  fi
 
   echo
   echo "Forbidden customer-facing strings in attachments:"
-  rg -n 'trunk|C:/|file://' "$ROOT_DIR/GPTs/attachments" || true
+  if rg -n 'trunk|C:/|file://' "$ROOT_DIR/GPTs/attachments"; then
+    echo "forbidden customer-facing strings found in attachments" >&2
+    validation_failed=1
+  fi
 
   while IFS= read -r id; do
     output="$(stage_field "$id" 6)"
     if [[ -z "$output" ]]; then
       echo "missing output for $id" >&2
-      missing=1
+      validation_failed=1
     fi
   done < <(stage_ids)
 
-  [[ "$missing" == "0" ]] || exit 1
+  [[ "$validation_failed" == "0" ]] || exit 1
 }
 
 main() {

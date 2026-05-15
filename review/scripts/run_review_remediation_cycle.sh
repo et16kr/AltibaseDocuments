@@ -426,7 +426,11 @@ run_stage_cycle() {
 
   echo "==> reviewing $id: $(stage_title "$id")"
   set_cycle_status "$id" Reviewing
-  run_review "$id"
+  if ! run_review "$id"; then
+    set_cycle_status "$id" Fail
+    append_failure "$id" "initial review command failed"
+    return 1
+  fi
   if is_dry_run; then
     echo "[dry-run] would inspect $(stage_output_rel "$id") for verdict and actionable findings"
     echo "[dry-run] would remediate, re-review, and commit only if the report requires it"
@@ -458,6 +462,7 @@ run_stage_cycle() {
     echo "==> re-reviewing $id"
     set_cycle_status "$id" ReReviewing
     if ! run_review "$id"; then
+      set_cycle_status "$id" Fail
       append_failure "$id" "re-review command failed on attempt $attempt"
       return 1
     fi
