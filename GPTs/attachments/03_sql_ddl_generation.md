@@ -1070,6 +1070,8 @@ ORDER BY name;
 
 Create an application schema, assign default storage, and grant only required DDL privileges through a role:
 
+Password case note: unquoted lowercase passwords are uppercased by default. Case-sensitive lowercase or mixed-case passwords require `CASE_SENSITIVE_PASSWORD = 1` and a quoted password in `CREATE USER` or `ALTER USER`.
+
 ```sql
 CREATE USER app IDENTIFIED BY app_password
 DEFAULT TABLESPACE app_mem_tbs
