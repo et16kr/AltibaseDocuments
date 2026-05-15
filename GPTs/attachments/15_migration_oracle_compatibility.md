@@ -241,9 +241,9 @@ Option block: `Foreign Key Migration`
 Option block: `PSM Migration`
 
 - Controls whether procedures, functions, packages, views, materialized views, typesets, and triggers are included.
-- DB-to-DB default is `No`.
+- DB-to-DB default is `Yes`.
 - DB-to-File default is `Yes`.
-- Converted PSM still requires review because semantic logic is not fully converted.
+- The default attempt to include PSM objects does not mean semantic compatibility. Review `sqlconv.html`, `sqlconv_src.sql`, and `sqlconv_dest.sql`, then compile and runtime-test converted procedures, functions, packages, views, materialized views, typesets, and triggers.
 
 Option block: `Drop Existing Objects`
 
@@ -861,7 +861,8 @@ Adapter concept:
 
 Prerequisite block:
 
-- Supported source in the Adapter manual: Altibase `5.5.1` or above.
+- 7.1 Adapter for Oracle guidance: Altibase `5.5.1` or later.
+- 7.3 and Altibase 8.1 verified source Adapter for Oracle guidance: Altibase `6.5.1` or later.
 - Oracle target: Oracle Database `10g` or higher with compatible OCI.
 - Install OCI before running `oraAdapter`.
 - Use the same database and national character sets on Altibase and Oracle when possible to reduce conversion cost.
@@ -1081,8 +1082,9 @@ Constraint block: DDL allowed regardless of XLog Sender
 
 Constraint block: LOB
 
+- LOB data type support is available from Adapter for Oracle `7.1.0.7.0`.
 - Set `ADAPTER_LOB_TYPE_SUPPORT=1` to use LOB support.
-- LOB support depends on OCI compatibility on Oracle 11g or later.
+- LOB support depends on Oracle 11g-or-later OCI compatibility.
 - LOB tables are constrained by `ORACLE_ERROR_RETRY_COUNT`, `ORACLE_SKIP_ERROR`, and `ORACLE_ARRAY_DML_MAX_SIZE`.
 - If LOB data is updated using `SELECT FOR UPDATE` on Altibase, commit before relying on replication.
 

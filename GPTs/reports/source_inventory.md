@@ -336,6 +336,13 @@ Source purpose: Migration Center, Adapter for Oracle, Oracle-to-Altibase convers
   - `Manuals/Altibase_trunk/eng/Adapter for Oracle User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/Migration Center User's Manual.md`
   - `ReleaseNotes/eng/Altibase_Migration_Center_7_19_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Adapter for Oracle User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/Adapter for Oracle User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/Adapter for Oracle User's Manual.md`
+  - `Manuals/Tools/Altibase_release/kor/Migration Center User's Manual.md`
+  - `Manuals/Tools/Altibase_trunk/kor/Migration Center User's Manual.md`
+  - `ReleaseNotes/kor/Altibase_Migration_Center_7_19_Release_Notes.md`
 
 ### 16_dblink_external_connectors.md
 
