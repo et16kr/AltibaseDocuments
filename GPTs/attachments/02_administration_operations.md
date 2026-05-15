@@ -1317,25 +1317,72 @@ Archive log mode block: `NOARCHIVELOG`
 - Online backup and ordinary media recovery are not supported.
 - Recovery is limited to offline backup restore, except for special cases such as recreating temporary tablespace files.
 
-Change mode in `CONTROL`:
+Runbook: change database archive log mode
 
-```sql
-STARTUP CONTROL;
-ALTER DATABASE ARCHIVELOG;
--- or
-ALTER DATABASE NOARCHIVELOG;
-```
-
-Check current mode:
+1. Check the current mode and archive destinations while service is still available:
 
 ```sql
 SELECT archivelog_mode
 FROM V$LOG;
 
-SELECT archive_mode, archive_dest, current_logfile, oldest_active_logfile
+SELECT lfg_id,
+       archive_mode,
+       archive_thr_running,
+       archive_dest,
+       current_logfile,
+       oldest_active_logfile
 FROM V$ARCHIVE
 ORDER BY lfg_id;
 ```
+
+2. Plan downtime. Changing between `ARCHIVELOG` and `NOARCHIVELOG` requires the `CONTROL` startup phase, so normal application service is unavailable during the stop, mode change, verification, and return to `SERVICE`.
+3. Before enabling `ARCHIVELOG`, confirm every `ARCHIVE_DEST` directory exists, is writable by the Altibase OS account, and has enough filesystem capacity for expected log generation plus the site's archive-log backup and retention window. Before disabling `ARCHIVELOG`, confirm the business accepts losing online backup and ordinary media recovery capability.
+4. Stop the database cleanly. Use the planned-maintenance shutdown path; do not use abort unless normal shutdown is impossible.
+
+```bash
+server stop
+```
+
+5. Connect as `SYSDBA`:
+
+```bash
+isql -u sys -p <SYS_password> -sysdba
+```
+
+6. Start to `CONTROL`, change the mode, and verify the new setting before opening service:
+
+```sql
+STARTUP CONTROL;
+
+ALTER DATABASE ARCHIVELOG;
+-- or
+ALTER DATABASE NOARCHIVELOG;
+
+SELECT archivelog_mode
+FROM V$LOG;
+
+SELECT lfg_id,
+       archive_mode,
+       archive_thr_running,
+       archive_dest,
+       current_logfile,
+       oldest_active_logfile
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+```
+
+7. Return to service:
+
+```sql
+STARTUP SERVICE;
+```
+
+8. After service opens, repeat the mode check and confirm `archive_thr_running`, `archive_dest`, `current_logfile`, and `oldest_active_logfile` in `V$ARCHIVE`. When enabling `ARCHIVELOG`, monitor the archive destination as log files switch so capacity problems are caught before they affect service.
+
+9. Follow-up backup guidance:
+
+- After enabling `ARCHIVELOG`, take a fresh full baseline backup before relying on media recovery, and make archive-log backup, capacity monitoring, and retention part of the operations schedule.
+- After disabling `ARCHIVELOG`, take a fresh offline backup for the new operating mode and do not promise online backup or ordinary media recovery for later failures.
 
 Compatibility block:
 
