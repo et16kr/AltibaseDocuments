@@ -76,6 +76,9 @@ Use these first when selecting the right source:
 | Waits and locks | `V$SESSION_WAIT`, `V$SESSION_WAIT_CLASS`, `V$LOCK`, `V$LOCK_WAIT`, `V$LOCK_STATEMENT` |
 | Transactions | `V$TRANSACTION`, `V$TRANSACTION_MGR`, `V$DBA_2PC_PENDING` |
 | Plan cache | `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT` |
+| System and session counters | `V$STATNAME`, `V$SYSSTAT`, `V$SESSTAT` |
+| Memory module usage | `V$MEMSTAT` |
+| Buffer pool statistics | `V$BUFFPOOL_STAT` |
 | Statistics | `V$DBMS_STATS`, `V$LOCK_TABLE_STATS`, `V$USAGE` |
 | Replication definition | `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, `SYSTEM_.SYS_REPL_ITEMS_` |
 | Replication runtime | `V$REPEXEC`, `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSENDER`, `V$REPRECEIVER` |
@@ -1696,6 +1699,300 @@ Representative SQL:
 SELECT session_id, id, execute_state, total_time, process_row, query
 FROM V$STATEMENT
 ORDER BY total_time DESC;
+```
+
+### Column Block: `V$STATEMENT` Large-View Columns
+
+Purpose: use this searchable column block when a question asks which `V$STATEMENT` column explains current SQL text, elapsed time, page access, scan counts, execution result counts, or the current wait event.
+
+Key columns: identity and SQL text use `ID`, `PARENT_ID`, `SESSION_ID`, `TX_ID`, `QUERY`; state uses `EXECUTE_STATE`, `FETCH_STATE`, `ARRAY_FLAG`, `EXECUTE_FLAG`, `BEGIN_FLAG`; elapsed timing uses `TOTAL_TIME`, `PARSE_TIME`, `VALIDATE_TIME`, `OPTIMIZE_TIME`, `EXECUTE_TIME`, `FETCH_TIME`, `SOFT_PREPARE_TIME`; plan cache linkage uses `SQL_CACHE_TEXT_ID`, `SQL_CACHE_PCO_ID`; page counters use `READ_PAGE`, `WRITE_PAGE`, `GET_PAGE`, `CREATE_PAGE`, `UNDO_READ_PAGE`, `UNDO_WRITE_PAGE`, `UNDO_GET_PAGE`, `UNDO_CREATE_PAGE`; scan counters use `MEM_CURSOR_FULL_SCAN`, `MEM_CURSOR_INDEX_SCAN`, `DISK_CURSOR_FULL_SCAN`, `DISK_CURSOR_INDEX_SCAN`; result counters use `EXECUTE_SUCCESS`, `EXECUTE_FAILURE`, `FETCH_SUCCESS`, `FETCH_FAILURE`, `PROCESS_ROW`, `MEMORY_TABLE_ACCESS_COUNT`; wait columns use `SEQNUM`, `EVENT`, `P1`, `P2`, `P3`, `WAIT_TIME`, `SECOND_IN_TIME`.
+
+When to query: query `V$STATEMENT` after identifying a session with `V$SESSION`, or directly when the user asks which SQL is slow, currently executing, waiting, scanning heavily, reading disk pages, or linked to SQL plan cache objects.
+
+Representative SQL:
+
+```sql
+SELECT session_id,
+       id,
+       execute_state,
+       fetch_state,
+       total_time,
+       execute_time,
+       fetch_time,
+       read_page,
+       get_page,
+       process_row,
+       event,
+       wait_time,
+       query
+FROM V$STATEMENT
+ORDER BY total_time DESC;
+```
+
+### Object Block: `V$STATNAME`, `V$SYSSTAT`, and `V$SESSTAT`
+
+Purpose: `V$STATNAME` maps statistic identifiers to statistic names; `V$SYSSTAT` shows system-wide statistic values; `V$SESSTAT` shows statistic values for connected sessions.
+
+Key columns: `V$STATNAME.SEQNUM`, `V$STATNAME.NAME`, `V$SYSSTAT.SEQNUM`, `V$SYSSTAT.NAME`, `V$SYSSTAT.VALUE`, `V$SESSTAT.SID`, `V$SESSTAT.SEQNUM`, `V$SESSTAT.NAME`, `V$SESSTAT.VALUE`.
+
+When to query: use this family when the user asks what a statistic identifier means, wants system versus session counter values, or needs counters for logons, timeouts, commits, rollbacks, execution/fetch failures, page I/O, scan counts, communication bytes, plan-cache elapsed time, replication elapsed time, or task scheduling.
+
+Representative SQL:
+
+```sql
+SELECT seqnum, name
+FROM V$STATNAME
+WHERE name IN (
+  'query timeout',
+  'execute failure count',
+  'data page read',
+  'elapsed time: query execute'
+)
+ORDER BY seqnum;
+
+SELECT seqnum, name, value
+FROM V$SYSSTAT
+WHERE name IN (
+  'query timeout',
+  'execute failure count',
+  'data page read',
+  'elapsed time: query execute'
+)
+ORDER BY seqnum;
+
+SELECT sid, seqnum, name, value
+FROM V$SESSTAT
+WHERE sid = <SESSION_ID>
+ORDER BY seqnum;
+```
+
+### Column Block: `V$STATNAME` Statistic Families
+
+Purpose: make statistic-name questions searchable without expanding the full manual table into the attachment.
+
+Key columns: `SEQNUM` is the statistic identifier; `NAME` is the literal statistic name used by `V$SYSSTAT` and `V$SESSTAT`.
+
+When to query: query `V$STATNAME` first when a user has a numeric `SEQNUM`, then query `V$SYSSTAT` or `V$SESSTAT` for values. Query value views directly when the user already has a statistic name.
+
+Representative SQL:
+
+```sql
+SELECT n.seqnum,
+       n.name,
+       s.value AS system_value
+FROM V$STATNAME n,
+     V$SYSSTAT s
+WHERE n.seqnum = s.seqnum
+  AND n.name LIKE 'elapsed time:%'
+ORDER BY n.seqnum;
+```
+
+Searchable statistic groups:
+
+| Group | Representative `V$STATNAME.NAME` entries |
+| --- | --- |
+| Logon and timeout counters | `logon current`, `logon cumulative`, `query timeout`, `ddl timeout`, `idle timeout`, `fetch timeout`, `utrans timeout`, `session terminated`, `ddl sync timeout` |
+| Transaction and execution counters | `session commit`, `session rollback`, `execute success count`, `execute failure count`, `prepare success count`, `prepare failure count`, `fetch success count`, `fetch failure count`, `statement rebuild count`, `rebuild count` |
+| Page I/O counters | `data page read`, `data page write`, `data page gets`, `data page fix`, `data page create`, `undo page read`, `undo page write`, `undo page gets`, `undo page fix`, `undo page create` |
+| Cursor and table access counters | `memory table cursor full scan count`, `memory table cursor index scan count`, `memory table cursor GRID scan count`, `disk table cursor full scan count`, `disk table cursor index scan count`, `disk table cursor GRID scan count`, `memory table access count` |
+| Network counters | `read socket count`, `write socket count`, `byte received via inet`, `byte sent via inet`, `byte received via unix domain`, `byte sent via unix domain`, `read IB count`, `write IB count`, `byte received via IB`, `byte sent via IB` |
+| Elapsed-time counters | `elapsed time: query parse`, `elapsed time: query validate`, `elapsed time: query optimize`, `elapsed time: query execute`, `elapsed time: query fetch`, `elapsed time: hard prepare time`, `elapsed time: sender(s) sending XLogs to receiver(s)`, `elapsed time: receiver(s) inserting rows`, `elapsed time: task schedule`, `max time: task schedule` |
+
+Elapsed-time statistics in this table are documented in microseconds.
+
+### Object Block: `V$MEMSTAT`
+
+Purpose: shows memory used by Altibase process modules.
+
+Key columns: `NAME`, `ALLOC_SIZE`, `ALLOC_COUNT`, `MAX_TOTAL_SIZE`.
+
+When to query: use `V$MEMSTAT` when memory growth must be attributed to a module such as communication, SQL execution, PSM, replication, plan cache, disk index build, storage, temporary memory, thread stack, Database Link, external procedures, or GIS.
+
+Representative SQL:
+
+```sql
+SELECT name,
+       alloc_size,
+       alloc_count,
+       max_total_size
+FROM V$MEMSTAT
+ORDER BY alloc_size DESC;
+```
+
+### Module Block: `V$MEMSTAT.NAME` Memory Module Families
+
+Purpose: make high-priority `V$MEMSTAT.NAME` module names searchable for memory diagnosis.
+
+Key columns: `NAME` is the module label; `ALLOC_SIZE` is memory used by that module in bytes; `ALLOC_COUNT` is the number of memory units that make up `ALLOC_SIZE`; `MAX_TOTAL_SIZE` is the maximum memory size of the module in bytes.
+
+When to query: filter by module names when a memory question already points to a subsystem; otherwise sort all rows by `ALLOC_SIZE` and compare repeated snapshots.
+
+Representative SQL:
+
+```sql
+SELECT name, alloc_size, alloc_count, max_total_size
+FROM V$MEMSTAT
+WHERE name IN (
+  'CM_Buffer',
+  'Query_Execute',
+  'Query_Prepare',
+  'Query_Meta',
+  'Query_PSM_Concurrent_Execute',
+  'SQL_Plan_Cache_Control',
+  'Storage_Disk_Index',
+  'Storage_Disk_Buffer',
+  'Storage_Memory_Manager',
+  'Replication_Sender',
+  'Replication_Receiver',
+  'Temp_Memory'
+)
+ORDER BY alloc_size DESC;
+```
+
+Searchable module groups:
+
+| Group | Representative `V$MEMSTAT.NAME` entries |
+| --- | --- |
+| Communication | `CM_Buffer`, `CM_DataType`, `CM_Interface`, `CM_Multiplexing`, `CM_NetworkInterface`, `Socket_Manager` |
+| Query and PSM | `Query_Binding`, `Query_Common`, `Query_DML`, `Query_Execute`, `Query_Meta`, `Query_Prepare`, `Query_PSM_Concurrent_Execute`, `Query_PSM_Execute`, `Query_Result_Cache`, `Query_Sequence`, `Query_Transaction` |
+| Plan cache and fixed tables | `SQL_Plan_Cache_Control`, `Fixed_Table` |
+| Replication | `Replication_Control`, `Replication_Data`, `Replication_Met`, `Replication_Network`, `Replication_Receiver`, `Replication_Recovery`, `Replication_Sender`, `Replication_Storage`, `Replication_Sync` |
+| Storage | `Storage_Disk_Buffer`, `Storage_Disk_Datafile`, `Storage_Disk_Index`, `Storage_Disk_Page`, `Storage_Disk_Recovery`, `Storage_Disk_SecondaryBuffer`, `Storage_Memory_Ager`, `Storage_Memory_Index`, `Storage_Memory_Manager`, `Storage_Memory_Page`, `Storage_Memory_Transaction`, `Storage_Tablespace` |
+| Transaction and temporary memory | `Transaction_DiskPage_Touched_List`, `Transaction_OID_List`, `Transaction_Segment_Table`, `Transaction_Table`, `Transaction_Table_Info`, `Temp_Memory`, `Volatile_Log_Buffer`, `Volatile_Memory_Manager`, `Volatile_Memory_Page` |
+| Extension and support modules | `Database_Link`, `External_Procedure`, `External_Procedure_Agent`, `GIS_DataType`, `GIS_Disk_Index`, `GIS_Function`, `Thread_Stack`, `Timer_Manager`, `SYSTEM` |
+
+### Object Block: `V$BUFFPOOL_STAT`
+
+Purpose: shows buffer pool size, list structure, hit ratio, page access counters, replacement-search counters, and disk read performance.
+
+Key columns: `ID`, `POOL_SIZE`, `PAGE_SIZE`, `HASH_BUCKET_COUNT`, `HASH_CHAIN_LATCH_COUNT`, `LRU_LIST_COUNT`, `PREPARE_LIST_COUNT`, `FLUSH_LIST_COUNT`, `CHECKPOINT_LIST_COUNT`, `HASH_PAGES`, `HOT_LIST_PAGES`, `COLD_LIST_PAGES`, `PREPARE_LIST_PAGES`, `FLUSH_LIST_PAGES`, `CHECKPOINT_LIST_PAGES`, `FIX_PAGES`, `GET_PAGES`, `READ_PAGES`, `CREATE_PAGES`, `HIT_RATIO`, `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, `VICTIM_SEARCH_WARP`, `LRU_SEARCHS`, `LRU_SEARCHS_AVG`, `DB_SINGLE_READ_PERF`, `DB_MULTI_READ_PERF`.
+
+When to query: use this view for buffer pool hit ratio questions, disk page read pressure, replacement-target search pressure, high flush/checkpoint list counts, or to verify list-count properties such as LRU, prepare, flush, and checkpoint list counts.
+
+Representative SQL:
+
+```sql
+SELECT id,
+       pool_size,
+       page_size,
+       hit_ratio,
+       get_pages,
+       fix_pages,
+       read_pages,
+       flush_list_pages,
+       checkpoint_list_pages,
+       victim_fails,
+       prepare_again_victims,
+       victim_search_warp,
+       lru_searchs_avg
+FROM V$BUFFPOOL_STAT
+ORDER BY id;
+```
+
+### Column Block: `V$BUFFPOOL_STAT` Buffer Pool Counters
+
+Purpose: make exact buffer-pool column questions searchable without listing every detailed manual paragraph.
+
+Key columns: capacity columns are `POOL_SIZE`, `PAGE_SIZE`, `HASH_BUCKET_COUNT`, `HASH_CHAIN_LATCH_COUNT`; list-count columns are `LRU_LIST_COUNT`, `PREPARE_LIST_COUNT`, `FLUSH_LIST_COUNT`, `CHECKPOINT_LIST_COUNT`; current page distribution columns are `HASH_PAGES`, `HOT_LIST_PAGES`, `COLD_LIST_PAGES`, `PREPARE_LIST_PAGES`, `FLUSH_LIST_PAGES`, `CHECKPOINT_LIST_PAGES`; I/O and hit columns are `FIX_PAGES`, `GET_PAGES`, `READ_PAGES`, `CREATE_PAGES`, `HIT_RATIO`; replacement columns are `PREPARE_VICTIMS`, `LRU_VICTIMS`, `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, `VICTIM_SEARCH_WARP`; search and movement columns are `LRU_SEARCHS`, `LRU_SEARCHS_AVG`, `LRU_TO_HOTS`, `LRU_TO_COLDS`, `LRU_TO_FLUSHS`, `HOT_INSERTIONS`, `COLD_INSERTIONS`; read-performance columns are `DB_SINGLE_READ_PERF`, `DB_MULTI_READ_PERF`.
+
+When to query: compare time-window snapshots when diagnosing buffer pool pressure. `READ_PAGES` indicates buffer misses, `HIT_RATIO` is cumulative since startup, `VICTIM_FAILS` is failures to find a replacement target, `PREPARE_AGAIN_VICTIMS` counts replacement targets found after waiting for prepare-list buffers, and `VICTIM_SEARCH_WARP` counts searches that failed after the specified time and passed to the next prepare list.
+
+Representative SQL:
+
+```sql
+SELECT id,
+       read_pages,
+       hit_ratio,
+       prepare_victims,
+       lru_victims,
+       victim_fails,
+       prepare_again_victims,
+       victim_search_warp,
+       lru_searchs,
+       lru_searchs_avg
+FROM V$BUFFPOOL_STAT
+ORDER BY id;
+```
+
+### Object Block: `V$INTERNAL_SESSION`
+
+Purpose: shows sessions created by the `DBMS_CONCURRENT_EXEC` package; use `V$SESSION` for normal client sessions.
+
+Key columns: `ID`, `TRANS_ID`, `QUERY_TIME_LIMIT`, `DDL_TIME_LIMIT`, `FETCH_TIME_LIMIT`, `UTRANS_TIME_LIMIT`, `IDLE_TIME_LIMIT`, `IDLE_START_TIME`, `ACTIVE_FLAG`, `OPENED_STMT_COUNT`, `DB_USERNAME`, `DB_USERID`, `SYSDBA_FLAG`, `AUTOCOMMIT_FLAG`, `SESSION_STATE`, `ISOLATION_LEVEL`, `CURRENT_STMT_ID`, `STACK_SIZE`, `DEFAULT_DATE_FORMAT`, `TRX_UPDATE_MAX_LOGSIZE`, `LOGIN_TIME`, `FAILOVER_SOURCE`, `TIME_ZONE`, `LOB_CACHE_THRESHOLD`, `QUERY_REWRITE_ENABLE`.
+
+When to query: use this view when a runtime question involves `DBMS_CONCURRENT_EXEC`, internal PSM concurrent execution sessions, internal session time limits, active internal work, current statement ID, session state, user identity, or inherited session properties.
+
+Representative SQL:
+
+```sql
+SELECT id,
+       trans_id,
+       db_username,
+       session_state,
+       active_flag,
+       opened_stmt_count,
+       current_stmt_id,
+       query_time_limit,
+       ddl_time_limit,
+       fetch_time_limit,
+       utrans_time_limit,
+       idle_time_limit,
+       time_zone
+FROM V$INTERNAL_SESSION
+ORDER BY id;
+```
+
+### Column Block: `V$INTERNAL_SESSION` Large-View Columns
+
+Purpose: make exact `V$INTERNAL_SESSION` column lookup searchable for internal session troubleshooting.
+
+Key columns: identity and transaction columns are `ID`, `TRANS_ID`, `DB_USERNAME`, `DB_USERID`, `DEFAULT_TBSID`, `DEFAULT_TEMP_TBSID`; limit columns are `QUERY_TIME_LIMIT`, `DDL_TIME_LIMIT`, `FETCH_TIME_LIMIT`, `UTRANS_TIME_LIMIT`, `IDLE_TIME_LIMIT`, `IDLE_START_TIME`; activity columns are `ACTIVE_FLAG`, `OPENED_STMT_COUNT`, `SESSION_STATE`, `CURRENT_STMT_ID`, `LOGIN_TIME`; transaction mode columns are `AUTOCOMMIT_FLAG`, `ISOLATION_LEVEL`, `REPLICATION_MODE`, `TRANSACTION_MODE`, `COMMIT_WRITE_WAIT_MODE`; execution environment columns are `OPTIMIZER_MODE`, `HEADER_DISPLAY_MODE`, `STACK_SIZE`, `DEFAULT_DATE_FORMAT`, `TRX_UPDATE_MAX_LOGSIZE`, `NLS_TERRITORY`, `NLS_ISO_CURRENCY`, `NLS_CURRENCY`, `NLS_NUMERIC_CHARACTERS`, `TIME_ZONE`, `LOB_CACHE_THRESHOLD`, `QUERY_REWRITE_ENABLE`; connection and privilege columns are `SYSDBA_FLAG`, `FAILOVER_SOURCE`.
+
+When to query: start with `V$INTERNAL_SESSION` for package-created internal sessions, then use `CURRENT_STMT_ID` with `V$STATEMENT.ID` and `ID` with `V$STATEMENT.SESSION_ID` if SQL text or wait information is needed.
+
+Representative SQL:
+
+```sql
+SELECT s.id,
+       s.db_username,
+       s.session_state,
+       s.active_flag,
+       s.current_stmt_id,
+       st.execute_state,
+       st.event,
+       st.query
+FROM V$INTERNAL_SESSION s,
+     V$STATEMENT st
+WHERE s.id = st.session_id
+ORDER BY s.id, st.id;
+```
+
+### Column Block: `V$TRANSACTION` Large-View Columns
+
+Purpose: use this searchable column block when a question asks which transaction view column explains transaction identity, session ownership, MVCC view SCNs, status, update size, XA state, undo-log position, DDL flag, disk update slot, or isolation level.
+
+Key columns: identity columns are `ID`, `SESSION_ID`, `SLOT_NO`; MVCC view columns are `MEMORY_VIEW_SCN`, `MIN_MEMORY_LOB_VIEW_SCN`, `DISK_VIEW_SCN`, `MIN_DISK_LOB_VIEW_SCN`, `COMMIT_SCN`; status columns are `STATUS`, `UPDATE_STATUS`, `LOG_TYPE`, `DDL_FLAG`, `ISOLATION_LEVEL`; XA columns are `XA_COMMIT_STATUS`, `XA_PREPARED_TIME`; undo log columns are `FIRST_UNDO_NEXT_LSN_FILENO`, `FIRST_UNDO_NEXT_LSN_OFFSET`, `CURRENT_UNDO_NEXT_SN`, `CURRENT_UNDO_NEXT_LSN_FILENO`, `CURRENT_UNDO_NEXT_LSN_OFFSET`, `LAST_UNDO_NEXT_LSN_FILENO`, `LAST_UNDO_NEXT_LSN_OFFSET`, `LAST_UNDO_NEXT_SN`; update and storage columns are `UPDATE_SIZE`, `FIRST_UPDATE_TIME`, `TSS_RID`, `RESOURCE_GROUP_ID`.
+
+When to query: query this view after identifying a session or transaction ID when the user asks whether a transaction is active, blocked, read-only, updating, DDL-related, XA-prepared, holding old MVCC views, or creating a large update footprint.
+
+Representative SQL:
+
+```sql
+SELECT id,
+       session_id,
+       status,
+       update_status,
+       log_type,
+       update_size,
+       ddl_flag,
+       isolation_level,
+       memory_view_scn,
+       disk_view_scn,
+       commit_scn,
+       first_update_time
+FROM V$TRANSACTION
+WHERE session_id = <SESSION_ID>
+ORDER BY id;
 ```
 
 ### Object Block: `V$LOCK_WAIT`, `V$LOCK`, and `V$LOCK_STATEMENT`
