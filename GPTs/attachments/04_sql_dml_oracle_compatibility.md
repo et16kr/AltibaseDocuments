@@ -16,9 +16,9 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 SQL Reference.
-- 7.3: Altibase 7.3 SQL Reference.
-- 8.1: Altibase 8.1 verified source SQL Reference.
+- 7.1: Altibase 7.1 SQL Reference; General Reference 1 for `REGEXP_MODE`.
+- 7.3: Altibase 7.3 SQL Reference; General Reference 1 for `REGEXP_MODE`.
+- 8.1: Altibase 8.1 verified source SQL Reference; General Reference 1 for `REGEXP_MODE`.
 
 ## Core Guidance
 
@@ -737,7 +737,16 @@ WHERE INLIST(dno, '1003,4001');
 - `LIKE` uses `%` for any string and `_` for a single character. Use `ESCAPE` to search literal `%` or `_`.
 - `LIKE` pattern strings can be up to 4000 bytes.
 - `REGEXP_LIKE` performs regular expression matching. Pattern expressions are commonly strings up to 1024 bytes.
-- Altibase regular expression support is partial POSIX BRE/ERE: multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are not supported.
+- Default `REGEXP_MODE=0` uses Altibase regular expression mode with partial POSIX BRE/ERE support. In this mode, multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are not supported.
+- `REGEXP_MODE=1` selects PCRE2-compatible mode. Use it only when the Altibase server character set is `US7ASCII` or `UTF-8`, and do not assume patterns are interchangeable with default Altibase regular expression syntax.
+- To enable PCRE2-compatible mode for new system connections or the current session:
+
+```sql
+ALTER SYSTEM SET REGEXP_MODE=1;
+ALTER SESSION SET REGEXP_MODE=1;
+```
+
+- For the property definition and permanent configuration path, see `05_data_types_properties.md` (`REGEXP_MODE`). For PCRE2 character-set and runtime errors, see `07_error_messages_troubleshooting.md`.
 
 ## SQL Function Compatibility
 

@@ -99,10 +99,13 @@ Source purpose: DML, expressions, functions, Oracle compatibility boundaries, SQ
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/SQL Reference.md`
+  - `Manuals/Altibase_7.1/eng/General Reference-1.Data Types & Altibase Properties.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/SQL Reference.md`
+  - `Manuals/Altibase_7.3/eng/General Reference-1.Data Types & Altibase Properties.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/SQL Reference.md`
+  - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
 
 ### 05_data_types_properties.md
 
