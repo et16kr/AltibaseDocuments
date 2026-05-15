@@ -45,8 +45,8 @@ R15 is a meta gate. Treat its High row as unresolved until the underlying `Revie
 | ID | State | Severity | Source Reports | Target Files | Required Change | Validation |
 | --- | --- | --- | --- | --- | --- | --- |
 | P0-01 | Done | Hygiene | local workspace | `review/reports/Codex`, `review/reports/스크린샷` | Confirm whether the two empty untracked files are intentional. If not needed, remove them with approval or record them as ignored residual workspace files. | `find review/reports -maxdepth 1 -type f -empty -printf '%p\n'` |
-| P0-02 | ToDo | Hygiene | local workspace | `review/reports/archive/` | Confirm whether the untracked archive directory should be committed, ignored, or left local-only. | `git status --short -- review/reports/archive` |
-| P0-03 | ToDo | Process | all reports | this file | Keep task states current while editing. Only one task should be `Progress` at a time unless edits are truly independent. | `rg -n "\| Progress \|" review/remediation_plan.md` |
+| P0-02 | Done | Hygiene | local workspace | `review/reports/archive/` | Confirm whether the untracked archive directory should be committed, ignored, or left local-only. | `git status --short -- review/reports/archive` |
+| P0-03 | Done | Process | all reports | this file | Keep task states current while editing. Only one task should be `Progress` at a time unless edits are truly independent. | `rg -n "\| Progress \|" review/remediation_plan.md` |
 
 ## P1 High Severity Fixes
 
