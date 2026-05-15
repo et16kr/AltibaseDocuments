@@ -131,6 +131,14 @@ Source purpose: DML, expressions, functions, Oracle compatibility boundaries, SQ
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/SQL Reference.md`
   - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_7.3/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- R07 source-detail note: Korean SQL Reference confirms the Altibase 7.1.0.7.7 boundary for PCRE2-compatible `REGEXP_MODE=1`; Korean General Reference confirms 8.1 JSON path operands are string-form only and cannot be bind variables, `NULL`, table columns, SQL functions, or user-defined functions.
 
 ### 05_data_types_properties.md
 

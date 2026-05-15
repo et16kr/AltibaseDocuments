@@ -738,7 +738,7 @@ WHERE INLIST(dno, '1003,4001');
 - `LIKE` pattern strings can be up to 4000 bytes.
 - `REGEXP_LIKE` performs regular expression matching. Pattern expressions are commonly strings up to 1024 bytes.
 - Default `REGEXP_MODE=0` uses Altibase regular expression mode with partial POSIX BRE/ERE support. In this mode, multibyte characters, backreferences, lookaheads, lookbehinds, and conditional regular expressions are not supported.
-- `REGEXP_MODE=1` selects PCRE2-compatible mode. Use it only when the Altibase server character set is `US7ASCII` or `UTF-8`, and do not assume patterns are interchangeable with default Altibase regular expression syntax.
+- `REGEXP_MODE=1` selects PCRE2-compatible mode. For Altibase 7.1, PCRE2-compatible mode requires 7.1.0.7.7 or later; for earlier or unknown 7.1 patch levels, keep default `REGEXP_MODE=0` syntax or verify the exact patch before using PCRE2-only regex. Use PCRE2-compatible mode only when the Altibase server character set is `US7ASCII` or `UTF-8`, and do not assume patterns are interchangeable with default Altibase regular expression syntax.
 - To enable PCRE2-compatible mode for new system connections or the current session:
 
 ```sql
@@ -881,6 +881,7 @@ JSON functions are 8.1 baseline features. Do not use them for 7.1 or 7.3 unless 
 - JSON processing uses Temporary LOB internally, so check `TEMPORARY_LOB_ENABLE` when a JSON workload fails or when memory use is being reviewed.
 - Treat JSON columns as LOB-like for DML and object restrictions; check the data type guidance before assuming they can be used like ordinary scalar columns.
 - Do not generate `SELECT FOR UPDATE` against `JSON` columns.
+- JSON path operands for `JSON_EXISTS`, `JSON_QUERY`, and `JSON_VALUE` must be string-form path expressions. Use literal path strings in generated examples, and do not use bind variables, `NULL`, table columns, SQL functions, or user-defined functions as the path operand unless a later exact target source confirms support.
 - For full JSON type, path-expression, storage, and property details, use `05_data_types_properties.md`.
 
 ### JSON Item: JSON_ARRAY
