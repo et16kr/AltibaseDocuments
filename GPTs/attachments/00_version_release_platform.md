@@ -439,4 +439,4 @@ ORDER BY name;
 
 
 ## Minor Patch & Release Notes Caveats
-- **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific `ReleaseNotes` (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
+- **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific Altibase release notes (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
