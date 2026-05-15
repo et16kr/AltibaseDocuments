@@ -237,7 +237,7 @@ Source purpose: execution plans, optimizer behavior, indexes, joins, monitoring 
 
 ### 09_replication_ha_cdc.md
 
-Source purpose: replication, HA, CDC/log analysis, compatibility, network checks, replication SSL.
+Source purpose: replication, HA, CDC/log analysis, Replication Manager, compatibility, network checks, replication SSL.
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/Replication Manual.md`
@@ -263,6 +263,11 @@ Source purpose: replication, HA, CDC/log analysis, compatibility, network checks
   - `Manuals/Altibase_trunk/kor/SQL Reference.md`
   - `Manuals/Altibase_trunk/kor/Replication Manual.md`
   - `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`
+  - `Manuals/Tools/Altibase_release/kor/Replication Manager User's Manual.md`
+  - `Manuals/Tools/Altibase_trunk/kor/Replication Manager User's Manual.md`
+  - `ReleaseNotes/kor/Altibase_Replication_Manager_1_2_Release_Notes.md`
+  - `ReleaseNotes/kor/Altibase_Replication_Manager_1_3_Release_Notes.md`
+  - `ReleaseNotes/kor/Altibase_Replication_Manager_1_4_Release_Notes.md`
 - Korean supplemental technical documents:
   - `Technical Documents/kor/ReplicationCompatibility.md`
   - `Technical Documents/kor/Replication network check.md`

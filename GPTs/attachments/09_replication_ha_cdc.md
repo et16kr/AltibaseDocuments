@@ -2,9 +2,9 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 Replication Manual and Log Analyzer User's Manual.
-- 7.3: Based on Altibase 7.3 Replication Manual and Log Analyzer User's Manual.
-- 8.1: Based on Altibase 8.1 verified source Replication Manual, Log Analyzer User's Manual, and release notes.
+- 7.1: Based on Altibase 7.1 Replication Manual, Log Analyzer User's Manual, and Replication Manager tool documentation.
+- 7.3: Based on Altibase 7.3 Replication Manual, Log Analyzer User's Manual, and Replication Manager tool documentation.
+- 8.1: Based on Altibase 8.1 verified source Replication Manual, Log Analyzer User's Manual, Replication Manager User's Manual, and release notes.
 
 ## Questions This File Can Answer
 
@@ -13,13 +13,14 @@
 - Which prerequisites must be checked before recommending replication, sequence replication, replication DDL, or Log Analyzer CDC?
 - How should `USING SSL` and `REPLICATION_SSL_PORT_NO` be explained for Altibase 8.1?
 - How should XLog Sender, XLog Collector, Log Analysis API, and ODBC C conversion be explained?
+- How should Replication Manager be used for GUI-based replication object inspection and operations?
 - How should replication compatibility, protocol version, network diagnostics, and replication gaps be checked?
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Replication Manual; Altibase 7.1 Log Analyzer User's Manual; Replication Manager User's Manual.
-- 7.3: Altibase 7.3 Replication Manual; Altibase 7.3 Log Analyzer User's Manual; Replication Manager User's Manual.
-- 8.1: Altibase 8.1 verified source Replication Manual; Altibase 8.1 verified source Log Analyzer User's Manual; Altibase 8.1 release notes.
+- 7.1: Altibase 7.1 Replication Manual; Altibase 7.1 Log Analyzer User's Manual; Replication Manager User's Manual and release notes.
+- 7.3: Altibase 7.3 Replication Manual; Altibase 7.3 Log Analyzer User's Manual; Replication Manager User's Manual and release notes.
+- 8.1: Altibase 8.1 verified source Replication Manual; Altibase 8.1 verified source Log Analyzer User's Manual; Replication Manager User's Manual; Altibase 8.1 release notes.
 - Supplemental compatibility and network-check documents: Replication Compatibility; Replication Network Check.
 
 ## Altibase Replication and Scope Overview
@@ -46,12 +47,14 @@ flowchart TD
   B -- Continue service after node failure --> D[HA and failover]
   B -- Feed changed rows to an external app --> E[Log Analyzer CDC]
   B -- Recover unsent logs after active failure --> F[Offline replication]
+  B -- Manage replication through GUI --> M[Replication Manager]
   C --> G{Need stronger consistency?}
   G -- Performance first --> H[LAZY mode]
   G -- Commit only after remote apply --> I[EAGER mode]
   D --> J[Active-Standby plus client failover callback]
   E --> K[XLog Sender plus XLog Collector API]
   F --> L[Meta logging plus SQL apply mode plus offline metadata]
+  M --> N[JDBC driver plus DB Connections plus pane actions]
 ```
 
 ## Core Concepts
@@ -1332,6 +1335,71 @@ Playbook block: failover validation
 4. Validate business-critical tables with row counts, max commit markers, application sequence tables, or checksums appropriate to the application.
 5. If the Active server failed with unsent logs, evaluate offline replication prerequisites before promoting the Standby for writes.
 
+## Replication Manager
+
+Use Replication Manager when the user wants GUI-based replication object management across multiple Altibase connections. It helps inspect replication topology, states, DDL, and relationships, but it does not replace replication design checks, SQL privilege checks, backup planning, or command-line verification through `V$REPSENDER`, `V$REPRECEIVER`, `V$REPGAP`, and replication error files.
+
+Version and runtime block:
+
+- Replication Manager is a replication-management GUI tool, not a Log Analyzer CDC client and not a generic schema migration tool.
+- Tool packages are provided for Microsoft Windows and Linux. Confirm the downloaded package, operating system, graphic system, and Java runtime before building a runbook.
+- The documented Java requirement is JDK or JRE 6 or later. Some packages include a JRE and some require the user to provide Java; Replication Manager 1.4 release notes record a packaged JRE update from 6 to 8. Verify the exact tool release in use.
+- Replication Manager is documented for Altibase 4.3.9 or later. Because one tool can connect to multiple Altibase server versions, import a JDBC driver file that matches each target Altibase server version.
+- Replication Manager 1.2 release notes add multi-IP database support. Replication Manager 1.3 release notes add easier `Create Full-mesh Replications`, `Join to Full-mesh`, and external help-link behavior.
+
+JDBC driver workflow:
+
+1. Obtain the JDBC driver from the Altibase server version that Replication Manager will connect to.
+2. If multiple server versions are managed, give each JDBC driver file a version-distinguishing name such as `Altibase_4.3.9.100.jar` or `Altibase_5.3.3.33.jar`.
+3. Open `JDBC driver manager`, add the driver file, assign the name Replication Manager should use, and close the manager. The driver can also be imported while adding a DB connection.
+4. When creating a DB connection, select the JDBC driver that matches the target server. Do not reuse a convenient driver across mixed-version servers without checking compatibility.
+
+DB connection workflow:
+
+1. Create a connection from `New DB Connection`.
+2. Fill the connection fields:
+   - `Connection Name`: unique, maximum 10 characters, starts with an alphabetic character, and uses alphabetic characters and numbers.
+   - `Password`: password for the database `SYS` user in the manual workflow. Treat this as a privileged secret.
+   - `DB Address`: IP address of the host where the database is installed.
+   - `DB Port`: connection port for the target database.
+   - `DB Name`: database name.
+   - `JDBC driver`: version-matched JDBC driver.
+   - `IP Address Type`: IPv4 or IPv6 when selection is needed.
+   - `NLS for Client`: set for Altibase 5.1.1 or earlier; it is not normally required for Altibase 5.3.1 or later.
+3. Use `Connection Test` before saving the connection.
+4. Use `Connect` to connect, `Disconnect` when work is complete, `Edit` only when the DB connection is not connected, and `Remove` only when the saved connection is no longer needed.
+
+`Extra Host IP` block:
+
+- If an Altibase host has multiple IP addresses and another Altibase uses one of those addresses as `Remote Host IP` in a replication object, that address must be either the DB connection `DB Address` or an `Extra Host IP`.
+- Manage this from `Manage Extra Host IP` on the DB connection. Without the extra address, the relationship between the database and replication object can be displayed incorrectly in `Map`.
+
+Pane and object model:
+
+- `DB Connections`: database-centered tree for connected databases, replication objects, and replication target tables.
+- `Replication Pairs`: logical pair view for same-named replication objects that correspond across two databases.
+- `Map`: physical placement, status, relationship, and replication-gap oriented view.
+- `Properties`: selected-object properties.
+- Shared object types are `Replication Object`, `Replication Target Table`, `DB Connections`, `DB Connection`, `Replication Pairs`, and `Replication Pair`. Some actions appear in one pane but not another, so answer from the selected pane and object rather than assuming every action is globally available.
+
+Action map:
+
+- `DB Connections` parent: `Connect all`, `Disconnect all`, `Start all`, `Stop all`, `Quick Start all`, `New DB Connection`, and tree expand/collapse actions.
+- `DB Connection`: `Connect`, `Disconnect`, `Edit`, `Manage Extra Host IP`, `Remove`, `Start all`, `Stop all`, `Quick Start all`, `Create Replication`, `Create Full-mesh Replications`, `Join to Full-mesh`, `Create Replication Pair`, and `Drop Replications`.
+- `Replication Object`: `Start`, `Stop`, `Quick Start`, `Sync`, `Sync Only`, `Drop`, `Edit Table List`, `Monitor`, `Show DDL`, and `Compare DDL`.
+- `Replication Pair`: pair-level `Start all`, `Stop all`, `Quick Start all`, and `Drop`; the `Replication Pairs` parent can also create replication pairs and full-mesh replications.
+- `Map`: use for status and relationship-oriented operations; it exposes connection-level start/stop/quick-start actions and replication-object `Start`, `Stop`, `Quick Start`, `Sync`, `Sync Only`, `Drop`, `Monitor`, `Show DDL`, and `Compare DDL`.
+
+Replication Manager guardrails:
+
+- Treat `Quick Start` and `Quick Start all` as high-risk. The manual warns that these actions can lose replication work that has not been sent between nodes. Use them only when intentionally skipping unsent changes is the chosen recovery action.
+- `Sync` is equivalent to `ALTER REPLICATION replication_name SYNC`; `Sync Only` is equivalent to `ALTER REPLICATION replication_name SYNC ONLY`. Treat both as data movement operations and verify replication state and gaps before and after use.
+- `Drop Replications`, pair-level `Drop`, and object-level `Drop` require the affected replication objects to be stopped first.
+- `Create Full-mesh Replications` creates same-named replication objects for the selected DB connections. The manual's four-connection example creates 16 same-named replication objects, so count the intended topology before running it.
+- `Join to Full-mesh` adds selected DB connections to an existing full-mesh set. Validate DB connection names, target addresses, `Extra Host IP`, and replication naming before use.
+- Use `Monitor` for replication-object monitoring, `Show DDL` to inspect a replication object and dependent objects such as tables and indexes, and `Compare DDL` to compare two replication-object DDL definitions before corrective action.
+- Replication Manager can make replication operations easier to trigger. For production answers, still include the same prerequisites required for SQL-based replication operations: version, topology, object names, gap state, write ownership, backup status, maintenance window, and rollback limits.
+
 ## Log Analyzer CDC
 
 Use Log Analyzer when the goal is CDC-style external consumption of changes rather than direct table-to-table replication. The XLog Sender is inside Altibase; the XLog Collector is inside a client application and receives XLogs and metadata through the Log Analysis API.
@@ -1415,6 +1483,19 @@ API function blocks:
 - Metadata: `ALA_GetProtocolVersion`, `ALA_GetReplicationInfo`, `ALA_GetTableInfo`, `ALA_GetTableInfoByName`, `ALA_GetColumnInfo`, `ALA_GetIndexInfo`, `ALA_IsHiddenColumn`.
 - Conversion: `ALA_GetInternalNumericInfo`, `ALA_GetAltibaseText`, `ALA_GetAltibaseSQL`, `ALA_GetODBCCValue`.
 - Error handling: `ALA_ClearErrorMgr`, `ALA_GetErrorCode`, `ALA_GetErrorLevel`, `ALA_GetErrorMessage`.
+
+XLog Collector runtime options:
+
+- `ALA_CreateXLogCollector()` binds the collector to an XLog Sender name, socket information, `aXLogPoolSize`, `aUseCommittedTxBuffer`, and `aACKPerXLogCount`.
+- For TCP collectors, the socket information string uses values such as `SOCKET=TCP`, optional `IP_STACK`, `PEER_IP` for XLog Sender authentication, and `MY_PORT` for the port where the collector waits for the Sender. The listen port cannot already be in use.
+- For UNIX-domain collectors, the socket type is `UNIX`, the socket path is generated under `$ALTIBASE_HOME/trc/rp-replication_name`, and the XLog Sender database and collector process must use the same `$ALTIBASE_HOME`.
+- `aXLogPoolSize` is the maximum number of XLogs in the XLog Pool. `ALA_ReceiveXLog()` obtains XLog memory from this pool; if the pool is exhausted, `ALA_ReceiveXLog()` can fail with XLog Pool empty behavior. Increase the pool with `ALA_SetXLogPoolSize()` only when needed, and prefer freeing processed XLogs promptly.
+- `aUseCommittedTxBuffer` requests transaction XLogs in commit order. In that mode, transaction XLogs remain in the Transaction Table until the `COMMIT` XLog arrives; savepoint-related XLogs are not provided and rolled-back transaction XLogs are not returned. Size the XLog Pool for larger memory pressure and expect extra latency, especially for batch-style transactions.
+- `aACKPerXLogCount` is the threshold for actual ACK transmission. Calling `ALA_SendACK()` does not always send an ACK immediately when this value is greater than `1`; ACK is sent after enough successful `ALA_GetXLog()` calls, or when a `KEEP_ALIVE` or `REPL_STOP` XLog has been received.
+- ACK messages include `Restart SN`. That value is derived from active transaction XLog positions, the last obtained XLog when no transaction is active, or the minimum uncommitted transaction XLog SN held in the Transaction Table when committed-transaction buffering is used.
+- Send ACKs regularly. If the XLog Sender does not receive ACK within `REPLICATION_RECEIVE_TIMEOUT`, it can terminate the network connection; long ACK delays can also change restart behavior after the Sender gives up and restarts.
+- Process all XLogs obtained by `ALA_GetXLog()` before sending an ACK that may advance the Sender's `Restart SN`.
+- Call `ALA_FreeXLog()` after processing each obtained XLog. Until `ALA_FreeXLog()` is called, the application owns that XLog and can exhaust the XLog Pool; after `ALA_FreeXLog()`, do not use that XLog or its related data.
 
 API cautions:
 
@@ -1688,6 +1769,12 @@ Template: answer a CDC question
 
 ```text
 Use Log Analyzer when an external application needs changed-row events. Create `CREATE REPLICATION ... FOR ANALYSIS` for the XLog Sender, start an XLog Collector in the application through the Log Analysis API, perform `ALA_Handshake()`, then receive, inspect, acknowledge, and free XLogs. Do not describe this as direct table-to-table replication.
+```
+
+Template: answer a Replication Manager question
+
+```text
+Use Replication Manager for GUI-based replication object management after importing the JDBC driver that matches each target Altibase server and creating tested DB connections. Use `DB Connections`, `Replication Pairs`, `Map`, and `Properties` according to the task, and keep high-risk actions such as `Quick Start`, `Drop`, full-mesh creation, and `Sync` behind the same production checks used for SQL-based replication operations.
 ```
 
 Template: answer a failover question

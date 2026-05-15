@@ -14,6 +14,7 @@
 - When should I use `dataCompJ` instead of `altiComp`?
 - How do I operate `aku` for Altibase in a Kubernetes StatefulSet?
 - What are `altiAudit`, `altiMon`, `altierr`, `altiProfile`, dump-family tools, `checkServer`, and `server` used for?
+- Where is Replication Manager GUI workflow guidance covered?
 
 ## Source Documents
 
@@ -48,6 +49,7 @@ flowchart TD
   B -- Error lookup --> L[altierr]
   B -- Profile analysis --> M[altiProfile]
   B -- Binary file or trace inspection --> N[dump-family tools]
+  B -- Replication GUI management --> O[Replication Manager in 09_replication_ha_cdc.md]
 ```
 
 ## Version Differences
@@ -1285,7 +1287,7 @@ Verification Method:
 - Use `02_administration_operations.md` when a utility recommendation affects startup, shutdown, backup, recovery, tablespaces, or service operations.
 - Use `06_data_dictionary_performance_views.md` for SQL checks that verify utility output, object state, replication state, sessions, or file metadata.
 - Use `07_error_messages_troubleshooting.md` with `altierr`, trace logs, dump-family output, and tool-reported Altibase error codes.
-- Use `09_replication_ha_cdc.md` when tool output involves replication state, Log Analyzer CDC, XLog Sender, or replication log diagnostics.
+- Use `09_replication_ha_cdc.md` when tool output involves replication state, Replication Manager GUI actions, Log Analyzer CDC, XLog Sender, or replication log diagnostics.
 - Use `13_isql_iloader_basic_tools.md` for iSQL and iLoader command-line workflows that complement `aexport`, migration, and data-load operations.
 - Use `18_security_ssl_tls.md` for `altiAudit`, `altipasswd`, audit policy, password handling, and SSL/TLS-sensitive operational tooling.
 
