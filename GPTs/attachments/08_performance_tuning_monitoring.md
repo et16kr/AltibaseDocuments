@@ -294,6 +294,13 @@ Compact syntax:
 ALTER SESSION SET EXPLAIN PLAN = { ON | ONLY | OFF };
 ```
 
+DML scope:
+
+- `EXPLAIN PLAN` is an iSQL tuning feature for DML plan checks, not only for `SELECT`.
+- Use it for `SELECT`, `INSERT`, `UPDATE`, and `DELETE` plan investigation.
+- `DELETE`, `UPDATE`, and `MOVE` use the same optimization process as `SELECT` internally, so interpret their plans through the same access, join, sort, and hash checks.
+- For `INSERT`, the visible plan scope is the `SELECT` part of `INSERT INTO SELECT`.
+
 Option block: `ON`
 
 - Executes the `SELECT` statement and prints result rows plus the plan tree.
