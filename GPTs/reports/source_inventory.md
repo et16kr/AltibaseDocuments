@@ -381,15 +381,23 @@ Source purpose: iSQL, iLoader, export/import, first-line operational tool usage.
 Source purpose: utilities, `aexport`, `altiComp`, `iloader`, `isql`, `aku`, `altiMon`, `dataCompJ`.
 
 - 7.1:
+  - `Manuals/Altibase_7.1/kor/Utilities Manual.md`
   - `Manuals/Altibase_7.1/eng/Utilities Manual.md`
+  - `Manuals/Tools/Altibase_release/kor/dataCompJ User's Manual.md`
   - `Manuals/Tools/Altibase_release/eng/dataCompJ User's Manual.md`
 - 7.3:
+  - `Manuals/Altibase_7.3/kor/Utilities Manual.md`
   - `Manuals/Altibase_7.3/eng/Utilities Manual.md`
+  - `Manuals/Tools/Altibase_release/kor/dataCompJ User's Manual.md`
   - `Manuals/Tools/Altibase_release/eng/dataCompJ User's Manual.md`
+  - `ReleaseNotes/kor/Altibase_dataCompJ_7_2_Release_Notes.md`
   - `ReleaseNotes/eng/Altibase_dataCompJ_7_2_Release_Notes.md`
 - Altibase 8.1 verified source:
+  - `Manuals/Altibase_trunk/kor/Utilities Manual.md`
   - `Manuals/Altibase_trunk/eng/Utilities Manual.md`
+  - `Manuals/Tools/Altibase_trunk/kor/dataCompJ User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/dataCompJ User's Manual.md`
+- Source authority note: Korean manuals and Korean release notes listed above are primary; English entries are secondary extraction/parity references.
 
 ### 15_migration_oracle_compatibility.md
 

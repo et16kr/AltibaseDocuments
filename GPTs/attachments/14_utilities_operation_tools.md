@@ -131,6 +131,7 @@ Key Inputs:
 - `DBMS_METADATA` package: required by the Altibase 7.3 Utilities Manual and Altibase 8.1 verified source for DDL extraction.
 - Source connection information: `-s`, `-port`, `-u`, `-p`.
 - Destination connection information written into generated scripts: `-tserver`, `-tport`.
+- `AEXPORT_FILE_PERMISSION`: set before generation when output files must be restricted, for example `export AEXPORT_FILE_PERMISSION=600`.
 
 Cautions:
 
@@ -140,6 +141,7 @@ Cautions:
 - `run_is.sh` can drop existing users and objects on the destination depending on generated scripts and properties. Never run generated import scripts against the source database.
 - If `-tserver` and `-tport` are omitted, generated scripts use the source server and port as the destination values.
 - Set `NLS_USE` explicitly in non-`US7ASCII` environments to reduce character conversion and data-loss risk.
+- `AEXPORT_FILE_PERMISSION` overrides `ALTIBASE_UT_FILE_PERMISSION` for `aexport` output. If neither is set, generated files can default to `666` permissions.
 - Double-quote user or object names that contain lowercase letters, spaces, or special characters.
 - `aexport` does not guarantee creation order for all stored procedures or materialized views. Some failed objects may need manual ordering and recreation.
 - Sequence metadata is limited for non-`SYS` accounts; manually validate sequence attributes on the destination.
@@ -216,10 +218,12 @@ sh run_il_in.sh
 sh run_is_refresh_mview.sh
 sh run_is_index.sh
 sh run_is_fk.sh
+# If replication objects are in scope and endpoint/topology review is complete:
+sh run_is_repl.sh
 sh run_is_alt_tbl.sh
 ```
 
-If `TWO_PHASE_SCRIPT=ON`, run `run_is_con.sh` instead of the separate post-load scripts created for indexes, foreign keys, triggers, and replication objects.
+If `TWO_PHASE_SCRIPT=OFF`, run `run_is_repl.sh` only when replication objects are in scope and the target host, port, and replication topology have been reviewed; otherwise record that replication DDL was intentionally skipped. If `TWO_PHASE_SCRIPT=ON`, run `run_is_con.sh` instead of the separate post-load scripts because it includes the indexes, foreign keys, triggers, and replication object creation bundle. Verify replication endpoints before executing generated replication DDL.
 
 ## `aexport.properties` Searchable Blocks
 
@@ -432,7 +436,7 @@ dataCompJCli.sh -f dataCompJ.xml
 
 Key Inputs:
 
-- Java Runtime Environment 8 or higher.
+- Java Runtime Environment 8 or higher and `JAVA_HOME` pointing to the installed Java path.
 - `dataCompJ.xml` or another XML configuration file.
 - JDBC URL, JDBC driver path, user ID, password, `FetchSize`, and `BatchSize` for `<MasterDB>` and `<SlaveDB>`.
 - `<Operation>`: `DIFF` or `SYNC`.
@@ -446,6 +450,7 @@ Key Inputs:
 Cautions:
 
 - The master database is Altibase. The documented slave databases are Oracle and MariaDB.
+- Documented compatibility bounds are Master DB Altibase 5.3.3 or later, Slave DB Oracle 9i or later, and Slave DB MariaDB 5.5.x or later.
 - Target tables must have compatible column names, column order, data types, and primary keys.
 - At least one comparable non-primary-key column must remain after unsupported data types and `<Exclude>` columns are removed.
 - Unsupported binary and LOB-type columns are excluded or cause build-phase errors depending on whether both sides are unsupported and compatible.
@@ -1261,6 +1266,7 @@ dumptrc
   [-c [-s]]
   [-a | -i file_name [-i file_name]... | -e file_name [-e file_name]...]
   [-n file_count]
+  [-x]
   [-f]
   [-v]
 ```
@@ -1271,10 +1277,12 @@ Key Inputs:
 - Trace selectors such as `error`, `server`, `sm`, `rp`, `qp`, `dk`, `dr`, `xa`, `mm`, `rp_conflict`, `dump`, `trc`, `snmp`, `cm`, `misc`, and `sd`.
 - `-c` to convert call stack addresses to function names.
 - `-s` to show only the call stack without symbol conversion.
+- `-x` to force call stack output when the `altibase` executable version and `dumptrc` version differ.
 
 Cautions:
 
 - The `dumptrc` version and Altibase executable version should match for normal call stack conversion.
+- Use `dumptrc -x` only as a forced mismatch-mode diagnostic option for support use, not as the normal path.
 - Trace logs can contain SQL text, host information, process IDs, and operational details. Treat output as sensitive.
 
 Verification Method:
