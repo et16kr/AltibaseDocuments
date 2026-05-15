@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 STAGES_FILE="${STAGES_FILE:-${ROOT_DIR}/review/review_stages.tsv}"
+STATUS_FILE="${STATUS_FILE:-${ROOT_DIR}/review/review_stage_status.tsv}"
 DESIGN_DOC="${DESIGN_DOC:-${ROOT_DIR}/review/Altibase_GPT_Detailed_Review_Design.md}"
 REPORT_DIR="${REPORT_DIR:-${ROOT_DIR}/review/reports}"
 CODEX_BIN="${CODEX_BIN:-codex}"
@@ -18,16 +19,22 @@ Usage:
   bash review/scripts/run_review_stage.sh prompt <R-ID>
   bash review/scripts/run_review_stage.sh run <R-ID>
   bash review/scripts/run_review_stage.sh run-all [GROUP]
+  bash review/scripts/run_review_stage.sh clear [GROUP]
   bash review/scripts/run_review_stage.sh validate
 
 Environment:
   STAGES_FILE       Review stage TSV. Default: review/review_stages.tsv
+  STATUS_FILE       Review stage status TSV. Default: review/review_stage_status.tsv
   DESIGN_DOC        Review design document. Default: review/Altibase_GPT_Detailed_Review_Design.md
   REPORT_DIR        Review report output directory. Default: review/reports
   CODEX_BIN         Codex binary. Default: codex
   CODEX_SUBCOMMAND  Codex subcommand. Default: exec
-  DRY_RUN=1         Print the Codex prompt instead of running it.
+  DRY_RUN=1         Print the Codex prompt or clear actions instead of running them.
   MAX_STAGES=N      Limit run-all to N stages. Default: 0 means no limit.
+
+Status:
+  Stage status is tracked in STATUS_FILE, not inferred from report existence.
+  Missing status rows default to ToDo.
 USAGE
 }
 
@@ -70,16 +77,89 @@ stage_ids() {
   ' "$STAGES_FILE"
 }
 
+valid_stage_status() {
+  case "$1" in
+    ToDo|Progress|Done|Fail)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+stage_status() {
+  local id="$1"
+  local status=""
+
+  if [[ -f "$STATUS_FILE" ]]; then
+    status="$(awk -F'\t' -v id="$id" '
+      NR == 1 && $1 == "id" { next }
+      $1 == id { print $2; found=1; exit }
+    ' "$STATUS_FILE")"
+  fi
+
+  if [[ -n "$status" ]]; then
+    valid_stage_status "$status" || die "invalid status for $id in $STATUS_FILE: $status"
+    printf '%s\n' "$status"
+  else
+    printf 'ToDo\n'
+  fi
+}
+
+set_stage_status() {
+  local id="$1"
+  local status="$2"
+  local previous temp sid current
+
+  stage_line "$id" >/dev/null || die "unknown stage: $id"
+  valid_stage_status "$status" || die "invalid status: $status"
+
+  previous="$(stage_status "$id")"
+  mkdir -p "$(dirname "$STATUS_FILE")"
+  temp="$(mktemp "${STATUS_FILE}.tmp.XXXXXX")"
+
+  {
+    printf 'id\tstatus\n'
+    while IFS= read -r sid; do
+      [[ -z "$sid" ]] && continue
+      if [[ "$sid" == "$id" ]]; then
+        current="$status"
+      else
+        current="$(stage_status "$sid")"
+      fi
+      printf '%s\t%s\n' "$sid" "$current"
+    done < <(stage_ids)
+  } > "$temp"
+
+  mv "$temp" "$STATUS_FILE"
+  if [[ "$previous" != "$status" ]]; then
+    printf "%s: %s -> %s\n" "$id" "$previous" "$status"
+  else
+    printf "%s: %s\n" "$id" "$status"
+  fi
+}
+
+stage_output_path() {
+  local id="$1"
+  local output
+
+  output="$(stage_field "$id" 6)"
+  [[ -n "$output" ]] || die "missing output for $id"
+
+  if [[ "$output" == /* ]]; then
+    printf '%s\n' "$output"
+  else
+    printf '%s/%s\n' "$ROOT_DIR" "$output"
+  fi
+}
+
 list_stages() {
   require_files
   local line id group title output status
   while IFS=$'\t' read -r id group title attachments source_hints output focus acceptance; do
     [[ "$id" == "id" || "$id" == \#* || -z "$id" ]] && continue
-    if [[ -f "${ROOT_DIR}/${output}" ]]; then
-      status="report"
-    else
-      status="pending"
-    fi
+    status="$(stage_status "$id")"
     printf "%-4s %-16s %-8s %s\n" "$id" "$group" "$status" "$title"
   done < "$STAGES_FILE"
 }
@@ -94,7 +174,7 @@ list_groups() {
 
 show_stage() {
   local id="$1"
-  local group title attachments source_hints output focus acceptance
+  local group title attachments source_hints output focus acceptance status report_file report_state
   group="$(stage_field "$id" 2)" || die "unknown stage: $id"
   title="$(stage_field "$id" 3)"
   attachments="$(stage_field "$id" 4)"
@@ -102,14 +182,23 @@ show_stage() {
   output="$(stage_field "$id" 6)"
   focus="$(stage_field "$id" 7)"
   acceptance="$(stage_field "$id" 8)"
+  status="$(stage_status "$id")"
+  report_file="$(stage_output_path "$id")"
+  if [[ -f "$report_file" ]]; then
+    report_state="present"
+  else
+    report_state="missing"
+  fi
 
   cat <<EOF
 ID:          $id
 Group:       $group
+Status:      $status
 Title:       $title
 Attachments: $attachments
 Sources:     $source_hints
 Output:      $output
+Report File: $report_state
 Focus:       $focus
 Acceptance:  $acceptance
 EOF
@@ -180,7 +269,7 @@ EOF
 
 run_stage() {
   local id="$1"
-  local prompt
+  local prompt output_path marker rc
   stage_line "$id" >/dev/null || die "unknown stage: $id"
   mkdir -p "$REPORT_DIR"
   prompt="$(build_prompt "$id")"
@@ -191,7 +280,28 @@ run_stage() {
   fi
 
   command -v "$CODEX_BIN" >/dev/null 2>&1 || die "codex binary not found: $CODEX_BIN"
+  output_path="$(stage_output_path "$id")"
+  marker="$(mktemp)"
+  set_stage_status "$id" Progress
+
+  set +e
   (cd "$ROOT_DIR" && "$CODEX_BIN" "$CODEX_SUBCOMMAND" "$prompt" </dev/null)
+  rc=$?
+  set -e
+
+  if [[ "$rc" -eq 0 && -s "$output_path" && "$output_path" -nt "$marker" ]]; then
+    rm -f "$marker"
+    set_stage_status "$id" Done
+    return 0
+  fi
+
+  rm -f "$marker"
+  set_stage_status "$id" Fail
+  if [[ "$rc" -eq 0 ]]; then
+    echo "error: expected non-empty fresh report was not created: $output_path" >&2
+    return 1
+  fi
+  return "$rc"
 }
 
 run_all() {
@@ -207,6 +317,44 @@ run_all() {
       break
     fi
   done < <(stage_ids "$group_filter")
+}
+
+clear_reports() {
+  local group_filter="${1:-}"
+  local deleted=0
+  local missing=0
+  local id path
+
+  require_files
+  while IFS= read -r id; do
+    [[ -z "$id" ]] && continue
+    path="$(stage_output_path "$id")"
+
+    if [[ -f "$path" ]]; then
+      if is_dry_run; then
+        printf "would delete %s\n" "$path"
+      else
+        rm -- "$path"
+        printf "deleted %s\n" "$path"
+      fi
+      deleted=$((deleted + 1))
+    else
+      printf "no report %s (%s)\n" "$id" "$path"
+      missing=$((missing + 1))
+    fi
+
+    if is_dry_run; then
+      printf "would set %s status to ToDo\n" "$id"
+    else
+      set_stage_status "$id" ToDo
+    fi
+  done < <(stage_ids "$group_filter")
+
+  if is_dry_run; then
+    printf "dry run: %d report(s) would be deleted; %d report(s) already absent.\n" "$deleted" "$missing"
+  else
+    printf "clear complete: %d report(s) deleted; %d report(s) already absent; statuses set to ToDo.\n" "$deleted" "$missing"
+  fi
 }
 
 validate() {
@@ -264,6 +412,10 @@ main() {
     run-all)
       [[ $# -le 2 ]] || die "run-all accepts at most one group"
       run_all "${2:-}"
+      ;;
+    clear)
+      [[ $# -le 2 ]] || die "clear accepts at most one group"
+      clear_reports "${2:-}"
       ;;
     validate)
       validate
