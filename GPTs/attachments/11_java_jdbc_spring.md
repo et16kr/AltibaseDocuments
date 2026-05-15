@@ -228,7 +228,9 @@ Connection attribute block: `ssl_enable`, `port`, `verify_server_certificate`, `
 - `verify_server_certificate=true`: authenticate the server certificate.
 - Truststore keys: `truststore_url`, `truststore_type`, `truststore_password`.
 - Mutual authentication keys: `keystore_url`, `keystore_type`, `keystore_password`.
-- Cipher/protocol keys: `ciphersuite_list`, `ssl_protocols`.
+- `ciphersuite_list`: source-backed for 7.1, 7.3, and Altibase 8.1 verified source.
+- `ssl_protocols`: use only for 7.3 and Altibase 8.1 verified-source guidance; do not suggest this property for 7.1.
+- For 7.1 SSL/TLS JDBC answers, keep the property set to `ssl_enable`, `port`, `ciphersuite_list`, `verify_server_certificate`, truststore keys, and keystore keys, then use the SSL/TLS attachment for 7.1 TLS 1.0 and OpenSSL limitations.
 - Use the SSL/TLS attachment for certificate preparation and server-side SSL/TLS properties.
 
 Connection attribute block: `stmt_cache_enable`, `stmt_cache_size`, `stmt_cache_sql_limit`
