@@ -119,7 +119,7 @@ R15 is a meta gate. Treat its High row as unresolved until the underlying `Revie
 | V01 | Done | Validation | all | `GPTs/attachments/` | Run upload-boundary checks after edits: exactly 20 upload Markdown files excluding README, no image dependency, no internal path/source labels, required headings present. | See command block below. |
 | V02 | Done | Validation | changed report set | `review/reports/R01_*.md` through `R14_*.md` | Re-review changed sections only and update relevant reports from `Review Required` to `Pass` when all listed findings are fixed or accepted. Preserve old evidence in archive if needed. | `rg -n "^Verdict:|^\| (High|Medium|Low) \|" review/reports/R*.md` |
 | V03 | Done | Validation | R15 | `review/reports/R15_multilingual_final_readiness.md` | Re-run final readiness after underlying report closure or residual-risk acceptance. R15 should remain `Review Required` until this point. | `rg -n "Verdict: (Fail|Review Required)|^\| (Blocker|High) \|" review/reports/R*.md` |
-| V04 | ToDo | Validation | final | optional acceptance record | If any task is not fixed by design, create an explicit residual-risk record that names the task ID, reason, impact, and owner approval. | `rg -n "residual|accepted risk|H[0-9]+|M[0-9]+" review GPTs -g '*.md'` |
+| V04 | Done | Validation | final | optional acceptance record | If any task is not fixed by design, create an explicit residual-risk record that names the task ID, reason, impact, and owner approval. | `rg -n "residual|accepted risk|H[0-9]+|M[0-9]+" review GPTs -g '*.md'` |
 
 Common validation commands:
 
