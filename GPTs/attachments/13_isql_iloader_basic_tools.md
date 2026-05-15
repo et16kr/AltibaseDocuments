@@ -86,6 +86,7 @@ isql
   [-P password]
   [/NOLOG]
   [-SYSDBA]
+  [-KEEP_SYSDBA]
   [-UNIXDOMAIN-FILEPATH filepath]
   [-IPC-FILEPATH filepath]
   [-IPCDA-FILEPATH filepath]
@@ -112,6 +113,7 @@ Syntax notes:
 - `-PORT` uses the command-line value first, then `ALTIBASE_PORT_NO`, then `PORT_NO` in `altibase.properties`, then an input prompt.
 - `/NOLOG` starts iSQL without logging in. Use `CONNECT` later.
 - `-SYSDBA` is for the `SYS` user to connect in SYSDBA mode. Only one SYSDBA connection is allowed at a time.
+- `-KEEP_SYSDBA` is used with `-SYSDBA` when you want iSQL to keep administrator mode after startup instead of reconnecting to a service session.
 - `-F` runs a script immediately after iSQL starts. Parameters after the script name can be used as substitution values when the script uses substitution variables.
 - `-O` writes iSQL command results to a file in the current directory and overwrites an existing file with the same name.
 
@@ -182,7 +184,7 @@ Use when: the server requires SSL/TLS, or the server requires client certificate
 Cookbook: start Altibase through iSQL
 
 ```bash
-isql -s 127.0.0.1 -u sys -p manager -sysdba
+isql -u sys -p manager -sysdba
 ```
 
 ```sql
@@ -193,6 +195,7 @@ Requirements:
 
 - Run the command with the operating system account that installed and owns Altibase.
 - Connect as `SYS` with `-SYSDBA`.
+- Use a local SYSDBA connection for startup. Remote `SYSDBA` may connect, but it cannot start the DBMS.
 - Use the administration attachment for detailed startup phase and recovery troubleshooting.
 
 Cookbook: shut down Altibase through iSQL

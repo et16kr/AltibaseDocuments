@@ -336,16 +336,19 @@ Source purpose: JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, Hib
 Source purpose: C client interfaces, CLI, ODBC, C Interface, Precompiler, LOB API guidance.
 
 - 7.1:
+  - `Manuals/Altibase_7.1/kor/CLI User's Manual.md`
   - `Manuals/Altibase_7.1/eng/CLI User's Manual.md`
   - `Manuals/Altibase_7.1/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_7.1/eng/Altibase C Interface Manual.md`
   - `Manuals/Altibase_7.1/eng/Precompiler User’s Manual.md`
 - 7.3:
+  - `Manuals/Altibase_7.3/kor/CLI User's Manual.md`
   - `Manuals/Altibase_7.3/eng/CLI User's Manual.md`
   - `Manuals/Altibase_7.3/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_7.3/eng/Altibase C Interface Manual.md`
   - `Manuals/Altibase_7.3/eng/Precompiler User's Manual.md`
 - Altibase 8.1 verified source:
+  - `Manuals/Altibase_trunk/kor/CLI User's Manual.md`
   - `Manuals/Altibase_trunk/eng/CLI User's Manual.md`
   - `Manuals/Altibase_trunk/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_trunk/eng/Altibase C Interface Manual.md`
@@ -357,14 +360,17 @@ Source purpose: C client interfaces, CLI, ODBC, C Interface, Precompiler, LOB AP
 Source purpose: iSQL, iLoader, export/import, first-line operational tool usage.
 
 - 7.1:
+  - `Manuals/Altibase_7.1/kor/iSQL User's Manual.md`
   - `Manuals/Altibase_7.1/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_7.1/eng/iLoader User's Manual.md`
   - `Manuals/Altibase_7.1/kor/iLoader User's Manual.md`
 - 7.3:
+  - `Manuals/Altibase_7.3/kor/iSQL User's Manual.md`
   - `Manuals/Altibase_7.3/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_7.3/eng/iLoader User's Manual.md`
   - `Manuals/Altibase_7.3/kor/iLoader User's Manual.md`
 - Altibase 8.1 verified source:
+  - `Manuals/Altibase_trunk/kor/iSQL User's Manual.md`
   - `Manuals/Altibase_trunk/eng/iSQL User's Manual.md`
   - `Manuals/Altibase_trunk/eng/iLoader User's Manual.md`
   - `Manuals/Altibase_trunk/kor/iLoader User's Manual.md`

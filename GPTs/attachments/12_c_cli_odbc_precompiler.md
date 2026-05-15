@@ -919,7 +919,7 @@ LOB API block: `SQLGetLob`
 - Type: Altibase-specific, non-standard CLI LOB function.
 - Purpose: reads part of a LOB through a locator into an application buffer.
 - Read buffer types: `SQL_C_BINARY` for `BLOB`, `SQL_C_CHAR` for `CLOB`.
-- `fromPosition`: byte-based start point for reading. `SQLGetLob()` `fromPosition` is documented as 1-based. If a source sample initializes a first full-read loop with offset `0`, treat that as a sample-specific convention and test against the target client patch before generating partial-read code.
+- `fromPosition`: byte-based, 0-based start point for reading. Use `0` for the first byte and advance by the number of bytes already read. If English manual text describes `SQLGetLob()` `fromPosition` as 1-based, treat that as documentation drift and keep generated code on the 0-based rule.
 - `forLength`: byte length requested.
 - Truncation: if returned data is larger than `bufferSize`, returns `SQL_SUCCESS_WITH_INFO` with SQLSTATE `01004` and truncates to the buffer size.
 
@@ -930,7 +930,7 @@ LOB API block: `SQLPutLob`
 - Source buffer types: `SQL_C_BINARY` for `BLOB`, `SQL_C_CHAR` for `CLOB`.
 - `forLength`: present in the function signature, but documented as not used in the source argument table.
 - `valueLength`: must be greater than 0; `SQL_NULL_DATA` is not accepted.
-- Position rule: `SQLPutLob()` `fromPosition` is documented as 1-based for partial writes. Do not pass a position greater than the current target LOB length. If a source sample uses `fromPosition=0` for new or whole-value locator patterns, label it as a sample-specific full-value convention rather than the generic partial-write rule.
+- Position rule: `SQLPutLob()` `fromPosition` is byte-based and 0-based. Use `fromPosition=0` for insert and full-value update patterns. Use `fromPosition == current LOB length` to append. Do not pass a position greater than the current target LOB length. If English manual text describes this as 1-based, treat that as documentation drift and keep generated code on the 0-based rule.
 - Transaction rule: use non-autocommit mode and commit or roll back explicitly after the LOB operation.
 
 LOB API block: `SQLTrimLob`
@@ -977,7 +977,7 @@ LOB full-read pattern:
 
 ```text
 SQLSetConnectAttr(dbc, SQL_ATTR_AUTOCOMMIT, SQL_AUTOCOMMIT_OFF, 0)
-SQLExecDirect(stmt, "SELECT clob_col FROM t WHERE id = ?", SQL_NTS)
+SQLExecDirect(stmt, "SELECT clob_col FROM t WHERE id = <literal_id>", SQL_NTS)
 SQLBindCol(stmt, 1, SQL_C_CLOB_LOCATOR, &lobLoc, 0, NULL)
 SQLFetch(stmt)
 SQLGetLobLength(stmt, lobLoc, SQL_C_CLOB_LOCATOR, &lobLength)
@@ -986,17 +986,21 @@ SQLFreeLob(stmt, lobLoc)
 SQLEndTran(SQL_HANDLE_DBC, dbc, SQL_COMMIT or SQL_ROLLBACK)
 ```
 
+Initialize `offset` to `0` for the first `SQLGetLob()` call.
+
 LOB update pattern:
 
 ```text
 SQLSetConnectAttr(dbc, SQL_ATTR_AUTOCOMMIT, SQL_AUTOCOMMIT_OFF, 0)
-SQLExecDirect(stmt, "SELECT clob_col FROM t WHERE id = ? FOR UPDATE", SQL_NTS)
+SQLExecDirect(stmt, "SELECT clob_col FROM t WHERE id = <literal_id> FOR UPDATE", SQL_NTS)
 SQLBindCol(stmt, 1, SQL_C_CLOB_LOCATOR, &lobLoc, 0, NULL)
 SQLFetch(stmt)
 SQLPutLob(stmt, SQL_C_CLOB_LOCATOR, lobLoc, position, reservedForLength, SQL_C_CHAR, buffer, bufferLength)
 SQLFreeLob(stmt, lobLoc)
 SQLEndTran(SQL_HANDLE_DBC, dbc, SQL_COMMIT or SQL_ROLLBACK)
 ```
+
+Set `position` to `0` for an insert or full-value update, or to the current LOB length for append.
 
 JSON LOB update pattern for Altibase 8.1 verified source:
 
