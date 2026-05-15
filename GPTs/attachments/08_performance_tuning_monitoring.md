@@ -1807,27 +1807,43 @@ Commit-mode note:
 
 Server issue block: `Log file wait`
 
-- Symptom: transactions wait because too few extra log files are prepared.
-- Check:
+- Symptom: Transactions wait while Altibase prepares additional log files.
+- Primary Causes: `PREPARE_LOG_FILE_COUNT` is too low for the burst write rate, log disk latency is high, or sustained transaction volume is consuming prepared log files faster than they are replenished.
+- Check SQL or Command:
 
 ```sql
 SELECT lf_prepare_wait_count
 FROM V$LFG;
 ```
 
-- Action: consider increasing `PREPARE_LOG_FILE_COUNT`, but avoid setting it excessively because server memory usage increases.
+- Immediate Action: Compare two snapshots in the same workload window. If `LF_PREPARE_WAIT_COUNT` rises and log disk I/O is not already saturated, consider a small increase to `PREPARE_LOG_FILE_COUNT`; keep the prior value and avoid excessive settings because server memory usage increases.
+- Verification: Re-run the `V$LFG` snapshot after the workload or change. The wait-count increase should slow or stop, and transaction latency during log-heavy work should improve.
+- Version Cautions: Check that `V$LFG.LF_PREPARE_WAIT_COUNT` and `PREPARE_LOG_FILE_COUNT` are available on the target server before relying on them.
+- Escalation: If waits continue after bounded tuning or log I/O is saturated, collect Altibase version, two `V$LFG` snapshots, log file layout, OS I/O samples, property values, and trace log excerpts before escalating.
 
 Server issue block: `Checkpoint I/O`
 
-- Symptom: checkpoint trace messages stay long at `[CHECKPOINT-step3] Flush Dirty Page(s)` or `[CHECKPOINT-step4] sync Database File`.
-- Check OS I/O with `sar`, `iostat`, or platform-equivalent tools.
-- Action: separate log files and data files onto different disks when disk I/O is the bottleneck.
-- Property levers: `CHECKPOINT_BULK_WRITE_PAGE_COUNT`, `CHECKPOINT_BULK_WRITE_SLEEP_SEC`, `CHECKPOINT_BULK_WRITE_SLEEP_USEC`, `CHECKPOINT_BULK_SYNC_PAGE_COUNT`.
+- Symptom: Checkpoint trace messages stay long at `[CHECKPOINT-step3] Flush Dirty Page(s)` or `[CHECKPOINT-step4] sync Database File`, often with elevated storage latency.
+- Primary Causes: Data files and log files share saturated storage, the dirty-page flush backlog is high, or checkpoint bulk write and sleep settings are not aligned with the storage capacity.
+- Check SQL or Command:
+
+```text
+sar
+iostat
+```
+
+Use platform-equivalent OS I/O tools when `sar` or `iostat` is unavailable, and compare the output with checkpoint trace timestamps.
+
+- Immediate Action: If OS I/O confirms a bottleneck, reduce competing storage load or place log files and data files on separate disks. Change `CHECKPOINT_BULK_WRITE_PAGE_COUNT`, `CHECKPOINT_BULK_WRITE_SLEEP_SEC`, `CHECKPOINT_BULK_WRITE_SLEEP_USEC`, or `CHECKPOINT_BULK_SYNC_PAGE_COUNT` only one at a time and keep the previous value for rollback.
+- Verification: Compare checkpoint trace duration and OS I/O latency before and after the change in the same workload window.
+- Version Cautions: Verify the checkpoint property names in `V$PROPERTY` on the target server, and use OS commands appropriate to the platform.
+- Escalation: If checkpoint delays persist or storage latency remains high, collect Altibase version, checkpoint trace excerpts, property values, storage layout, and OS I/O samples before further property changes.
 
 Server issue block: `Disk buffer pressure`
 
-- Symptom: disk-table queries show low buffer hit ratio or increasing victim search work.
-- Check:
+- Symptom: Disk-table queries show low buffer hit ratio, rising disk reads, or increasing victim search work.
+- Primary Causes: The disk buffer is smaller than the active working set, SQL is doing avoidable full scans, predicates or indexes are inefficient, or page replacement work is increasing under load.
+- Check SQL or Command:
 
 ```sql
 SELECT hit_ratio AS "HIT_RATIO(%)",
@@ -1835,15 +1851,16 @@ SELECT hit_ratio AS "HIT_RATIO(%)",
 FROM V$BUFFPOOL_STAT;
 ```
 
-- Interpretation: low `HIT_RATIO` means more pages are read from disk than from buffer.
-- Interpretation: increasing `VICTIM_SEARCH_WARP` indicates page flushing is being deprioritized.
-- Action: tune SQL that reads many disk pages, reduce full scans, or consider increasing `BUFFER_AREA_SIZE`.
-- Statistics are cumulative since server start; compare snapshots for a time window.
+- Immediate Action: First tune SQL that reads many disk pages and reduce avoidable full scans. Consider increasing `BUFFER_AREA_SIZE` only after time-window snapshots show persistent buffer pressure; keep the previous value and confirm service impact before changing it.
+- Verification: Repeat the `V$BUFFPOOL_STAT` snapshot over the same interval. `HIT_RATIO` should improve or stabilize, victim search work should not continue rising at the same rate, and the affected SQL should show lower elapsed time or disk-read pressure.
+- Version Cautions: `V$BUFFPOOL_STAT` values are cumulative since server start; compare deltas over a time window and verify column availability on the target server before interpreting the metrics.
+- Escalation: If buffer pressure remains after SQL tuning and a bounded buffer-size review, collect Altibase version, before/after `V$BUFFPOOL_STAT` snapshots, top disk-read SQL, execution plans, OS I/O samples, and current buffer property values.
 
 Server issue block: `Service thread overload`
 
-- Symptom: many clients connect concurrently and queries wait while service threads are created or shared.
-- Check:
+- Symptom: Many clients connect concurrently and queries wait while service threads are created or shared.
+- Primary Causes: Concurrent session load exceeds the configured service-thread capacity, long-running SQL occupies service threads, or multiplexing/shared thread settings are too low for the workload.
+- Check SQL or Command:
 
 ```sql
 SELECT RPAD(type, 30) AS thread_type, COUNT(*) AS thread_count
@@ -1855,13 +1872,16 @@ FROM V$PROPERTY
 WHERE name LIKE 'MULTIPLEXING%_THREAD_COUNT';
 ```
 
-- Action: if `SOCKET` count is larger than `MULTIPLEXING_THREAD_COUNT`, consider increasing `MULTIPLEXING_THREAD_COUNT` and tuning long-running SQL.
+- Immediate Action: Tune or cancel long-running SQL before changing thread properties. If the thread count evidence still shows service-thread saturation, consider a bounded increase to `MULTIPLEXING_THREAD_COUNT` after confirming service impact and retaining the previous value.
+- Verification: Repeat the `V$SERVICE_THREAD` and `V$PROPERTY` check during a comparable workload window. Thread growth and user-visible waits should stabilize after the SQL or property action.
+- Version Cautions: `V$SERVICE_THREAD` type values and multiplexing properties can vary by server version and configuration; verify the view and property names on the target server.
+- Escalation: If waits continue after SQL tuning and bounded thread review, collect Altibase version, session count, `V$SERVICE_THREAD` snapshots, `MULTIPLEXING%_THREAD_COUNT` values, active statement evidence, and trace log excerpts.
 
 Server issue block: `MVCC garbage collector pressure`
 
-- Symptom: memory table size, undo tablespace, or log file usage grows because old versions cannot be reclaimed.
-- Causes: long uncommitted transactions, excessive concurrent transactions, bulk updates, or too many obsolete versions.
-- Check:
+- Symptom: Memory table size, undo tablespace usage, or log file usage grows because old row versions cannot be reclaimed.
+- Primary Causes: Long uncommitted transactions, excessive concurrent transactions, bulk updates, or too many obsolete versions are delaying garbage collection.
+- Check SQL or Command:
 
 ```sql
 SELECT gc_name,
@@ -1887,11 +1907,18 @@ AND execute_flag = 1
 ORDER BY total_time DESC;
 ```
 
-- Action: tune or end long transactions, review bulk-update patterns, and consider `AGER_WAIT_MINIMUM` and `AGER_WAIT_MAXIMUM` only after confirming the transaction pattern.
+- Immediate Action: Tune or end the long transaction that holds the oldest memory view SCN, review bulk-update batching, and consider `AGER_WAIT_MINIMUM` or `AGER_WAIT_MAXIMUM` only after confirming the transaction pattern. Keep previous property values for rollback.
+- Verification: Re-run the `V$MEMGC` and active-statement checks. `GCGAP` should narrow or stabilize, the same long transaction should no longer hold the oldest memory view SCN, and memory, undo, or log growth should stop accelerating.
+- Version Cautions: Verify `V$MEMGC`, `V$STATEMENT`, and `V$TRANSACTION` column availability on the target server before relying on this exact query.
+- Escalation: If GC pressure continues after resolving long transactions or if the blocking transaction cannot be safely ended, collect Altibase version, `V$MEMGC` snapshots, blocker SQL, transaction age, memory/undo/log growth evidence, and trace log excerpts.
 
 Server issue block: `High CPU by server thread`
 
-- Check OS thread CPU by platform:
+- Symptom: The Altibase process has high CPU usage, or one server thread consumes CPU for a sustained interval.
+- Primary Causes: Expensive SQL, inefficient execution plans, excessive concurrency, latch or wait contention, or an internal server condition that requires stack evidence.
+- Check SQL or Command:
+
+Check OS thread CPU by platform:
 
 | OS | Command |
 | --- | --- |
@@ -1906,7 +1933,10 @@ Server issue block: `High CPU by server thread`
 | HP-UX, Linux | `pstack <altibase_pid>` |
 | AIX | `procstack <altibase_pid>` |
 
-- Pair OS thread evidence with `V$SESSION`, `V$STATEMENT`, and wait views before recommending SQL or property changes.
+- Immediate Action: Pair OS thread evidence with `V$SESSION`, `V$STATEMENT`, and wait views before recommending SQL or property changes. Prefer SQL tuning, concurrency reduction, or plan correction when the hot thread maps to an active statement.
+- Verification: Repeat the OS thread CPU check and the relevant Altibase views after the action. CPU usage should fall in the same workload window, and the mapped SQL or wait condition should improve.
+- Version Cautions: Thread inspection commands are platform-specific, and view columns can vary by server version; verify the exact OS tool and view schema on the target server.
+- Escalation: If the hot thread cannot be mapped to SQL or waits, or CPU remains high after a bounded SQL/concurrency action, collect Altibase version, OS thread samples, `pstack` or `procstack` output, active session and statement snapshots, wait evidence, and trace log excerpts.
 
 ## Monitoring API
 
