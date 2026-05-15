@@ -1740,8 +1740,9 @@ ORDER BY a.child_pco_count DESC;
 Interpretation:
 
 - High `CACHE_MISS_COUNT`: consider larger `SQL_PLAN_CACHE_SIZE`, more bind-variable use, or prepare/execute application flow.
-- High `CREATED_BY_CACHE_MISS`: SQL plan cache may be too small or literal SQL may be overused.
-- High `CREATED_BY_PLAN_INVALIDATION`: referenced objects such as tables or indexes may be changing frequently.
+- Interpret `CREATE_REASON` from the values returned by the target server. Data dictionary spellings include `CREATE_BY_CACHE_MISS`, `CREATE_BY_PLAN_INVALIDATION`, and `CREATE_BY_PLAN_TOO_OLD`; some tuning-guide examples show a `CREATED_BY_*` spelling, so validate target output before hard-coding alert filters.
+- High cache-miss reason, such as `CREATE_BY_CACHE_MISS` or the target server's equivalent spelling: SQL plan cache may be too small or literal SQL may be overused.
+- High plan-invalidation reason, such as `CREATE_BY_PLAN_INVALIDATION` or the target server's equivalent spelling: referenced objects such as tables or indexes may be changing frequently.
 - High `CHILD_PCO_COUNT`: check whether SQL text is the same but object owners differ, or whether referenced objects are frequently changed.
 
 ## Result Cache
