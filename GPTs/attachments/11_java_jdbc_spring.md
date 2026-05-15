@@ -2,7 +2,7 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 JDBC, Adapter for JDBC, Spring Data JPA, Hibernate, and Java compatibility guidance.
+- 7.1: Based on Altibase 7.1 JDBC and Adapter for JDBC manuals. Treat Spring/Hibernate Maven examples and Java compatibility ranges as driver-patch examples that require verification against the target 7.1 driver or Adapter patch.
 - 7.3: Based on Altibase 7.3 JDBC, Adapter for JDBC, Spring Data JPA, Hibernate 6.4, and Java compatibility guidance.
 - 8.1: Based on Altibase 8.1 verified source JDBC, Adapter for JDBC, release note, Spring Data JPA, Hibernate 6.4, and Java compatibility guidance.
 
@@ -19,9 +19,10 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 JDBC User's Manual; Adapter for JDBC User's Manual; Spring Data JPA guide; Spring Data JPA with Hibernate 6.4 guide; Java compatibility note.
-- 7.3: Altibase 7.3 JDBC User's Manual; Adapter for JDBC User's Manual; Spring Data JPA guide; Spring Data JPA with Hibernate 6.4 guide; Java compatibility note.
-- 8.1: Altibase 8.1 verified source JDBC User's Manual; Adapter for JDBC User's Manual; release note; Spring Data JPA guide; Spring Data JPA with Hibernate 6.4 guide; Java compatibility note.
+- 7.1: Altibase 7.1 JDBC User's Manual; Adapter for JDBC User's Manual.
+- 7.3: Altibase 7.3 JDBC User's Manual; Adapter for JDBC User's Manual; Spring Data JPA guide; Spring Data JPA with Hibernate 6.4 guide.
+- 8.1: Altibase 8.1 verified source JDBC User's Manual; Adapter for JDBC User's Manual; release note; Spring Data JPA guide; Spring Data JPA with Hibernate 6.4 guide.
+- Supplemental Java compatibility note: use for driver-patch compatibility examples, and verify the exact target JDBC driver or Adapter for JDBC patch before giving production Java runtime guidance.
 
 ## Response Rules
 
@@ -57,11 +58,11 @@ Version block: 7.1
 - Logging and non-logging JARs: `Altibase.jar` supports logging; `Altibase_t.jar` does not support logging.
 - JDBC 3.0 driver baseline: `Altibase.jar` is a Type 4 pure Java driver and operates on JDK 1.5 or later according to the 7.1 JDBC guide.
 - JDBC 4.2 support: `Altibase42.jar` supports JDBC 4.2 APIs and Java 8 time conversion.
-- Maven Central availability: from Altibase 7.1.0.9.0; the Spring Hibernate 6.4 guide uses `com.altibase:altibase-jdbc:7.1.0.9.2` as the 7.1 example.
+- Maven Central driver-patch example: the Spring/Hibernate guide uses `com.altibase:altibase-jdbc:7.1.0.9.2` as a 7.1 example. Verify Maven Central availability and support against the exact target 7.1 JDBC driver patch before recommending this dependency.
 - Hibernate LOB caution: in 7.1, set `lob_null_select=off` when Hibernate LOB features are used, because the 7.1 default is `on`.
 - `socket_immediate_close`: supported by Altibase JDBC driver 7.1.0.9.8 and later.
-- Java compatibility note: `Altibase.jar` is listed as compatible from Java 5 through Java 17-21; `Altibase42.jar` is listed from Java 8 through Java 17-21. Java 11 or later support for the JDBC 3.0 driver starts from Altibase 7.1.0.2.6.
-- Adapter for JDBC Java compatibility: 7.1 Adapter for JDBC is listed from Java 7 through Java 17-21; Java 11 or later support starts from Altibase 7.1.0.2.6.
+- Java compatibility driver-patch examples: supplemental compatibility material lists `Altibase.jar` from Java 5 through Java 17-21 and `Altibase42.jar` from Java 8 through Java 17-21, with Java 11 or later support for the JDBC 3.0 driver starting from Altibase 7.1.0.2.6. Verify the exact 7.1 driver patch and target Java runtime before treating these ranges as supported.
+- Adapter for JDBC Java compatibility example: supplemental compatibility material lists 7.1 Adapter for JDBC from Java 7 through Java 17-21, with Java 11 or later support starting from Altibase 7.1.0.2.6. Verify the target Adapter for JDBC patch before committing to a Java runtime.
 
 Version block: 7.3
 
@@ -448,7 +449,7 @@ Altibase JDBC Maven dependency for 7.3:
 </dependency>
 ```
 
-Altibase JDBC Maven dependency for 7.1:
+Altibase JDBC Maven dependency for 7.1 driver-patch example:
 
 ```xml
 <dependency>
@@ -457,6 +458,8 @@ Altibase JDBC Maven dependency for 7.1:
     <version>7.1.0.9.2</version>
 </dependency>
 ```
+
+Verify the target 7.1 JDBC driver patch before using this Maven dependency in production. If the target patch is not confirmed as a supported Maven artifact, use the matching driver shipped with the Altibase installation.
 
 Spring Boot 3.2 / Hibernate 6.4 `application.properties`:
 
