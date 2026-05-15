@@ -106,21 +106,24 @@ flowchart LR
 
 ## Replication State Diagram
 
-Use this state model when explaining `CREATE REPLICATION`, `ALTER REPLICATION ... SYNC`, `START`, `QUICKSTART`, `STOP`, `RESET`, and `DROP REPLICATION`.
+Use this state model when explaining `CREATE REPLICATION`, `ALTER REPLICATION ... SYNC`, `ALTER REPLICATION ... SYNC ONLY`, `START`, `QUICKSTART`, `STOP`, `RESET`, and `DROP REPLICATION`.
 
 ```mermaid
 stateDiagram-v2
   [*] --> NotCreated
   NotCreated --> Created: CREATE REPLICATION on both nodes
-  Created --> Syncing: ALTER REPLICATION ... SYNC or SYNC ONLY
-  Syncing --> Running: SYNC completes and Sender starts
+  Created --> SyncingToStart: ALTER REPLICATION ... SYNC
+  SyncingToStart --> Running: SYNC completes and Sender starts
+  Created --> SyncingOnly: ALTER REPLICATION ... SYNC ONLY
+  SyncingOnly --> Created: data aligned; START still required
   Created --> Running: ALTER REPLICATION ... START
   Created --> RunningCurrent: ALTER REPLICATION ... QUICKSTART
   RunningCurrent --> Running: current log position selected
   Running --> Flushing: ALTER REPLICATION ... FLUSH
   Flushing --> Running: sent through requested log point
   Running --> Stopped: ALTER REPLICATION ... STOP
-  Syncing --> Stopped: STOP during SYNC
+  SyncingToStart --> Stopped: STOP during SYNC
+  SyncingOnly --> Stopped: STOP during SYNC ONLY
   Stopped --> Running: START
   Stopped --> RunningCurrent: QUICKSTART
   Stopped --> Created: RESET
@@ -162,9 +165,11 @@ Mode block: `EAGER`
 - Important property: `REPLICATION_EAGER_PARALLEL_FACTOR`.
 - Cautions:
   - Both local and remote replication objects must use EAGER mode for synchronization.
-  - EAGER mode is not recommended for more than three nodes.
+  - EAGER mode is not recommended for three or more nodes.
   - Network failure can still create split-brain style inconsistency if both sides continue accepting updates.
+  - A table should participate in only one EAGER-mode replication object; using the same table in multiple EAGER replications can cause data mismatch and incremental sync failure after a fault.
   - Node time must be synchronized.
+  - If abnormal termination occurs before committed logs are flushed to disk, data can be lost unless the documented recovery option or commit-write properties such as `COMMIT_WRITE_WAIT_MODE`, `REPLICATION_COMMIT_WRITE_WAIT_MODE`, and `REPLICATION_SYNC_LOG` are considered.
   - `REPLICATION_SQL_APPLY_ENABLE` is not available in EAGER mode.
   - Offline replication and cross-version compatibility rules that apply to LAZY mode do not make EAGER safe across different versions.
 
@@ -254,6 +259,7 @@ Object and schema prerequisites:
 - Replication target tables must have primary keys.
 - Primary-key columns on target tables must not be updated.
 - Replication target item types must match: table to table, partition to partition. Table-to-partition crossover is not supported.
+- When removing a replication target, use the same table or partition granularity that was used when the target was added; partitions added individually must be removed individually.
 - For partition replication, partitioning method and partition constraints must match. Hash partition counts must match.
 
 Operational prerequisites:
@@ -331,6 +337,12 @@ propagation_replication ::=
     FROM user_name.table_name [PARTITION partition_name]
     TO   user_name.table_name [PARTITION partition_name]
     [, FROM ... TO ...];
+
+receive_only_replication ::=
+  CREATE REPLICATION replication_name OPTIONS RECEIVE_ONLY
+    FROM user_name.table_name [PARTITION partition_name]
+    TO   user_name.table_name [PARTITION partition_name]
+    [, FROM ... TO ...];
 ```
 
 Syntax notes:
@@ -349,6 +361,7 @@ Syntax notes:
 - `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `AS MASTER` and `AS SLAVE` affect handshaking. Valid pairings are not-set with not-set, master with slave, and slave with master.
+- `OPTIONS RECEIVE_ONLY` uses a receive-only creation form without a peer host list. When receive-only mode is later turned off, supply the peer host again with `SET RECEIVE_ONLY OFF WITH ...`.
 
 ## CREATE REPLICATION Examples: Non-SSL TCP
 
@@ -504,6 +517,9 @@ ALTER REPLICATION replication_name START [RETRY];
 ALTER REPLICATION replication_name QUICKSTART [RETRY];
 ALTER REPLICATION replication_name STOP;
 ALTER REPLICATION replication_name RESET;
+ALTER REPLICATION replication_name DROP HOST ALL;
+ALTER REPLICATION replication_name SET RECEIVE_ONLY
+  { ON | OFF WITH 'remote_host_ip_or_name', remote_host_port_no [USING conn_type [ib_latency]] };
 
 ALTER REPLICATION replication_name ADD TABLE
   FROM user_name.table_name [PARTITION partition_name]
@@ -569,6 +585,7 @@ Operation block: `ADD TABLE`
 Operation block: `DROP TABLE`
 
 - Removes a table or partition from a replication object.
+- Specify the same table or partition form that was used when the target was added; do not remove individually registered partitions by specifying only the whole table.
 - If the target table's primary transaction log or metadata log is inside a replication gap, the gap can be skipped and data inconsistency can result.
 
 Operation block: `FLUSH`
@@ -726,6 +743,35 @@ ALTER REPLICATION rep1 SET GROUPING DISABLE;
 - Key properties: `REPLICATION_GROUPING_AHEAD_READ_NEXT_LOG_FILE`, `REPLICATION_GROUPING_TRANSACTION_MAX_COUNT`.
 - Restriction: LAZY mode only.
 
+Option block: `RECEIVE_ONLY`
+
+- Version scope: supported in 7.3 and Altibase 8.1 verified source. For 7.1, treat it as 7.1.0.8.5 patch-level material and confirm the exact patch/meta version before recommending it.
+- Syntax:
+
+```sql
+CREATE REPLICATION rep1 OPTIONS RECEIVE_ONLY
+FROM sys.t1 TO sys.t1;
+
+ALTER REPLICATION rep1 DROP HOST ALL;
+ALTER REPLICATION rep1 RESET;
+ALTER REPLICATION rep1 SET RECEIVE_ONLY ON;
+ALTER REPLICATION rep1 SET RECEIVE_ONLY OFF WITH 'standby_ip', standby_port;
+```
+
+- Purpose: configure a replication object so the local node receives changes but does not send its own change data to another node.
+- Operational behavior: receive-only replication does not read local logs for sending; host information is removed when receive-only mode is enabled and must be supplied again when it is disabled.
+- Pre-steps for changing an existing replication object to receive-only:
+  - Stop the replication object if it is running.
+  - Remove all configured host information with `ALTER REPLICATION replication_name DROP HOST ALL`.
+  - Reset restart information with `ALTER REPLICATION replication_name RESET`.
+  - Enable receive-only with `ALTER REPLICATION replication_name SET RECEIVE_ONLY ON`.
+- To disable receive-only mode, use `ALTER REPLICATION replication_name SET RECEIVE_ONLY OFF WITH 'remote_host', remote_port [USING conn_type [ib_latency]]`.
+- Restrictions:
+  - Cannot be combined with `RECOVERY`, `GAPLESS`, `GROUPING`, or `META_LOGGING`.
+  - Cannot be used with DDL replication.
+  - Cannot be used in EAGER mode.
+  - Cannot be used by replication objects with non-default replication roles.
+
 Option block: `META_LOGGING`
 
 - Syntax:
@@ -840,6 +886,7 @@ DDL restrictions:
 
 - Do not use the DDL synchronization procedure for EAGER-mode replication objects, `RECOVERY`-enabled replication objects, `FOR PROPAGATION` replication objects, `RECEIVE_ONLY` replication objects, or partitioned tables with global non-partitioned indexes.
 - Do not use the DDL synchronization procedure for index partition rebuilds, grants/revokes, or trigger create/drop.
+- Do not enable SQL apply mode for replication target tables that include encrypted columns; check target column definitions before recommending `REPLICATION_SQL_APPLY_ENABLE`.
 - For unsupported replication objects or DDL types, remove the target from replication and perform DDL on both nodes, drop and recreate replication where required, or use a source-specific documented procedure.
 - Clear replication gaps before DDL.
 - DDL locks the target table; a primary transaction during the lock can block receiver apply.
@@ -1097,7 +1144,9 @@ Compatibility block: Altibase 8.1
 
 - Use Altibase 8.1 verified source for 8.1 answers.
 - 8.1 adds SSL/TLS support for replication communication through `USING SSL` and `REPLICATION_SSL_PORT_NO`.
+- Do not declare 8.1-to-older replication compatibility from the 7.1/7.3 LAZY matrix or protocol prefix alone; require an Altibase 8.1 compatibility matrix or vendor confirmation for 8.1 cross-version plans.
 - Do not infer EAGER or offline compatibility from LAZY compatibility statements.
+- Treat 8.1 SSL support as a separate transport feature, not as a cross-version compatibility guarantee.
 - When planning 8.1 with older nodes, request the exact `product_version` and `repl_protocol_version` from both nodes before giving a compatibility answer.
 
 Compatibility SQL:
@@ -1136,6 +1185,7 @@ Replication runtime views:
 - `V$REPSENDER_STATISTICS`
 - `V$REPSENDER_TRANSTBL`
 - `V$REPSENDER_TRANSTBL_PARALLEL`
+- `V$REPSYNC`
 
 Health query block: definitions
 
@@ -1184,6 +1234,19 @@ FROM V$REPSENDER
 ORDER BY rep_name;
 ```
 
+Health query block: synchronization progress
+
+```sql
+SELECT rep_name,
+       sync_table,
+       sync_partition,
+       sync_record_count
+FROM V$REPSYNC
+ORDER BY rep_name, sync_table, sync_partition;
+```
+
+Use `V$REPSYNC` while `SYNC` or `SYNC ONLY` is running. `SYNC_RECORD_COUNT` shows synchronized records during synchronization and `-1` after synchronization completes.
+
 Health query block: receiver and target columns
 
 ```sql
@@ -1201,14 +1264,13 @@ FROM V$REPRECEIVER
 ORDER BY rep_name;
 
 SELECT rep_name,
-       local_user_name,
-       local_table_name,
-       local_column_name,
-       remote_user_name,
-       remote_table_name,
-       remote_column_name
+       user_name,
+       table_name,
+       partition_name,
+       column_name,
+       apply_mode
 FROM V$REPRECEIVER_COLUMN
-ORDER BY rep_name, local_user_name, local_table_name, local_column_name;
+ORDER BY rep_name, user_name, table_name, partition_name, column_name;
 ```
 
 ## Troubleshooting Playbooks
@@ -1598,7 +1660,7 @@ Error level block: `ALA_ERROR_INFO`
 ## Attachment Cross-References
 
 - Use `03_sql_ddl_generation.md` for `CREATE REPLICATION`, `ALTER REPLICATION`, replicated table, sequence, and privilege DDL generation.
-- Use `06_data_dictionary_performance_views.md` for replication metadata and runtime checks against `SYSTEM_.SYS_REPLICATIONS_`, `V$REPGAP`, `V$REPSENDER`, and `V$REPRECEIVER`.
+- Use `06_data_dictionary_performance_views.md` for replication metadata and runtime checks against `SYSTEM_.SYS_REPLICATIONS_`, `V$REPGAP`, `V$REPSYNC`, `V$REPSENDER`, and `V$REPRECEIVER`.
 - Use `07_error_messages_troubleshooting.md` when a replication, Log Analyzer, network, or SSL issue starts from an Altibase error code.
 - Use `08_performance_tuning_monitoring.md` when replication lag or apply delay may be caused by slow SQL, waits, log pressure, or server bottlenecks.
 - Use `12_c_cli_odbc_precompiler.md` for ODBC C conversion, LOB, and client-buffer handling when consuming Log Analyzer XLogs.

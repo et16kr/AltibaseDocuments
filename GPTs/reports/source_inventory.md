@@ -15,6 +15,7 @@ For Altibase 8.1, the internally verified source set is the current 8.1 verified
 - Altibase 8.1 verified source manuals: `Manuals/Altibase_trunk/kor` authoritative, `Manuals/Altibase_trunk/eng` English extraction/reference
 - Release notes, English: `ReleaseNotes/eng`
 - Release notes, Korean: `ReleaseNotes/kor` authoritative if release-note content differs from English
+- Patch notes: `PatchNotes/*/kor` authoritative for patch-level behavior; `PatchNotes/*/eng` English extraction/reference when present
 - Tool manuals, release source: `Manuals/Tools/Altibase_release/kor` authoritative, `Manuals/Tools/Altibase_release/eng` English extraction/reference
 - Tool manuals, Altibase 8.1 verified source: `Manuals/Tools/Altibase_trunk/kor` authoritative, `Manuals/Tools/Altibase_trunk/eng` English extraction/reference
 - Technical documents: `Technical Documents/kor` authoritative when paired or Korean-only, `Technical Documents/eng` English extraction/reference
@@ -173,9 +174,11 @@ Source purpose: meta tables, data dictionary, performance views, operational che
   - `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 - Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
   - `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
   - `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
   - `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+  - `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_8_5_Patch_Notes.md`
 
 ### 07_error_messages_troubleshooting.md
 
@@ -253,6 +256,7 @@ Source purpose: replication, HA, CDC/log analysis, compatibility, network checks
   - `Manuals/Altibase_7.1/kor/SQL Reference.md`
   - `Manuals/Altibase_7.1/kor/Replication Manual.md`
   - `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`
+  - `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_8_5_Patch_Notes.md`
   - `Manuals/Altibase_7.3/kor/SQL Reference.md`
   - `Manuals/Altibase_7.3/kor/Replication Manual.md`
   - `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`

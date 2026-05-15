@@ -1257,7 +1257,7 @@ FROM SYSTEM_.SYS_REPLICATIONS_
 ORDER BY replication_name;
 ```
 
-`IS_STARTED` values are `0` suspended and `1` active. `REPL_MODE` values include `0` lazy and `2` eager. `OPTIONS` is a bit-style decimal flag for recovery, offline, gapless, parallel applier, transaction grouping, and meta logging options.
+`IS_STARTED` values are `0` suspended and `1` active. `REPL_MODE` values include `0` lazy and `2` eager. `OPTIONS` is a bit-style decimal flag: `1` recovery, `2` offline, `4` gapless, `8` parallel applier, `16` transaction grouping, `256` meta logging, and, on versions that expose it, `512` receive-only. On 7.1 systems, treat receive-only as 7.1.0.8.5 patch-level material and verify the exact patch/meta version plus observed metadata before decoding `512`, because earlier 7.1 dictionary layouts may not list the receive-only flag.
 
 ### Check Replication Hosts
 
@@ -1387,6 +1387,19 @@ ORDER BY rep_name;
 ```
 
 `STATUS` values include `0` stop, `1` run, `2` retry, `6` sync, and `9` idle. `NET_ERROR_FLAG` value `1` indicates a network error.
+
+### Check Replication Synchronization Progress
+
+```sql
+SELECT rep_name,
+       sync_table,
+       sync_partition,
+       sync_record_count
+FROM V$REPSYNC
+ORDER BY rep_name, sync_table, sync_partition;
+```
+
+Use `V$REPSYNC` while `SYNC` or `SYNC ONLY` is running. `SYNC_RECORD_COUNT` shows synchronized records during synchronization and `-1` after synchronization completes.
 
 ### Check Replication Receiver Status
 
@@ -2092,11 +2105,11 @@ FROM SYSTEM_.SYS_REPLICATIONS_
 ORDER BY replication_name;
 ```
 
-### Object Block: `V$REPGAP`, `V$REPSENDER`, and `V$REPRECEIVER`
+### Object Block: `V$REPGAP`, `V$REPSYNC`, `V$REPSENDER`, and `V$REPRECEIVER`
 
-Purpose: show replication runtime gap, sender state, receiver state, network error flag, and apply counters.
+Purpose: show replication runtime gap, synchronization progress, sender state, receiver state, network error flag, and apply counters.
 
-Key columns: `REP_NAME`, `REP_GAP`, `REP_GAP_SIZE`, `STATUS`, `NET_ERROR_FLAG`, `XSN`, `COMMIT_XSN`, `APPLY_XSN`, `INSERT_FAILURE_COUNT`, `UPDATE_FAILURE_COUNT`, `DELETE_FAILURE_COUNT`.
+Key columns: `REP_NAME`, `REP_GAP`, `REP_GAP_SIZE`, `SYNC_TABLE`, `SYNC_PARTITION`, `SYNC_RECORD_COUNT`, `STATUS`, `NET_ERROR_FLAG`, `XSN`, `COMMIT_XSN`, `APPLY_XSN`, `INSERT_FAILURE_COUNT`, `UPDATE_FAILURE_COUNT`, `DELETE_FAILURE_COUNT`.
 
 Representative SQL:
 
@@ -2104,6 +2117,10 @@ Representative SQL:
 SELECT rep_name, rep_gap, rep_gap_size, read_file_no, read_offset
 FROM V$REPGAP
 ORDER BY rep_name;
+
+SELECT rep_name, sync_table, sync_partition, sync_record_count
+FROM V$REPSYNC
+ORDER BY rep_name, sync_table, sync_partition;
 ```
 
 ### Object Block: `V$TABLESPACES`, `V$DATAFILES`, and `V$MEM_TABLESPACES`
@@ -2174,9 +2191,10 @@ Use this when the user asks "is replication delayed or failing":
 1. Query `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, and `SYSTEM_.SYS_REPL_ITEMS_`.
 2. Query `V$REPEXEC`.
 3. Query `V$REPGAP` or `V$REPGAP_PARALLEL`.
-4. Query `V$REPSENDER` and `V$REPRECEIVER`.
-5. Treat `NET_ERROR_FLAG = 1`, large `REP_GAP_SIZE`, and receiver failure counts as investigation triggers.
-6. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
+4. If `SYNC` or `SYNC ONLY` is running, query `V$REPSYNC`.
+5. Query `V$REPSENDER` and `V$REPRECEIVER`.
+6. Treat `NET_ERROR_FLAG = 1`, large `REP_GAP_SIZE`, and receiver failure counts as investigation triggers.
+7. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
 
 ### Template: Version-Sensitive 8.1 Request
 
