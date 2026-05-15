@@ -1846,15 +1846,19 @@ Server issue block: `Disk buffer pressure`
 - Check SQL or Command:
 
 ```sql
-SELECT hit_ratio AS "HIT_RATIO(%)",
+SELECT id,
+       hit_ratio AS "HIT_RATIO(%)",
+       read_pages,
+       victim_fails,
+       prepare_again_victims,
        victim_search_warp
 FROM V$BUFFPOOL_STAT;
 ```
 
-- Immediate Action: First tune SQL that reads many disk pages and reduce avoidable full scans. Consider increasing `BUFFER_AREA_SIZE` only after time-window snapshots show persistent buffer pressure; keep the previous value and confirm service impact before changing it.
-- Verification: Repeat the `V$BUFFPOOL_STAT` snapshot over the same interval. `HIT_RATIO` should improve or stabilize, victim search work should not continue rising at the same rate, and the affected SQL should show lower elapsed time or disk-read pressure.
+- Immediate Action: Treat increasing `VICTIM_SEARCH_WARP` as replacement-buffer search pressure: searches have continued to another prepare list after replacement targets were not found on prepare or LRU lists. Compare time-window deltas for `READ_PAGES`, `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, and `VICTIM_SEARCH_WARP` before choosing an action. First tune SQL that drives high `READ_PAGES` deltas and reduce avoidable full scans. Consider increasing `BUFFER_AREA_SIZE` only when repeated snapshots show persistent disk-read and replacement-search pressure; keep the previous value and confirm service impact before changing it.
+- Verification: Repeat the `V$BUFFPOOL_STAT` snapshot over the same interval. `READ_PAGES`, `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, and `VICTIM_SEARCH_WARP` deltas should flatten or fall, `HIT_RATIO` should improve or stabilize, and the affected SQL should show lower elapsed time or disk-read pressure.
 - Version Cautions: `V$BUFFPOOL_STAT` values are cumulative since server start; compare deltas over a time window and verify column availability on the target server before interpreting the metrics.
-- Escalation: If buffer pressure remains after SQL tuning and a bounded buffer-size review, collect Altibase version, before/after `V$BUFFPOOL_STAT` snapshots, top disk-read SQL, execution plans, OS I/O samples, and current buffer property values.
+- Escalation: If buffer pressure remains after SQL tuning and a bounded buffer-size review, collect Altibase version, before/after `V$BUFFPOOL_STAT` snapshots with all four paired counters, top disk-read SQL, execution plans, OS I/O samples, and current buffer property values.
 
 Server issue block: `Service thread overload`
 
