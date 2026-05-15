@@ -1433,7 +1433,7 @@ NiFi controller service property block:
 - `Database Connection URL`: `jdbc:Altibase://host_ip:port_no/database_name`.
 - CLOB option for values larger than 32 KB: `jdbc:Altibase://host_ip:port_no/database_name?force_clob_bind=true`.
 - `Database Driver Class Name`: `Altibase.jdbc.driver.AltibaseDriver`.
-- `Database Driver Location(s)`: directory or jar path where the Altibase JDBC driver exists. The UI example uses `/home/altibase/NiFi/nifi-1.12.1/lib`.
+- `Database Driver Location(s)`: directory or jar path where the Altibase JDBC driver exists. For a standard NiFi layout, use `$NIFI_HOME/lib`.
 - `Database User`: Altibase user account.
 - `Password`: Altibase user password.
 - Optional pooling fields shown in the UI include `Max Wait Time`, `Max Total Connections`, `Minimum Idle Connections`, and `Max Idle Connections`. Tune these for the flow and database capacity.
@@ -1444,7 +1444,7 @@ NiFi controller service example values:
 Controller Service Name: Altibase_DBCPConnectionPool
 Database Connection URL: jdbc:Altibase://192.168.204.129:20300/mydb
 Database Driver Class Name: Altibase.jdbc.driver.AltibaseDriver
-Database Driver Location(s): /home/altibase/NiFi/nifi-1.12.1/lib
+Database Driver Location(s): $NIFI_HOME/lib
 Max Wait Time: 500 millis
 Max Total Connections: 8
 Minimum Idle Connections: 0
