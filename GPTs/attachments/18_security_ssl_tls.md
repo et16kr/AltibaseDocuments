@@ -29,6 +29,7 @@
 - For 8.1-specific statements, say `Altibase 8.1 verified source`.
 - Do not expose internal source labels or local source-tree paths in customer answers.
 - For production SSL/TLS changes, ask for the exact Altibase version, client interface, authentication mode, certificate type, server and client OS, OpenSSL version, and target ports before giving a final procedure.
+- For production JDBC or ODBC/CLI SSL/TLS recommendations, also verify the target version and platform. The Altibase SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel-Linux.
 
 ## Fast Decision Map
 
@@ -61,6 +62,8 @@ Connection surfaces:
 - `Server SSL/TLS`: controlled mainly by `SSL_ENABLE`, `SSL_PORT_NO`, certificate properties, cipher properties, and `SSL_CLIENT_AUTHENTICATION`.
 - `Client SSL/TLS`: controlled by interface-specific settings such as JDBC properties, ODBC/CLI `SSL_*` properties, ADO.NET connection-string keys, and `ALTIBASE_SSL_PORT_NO`.
 - `Replication SSL/TLS`: an Altibase 8.1 replication feature using `CREATE REPLICATION ... USING SSL` and `REPLICATION_SSL_PORT_NO`.
+
+Platform caveat: before production JDBC or ODBC/CLI SSL/TLS guidance, verify the exact Altibase version and platform against supported-platform information. The SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel-Linux; do not extend that support to other platforms without target-version evidence.
 
 ```mermaid
 flowchart LR
@@ -218,6 +221,8 @@ Expected listener evidence:
 
 Use this section for client-to-server SSL/TLS. This includes applications and tools. It does not configure replication SSL.
 
+Before applying JDBC or ODBC/CLI SSL/TLS procedures in production, verify the target Altibase version and platform. The SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux support.
+
 Client certificate decision matrix:
 
 - Private CA plus server-only authentication: import the server CA certificate into the client truststore or configure the client CA file.
@@ -227,12 +232,13 @@ Client certificate decision matrix:
 
 JDBC setup checklist:
 
-1. For private CA server certificates, import the server CA certificate into a truststore.
-2. For mutual authentication, prepare a PKCS #12 file containing the client certificate and private key, then import it into a Java keystore.
-3. Configure Java SSL properties either as JVM options, `System.setProperty(...)`, or JDBC connection properties.
-4. Set `ssl_enable=true`.
-5. Set `port` to the server `SSL_PORT_NO`, or set `ALTIBASE_SSL_PORT_NO` for tools and clients that use it.
-6. For TLS 1.3 on 7.3 or 8.1, use a Java version that supports TLS 1.3 and set `ssl_protocols` when protocol pinning is needed.
+1. Verify that the target Altibase version and platform are supported for JDBC SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux.
+2. For private CA server certificates, import the server CA certificate into a truststore.
+3. For mutual authentication, prepare a PKCS #12 file containing the client certificate and private key, then import it into a Java keystore.
+4. Configure Java SSL properties either as JVM options, `System.setProperty(...)`, or JDBC connection properties.
+5. Set `ssl_enable=true`.
+6. Set `port` to the server `SSL_PORT_NO`, or set `ALTIBASE_SSL_PORT_NO` for tools and clients that use it.
+7. For TLS 1.3 on 7.3 or 8.1, use a Java version that supports TLS 1.3 and set `ssl_protocols` when protocol pinning is needed.
 
 JDBC truststore import:
 
@@ -321,12 +327,13 @@ JDBC property block: `truststore_url`, `truststore_type`, `truststore_password`
 
 ODBC/CLI setup checklist:
 
-1. Verify that OpenSSL libraries and the `openssl` utility are installed on the client host.
-2. For mutual authentication, prepare the client certificate and private key in PEM format.
-3. Configure `SSL_CA` or `SSL_CAPATH` when server certificate verification is required.
-4. Configure `SSL_CERT` and `SSL_KEY` when mutual authentication is enabled.
-5. Connect with SSL/TLS by selecting SSL connection type and using the server `SSL_PORT_NO`.
-6. For FIPS on 7.3 or 8.1 verified source, set `ALTIBASE_SSL_LOAD_CONFIG=1` for ODBC/CLI clients and set `SSL_LOAD_CONFIG=1` on the server. For ADO.NET or other clients, use only source-documented SSL connection keys unless a matching guide explicitly documents FIPS config loading.
+1. Verify that the target Altibase version and platform are supported for ODBC/CLI SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux.
+2. Verify that OpenSSL libraries and the `openssl` utility are installed on the client host.
+3. For mutual authentication, prepare the client certificate and private key in PEM format.
+4. Configure `SSL_CA` or `SSL_CAPATH` when server certificate verification is required.
+5. Configure `SSL_CERT` and `SSL_KEY` when mutual authentication is enabled.
+6. Connect with SSL/TLS by selecting SSL connection type and using the server `SSL_PORT_NO`.
+7. For FIPS on 7.3 or 8.1 verified source, set `ALTIBASE_SSL_LOAD_CONFIG=1` for ODBC/CLI clients and set `SSL_LOAD_CONFIG=1` on the server. For ADO.NET or other clients, use only source-documented SSL connection keys unless a matching guide explicitly documents FIPS config loading.
 
 ODBC/CLI verification commands:
 
@@ -589,13 +596,13 @@ Configure server SSL/TLS in `altibase.properties`: set `SSL_ENABLE=1`, choose a 
 Template: JDBC SSL/TLS setup
 
 ```text
-For JDBC, set `ssl_enable=true` and set `port` to the server `SSL_PORT_NO`. If the server certificate is issued by a private CA, import the CA certificate into a truststore and configure `truststore_url` and `truststore_password`. For mutual authentication, import the client certificate and private key into a keystore and configure `keystore_url` and `keystore_password`.
+For JDBC, first verify that the target Altibase version and platform are supported for SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux. Then set `ssl_enable=true` and set `port` to the server `SSL_PORT_NO`. If the server certificate is issued by a private CA, import the CA certificate into a truststore and configure `truststore_url` and `truststore_password`. For mutual authentication, import the client certificate and private key into a keystore and configure `keystore_url` and `keystore_password`.
 ```
 
 Template: ODBC/CLI SSL/TLS setup
 
 ```text
-For ODBC/CLI, verify OpenSSL on the client host, connect with the SSL connection type, and use the server `SSL_PORT_NO`. Configure `SSL_CA` or `SSL_CAPATH` for server verification. For mutual authentication, also configure `SSL_CERT` and `SSL_KEY`. Use `SSL_VERIFY=1` when the server certificate must be verified.
+For ODBC/CLI, first verify that the target Altibase version and platform are supported for SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux. Then verify OpenSSL on the client host, connect with the SSL connection type, and use the server `SSL_PORT_NO`. Configure `SSL_CA` or `SSL_CAPATH` for server verification. For mutual authentication, also configure `SSL_CERT` and `SSL_KEY`. Use `SSL_VERIFY=1` when the server certificate must be verified.
 ```
 
 Template: Altibase 8.1 replication SSL setup
