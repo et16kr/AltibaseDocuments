@@ -2518,7 +2518,8 @@ This sections offers instructions on how to use LOB type data provided by Altiba
 
 #### Prerequisites
 
--   Altibase supports the LOB data types, BLOB and CLOB, and each can have the maximum size of 2Gbytes.
+-   Altibase supports the LOB data types, BLOB and CLOB, and each can have the maximum size of 4GB-1byte.
+    However, this is possible only in JDK 1.6 or later.
 
 To manipulate LOB data, the autocommit mode of a session must satisfy one of the following conditions.
 
@@ -3674,8 +3675,8 @@ The following table lists the types of SQLSTATE which can occur in the Altibase 
 
 | Interface name                                          | Specification Version | **Supported** | Details                                                      | Exceptions                                                   |
 | :------------------------------------------------------ | --------------------- | ------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| createBlob()                                            | 4.0                   | X             | Does not support creating LOB object in Connection phase     | SQLFeatureNotSupported error occurred                        |
-| createClob()                                            | 4.0                   | X             | Does not support creating LOB object in Connection phase     | SQLFeatureNotSupported error occurred                        |
+| createBlob()                                            | 4.0                   | O             | Does not support long data type                              |                                                              |
+| createClob()                                            | 4.0                   | O             | Does not support long data type                              |                                                              |
 | createNClob()                                           | 4.0                   | X             | Does not support multinational language for CLOB object      | SQLFeatureNotSupported error occurred                        |
 | createSQLXML()                                          | 4.0                   | X             | Does not support SQLXML type                                 | SQLFeatureNotSupported error occurred                        |
 | isValid(int  timeout)                                   | 4.0                   | O             |                                                              |                                                              |

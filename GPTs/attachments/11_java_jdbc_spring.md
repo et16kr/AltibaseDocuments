@@ -540,45 +540,73 @@ Added connection Altibase.jdbc.driver.AltibaseConnection
 
 ## JDBC Data Type And API Cookbook
 
-Basic data type mapping blocks:
+These searchable blocks summarize the high-risk JDBC type mapping and method-family rows. For exception handling, capture the Java exception class, vendor error code, and `SQLException.getSQLState()`; use the SQLSTATE troubleshooting blocks below when the driver reports a state.
 
-- `CHAR`, `VARCHAR`, `LONGVARCHAR`: Java `String`.
-- `NUMERIC`, `DECIMAL`: Java `BigDecimal`.
-- `BIT`: Altibase `VARBIT`; Java `BitSet`.
-- `TINYINT`, `SMALLINT`: Altibase `SMALLINT`; Java `Short`.
-- `INTEGER`: Java `Integer`.
-- `BIGINT`: Java `Long`.
-- `REAL`: Java `Float`.
-- `FLOAT`: Java `BigDecimal`.
-- `DOUBLE`: Java `Double`.
-- `BINARY`: Altibase `BYTE`; Java `byte[]`.
-- `VARBINARY`, `LONGVARBINARY`: Altibase `BLOB`; Java `Blob`.
-- `DATE`, `TIME`, `TIMESTAMP`: Altibase `DATE`; Java `Timestamp`.
-- `CLOB`: Java `Clob`.
-- `BLOB`: Java `Blob`.
-- `GEOMETRY`: Java `byte[]`; use `AltibaseTypes.GEOMETRY` when binding through `setObject`.
-- Unsupported or unmapped JDBC types include `BOOLEAN`, `ARRAY`, `DISTINCT`, `STRUCT`, `REF`, `DATALINK`, and `JAVA_OBJECT`.
+Type mapping block: character and national character strings
 
-Java 8 time mapping with JDBC 4.2:
+- Support status: `CHAR`, `VARCHAR`, and `LONGVARCHAR` map to Java `String`; `NCHAR` and `NVARCHAR` are handled with ordinary string methods such as `getString`, `setString`, `getNString`, and `setNString`.
+- Binding and retrieval: `String` can be converted to character, numeric, bit, binary, and date/time targets listed in the JDBC conversion table; prefer explicit target SQL types when the target column is not character.
+- Exception behavior: unsupported target conversions are reported as `SQLException`; SQLSTATE class information, when available, should be read from the exception rather than inferred.
+- Version notes: the basic string mapping and JDBC 4.2 string method rows are present in 7.1, 7.3, and Altibase 8.1 verified source. Use `ncharliteralreplace` only when NCHAR string literal replacement is required by the client workflow.
 
-- `java.time.LocalDate`: converted to `java.sql.Date`.
-- `java.time.LocalTime`: converted to `java.sql.Time`.
-- `java.time.LocalDateTime`: converted to `java.sql.Timestamp`.
-- `java.time.OffsetTime`: not supported.
-- `java.time.OffsetDateTime`: not supported.
+Type mapping block: numeric, decimal, and bit values
 
-JDBC 4.2 API support highlights:
+- Support status: `NUMERIC` and `DECIMAL` map to Java `BigDecimal`; `TINYINT` and `SMALLINT` map to Java `Short`; `INTEGER` maps to Java `Integer`; `BIGINT` maps to Java `Long`; `REAL` maps to Java `Float`; `FLOAT` maps to Java `BigDecimal`; `DOUBLE` maps to Java `Double`; `BIT` maps to Altibase `VARBIT` and Java `BitSet`.
+- Binding and retrieval: `Boolean`, numeric wrapper classes, `BigDecimal`, and `String` have broad `setObject` conversion coverage for numeric, bit, and character targets. Use `AltibaseBitSet` when a bit value ending in `0` must preserve the specified bit length.
+- Exception behavior: invalid conversion choices are driver-reported `SQLException` cases; keep the reported SQLSTATE and exact Java type/target SQL type in troubleshooting notes.
+- Version notes: these mappings are stable across 7.1, 7.3, and Altibase 8.1 verified source.
 
-- `PreparedStatement.setObject(int, Object, SQLType)` is supported.
-- `PreparedStatement.setObject(int, Object, SQLType, int)` is supported.
-- `CallableStatement.getObject(int, Class<T>)` is supported.
-- `CallableStatement.getObject(String, Class<T>)` is supported.
-- `CallableStatement.setObject(String, Object, SQLType)` is supported.
-- `CallableStatement.setObject(String, Object, SQLType, int)` is supported.
-- `ResultSet.getObject(int, Class<T>)` is supported.
-- `ResultSet.getObject(String, Class<T>)` is supported.
-- `Connection.createBlob()`, `Connection.createClob()`, and `Connection.createNClob()` are not supported.
-- `NCLOB` and N-character stream APIs that require `NCLOB` return `SQLFeatureNotSupportedException`.
+Type mapping block: binary, `BLOB`, and `CLOB`
+
+- Support status: `BINARY` maps to Altibase `BYTE` and Java `byte[]`; `VARBINARY` and `LONGVARBINARY` map to Altibase `BLOB` and Java `Blob`; JDBC `BLOB` maps to Java `Blob`; JDBC `CLOB` maps to Java `Clob`.
+- Binding and retrieval: `byte[]` can bind character, binary, varbinary, and `BLOB` targets; `InputStream` is the direct Java stream family for `BLOB`; `Reader` is the direct Java stream family for `CLOB`; `Blob` binds to `BLOB`; `Clob` binds to `CLOB`.
+- Exception behavior: unsupported `NCLOB` paths raise `SQLFeatureNotSupportedException`; LOB length, stream, and conversion problems are reported as `SQLException` with the driver's SQLSTATE when one is available.
+- Version notes: ordinary `BLOB` and `CLOB` method families are documented for 7.1 and 7.3 and retained in Altibase 8.1 verified source. Altibase 8.1 also has separate Temporary LOB and Empty LOB behavior; do not apply those 8.1-specific notes to 7.1 or 7.3.
+
+Type mapping block: date, time, timestamp, and Java 8 time classes
+
+- Support status: JDBC `DATE`, `TIME`, and `TIMESTAMP` map to Altibase `DATE` and Java `Timestamp` in the basic data type mapping.
+- JDBC 4.2 Java time support: `java.time.LocalDate` converts to `java.sql.Date`; `java.time.LocalTime` converts to `java.sql.Time`; `java.time.LocalDateTime` converts to `java.sql.Timestamp`; `java.time.OffsetTime` and `java.time.OffsetDateTime` are not supported.
+- Exception behavior: unsupported Java time classes or incompatible date/time conversions should be treated as driver `SQLException` cases and logged with the source Java class, target SQL type, and SQLSTATE.
+- Version notes: `Altibase42.jar` provides the JDBC 4.2 Java 8 time mapping. Altibase 7.3 release notes describe JDBC 4.2 as partial support; keep answers to the listed classes and APIs unless the exact target driver proves more.
+
+Type mapping block: `GEOMETRY` and unsupported standard JDBC types
+
+- Support status: Altibase `GEOMETRY` maps to Java `byte[]`; bind it with `setObject` and `AltibaseTypes.GEOMETRY`.
+- Unsupported or unmapped types: `BOOLEAN`, `ARRAY`, `DISTINCT`, `STRUCT`, `REF`, `DATALINK`, `JAVA_OBJECT`, `RowId`, `SQLXML`, `NCLOB`, and `REF_CURSOR` are not supported or not directly mapped in the retained JDBC tables.
+- Exception behavior: unsupported JDBC type families commonly raise `SQLFeatureNotSupportedException`; for `REF_CURSOR`, the documented JDBC 4.2 row says it cannot be used as an outbound parameter.
+- Version notes: 7.1, 7.3, and Altibase 8.1 verified source keep the same high-level unsupported type families. Altibase 8.1 native `JSON` is a server data type, but this JDBC attachment does not expand JSON binding details.
+
+PreparedStatement method family: `setObject`, scalar binding, and large update
+
+- Support status: `PreparedStatement.setObject(int, Object, SQLType)` and `PreparedStatement.setObject(int, Object, SQLType, int)` are supported JDBC 4.2 APIs; `executeLargeUpdate()` is supported.
+- Supported binding families: `setNString`, `setClob` with `Reader`, `setBlob` with `InputStream`, and `setAsciiStream` are supported in the JDBC 4.0 rows.
+- Unsupported binding families: `setRowId`, `setNClob`, `setSQLXML`, and `setNCharacterStream` are not supported.
+- Exception behavior: unsupported `RowId`, `NCLOB`, `SQLXML`, and N-character stream APIs raise `SQLFeatureNotSupportedException`. Invalid conversion or stream failures should be logged as `SQLException` with SQLSTATE.
+- Version notes: JDBC 4.2 `SQLType` overloads require the JDBC 4.2 driver path such as `Altibase42.jar`. For `BLOB` batch inserts with `PreparedStatement.setBytes()` and data that can exceed `65534` bytes, keep `batch_setbytes_use_lob=true`.
+
+CallableStatement method family: `getObject`, `setObject`, and OUT parameters
+
+- Support status: `CallableStatement.getObject(int, Class<T>)`, `getObject(String, Class<T>)`, `setObject(String, Object, SQLType)`, `setObject(String, Object, SQLType, int)`, and `registerOutParameter` overloads that take `SQLType` are supported.
+- Supported named parameter families: `setClob`, `setBlob`, `getNString`, `setNString`, `getCharacterStream`, `setAsciiStream`, `setBinaryStream`, and `setCharacterStream` are supported for the documented parameter-name or parameter-index forms.
+- Unsupported named parameter families: `getRowId`, `setRowId`, `getNClob`, `setNClob`, `getSQLXML`, `setSQLXML`, `getNCharacterStream`, and `setNCharacterStream` are not supported.
+- Exception behavior: unsupported `RowId`, `NCLOB`, `SQLXML`, and N-character stream methods raise `SQLFeatureNotSupportedException`. Existing programs that catch `SQLException` still catch this subclass.
+- Version notes: Altibase 7.3 release notes call out the JDBC 4.2 behavior change where selected unsupported methods now raise `SQLFeatureNotSupportedException` instead of a generic `SQLException`; keep 7.1 driver-patch behavior tied to the actual driver being used.
+
+ResultSet method family: `getObject`, scalar getters, and updatable rows
+
+- Support status: `ResultSet.getObject(int, Class<T>)` and `getObject(String, Class<T>)` are supported; ordinary scalar getters such as `getString`, `getBigDecimal`, `getBoolean`, `getBytes`, `getDate`, `getTime`, and `getTimestamp` are supported for the database types listed in the JDBC conversion table.
+- Supported update families: `updateNString`, `updateAsciiStream`, `updateBinaryStream`, `updateCharacterStream`, `updateBlob`, and `updateClob` are supported in the documented JDBC 4.0 rows.
+- Unsupported update or getter families: `getRowId`, `updateRowId`, `getNClob`, `updateNClob`, `getSQLXML`, `updateSQLXML`, `getNCharacterStream`, and `updateNCharacterStream` are not supported.
+- Exception behavior: unsupported `RowId`, `NCLOB`, `SQLXML`, and N-character stream APIs raise `SQLFeatureNotSupportedException`. Unsupported ResultSet mode or cursor-state problems should be diagnosed with the driver SQLSTATE, cursor type, concurrency, holdability, and current fetch position.
+- Version notes: 7.3 defaults `reuse_resultset` to `true`, while 7.1 defaults it to `false`; when reuse is enabled, close or release the first `ResultSet` before using another `ResultSet` created by the same `PreparedStatement`.
+
+ResultSet method family: type, concurrency, holdability, and cursor behavior
+
+- Support status: forward-only read-only `ResultSet` use is the baseline. Scrollable and updatable `ResultSet` objects are available through the documented type, concurrency, and holdability options, subject to query restrictions.
+- Operational cautions: large scrollable result sets consume more client memory; scroll-sensitive result sets use fetch-size-sensitive caching; `HOLD_CURSORS_OVER_COMMIT` requires non-autocommit mode or `clientside_auto_commit=on`.
+- Exception behavior: invalid combinations can be converted by the driver to a valid combination without raising an exception; cursor closure, empty result set, or unsupported mode cases should be diagnosed from the resulting `ResultSet` properties and SQLSTATE.
+- Version notes: when executing PSM, only default ResultSet types are available; non-default options can be ignored.
 
 National character set:
 
@@ -597,14 +625,28 @@ sPstmt.setObject(1, geometryData, AltibaseTypes.GEOMETRY);
 - Java `BitSet` can be used.
 - Use `AltibaseBitSet` when a bit value ending in `0` must preserve the specified bit length.
 
-LOB handling rules:
+LOB method family: ordinary `BLOB` and `CLOB` workflow
 
-- Altibase ordinary LOB data types are `BLOB` and `CLOB`.
-- For ordinary LOB work, disable autocommit with `Connection.setAutoCommit(false)` and control transactions explicitly, or set `clientside_auto_commit=on` when that driver-controlled model is intended.
-- Prefer `InputStream` or `OutputStream` for `BLOB`.
-- Prefer `Reader` or `Writer` for `CLOB`.
-- If the LOB size is equal to or less than `8192` bytes, tune `lob_cache_threshold` appropriately.
-- Explicitly free many obtained LOB objects; commit alone is not a substitute for freeing client-side LOB resources.
+- Support status: Altibase ordinary LOB data types are `BLOB` and `CLOB`; each ordinary LOB can be up to `4GB-1byte` when using JDK 1.6 or later.
+- Write families: use `PreparedStatement.setBlob()` with `InputStream`, `PreparedStatement.setClob()` with `Reader`, `ResultSet.updateBlob()`, `ResultSet.updateClob()`, or a `SELECT ... FOR UPDATE` workflow that obtains the locator before writing.
+- Read families: use `ResultSet.getBlob()` with `InputStream` or byte-array processing for `BLOB`; use `ResultSet.getClob()` with `Reader` or string processing for `CLOB`. `Blob.getBinaryStream(long, long)` and `Clob.getCharacterStream(long, long)` are supported.
+- Exception behavior: stream I/O, LOB length mismatch, invalid cursor position, and closed cursor problems surface as `SQLException`; keep the SQLSTATE and cursor/transaction context with the error report.
+- Version notes: for ordinary LOB work, disable autocommit with `Connection.setAutoCommit(false)` and control transactions explicitly, or set `clientside_auto_commit=on` when that driver-controlled model is intended.
+
+LOB method family: connection-created LOB objects and `NCLOB`
+
+- Support status: `Connection.createBlob()` and `Connection.createClob()` are supported in the JDBC 4.2 driver path, but LOB objects created this way do not support the long data type. `Connection.createNClob()` is not supported.
+- Unsupported families: `NCLOB`, `NClob`, and N-character stream APIs that require `NCLOB` are not supported.
+- Exception behavior: unsupported `NCLOB` methods raise `SQLFeatureNotSupportedException`. Hibernate capability checks that call `Connection.createNClob()` can safely ignore that exception when `spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true` is configured.
+- Version notes: for 7.1, `createBlob()` and `createClob()` require the JDBC 4.2 driver and are supported from `Altibase42.jar` 7.1.0.8.3. In 7.3 and Altibase 8.1 verified source, the JDBC 4.2 driver supports these methods. For large LOB data, prefer ordinary stream processing if client-side LOB object handling risks memory pressure.
+
+LOB method family: cache, null, empty, and resource lifetime
+
+- Support status: `lob_cache_threshold` controls client-side LOB caching for small LOB values; if the LOB size is equal to or less than `8192` bytes, tune the threshold appropriately.
+- Null LOB behavior: `lob_null_select` controls whether `ResultSet.getBlob()` and `ResultSet.getClob()` return a LOB object for a NULL LOB value. In 7.1, set `lob_null_select=off` for Hibernate LOB behavior; in 7.3 and Altibase 8.1 verified source, the default is already `off`.
+- Empty LOB behavior: Altibase 8.1 verified source improves JDBC Empty LOB processing for `BLOB` or `CLOB` data with length 0. Do not apply older 7.1/7.3 zero-length LOB guidance to 8.1 Empty LOB behavior without checking the target 8.1 driver.
+- Resource lifetime: explicitly free many obtained LOB objects; commit alone is not a substitute for freeing client-side LOB resources.
+- Exception behavior: LOB locator invalidation, closed stream, or length mismatch errors should be diagnosed from the Java exception, SQLSTATE, transaction mode, and whether the locator came from an open `ResultSet`.
 
 Altibase 8.1 Empty LOB note:
 
@@ -626,6 +668,7 @@ LOB restriction block:
 
 - If a LOB value retrieved from an open `ResultSet` is used by another `Statement.executeUpdate()` before the cursor is closed, later fetches from that cursor can fail because the LOB locator is freed.
 - For that pattern, call `setAutoCommit(false)` before the workflow and close or consume the cursor in a controlled order.
+- Exception behavior: when the locator is freed by an automatic commit, subsequent fetch or LOB operations fail as driver `SQLException`; preserve SQLSTATE and the sequence of cursor, LOB, and update calls.
 
 Atomic Batch:
 
@@ -675,7 +718,7 @@ SQLSTATE block: class `01` warning
 SQLSTATE block: class `0A` feature not supported
 
 - `0A000`: feature not supported.
-- Common causes: `NCLOB` APIs, `createBlob()`, `createClob()`, `createNClob()`, unsupported ResultSet mode, or JDBC specification violation.
+- Common causes: `NCLOB` APIs such as `createNClob()`, unsupported ResultSet mode, or JDBC specification violation.
 
 SQLSTATE block: class `22` data exception
 
