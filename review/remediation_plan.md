@@ -20,7 +20,7 @@ Resume rule:
 3. If none is in progress, start the first `ToDo` task in priority order.
 4. Before editing a task, change its state from `ToDo` to `Progress`.
 5. After editing, run the listed validation and change state to `Done` or `Fail`.
-6. Do not mark R15 final readiness tasks `Done` until all referenced prerequisite tasks are `Done` or explicitly accepted as residual risk.
+6. Do not mark final readiness tasks `Done` until all referenced prerequisite tasks are `Done` or explicitly accepted as residual risk. The final readiness review is the last `G5_Retrieval` stage in `review/review_stages.tsv`.
 7. When marking a task `Fail`, record the cause in `review/remediation_failure_log.md`. The remediation runner appends this automatically for `mark`, `finish`, and `run-all`; pass `--reason` whenever the failure is operator-triggered.
 
 Useful status commands:
@@ -39,7 +39,7 @@ git status --short -- GPTs/attachments GPTs/reports review/reports review/remedi
 - P3: retrieval-quality, cross-reference, and Low severity cleanup.
 - P4: validation, report re-review, and final readiness.
 
-R15 is a meta gate. Treat its High row as unresolved until the underlying `Review Required` reports are fixed or accepted.
+The final readiness review is a meta gate. Treat its unresolved rows as unresolved until the underlying `Review Required` reports are fixed or accepted.
 
 ## P0 Tracking And Hygiene
 
@@ -68,7 +68,7 @@ R15 is a meta gate. Treat its High row as unresolved until the underlying `Revie
 | H13 | Done | High | R14 | `GPTs/attachments/06_data_dictionary_performance_views.md` | Add compact searchable object/column blocks for missing high-priority performance view families: `V$STATNAME`, `V$MEMSTAT`, `V$BUFFPOOL_STAT`, `V$INTERNAL_SESSION`, plus large-view column blocks where useful. Include purpose, key columns, when to query, and representative SQL. | `rg -n "V\$STATNAME|V\$MEMSTAT|V\$BUFFPOOL_STAT|V\$INTERNAL_SESSION|Searchable Object Blocks" GPTs/attachments/06_data_dictionary_performance_views.md` |
 | H14 | Done | High | R14 | `GPTs/attachments/11_java_jdbc_spring.md` | Expand JDBC matrix material into searchable blocks by important Java/JDBC type mapping and method family. Cover `ResultSet`, `CallableStatement`, `PreparedStatement`, and LOB method families with support status, exception behavior, and version notes. | `rg -n "ResultSet|CallableStatement|PreparedStatement|LOB|type mapping|SQLSTATE|JDBC 4\.2" GPTs/attachments/11_java_jdbc_spring.md` |
 | H15 | Done | High | R14 | `GPTs/attachments/11_java_jdbc_spring.md` | Expand SQLSTATE section into class/subclass blocks for retained JDBC table entries so code-level troubleshooting questions can be answered without guessing. | `rg -n "SQLSTATE|SQL state|080|220|HY|class|subclass" GPTs/attachments/11_java_jdbc_spring.md` |
-| H16 | Done | High | R15 | `review/reports/*.md`, optional residual-risk record | Resolve R15 meta gate by making underlying High tasks `Done`, or create an explicit residual-risk acceptance record for any unresolved High task. Do not do this before H01-H15 are handled. | `rg -n "Verdict: (Fail|Review Required)|^\| (Blocker|High) \|" review/reports/R*.md` |
+| H16 | Done | High | final readiness review | `review/reports/*.md`, optional residual-risk record | Resolve the final readiness meta gate by making underlying High tasks `Done`, or create an explicit residual-risk acceptance record for any unresolved High task. Do not do this before H01-H15 are handled. | `rg -n "Verdict: (Fail|Review Required)|^\| (Blocker|High) \|" review/reports/R*.md` |
 
 ## P2 Medium Severity Fixes
 
@@ -118,7 +118,7 @@ R15 is a meta gate. Treat its High row as unresolved until the underlying `Revie
 | --- | --- | --- | --- | --- | --- | --- |
 | V01 | Done | Validation | all | `GPTs/attachments/` | Run upload-boundary checks after edits: exactly 20 upload Markdown files excluding README, no image dependency, no internal path/source labels, required headings present. | See command block below. |
 | V02 | Done | Validation | changed report set | `review/reports/R01_*.md` through `R14_*.md` | Re-review changed sections only and update relevant reports from `Review Required` to `Pass` when all listed findings are fixed or accepted. Preserve old evidence in archive if needed. | `rg -n "^Verdict:|^\| (High|Medium|Low) \|" review/reports/R*.md` |
-| V03 | Done | Validation | R15 | `review/reports/R15_multilingual_final_readiness.md` | Re-run final readiness after underlying report closure or residual-risk acceptance. R15 should remain `Review Required` until this point. | `rg -n "Verdict: (Fail|Review Required)|^\| (Blocker|High) \|" review/reports/R*.md` |
+| V03 | Done | Validation | final readiness review | `review/reports/R27_multilingual_final_readiness.md` | Re-run final readiness after underlying report closure or residual-risk acceptance. The final readiness report should remain `Review Required` until this point. | `rg -n "Verdict: (Fail|Review Required)|^\| (Blocker|High) \|" review/reports/R*.md` |
 | V04 | Done | Validation | final | optional acceptance record | If any task is not fixed by design, create an explicit residual-risk record that names the task ID, reason, impact, and owner approval. | `rg -n "residual|accepted risk|H[0-9]+|M[0-9]+" review GPTs -g '*.md'` |
 
 Common validation commands:
@@ -157,4 +157,4 @@ Known pass reports:
 
 Known pending validation reports:
 
-- R15 final readiness, to be re-run by V03 after V02 closure.
+- Final readiness review, to be re-run by V03 after V02 closure.

@@ -35,7 +35,7 @@ When asked to review or fill review documents:
 - Write findings with severity, file, line, finding, and recommendation.
 - Prefer source-backed findings over broad style comments.
 - Keep report conclusions actionable enough to become remediation tasks.
-- R15 is a final readiness gate and should remain unresolved until underlying review-required reports or residual risks are handled.
+- The final readiness stage is the last `G5_Retrieval` stage in `review/review_stages.tsv` and should remain unresolved until underlying review-required reports or residual risks are handled.
 
 Use the review stage runner for staged report generation:
 

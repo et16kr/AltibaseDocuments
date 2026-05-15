@@ -798,7 +798,7 @@ Follow the plan's state rules:
 - Mark the task Done only when the required change is applied, validation evidence is acceptable, and the local review evidence has no hard failure.
 - The run-all parent process will invoke the separate Codex CLI automatic post-review after this task process exits, then commit the task if the post-review passes.
 - Mark the task Fail if the task is blocked or validation shows the change is not complete. Include `--reason` so the failure log captures the cause.
-- Do not mark R15 final readiness tasks Done until their prerequisite tasks are Done or explicitly accepted as residual risk.
+- Do not mark final readiness tasks Done until their prerequisite tasks are Done or explicitly accepted as residual risk. The final readiness review is the last G5_Retrieval stage in review/review_stages.tsv.
 - Review retry rule: after the first review, if a finding is small, scoped to this task, and source-backed, fix it and run review again. Retry at most {DEFAULT_REVIEW_RETRIES} time(s). If the same issue remains, required source evidence is unclear, or a fix would broaden scope, mark the task Fail and record the reason.
 - If the local review shows stale report findings that the diff has actually fixed, use the target-file diff and validation command as the deciding evidence.
 
