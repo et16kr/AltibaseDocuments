@@ -723,16 +723,13 @@ Mode block: `TRUNCATE`
 
 ## iLoader CSV And Delimiter Cookbook
 
-Cookbook: use CSV rules
-
-```bash
-iloader out -s 127.0.0.1 -u sys -p manager -f target_table.fmt -d target_table.csv -rule csv
-iloader in  -s 127.0.0.1 -u sys -p manager -f target_table.fmt -d target_table.csv -rule csv
-```
+Cookbook: evaluate CSV rules
 
 Use when: character data can include commas or double quotation marks and CSV escaping is preferred.
 
-Caution: use `-rule csv` instead of custom delimiter settings such as `-t`, `-r`, or `-e`.
+Source conflict note: the iLoader manuals document `-rule csv`, but the same option description says `-rule csv` cannot be used with delimiter-related options including `-f`, `-t`, `-r`, and `-e`. Because ordinary iLoader `in` and `out` cookbook commands use a FORM file through `-f`, do not generate a copy-ready command that combines `-rule csv` with `-f target_table.fmt`.
+
+Caution: before using `-rule csv`, verify the exact command form against the target iLoader client manual or a non-production runtime test. For copy-ready table loads and extracts, use the verified FORM-file workflow with explicit delimiter choices, such as the pipe-delimited examples below.
 
 Cookbook: import a pipe-delimited file
 
@@ -762,7 +759,7 @@ Delimiter cautions:
 
 - Field delimiter `-t`, row delimiter `-r`, and enclosing delimiter `-e` must be different.
 - A delimiter must not be a subset of another delimiter.
-- Column data must not contain the delimiter sequence unless CSV or a safe delimiter strategy is used.
+- Column data must not contain the delimiter sequence unless a target-client-verified CSV rule or a safe delimiter strategy is used.
 - Avoid delimiter characters that the shell interprets, such as quotes, slash, ampersand, and redirection characters.
 
 ## iLoader Row Range And Multiple File Cookbook
@@ -1203,7 +1200,7 @@ Troubleshooting block: duplicate key or unique index
 Troubleshooting block: delimiter appears inside data
 
 - Symptom: rows parse into the wrong number of columns or fail.
-- Fix: choose safe delimiters, use CSV rules where suitable, or clean/escape the data source.
+- Fix: choose safe delimiters, use a target-client-verified `-rule csv` form where suitable, or clean/escape the data source.
 
 Troubleshooting block: insufficient target space
 
@@ -1249,7 +1246,7 @@ Notes:
 2. Confirm source and target character sets. Set `ALTIBASE_NLS_USE`, `-NLS_USE`, or `DATA_NLS_USE` deliberately.
 3. Confirm that the target table exists and has compatible column definitions.
 4. Decide load mode: `APPEND`, `REPLACE`, or `TRUNCATE`.
-5. Decide delimiter strategy: `-rule csv` or explicit `-t`, `-r`, and `-e`.
+5. Decide delimiter strategy: target-client-verified `-rule csv` without incompatible `-f`, `-t`, `-r`, or `-e`, or FORM-file loading with explicit delimiter options.
 6. Check whether the table has LOB columns. If yes, choose a LOB file strategy and avoid incompatible performance options.
 7. Create or regenerate the FORM file with `formout`.
 8. Edit the FORM file only for required `DATEFORM`, sequence, function, `DOWNLOAD CONDITION`, `TIMESTAMP`, LOB, or character-set behavior.
