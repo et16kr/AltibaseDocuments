@@ -75,6 +75,7 @@ Version block: 7.1
 
 - TLS support: Altibase 7.1 SSL/TLS guidance describes TLS 1.0 through the OpenSSL library.
 - OpenSSL requirement: OpenSSL toolkit `0.9.4` through `1.0.2` according to the 7.1 SSL/TLS guide.
+- Heartbleed caution: before enabling SSL/TLS on Altibase 7.1-era systems, verify that the installed OpenSSL version is not vulnerable to Heartbleed. The 7.1 SSL/TLS guide gives `OPENSSL_NO_HEARTBEATS` as the source-provided check.
 - Java guidance: JRE 1.6 or later is recommended for convenient SSL client setup; JRE 1.5 can be used but is not recommended.
 - Server properties: use `SSL_ENABLE`, `SSL_PORT_NO`, `SSL_MAX_LISTEN`, `SSL_CIPHER_LIST`, `SSL_CLIENT_AUTHENTICATION`, `SSL_CERT`, `SSL_KEY`, `SSL_CA`, and `SSL_CAPATH`.
 - 7.1 sources do not define `SSL_CIPHER_SUITES`, `SSL_LOAD_CONFIG`, or replication SSL.
@@ -100,7 +101,7 @@ Use this section for application-to-server SSL/TLS, not replication SSL.
 
 Server setup checklist:
 
-1. Confirm that the Altibase version and OpenSSL version match the target version guidance.
+1. Confirm that the Altibase version and OpenSSL version match the target version guidance. For Altibase 7.1, verify that the installed OpenSSL is not vulnerable to Heartbleed before enabling SSL/TLS; use `OPENSSL_NO_HEARTBEATS` as the source-provided check.
 2. Prepare the server certificate, server private key, and CA certificate or CA directory.
 3. Set SSL/TLS server properties in `altibase.properties`.
 4. Decide whether the server will use server-only authentication or mutual authentication.
