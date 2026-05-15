@@ -1666,6 +1666,15 @@ LOB memory note:
 - Use `LongDataCompat=ON` for ODBC Driver Manager compatibility with LOB type reporting.
 - Use APRE file LOB syntax when embedded SQL should move complete LOB values between database columns and files.
 
+## Attachment Cross-References
+
+- Use `05_data_types_properties.md` for database data type limits, LOB and JSON semantics, property behavior, and type-selection decisions behind client conversions.
+- Use `07_error_messages_troubleshooting.md` for SQLSTATE, Altibase error-code, LOB locator, network, and client handshake triage.
+- Use `08_performance_tuning_monitoring.md` when fetch size, bind style, autocommit, cursor use, or client-side buffering affects response time or resource use.
+- Use `09_replication_ha_cdc.md` when C or ODBC client code consumes Log Analyzer XLogs or handles CDC-oriented ODBC C conversion.
+- Use `14_utilities_operation_tools.md` for CheckServer API, iLoader API, and utility-driven diagnostics that complement C client interfaces.
+- Use `18_security_ssl_tls.md` for ODBC/CLI SSL/TLS connection properties, certificate verification, OpenSSL requirements, and handshake troubleshooting.
+
 ## Answer Templates
 
 Template: basic CLI connection and query flow

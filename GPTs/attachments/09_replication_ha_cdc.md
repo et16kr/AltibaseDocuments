@@ -1576,6 +1576,15 @@ Error level block: `ALA_ERROR_INFO`
   - `0x5203D`: failed to convert from CMT to `ulnColumn`; `ALA_GetODBCCValue`.
   - `0x5203E`: failed to convert from `ulnColumn` to ODBC C; `ALA_GetODBCCValue`.
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for `CREATE REPLICATION`, `ALTER REPLICATION`, replicated table, sequence, and privilege DDL generation.
+- Use `06_data_dictionary_performance_views.md` for replication metadata and runtime checks against `SYSTEM_.SYS_REPLICATIONS_`, `V$REPGAP`, `V$REPSENDER`, and `V$REPRECEIVER`.
+- Use `07_error_messages_troubleshooting.md` when a replication, Log Analyzer, network, or SSL issue starts from an Altibase error code.
+- Use `08_performance_tuning_monitoring.md` when replication lag or apply delay may be caused by slow SQL, waits, log pressure, or server bottlenecks.
+- Use `12_c_cli_odbc_precompiler.md` for ODBC C conversion, LOB, and client-buffer handling when consuming Log Analyzer XLogs.
+- Use `18_security_ssl_tls.md` for Altibase 8.1 replication SSL setup, certificate requirements, and SSL/TLS troubleshooting.
+
 ## Customer Answer Templates
 
 Template: create and start replication

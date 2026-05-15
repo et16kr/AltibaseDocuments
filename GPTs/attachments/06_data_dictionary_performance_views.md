@@ -2078,6 +2078,15 @@ FROM V$TEMPORARY_LOBS
 ORDER BY type, id;
 ```
 
+## Attachment Cross-References
+
+- Use `02_administration_operations.md` when dictionary or performance-view evidence leads to tablespace, backup, recovery, startup, or shutdown action.
+- Use `03_sql_ddl_generation.md` when metadata lookup must turn into corrected DDL for objects, privileges, indexes, partitions, sequences, or replication.
+- Use `07_error_messages_troubleshooting.md` when the view query is part of an error-code response or log-message triage.
+- Use `08_performance_tuning_monitoring.md` for deeper interpretation of sessions, statements, waits, locks, plan cache, statistics, and server bottlenecks.
+- Use `09_replication_ha_cdc.md` for replication topology, mode, failover, gap, Sender, Receiver, and CDC interpretation after view lookup.
+- Use `16_dblink_external_connectors.md` when metadata or runtime checks involve database links, AltiLinker, remote statements, or global transactions.
+
 ## Answer Templates
 
 ### Template: Object Metadata Request

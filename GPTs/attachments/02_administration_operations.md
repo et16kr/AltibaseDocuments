@@ -2012,6 +2012,14 @@ Problem block: undo tablespace pressure
 - 8.1: Use Altibase 8.1 verified source. In memory checkpoint answers, account for `CHECKPOINT_SCALE`, `V$MEM_STABLE`, and `SINGLE` versus `PAIR` stable checkpoint image behavior.
 - Cross-version: `ARCHIVELOG` is required for online backup and ordinary media recovery. `NOARCHIVELOG` recovery is limited to offline backups and special temporary-file recreation cases.
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for exact DDL syntax when an operation creates, alters, drops, moves, or partitions database objects.
+- Use `06_data_dictionary_performance_views.md` for validation SQL against users, roles, tablespaces, files, sessions, and backup or archive state.
+- Use `07_error_messages_troubleshooting.md` when an operational request starts from a reported Altibase error code or log message.
+- Use `08_performance_tuning_monitoring.md` when the same symptom is primarily slow SQL, lock wait, checkpoint delay, memory pressure, or plan behavior.
+- Use `14_utilities_operation_tools.md` for operational tools such as `aexport`, `altierr`, `altiAudit`, `altiProfile`, and dump-family diagnostics.
+
 ## Answer Templates
 
 Template: create or resize tablespace

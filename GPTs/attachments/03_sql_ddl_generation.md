@@ -1947,6 +1947,14 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 - 7.3: Use 7.3 SQL Reference syntax. Treat ordinary DDL patterns as close to 7.1, but check 7.3-specific SQL, Spatial, and Replication improvements when relevant.
 - 8.1: Use Altibase 8.1 verified source for `IF NOT EXISTS` in supported `CREATE` statements, `IF EXISTS` in supported `DROP` statements, native `JSON`, Temporary LOB, `TEMPORARY_LOB_ENABLE`, `V$TEMPORARY_LOBS`, `USING SSL` replication, and `REPLICATION_SSL_PORT_NO`.
 
+## Attachment Cross-References
+
+- Use `02_administration_operations.md` for operational runbooks, tablespace lifecycle, backup, recovery, and service-phase context around generated DDL.
+- Use `05_data_types_properties.md` for exact data type limits, storage modifiers, property names, and version-sensitive JSON or Temporary LOB behavior.
+- Use `06_data_dictionary_performance_views.md` for metadata checks that verify generated users, objects, columns, constraints, indexes, partitions, and replication objects.
+- Use `09_replication_ha_cdc.md` when DDL creates or changes replication objects, replicated tables, sequence replication, or CDC XLog Sender setup.
+- Use `18_security_ssl_tls.md` for security policy context around users, grants, audit statements, passwords, TCP access, and SSL/TLS-related DDL choices.
+
 ## DDL Response Checklist
 
 - State the assumed Altibase version.

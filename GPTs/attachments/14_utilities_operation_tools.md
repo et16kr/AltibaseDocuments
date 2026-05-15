@@ -1280,6 +1280,15 @@ Verification Method:
 - Output shows selected logs and a summary such as number of logs printed.
 - With `-c`, stack frames are annotated with function names when symbols are resolvable.
 
+## Attachment Cross-References
+
+- Use `02_administration_operations.md` when a utility recommendation affects startup, shutdown, backup, recovery, tablespaces, or service operations.
+- Use `06_data_dictionary_performance_views.md` for SQL checks that verify utility output, object state, replication state, sessions, or file metadata.
+- Use `07_error_messages_troubleshooting.md` with `altierr`, trace logs, dump-family output, and tool-reported Altibase error codes.
+- Use `09_replication_ha_cdc.md` when tool output involves replication state, Log Analyzer CDC, XLog Sender, or replication log diagnostics.
+- Use `13_isql_iloader_basic_tools.md` for iSQL and iLoader command-line workflows that complement `aexport`, migration, and data-load operations.
+- Use `18_security_ssl_tls.md` for `altiAudit`, `altipasswd`, audit policy, password handling, and SSL/TLS-sensitive operational tooling.
+
 ## Operational Guardrails
 
 - Prefer a read-only diagnostic utility first (`altierr`, `altiAudit`, `altiProfile`, dump-family tools, `altiComp DIFF`, `dataCompJ DIFF`) before recommending a corrective action.

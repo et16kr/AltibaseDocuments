@@ -1536,6 +1536,15 @@ Use this order:
 - 7.3: Use 7.3 Error Message Reference wording when the customer reports a 7.3 system. SSL, regular expression, replication, and LOB errors should be checked against 7.3 wording.
 - 8.1: Use Altibase 8.1 verified source for JSON, Temporary LOB, replication SSL, sharding, and current SSL/TLS behavior. JSON-specific error blocks such as `mtERR_ABORT_JSON_WITHOUT_TEMPLOB` and `qpERR_ABORT_JSON_*` are 8.1-sensitive.
 
+## Attachment Cross-References
+
+- Use `02_administration_operations.md` when an error requires startup, shutdown, tablespace, backup, recovery, archive log, or media recovery action.
+- Use `03_sql_ddl_generation.md` when the fix is corrected SQL syntax, object DDL, user or privilege DDL, queue DDL, or replication DDL.
+- Use `06_data_dictionary_performance_views.md` for confirmation queries against objects, columns, constraints, privileges, sessions, locks, properties, and replication views.
+- Use `08_performance_tuning_monitoring.md` when the reported error is coupled with slow SQL, lock waits, hangs, memory pressure, or plan instability.
+- Use `09_replication_ha_cdc.md` for replication state, gap, conflict, failover, and Log Analyzer CDC troubleshooting after error normalization.
+- Use `18_security_ssl_tls.md` for SSL/TLS listener, certificate, cipher, FIPS, client handshake, and replication SSL configuration checks.
+
 ## Residual Scope
 
 - Add future error blocks only after source-backed review, and keep the standardized error format above.

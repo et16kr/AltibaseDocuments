@@ -2052,6 +2052,15 @@ FROM V$PROPERTY
 WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 ```
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` when a type or property answer must become executable table, index, user, replication, or `ALTER SYSTEM` syntax.
+- Use `04_sql_dml_oracle_compatibility.md` for DML, condition, function, and Oracle-conversion behavior affected by data type semantics.
+- Use `06_data_dictionary_performance_views.md` for `V$PROPERTY`, object-column, Temporary LOB, and version-availability verification SQL.
+- Use `08_performance_tuning_monitoring.md` when a property affects optimizer behavior, memory use, plan cache, result cache, statistics, or server tuning.
+- Use `12_c_cli_odbc_precompiler.md` for CLI, ODBC, Altibase C Interface, and APRE type conversion and LOB handling questions.
+- Use `18_security_ssl_tls.md` for SSL/TLS property names, ports, certificate paths, and security-facing property checks.
+
 ## Property Answer Checklist
 
 - State the Altibase version used as the baseline.

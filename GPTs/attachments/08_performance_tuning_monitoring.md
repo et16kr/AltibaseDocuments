@@ -2246,6 +2246,15 @@ WHERE tablename IN (
 ORDER BY tablename, colname;
 ```
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` when a tuning recommendation becomes DDL for indexes, constraints, partitions, tablespaces, statistics objects, or generated SQL.
+- Use `05_data_types_properties.md` for property semantics, data type choices, bind-type effects, JSON or Temporary LOB behavior, and exact property names.
+- Use `06_data_dictionary_performance_views.md` for compact lookup SQL and column checks before relying on a performance view in a customer answer.
+- Use `07_error_messages_troubleshooting.md` when the performance symptom includes a specific Altibase error code, SQLSTATE, or log message.
+- Use `12_c_cli_odbc_precompiler.md` when client fetch, bind, LOB, autocommit, or CLI/ODBC transaction behavior affects performance.
+- Use `14_utilities_operation_tools.md` for diagnostic tools such as `altiMon`, `altiProfile`, `dumptrc`, and other operational evidence collectors.
+
 ## Answer Patterns
 
 Slow SQL answer pattern:

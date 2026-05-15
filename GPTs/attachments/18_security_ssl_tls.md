@@ -585,6 +585,15 @@ Troubleshooting block: replication SSL does not connect
 - Check firewall rules for both SSL replication ports.
 - Do not use `FOR ANALYSIS` Log Analyzer replication with `USING SSL`.
 
+## Attachment Cross-References
+
+- Use `03_sql_ddl_generation.md` for user, role, grant, revoke, audit, and replication DDL that carries security or SSL/TLS implications.
+- Use `05_data_types_properties.md` for exact SSL/TLS, replication port, certificate path, audit, and password-related property names.
+- Use `07_error_messages_troubleshooting.md` for SSL/TLS error codes, SQLSTATEs, OpenSSL details, and handshake failure triage.
+- Use `09_replication_ha_cdc.md` for replication mode, topology, failover, and CDC context around Altibase 8.1 replication SSL.
+- Use `12_c_cli_odbc_precompiler.md` for ODBC/CLI SSL connection strings, OpenSSL client requirements, and certificate verification behavior.
+- Use `14_utilities_operation_tools.md` for `altiAudit`, `altipasswd`, and operational tools that collect or change security-sensitive evidence.
+
 ## Customer Answer Templates
 
 Template: server SSL/TLS setup
