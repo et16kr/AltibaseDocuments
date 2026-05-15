@@ -176,6 +176,16 @@ Source purpose: error codes, causes, actions, troubleshooting response format.
   - `Manuals/Altibase_7.3/eng/Error Message Reference.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Error Message Reference.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Error Message Reference.md`
+  - `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/Error Message Reference.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_7.3/kor/SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/Error Message Reference.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
 
 ### 08_performance_tuning_monitoring.md
 

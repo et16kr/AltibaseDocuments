@@ -176,7 +176,10 @@ WHERE name IN (
   'PORT_NO',
   'REPLICATION_PORT_NO',
   'REPLICATION_RECEIVE_TIMEOUT',
-  'LOCK_TIMEOUT',
+  'DDL_LOCK_TIMEOUT',
+  'USER_LOCK_REQUEST_TIMEOUT',
+  'REPLICATION_LOCK_TIMEOUT',
+  'REPLICATION_SYNC_LOCK_TIMEOUT',
   'QUERY_TIMEOUT',
   'REGEXP_MODE',
   'TEMPORARY_LOB_ENABLE',
@@ -516,9 +519,9 @@ Applies To: SQL waiting for row, table, or tablespace locks.
 
 Symptom: A transaction cannot acquire a lock before timeout.
 
-Primary Causes: A long-running transaction holds the required lock, or `LOCK_TIMEOUT` is too short for the workload.
+Primary Causes: A long-running transaction holds the required lock. For DDL, `DDL_LOCK_TIMEOUT` may be too short; for user-lock requests, check `USER_LOCK_REQUEST_TIMEOUT`; for replication flows, check `REPLICATION_LOCK_TIMEOUT` or `REPLICATION_SYNC_LOCK_TIMEOUT`. For statement-level row or table locking, the relevant SQL may use `WAIT n` or `NOWAIT` with `LOCK TABLE` or `SELECT ... FOR UPDATE`.
 
-Immediate Action: Identify the blocking transaction. Increase lock timeout only when it is operationally acceptable.
+Immediate Action: Identify the blocking transaction. Increase the context-specific timeout property or adjust statement-level `WAIT n`/`NOWAIT` behavior only when it is operationally acceptable.
 
 Check SQL or Command:
 
@@ -528,7 +531,13 @@ FROM V$LOCK_WAIT;
 
 SELECT name, value1
 FROM V$PROPERTY
-WHERE name = 'LOCK_TIMEOUT';
+WHERE name IN (
+  'DDL_LOCK_TIMEOUT',
+  'USER_LOCK_REQUEST_TIMEOUT',
+  'REPLICATION_LOCK_TIMEOUT',
+  'REPLICATION_SYNC_LOCK_TIMEOUT'
+)
+ORDER BY name;
 ```
 
 Version Cautions: Applies across 7.1, 7.3, and 8.1.

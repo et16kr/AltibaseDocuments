@@ -28,7 +28,7 @@
 - Query meta tables with `SELECT`. Do not suggest direct DML against meta tables except to explain that it is unsafe and should be avoided.
 - If the user supplies an object name, include owner-qualified check SQL when possible. Use `'<OWNER_NAME>'`, `'<TABLE_NAME>'`, `'<INDEX_NAME>'`, `'<USER_NAME>'`, `'<REPLICATION_NAME>'`, and similar placeholders when the exact value is not known.
 - For quoted mixed-case object names, tell the user to use the exact stored value in the meta table predicates.
-- For cross-version answers, first check availability with `V$TABLE` and `V$ALLCOLUMN` when a view or column may vary by version.
+- For cross-version answers, first check performance-view availability with `V$TABLE` and `V$ALLCOLUMN`, and check meta-table column availability with `SYSTEM_.SYS_TABLES_` and `SYSTEM_.SYS_COLUMNS_` when a column may vary by version.
 
 ## Version Notes
 
@@ -37,6 +37,7 @@
 - 8.1: `V$MEM_STABLE` is documented in the Altibase 8.1 verified source data dictionary and is used with `V$LOG.CHECKPOINT_SCALE` and `V$MEM_TABLESPACES.CURRENT_DB` for memory checkpoint image checks.
 - 8.1: Temporary LOB support is documented in the Altibase 8.1 release notes. Check Temporary LOB usage with `V$TEMPORARY_LOBS` when that view exists.
 - Version-sensitive view check: the 8.1 release notes list `V$LOCK_TABLE_STATS`, `V$MEM_STABLE`, and `V$TEMPORARY_LOBS`; 7.1 and 7.3 General Reference 2 also document `V$LOCK_TABLE_STATS`. For portable answers, check `V$TABLE` before relying on these views.
+- Version-sensitive meta-table column check: `SYSTEM_.SYS_REPL_ITEMS_.IS_CONDITION_SYNCED` is documented for 7.3 and 8.1, but not for the 7.1 `SYSTEM_.SYS_REPL_ITEMS_` layout. For 7.1-compatible SQL, omit that column unless the target database exposes it.
 
 ```sql
 SELECT name, columncount
@@ -1257,6 +1258,39 @@ ORDER BY host_no;
 ```
 
 ### Check Replication Items
+
+```sql
+SELECT replication_name,
+       local_user_name,
+       local_table_name,
+       local_partition_name,
+       remote_user_name,
+       remote_table_name,
+       remote_partition_name,
+       is_partition,
+       replication_unit,
+       invalid_max_sn
+FROM SYSTEM_.SYS_REPL_ITEMS_
+WHERE replication_name = '<REPLICATION_NAME>'
+ORDER BY local_user_name, local_table_name, local_partition_name;
+```
+
+Use `IS_CONDITION_SYNCED` only after confirming the target version exposes that column. It is documented for 7.3 and 8.1, but not for the 7.1 `SYSTEM_.SYS_REPL_ITEMS_` layout.
+
+```sql
+SELECT c.column_name
+FROM SYSTEM_.SYS_COLUMNS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.user_id = t.user_id
+  AND c.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'SYSTEM_'
+  AND t.table_name = 'SYS_REPL_ITEMS_'
+  AND c.column_name = 'IS_CONDITION_SYNCED';
+```
+
+If the column exists on the target system:
 
 ```sql
 SELECT replication_name,
