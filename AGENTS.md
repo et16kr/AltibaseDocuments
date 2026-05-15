@@ -37,6 +37,16 @@ When asked to review or fill review documents:
 - Keep report conclusions actionable enough to become remediation tasks.
 - R15 is a final readiness gate and should remain unresolved until underlying review-required reports or residual risks are handled.
 
+Use the review stage runner for staged report generation:
+
+```bash
+bash review/scripts/run_review_stage.sh list
+bash review/scripts/run_review_stage.sh clear
+bash review/scripts/run_review_stage.sh run-all
+```
+
+Stage status is tracked in `review/review_stage_status.tsv`, not inferred from whether a report file exists. A report file may be partial if a run ended while writing. Treat missing status rows as `ToDo`; `run` marks a stage `Progress` before invoking Codex, marks it `Done` only after a fresh non-empty report is created by that run, and marks it `Fail` on failure or stale/missing output. `clear [GROUP]` deletes only the stage output reports defined in `review/review_stages.tsv` and resets the selected stage statuses to `ToDo`.
+
 ## Remediation Phase
 
 Remediation is driven by `review/remediation_plan.md`.
@@ -60,7 +70,20 @@ bash GPTs/scripts/remediation_plan.sh start H01
 bash GPTs/scripts/remediation_plan.sh validate H01
 bash GPTs/scripts/remediation_plan.sh finish H01 Done
 bash GPTs/scripts/remediation_plan.sh finish H01 Fail --force --reason "short failure reason"
+bash GPTs/scripts/remediation_plan.sh run-all
 ```
+
+### Remediation `run-all` Semantics
+
+Bare `run-all` means run all remaining `Progress`/`ToDo` remediation tasks in plan order:
+
+```bash
+bash GPTs/scripts/remediation_plan.sh run-all
+```
+
+Do not treat bare `run-all` as a one-task command. Use `run` for one task, or use `run-all --max-tasks N` only when intentionally limiting a batch.
+
+`run-all` stops on `Fail` by default and records failure information in `review/remediation_failure_log.md`. Use `--keep-going-on-fail` only for explicit manual recovery runs where continuing after a failed task is intentional.
 
 ## Failure Recording
 

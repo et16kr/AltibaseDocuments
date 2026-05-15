@@ -786,13 +786,14 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_run_all(args: argparse.Namespace) -> int:
     max_tasks = args.max_tasks
-    if max_tasks < 1:
+    if max_tasks is not None and max_tasks < 1:
         die("--max-tasks must be at least 1")
 
     if args.dry_run:
         tasks = parse_tasks(args.plan)
         active = progress_tasks(tasks)
-        candidates = active[:1] if active else [task for task in tasks if task.state == "ToDo"][:max_tasks]
+        todo = [task for task in tasks if task.state == "ToDo"]
+        candidates = active[:1] if active else (todo if max_tasks is None else todo[:max_tasks])
         if not candidates:
             print("No Progress or ToDo tasks remain.")
             return 0
@@ -801,7 +802,7 @@ def cmd_run_all(args: argparse.Namespace) -> int:
         return 0
 
     ran = 0
-    while ran < max_tasks:
+    while max_tasks is None or ran < max_tasks:
         task = next_task(parse_tasks(args.plan))
         if not task:
             print("No Progress or ToDo tasks remain.")
@@ -835,7 +836,7 @@ def cmd_run_all(args: argparse.Namespace) -> int:
             print(f"==> {task.id} is still Progress; stopping for review.")
             return 2
         if refreshed.state == "Fail" and args.stop_on_fail:
-            print(f"==> {task.id} is Fail; stopping because --stop-on-fail was set.")
+            print(f"==> {task.id} is Fail; stopping because stop-on-fail is enabled.")
             return 1
 
     print(f"Stopped after {ran} task(s).")
@@ -918,8 +919,26 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.set_defaults(func=cmd_run)
 
     run_all_parser = sub.add_parser("run-all", help="Run tasks sequentially through Codex.")
-    run_all_parser.add_argument("--max-tasks", type=int, default=int(os.environ.get("MAX_TASKS", "1")))
-    run_all_parser.add_argument("--stop-on-fail", action="store_true")
+    run_all_parser.add_argument(
+        "--max-tasks",
+        type=int,
+        default=int(os.environ["MAX_TASKS"]) if os.environ.get("MAX_TASKS") else None,
+        help="Maximum tasks to run. Default: all remaining Progress/ToDo tasks.",
+    )
+    fail_group = run_all_parser.add_mutually_exclusive_group()
+    fail_group.add_argument(
+        "--stop-on-fail",
+        dest="stop_on_fail",
+        action="store_true",
+        default=True,
+        help="Stop if a task enters Fail. This is the default.",
+    )
+    fail_group.add_argument(
+        "--keep-going-on-fail",
+        dest="stop_on_fail",
+        action="store_false",
+        help="Continue after a task enters Fail.",
+    )
     run_all_parser.add_argument("--force", action="store_true", help="Bypass single-Progress checks.")
     run_all_parser.add_argument("--dry-run", action="store_true", help="Print prompts without running Codex.")
     run_all_parser.add_argument("--codex-bin", help="Codex binary. Default: CODEX_BIN or codex.")
