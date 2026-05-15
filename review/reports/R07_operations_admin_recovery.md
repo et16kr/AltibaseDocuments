@@ -1,6 +1,6 @@
-# R07 Installation, Startup/Shutdown, Administration, Backup, Recovery, Tablespace Operations
+# R07 Installation, Startup/Shutdown, Administration, Backup, Recovery, and Tablespace Operations
 
-Date: 2026-05-14
+Date: 2026-05-15
 Reviewer: Codex
 Verdict: Review Required
 
@@ -16,96 +16,91 @@ Verdict: Review Required
   - `Manuals/Altibase_7.1/eng/Getting Started Guide.md`
   - `Manuals/Altibase_7.1/eng/Installation Guide.md`
   - `Manuals/Altibase_7.1/eng/Administrator's Manual.md`
-  - `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
   - `Manuals/Altibase_7.1/eng/SQL Reference.md`
-  - `Manuals/Altibase_trunk/eng/Installation Guide.md`
-  - `Manuals/Altibase_trunk/eng/Administrator's Manual` equivalent path with typographic apostrophe
-  - `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_7.3/eng/Administrator’s Manual.md`
+  - `Manuals/Altibase_trunk/eng/Administrator’s Manual.md`
   - `Manuals/Altibase_trunk/eng/SQL Reference.md`
-  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+  - `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ## Commands Run
 
 ```bash
-wc -l GPTs/attachments/00_version_release_platform.md GPTs/attachments/01_getting_started_installation.md GPTs/attachments/02_administration_operations.md Manuals/Altibase_7.1/eng/Getting\ Started\ Guide.md Manuals/Altibase_7.1/eng/Installation\ Guide.md Manuals/Altibase_7.1/eng/Administrator\'s\ Manual.md GPTs/reports/version_coverage_validation.md
-nl -ba GPTs/attachments/01_getting_started_installation.md | sed -n '1,430p'
-nl -ba GPTs/attachments/02_administration_operations.md | sed -n '1,1780p'
-nl -ba GPTs/attachments/00_version_release_platform.md | sed -n '1,470p'
-sed -n '1,240p' GPTs/reports/version_coverage_validation.md
-rg -n 'startup|shutdown|server start|server stop|dbcreate|post_install|pre_install|license|ulimit|transparent|THP|archivelog|noarchivelog|catproc|ALTIBASE_NLS|ALTIBASE_HOME' Manuals/Altibase_7.1/eng/Getting\ Started\ Guide.md Manuals/Altibase_7.1/eng/Installation\ Guide.md
-rg -n 'Startup Phase|STARTUP|SHUTDOWN|ARCHIVELOG|NOARCHIVELOG|BACKUP|RECOVER|RESETLOGS|DISCARD|TABLESPACE|V\$TABLESPACES|V\$DATAFILES|V\$MEM_TABLESPACES|V\$ARCHIVE|V\$LOG|altipasswd|syspassword' Manuals/Altibase_7.1/eng/Administrator\'s\ Manual.md
-rg -n 'V\$LOG|SERVER_STATUS|ARCHIVELOG_MODE|CHECKPOINT_SCALE|BEGIN_CHKPT_FILE_NO|V\$ARCHIVE|V\$DATAFILES|V\$MEM_TABLESPACES|V\$VOL_TABLESPACES|V\$MEM_STABLE|V\$BACKUP_INFO|V\$OBSOLETE_BACKUP_INFO|V\$TABLE\b' Manuals/Altibase_7.1/eng Manuals/Altibase_7.3/eng Manuals/Altibase_trunk/eng
-rg -n 'AIX 7\.2|Red Hat Enterprise Linux 9|Windows 2008|Windows 10|Altibase 8\.1|Supported Platform|Platform' ReleaseNotes Manuals/Altibase_trunk GPTs/attachments/00_version_release_platform.md GPTs/attachments/01_getting_started_installation.md
-rg -n 'TODO|FIXME|trunk|/home/|file://|media/|\.jpg|\.png|ReleaseNotes|Altibase_trunk|Technical Documents' GPTs/attachments/00_version_release_platform.md GPTs/attachments/01_getting_started_installation.md GPTs/attachments/02_administration_operations.md
+sed -n '1,240p' review/Altibase_GPT_Detailed_Review_Design.md
+sed -n '1,220p' GPTs/Altibase_GPT_Document_Selection.md
+sed -n '1,260p' GPTs/Altibase_GPT_Attachment_Build_Workplan.md
+sed -n '1,220p' GPTs/attachments/README.md
+wc -l GPTs/attachments/00_version_release_platform.md GPTs/attachments/01_getting_started_installation.md GPTs/attachments/02_administration_operations.md GPTs/reports/version_coverage_validation.md
+rg -n "^## |^### |^Item:|^Phase block:|^Command block:|^Operation block:|^Backup|^Recovery|^Tablespace|^Version|^Caution|^Checklist|^Risk" GPTs/attachments/02_administration_operations.md
+rg -n "STARTUP|SHUTDOWN|ARCHIVELOG|NOARCHIVELOG|BEGIN BACKUP|END BACKUP|RECOVER DATABASE|RESTORE DATABASE|RESETLOGS|CREATE DATAFILE|CREATE CHECKPOINT IMAGE|DISCARD|CHECKPOINT PATH|INCREMENTAL|CHANGE BACKUP DIRECTORY" "Manuals/Altibase_7.1/eng/Administrator's Manual.md"
+rg -n "post_install|pre_install|server create|server start|server stop|startup|shutdown|license|Transparent Huge|THP|ulimit|kernel|catproc|Patch Installation|APatch|server downgrade" "Manuals/Altibase_7.1/eng/Getting Started Guide.md" "Manuals/Altibase_7.1/eng/Installation Guide.md"
+rg -n "IF NOT EXISTS|CREATE.*TABLESPACE|DROP TABLESPACE|ALTER TABLESPACE" Manuals/Altibase_trunk/eng/SQL\ Reference.md Manuals/Altibase_trunk/eng/Administrator*Manual.md
 find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | sort | wc -l
+rg -n "BEGIN BACKUP|END BACKUP|RECOVER DATABASE|RESTORE DATABASE|RESETLOGS|DISCARD|ARCHIVELOG|NOARCHIVELOG|RENAME DATAFILE|CREATE DATAFILE|CREATE CHECKPOINT IMAGE|CHECKPOINT SCALE|server stop|server kill|post_install|pre_install" GPTs/attachments/00_version_release_platform.md GPTs/attachments/01_getting_started_installation.md GPTs/attachments/02_administration_operations.md
+rg -n 'trunk|file://|/home/et16|media/|\.gif|\.png|\.jpg|C:\\' GPTs/attachments/00_version_release_platform.md GPTs/attachments/01_getting_started_installation.md GPTs/attachments/02_administration_operations.md
 ```
 
 ## Findings
 
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/01_getting_started_installation.md` | 60 | The 8.1 platform baseline says 8.1.0.0.1 supports Linux x86-64 on RHEL 7, 8, and 9 for server/client and Windows client-only, but omits AIX 7.2. This conflicts with `00_version_release_platform.md` line 322 and the 8.1 release notes, which list AIX 7.2 as server and client supported. | Add AIX 7.2 to the 8.1 pre-installation platform item and keep the wording aligned with `00_version_release_platform.md`. If this file intentionally gives only the Linux quick path, say that explicitly and point platform decisions to file 00. |
-| High | `GPTs/attachments/01_getting_started_installation.md` | 380 | The 8.1 version-difference block repeats the same incomplete platform list and can cause GPT answers to state an incomplete 8.1 install target set. | Update this block to include AIX 7.2 server/client support, RHEL 7/8/9 Linux x86-64 support, Windows 2008/10 client-only support, 64-bit-only packages, and JDK 1.8+ for Java components. |
-| High | `GPTs/attachments/02_administration_operations.md` | 162 | The common DBA check query selects `checkpoint_scale` from `V$LOG`. `CHECKPOINT_SCALE` is documented in the 8.1 verified source data dictionary, but it is not present in the sampled 7.1 or 7.3 data dictionaries. A generated 7.1/7.3 operational query would fail. | Remove `checkpoint_scale` from the common `V$LOG` query. Add a separate 8.1-only checkpoint-scale query, guarded by a column check through `V$ALLCOLUMN` or explicit wording that it applies only to Altibase 8.1 verified source. |
-| Medium | `GPTs/attachments/02_administration_operations.md` | 130 | Shutdown phase guidance says all shutdown options are available in `SERVICE`, but does not preserve the source distinction that `SHUTDOWN NORMAL` and `SHUTDOWN IMMEDIATE` are service-phase-only while `SHUTDOWN ABORT` can be executed in any phase. | Add a short rule under shutdown choices: `SHUTDOWN NORMAL` and `SHUTDOWN IMMEDIATE` require `SERVICE`; `SHUTDOWN ABORT` is available in any startup phase and should be emergency-only because restart recovery is expected. |
-| Medium | `GPTs/attachments/02_administration_operations.md` | 842 | The memory checkpoint path runbook is not fully actionable. It starts at `STARTUP PROCESS`/`STARTUP CONTROL` and lists `ADD`, `RENAME`, and `DROP CHECKPOINT PATH`, but omits the service shutdown/window, directory creation and permissions before the change, OS-level move/copy commands before returning to service, and verification queries. | Split this into separate add, rename, and drop runbooks. Include planned shutdown, `STARTUP CONTROL`, pre-created destination paths owned by the Altibase OS account, the exact `ALTER TABLESPACE` operation, required movement of checkpoint image files, verification with `V$TABLESPACES` in control or `V$MEM_TABLESPACE_CHECKPOINT_PATHS` after meta/service, then `STARTUP SERVICE`. |
-| Medium | `GPTs/attachments/02_administration_operations.md` | 1053 | The offline physical backup block correctly says to copy all memory checkpoint directories, log anchors, needed log files, and disk data files, but the command example only copies default-looking `$ALTIBASE_HOME/dbs0`, `$ALTIBASE_HOME/dbs1`, `$ALTIBASE_HOME/logs`, and `$ALTIBASE_HOME/dbs/*.dbf`. Sites with non-default `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, or data files outside `$ALTIBASE_HOME/dbs` could take an incomplete backup if they follow the sample literally. | Add a preflight discovery step: read `MEM_DB_DIR`, `LOGANCHOR_DIR`, and `LOG_DIR` from properties, query `V$DATAFILES` for all disk data files, and state that the sample `cp` commands are placeholders to be expanded to every site-specific path. Include a post-copy file-count or manifest verification step. |
-| Medium | `GPTs/attachments/02_administration_operations.md` | 1213 | Incremental backup prerequisites mention that `backupInfo` loss makes prior incremental backups unusable, but the recovery runbooks do not capture the source procedure for missing `changeTracking` or `backupInfo` files: if those files are lost, the server may not start in `CONTROL`; it must start in `PROCESS` so change tracking can be disabled and `backupInfo` restored from the most recent incremental backup path. | Add an incremental recovery preflight block before `ALTER DATABASE RESTORE DATABASE`: check whether `$ALTIBASE_HOME/dbs/changeTracking` and `backupInfo` exist, start `PROCESS` if `CONTROL` fails because of these files, run `ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING` when needed, restore `backupInfo` from the backup tag directory, then proceed to `CONTROL`. |
-| Low | `GPTs/attachments/02_administration_operations.md` | 18 | The "Altibase Hybrid Architecture" section uses marketing-style claims such as "extreme high-performance (microsecond latency)" and "requires no external caching layer." This is not tied to the operational source checks and may encourage overclaiming in administration answers. | Remove the latency and no-cache claims from this operations attachment, or reword as a sourced architecture summary without performance guarantees. Keep performance positioning in the performance attachment. |
+| High | `GPTs/attachments/02_administration_operations.md` | 805 | The disk datafile move runbook shows `OFFLINE`, `RENAME DATAFILE`, and `ONLINE`, but it does not include the required OS-level move/copy before the rename/online step. The note about moving the physical file appears after the SQL block and after `ONLINE`, so a GPT may produce an unsafe or failing command order. Source wording also needs reconciliation: the Administrator's Manual allows service-phase rename for offline tablespaces, while the SQL Reference says `ALTER TABLESPACE ... RENAME DATAFILE` is only during `CONTROL`. | Split this into explicit runbooks: planned service/offline move if accepted by source policy, and recovery/`CONTROL` move. In both, include precheck, stop/offline or `STARTUP CONTROL`, OS copy/move to the target path, ownership/permission check, `ALTER ... RENAME DATAFILE`, `V$DATAFILES` verification, then `ONLINE` or `SERVICE`. Add a source-audit note for the Admin Manual vs SQL Reference phase difference. |
+| High | `GPTs/attachments/02_administration_operations.md` | 1354 | Incremental restore/recovery coverage lists the basic `RESTORE DATABASE` and `RECOVER DATABASE` commands but omits the source-required handling for incomplete incremental recovery: restoring historical `loganchor*` and `backupInfo`, disabling invalid change tracking in `PROCESS`, then using `RESETLOGS`. This can produce an incomplete recovery answer that fails or leaves backup metadata inconsistent. | Add separate incremental recovery runbooks for complete recovery, incomplete recovery by tag, and incomplete recovery by `UNTIL TIME` or `UNTIL CANCEL`. Include when to restore old `loganchor*` and `backupInfo`, when to run `ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING` in `PROCESS`, tag matching rules, temporary-file recreation, `META RESETLOGS`, and the required full backup afterward. |
+| Medium | `GPTs/attachments/02_administration_operations.md` | 1073 | Offline physical backup says to copy memory checkpoint directories, log anchors, needed logs, and disk data files, but it does not say to preserve the exact `$ALTIBASE_HOME/conf/altibase.properties` used at backup time. The source recovery section states that the properties file used when the database was backed up must be used during recovery. | Add `$ALTIBASE_HOME/conf/altibase.properties` to the offline backup manifest, or explicitly state that it must be retained and restored with the backup set. Also add a post-`server stop` verification step before copying files so the backup is not taken while logs are still changing. |
+| Medium | `GPTs/attachments/02_administration_operations.md` | 1176 | The archive log mode change block starts at `STARTUP CONTROL` and runs `ALTER DATABASE ARCHIVELOG` or `ALTER DATABASE NOARCHIVELOG`, but it does not show the full service-impact sequence or verification. Since phases only move forward and mode changes require `CONTROL`, a production answer needs shutdown planning, archive destination capacity checks, transition back to service, and mode verification. | Convert this block into a runbook: confirm current `V$LOG.ARCHIVELOG_MODE` and `V$ARCHIVE`, plan downtime, cleanly stop service, connect `SYSDBA`, `STARTUP CONTROL`, alter mode, verify, `STARTUP SERVICE`, and confirm archive destination behavior. Add backup follow-up guidance after changing mode if local policy requires a new baseline. |
+| Medium | `GPTs/attachments/01_getting_started_installation.md` | 331 | Patch rollback notes correctly warn that installer rollback does not cover data or logs, but the meta downgrade section only says to stop the server first. The Installation Guide also says that after `server downgrade`, the user must delete the patch; otherwise running the server can trigger meta upgrade again. | Add the missing post-downgrade rollback/delete-patch step and make the order explicit: backup product/data/logs, `server stop`, run `server downgrade` when needed, run the APatch patch uninstaller/delete step, then verify binary and meta versions. |
+| Low | `GPTs/attachments/02_administration_operations.md` | 89 | The administration attachment uses `isql -u sys -p manager -sysdba` for high-risk operations but does not repeat the production-safety note found in the installation attachment that `manager` is only a manual example and must be replaced if changed. | Add one short note near the SYSDBA command block: examples use `sys` and `manager`; use the site-specific `SYS` password and avoid embedding production passwords in reusable scripts. |
+| Low | `GPTs/attachments/02_administration_operations.md` | 18 | The architecture block uses promotional wording such as "extreme high-performance (microsecond latency)" and "requires no external caching layer". This is not an operational safety bug, but it is less source-neutral than the rest of the attachment and could lead to overconfident GPT answers. | Reword as source-backed architecture guidance: Altibase supports memory, disk, and volatile tablespaces in one engine; choose storage by persistence, size, and performance requirements. Avoid latency claims unless tied to a precise source and workload. |
 
 ## Source Checks
 
 - Claims checked:
-  - Installation order, `post_install.sh dbcreate`, `server create`, `server start`, iSQL verification, shutdown modes, PSM `catproc.sql`, license handling, user limits, kernel parameters, and THP guidance.
-  - 8.1 platform support from release notes and 8.1 installation source.
-  - Startup phase semantics, shutdown phase restrictions, archive/noarchive behavior, online/offline backup, media recovery, incomplete recovery with `RESETLOGS`, incremental backup files, and tablespace state/DDL behavior.
-  - Data dictionary columns for `V$LOG`, `V$ARCHIVE`, `V$DATAFILES`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES`, and 8.1 `V$MEM_STABLE`.
+  - Installation prerequisites, package flow, license handling, `pre_install.sh`, `post_install.sh dbcreate`, `catproc.sql`, startup, shutdown, and patch rollback.
+  - Startup phases, `SHUTDOWN NORMAL`, `SHUTDOWN IMMEDIATE`, `SHUTDOWN ABORT`, `server stop`, and `server kill`.
+  - Tablespace states, `DISCARD`, disk/memory/volatile/temporary/undo concepts, `CREATE TABLESPACE`, `ALTER TABLESPACE`, datafile/tempfile changes, checkpoint paths, and `IF NOT EXISTS` for 8.1.
+  - Online backup, offline backup, archive log mode, media recovery, incomplete recovery, incremental backup/recovery, `backupInfo`, `changeTracking`, `RESETLOGS`, and 8.1 checkpoint scale.
 - Source coverage:
-  - Strong for 7.1 installation and administration because the sampled manuals contain detailed procedures.
-  - Strong for 8.1 platform support and checkpoint-scale behavior from 8.1 release notes and verified-source manuals.
-  - `version_coverage_validation.md` confirms marker coverage for 7.1, 7.3, and 8.1 across the attachment set.
+  - 7.1 source coverage was sampled in depth because the stage hints identify 7.1 manuals.
+  - 7.3 and 8.1 were checked for corresponding Administrator's Manual, SQL Reference, data dictionary, and release-note markers where version behavior differs.
+  - `GPTs/reports/version_coverage_validation.md` reports pass-level marker coverage for all 20 attachments.
 - Source gaps:
-  - I did not execute SQL against a live Altibase instance, so query syntax was checked against manuals and attachment cross-references only.
-  - I did not exhaustively verify every user/role privilege query in `02_administration_operations.md`; the stage review focused on installation, startup/shutdown, backup, recovery, and tablespace operation risk.
+  - Disk datafile rename phase behavior needs source-policy resolution because the Administrator's Manual and SQL Reference wording differ. The attachment should not leave this ambiguous in a production move runbook.
 
 ## Oracle-Overlap Decision
 
 - Correctly compressed:
-  - Ordinary account, role, grant/revoke, and generic SQL mechanics are kept brief compared with Altibase-specific operation, storage, backup, and recovery guidance.
+  - The reviewed attachments avoid generic Oracle DML and focus on Altibase installation, phases, properties, tablespaces, backup, recovery, and operational views.
 - Too much generic Oracle material:
-  - No major Oracle-overlap bloat was found in this stage.
+  - None found in this stage.
 - Missing Altibase-specific difference:
-  - The 8.1-only `V$LOG.CHECKPOINT_SCALE` column must be separated from common 7.1/7.3 operational queries.
-  - The 8.1 AIX 7.2 platform support difference must be included in the installation attachment, not only in the platform attachment.
+  - Incremental incomplete recovery needs Altibase-specific `backupInfo`, `changeTracking`, and log anchor handling.
+  - Datafile and checkpoint-image move/recovery flows need stricter Altibase-specific command ordering and phase wording.
 
 ## Version Checks
 
 - 7.1:
-  - Startup/shutdown, backup/recovery, archive/noarchive, tablespace states, and tablespace DDL broadly match the sampled 7.1 manuals.
-  - The common `V$LOG` query currently includes an 8.1-only column and is not safe for 7.1.
+  - Installation, startup/shutdown, online/offline backup, archive log mode, media recovery, and incremental backup material is broadly source-backed.
+  - Follow-up needed for offline backup property-file retention, patch rollback, datafile move ordering, and incomplete incremental recovery.
 - 7.3:
-  - The stage file includes 7.3 coverage markers and the operational model appears mostly aligned with 7.1 for the reviewed procedures.
-  - The common `V$LOG` query currently includes an 8.1-only column and is not safe for 7.3.
+  - The attachment states the same operational model as 7.1 for covered backup/recovery/tablespace operations. No 7.3-specific contradiction was found in sampled checks.
 - 8.1:
-  - File 00 correctly lists AIX 7.2, RHEL 7/8/9, and Windows client-only platform support for 8.1.
-  - File 01 omits AIX 7.2 in two 8.1 installation/platform locations.
-  - 8.1 checkpoint-scale handling is present, but the common `V$LOG` query needs version scoping.
+  - 8.1 platform and feature routing in `00_version_release_platform.md` is customer-safe and avoids internal source labels.
+  - 8.1 checkpoint scale, `V$LOG.CHECKPOINT_SCALE`, `V$MEM_STABLE`, and `SINGLE`/`PAIR` guidance is source-backed in sampled checks.
 
 ## Retrieval And GPT Answer Quality
 
 - Strengths:
-  - File 02 has strong runbook coverage for DBA operations and uses the right operational pattern: identify state, check views, confirm backup, execute, verify, and state rollback/recovery limits.
-  - Backup and recovery sections include important Altibase-specific cautions: `ARCHIVELOG`, current log anchors, stable memory checkpoint images, `RESETLOGS`, and follow-up full backup.
-  - File 00 is a useful platform and upgrade anchor with concise version matrices and answer rules.
+  - The attachments have strong question-oriented structure, literal command preservation, and useful operational check SQL.
+  - `02_administration_operations.md` is rich enough for retrieval on backup, recovery, tablespaces, and operational views.
+  - Upload-boundary validation found 20 attachment Markdown files, excluding `README.md`; the three stage attachments had no matches for `trunk`, `file://`, local workspace paths, or raw image references in the validation regex.
 - Risks:
-  - Conflicting 8.1 platform statements between files 00 and 01 can cause inconsistent installation answers.
-  - A GPT may retrieve the common `V$LOG` query without the later 8.1 context and generate failing 7.1/7.3 SQL.
-  - Some high-risk runbooks still read like summaries rather than exact procedures, especially memory checkpoint path changes and offline physical backups.
+  - High-risk code blocks may be retrieved without nearby notes. The datafile move and recovery command blocks need to include safety steps inside the procedure, not only in surrounding prose.
+  - Incremental recovery is complex enough that a compact command block can mislead unless it separates complete, incomplete, and tag-based cases.
 
 ## Required Follow-Up
 
-- Fix the two High platform issues in `01_getting_started_installation.md`.
-- Split `V$LOG.CHECKPOINT_SCALE` into an 8.1-only check and keep 7.1/7.3 common log checks portable.
-- Add the missing shutdown phase distinction for `SHUTDOWN ABORT`.
-- Harden the memory checkpoint path and offline backup runbooks with complete command order, path discovery, OS file steps, and verification.
-- Add an incremental recovery preflight for missing `changeTracking` and `backupInfo`.
+- Fix the two High findings in `02_administration_operations.md` before upload.
+- Add the Medium operational-safety improvements for offline backup, archive log mode changes, and patch rollback.
+- Resolve or explicitly document the source-policy decision for `ALTER TABLESPACE ... RENAME DATAFILE` phase requirements.
+- After edits, rerun focused validation for the same stage and re-review the changed sections only.

@@ -1,11 +1,9 @@
 # R12 Development Interfaces Review
-
-Date: 2026-05-14
+Date: 2026-05-15
 Reviewer: Codex
 Verdict: Review Required
 
 ## Scope
-
 - Attachments:
   - `GPTs/attachments/10_psm_stored_external_procedures.md`
   - `GPTs/attachments/11_java_jdbc_spring.md`
@@ -19,94 +17,90 @@ Verdict: Review Required
 - Source manuals sampled:
   - `Manuals/Altibase_7.1/eng/JDBC User's Manual.md`
   - `Manuals/Altibase_7.3/eng/JDBC User's Manual.md`
-  - `Manuals/Altibase_trunk/eng/JDBC User's Manual.md`
-  - `Manuals/Altibase_7.1/eng/CLI User's Manual.md`
-  - `Manuals/Altibase_trunk/eng/CLI User's Manual.md`
-  - `Manuals/Altibase_7.1/eng/ODBC User's Manual.md`
-  - `Manuals/Altibase_7.1/eng/Altibase C Interface Manual.md`
-  - `Manuals/Altibase_7.3/kor/API User's Manual.md`
-  - `Manuals/Altibase_trunk/kor/CLI User's Manual.md`
   - `Technical Documents/kor/JavaCompatibility.md`
+  - `Manuals/Altibase_7.1/eng/CLI User's Manual.md`
+  - `Manuals/Altibase_7.3/eng/CLI User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/CLI User's Manual.md`
+  - `Manuals/Altibase_7.1/eng/ODBC User's Manual.md`
+  - `Manuals/Altibase_7.3/eng/ODBC User's Manual.md`
+  - `Manuals/Altibase_7.1/eng/iSQL User's Manual.md`
+  - `Manuals/Altibase_7.3/eng/iSQL User's Manual.md`
+  - `Manuals/Altibase_7.1/eng/iLoader User's Manual.md`
+  - `Manuals/Altibase_7.3/eng/iLoader User's Manual.md`
+  - `Manuals/Altibase_trunk/eng/iLoader User's Manual.md`
+  - `Manuals/Altibase_7.1/eng/Altibase C Interface Manual.md`
+  - `Manuals/Altibase_7.3/eng/Altibase C Interface Manual.md`
+  - `Manuals/Altibase_trunk/eng/Precompiler User's Manual.md`
+  - `Manuals/Altibase_7.3/eng/Precompiler User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ## Commands Run
-
 ```bash
-sed -n '1,240p' review/Altibase_GPT_Detailed_Review_Design.md
-sed -n '1,220p' GPTs/Altibase_GPT_Document_Selection.md
-sed -n '1,260p' GPTs/Altibase_GPT_Attachment_Build_Workplan.md
-sed -n '1,220p' GPTs/attachments/README.md
-nl -ba GPTs/attachments/10_psm_stored_external_procedures.md | sed -n '1,1220p'
-nl -ba GPTs/attachments/11_java_jdbc_spring.md | sed -n '1,1120p'
-nl -ba GPTs/attachments/12_c_cli_odbc_precompiler.md | sed -n '1,1700p'
-nl -ba GPTs/attachments/13_isql_iloader_basic_tools.md | sed -n '1,1320p'
-rg -n "PING|/\\* PING \\*/ SELECT 1|poolPingQuery|validationQuery" Manuals/Altibase_7.1 GPTs/attachments/11_java_jdbc_spring.md
-rg -n "jdbc:Altibase|alternateservers|connectionretrycount|sessionfailover|lob_null_select|stmt_cache|truststore|verify_server_certificate" "Manuals/Altibase_7.1/eng/JDBC User's Manual.md" GPTs/attachments/11_java_jdbc_spring.md
-rg -n "SQLGetLob\\(|SQLPutLob\\(|fromPosition|SQLTrimLob\\(" GPTs/attachments/12_c_cli_odbc_precompiler.md "Manuals/Altibase_trunk/eng/CLI User's Manual.md" "Manuals/Altibase_7.1/eng/CLI User's Manual.md"
-rg -n "SQLFreeLob2|stmt_cache_enable|stmt_cache_size|stmt_cache_sql_limit" Manuals/Altibase_trunk ReleaseNotes GPTs/attachments/11_java_jdbc_spring.md GPTs/attachments/12_c_cli_odbc_precompiler.md
-rg -n "ALTIBASE_UT_FILE_PERMISSION|ISQL_FILE_PERMISSION|ILO_FILE_PERMISSION|ISQL_SECURE_LOGIN_MSG" Manuals/Altibase_7.1 Manuals/Altibase_7.3 Manuals/Altibase_trunk GPTs/attachments/13_isql_iloader_basic_tools.md
-rg -n "trunk|/home/|file://|Manuals/Altibase_trunk|workstation|repository|internal source" GPTs/attachments/10_psm_stored_external_procedures.md GPTs/attachments/11_java_jdbc_spring.md GPTs/attachments/12_c_cli_odbc_precompiler.md GPTs/attachments/13_isql_iloader_basic_tools.md
-rg -n "http://|https://|\\.png|\\.jpg|\\.gif|\\.svg|!\\[|media/|PDF/" GPTs/attachments/10_psm_stored_external_procedures.md GPTs/attachments/11_java_jdbc_spring.md GPTs/attachments/12_c_cli_odbc_precompiler.md GPTs/attachments/13_isql_iloader_basic_tools.md
+wc -l GPTs/attachments/10_psm_stored_external_procedures.md GPTs/attachments/11_java_jdbc_spring.md GPTs/attachments/12_c_cli_odbc_precompiler.md GPTs/attachments/13_isql_iloader_basic_tools.md
+rg -n "jdbc:|Altibase.jdbc|AltibaseConnection|LOB|Temporary LOB|Spring|Hibernate|SQLAlloc|SQLConnect|SQLDriverConnect|SQLFree|SQLBind|SQLFetch|isql|iloader|precompiler|APRE|CLI|ODBC|DSN|URL|Driver|JDK|Java" GPTs/attachments/10_psm_stored_external_procedures.md GPTs/attachments/11_java_jdbc_spring.md GPTs/attachments/12_c_cli_odbc_precompiler.md GPTs/attachments/13_isql_iloader_basic_tools.md
+rg -n "AltibaseFailoverCallback|failoverCallback|Event\\.BEGIN|Result\\.GO|/\\* PING \\*/ SELECT 1|lob_null_select|hibernate-community-dialects" "Manuals/Altibase_7.1/eng/JDBC User's Manual.md" "Manuals/Altibase_7.3/eng/JDBC User's Manual.md" GPTs/attachments/11_java_jdbc_spring.md
+rg -n "SQLGetLob\\(|SQLPutLob|SQLTrimLob|SQLFreeLob2|SQLEmptyLob|SQLGetLobLength2|CONNTYPE|LongDataCompat" Manuals/Altibase_7.1/eng Manuals/Altibase_7.3/eng Manuals/Altibase_trunk/kor GPTs/attachments/12_c_cli_odbc_precompiler.md -g '*CLI*' -g '*ODBC*' -g '*.md'
+rg -n -- "-dry-run|-lightmode|-stmt_prefix|-extra_col_delimiter|use_lob_file|Empty LOB|LOB data of size 0|rule csv" "Manuals/Altibase_7.1/eng/iLoader User's Manual.md" "Manuals/Altibase_7.3/eng/iLoader User's Manual.md" "Manuals/Altibase_trunk/eng/iLoader User's Manual.md" ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md GPTs/attachments/13_isql_iloader_basic_tools.md
+rg -n "trunk|/home/|file://|Manuals/Altibase_trunk|github.com/ALTIBASE/Documents|media/|\\.png|\\.gif|TODO|TBD|FIXME" GPTs/attachments/10_psm_stored_external_procedures.md GPTs/attachments/11_java_jdbc_spring.md GPTs/attachments/12_c_cli_odbc_precompiler.md GPTs/attachments/13_isql_iloader_basic_tools.md
 find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
+git status --short -- GPTs/attachments review/reports/R12_development_interfaces.md
 ```
 
 ## Findings
-
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/12_c_cli_odbc_precompiler.md` | 936 | The `SQLGetLob()` `fromPosition` guidance does not preserve the formal manual rule that the start point begins at `1`. The 7.1 and 8.1-source CLI manuals document `SQLGetLob()` `fromPosition` as "It begins at 1", while the attachment only says the sample loop starts with offset `0`. This can produce off-by-one LOB reads in generated C examples. | State the formal rule explicitly: `SQLGetLob()` `fromPosition` is documented as 1-based. If retaining the manual sample convention that initializes the first loop offset to `0`, label it as a source-sample inconsistency and advise testing against the target client patch before generating partial-read code. |
-| High | `GPTs/attachments/12_c_cli_odbc_precompiler.md` | 947 | The `SQLPutLob()` position rule omits the documented 1-based `fromPosition` definition and instead emphasizes `fromPosition=0` examples for new or whole-value patterns. `SQLTrimLob()` is correctly documented separately as 0-based at line 954, so the current wording risks mixing `SQLTrimLob()` semantics into `SQLPutLob()` partial update examples. | Split the LOB position rules by API: `SQLGetLob()` and `SQLPutLob()` are documented as beginning at `1`; `SQLTrimLob()` begins at `0`. If examples use `0` for full replacement or empty LOB cases, explain that separately and do not use a generic `position` placeholder without the base rule. |
-| Medium | `GPTs/attachments/12_c_cli_odbc_precompiler.md` | 1687 | The "Additional API Interfaces" block says Altibase provides "full support" for PHP/PDO, ADO.NET, XA, CheckServer API, and iLoader API. The API User's Manual has important constraints, including unsupported PDO APIs, CheckServer local/single-process restrictions, ADO.NET unsupported interfaces, platform and version requirements, and package-specific limitations. This overstates support and is outside this attachment's stated source list. | Replace "full support" with a constrained cross-reference such as "additional API families exist; check the API User's Manual and version/platform limits before use." Add one-line cautions for PDO, ADO.NET, CheckServer API, and iLoader API, or remove the block from this attachment and leave the details to the API/tool-specific attachment. |
+| High | `GPTs/attachments/12_c_cli_odbc_precompiler.md`; `GPTs/attachments/11_java_jdbc_spring.md`; `GPTs/attachments/13_isql_iloader_basic_tools.md` | 98; 81; 70 | Altibase 8.1 Empty LOB interface changes are not captured. The 8.1 release notes add CLI `SQLEmptyLob()` and `SQLGetLobLength2()`, improved iLoader Empty LOB support only with `-lob -use_lob_file=yes`, and improved JDBC Empty LOB support. The current attachments cover ordinary LOBs, Temporary LOBs, and `SQLFreeLob2()`, but do not distinguish this 8.1 Empty LOB behavior from older 7.1/7.3 guidance where zero-length LOB data is documented as handled like `NULL`. | Add an 8.1-specific Empty LOB note to the JDBC LOB section, CLI LOB API section, and iLoader LOB cookbook. Preserve the literals `SQLEmptyLob()`, `SQLGetLobLength2()`, `-lob`, `use_lob_file=yes`, and state that older 7.1/7.3 answers should not assume 8.1 Empty LOB behavior. |
+| High | `GPTs/attachments/13_isql_iloader_basic_tools.md` | 727 | The CSV cookbook examples use `-rule csv` together with `-f target_table.fmt`, but the 7.1 and 7.3 iLoader manuals state that `-rule csv` cannot be used with delimiter-related options including `-f`, `-t`, `-r`, and `-e`; the caution at line 733 omits `-f`. This makes the user-facing example potentially not version-safe. | Reconcile the example with verified iLoader behavior. Either remove `-f` from the `-rule csv` example and show the verified alternative, or document the manual conflict explicitly and avoid presenting the current command as a copy-ready command. Update the caution to include every incompatible option supported by the verified source. |
+| Medium | `GPTs/attachments/13_isql_iloader_basic_tools.md` | 527 | The compact iLoader syntax omits documented literal options that are likely retrieval targets: `-dry-run`, `-lightmode`, and 7.1-documented `-stmt_prefix` and `-extra_col_delimiter`. The version block mentions `-lightmode`, but the command syntax and option blocks do not preserve these literals in the main iLoader section. | Add the omitted options with version scope, or label the compact syntax as intentionally partial and add small option blocks for `-dry-run`, `-lightmode`, `-stmt_prefix`, and `-extra_col_delimiter`. |
+| Low | `GPTs/attachments/11_java_jdbc_spring.md` | 144 | The SSL/TLS JDBC URL example enables `verify_server_certificate=true` but does not show the truststore attributes needed for private CA deployments. The truststore properties are listed later, so the issue is example completeness rather than a missing literal. | Add an inline note under the SSL/TLS URL example that server verification requires a configured default truststore or explicit `truststore_url` and `truststore_password`, and keep detailed certificate procedure in the SSL/TLS attachment. |
 
 ## Source Checks
-
 - Claims checked:
-  - JDBC driver class, `jdbc:Altibase://server_ip:server_port/dbname`, URL property syntax, IPv6 form, DataSource search order, failover attributes, SSL/TLS properties, `lob_null_select`, PING validation query, Java 8 time mappings, JDBC 4.2 unsupported NCLOB/LOB-creation APIs, statement caching, and Atomic Batch.
-  - Java compatibility for Altibase 7.1 and 7.3 from the Java compatibility technical note, plus Altibase 8.1 JDK and JDBC statement-cache release-note coverage.
-  - Spring Boot/Hibernate 6.4 and pre-6.4 dialect setup, including `hibernate-community-dialects` and `spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true`.
-  - CLI/ODBC call order, `SQLDriverConnect()` connection strings, ODBC 3.51 support table, `LongDataCompat`, CLI LOB locator APIs, `SQLFreeLob2()` JSON cleanup, ACI function flow, APRE command/options/host-variable syntax, and iSQL/iLoader command examples.
+  - JDBC URL shape, `Altibase.jdbc.driver.AltibaseDriver`, `AltibaseConnection`, `/* PING */ SELECT 1`, failover callback constants, statement cache properties, Maven Central availability, Hibernate dialect setup, `lob_null_select`, and Java compatibility were checked against 7.1/7.3 JDBC manuals and the Java compatibility technical document.
+  - CLI and ODBC connection strings, handle allocation order, diagnostics, `LongDataCompat`, ODBC support tables, LOB locator functions, `SQLGetLob()` and `SQLPutLob()` position cautions, `SQLTrimLob()`, `SQLFreeLob()`, and 8.1 `SQLFreeLob2()` guidance were checked against CLI/ODBC manuals and 8.1 release notes.
+  - iSQL and iLoader command forms, generated file permissions, `ALTIBASE_UT_FILE_PERMISSION`, `ISQL_FILE_PERMISSION`, `ISQL_SECURE_LOGIN_MSG`, iLoader CSV, LOB, bad/log, and performance options were checked against iSQL/iLoader manuals.
+  - APRE command options, build/link requirements, host variable rules, indicator variables, multi-connection syntax, LOB file modes, and SQLDA names were sampled against precompiler manuals.
+  - Temporary LOB coverage in the PSM attachment was checked against 8.1 release notes and verified-source data dictionary references for `V$TEMPORARY_LOBS`.
 - Source coverage:
-  - Strong for JDBC, Spring/Hibernate, CLI, ODBC, ACI, APRE, iSQL, and iLoader ordinary workflows.
-  - Strong for 8.1 statement caching and JSON LOB cleanup, with release-note and verified-source support.
-  - The stage attachments preserve most literal API names, options, commands, properties, and paths.
+  - Strong for JDBC, CLI, ODBC, iSQL, iLoader, APRE option names, and common command examples for Altibase 7.1 and 7.3.
+  - Adequate for 8.1 interface deltas where release notes and verified trunk sources expose the relevant literals.
 - Source gaps:
-  - No live Altibase client/server was available, so examples were source-reviewed but not executed.
-  - The CLI manuals themselves contain an apparent inconsistency: `SQLGetLob()`/`SQLPutLob()` argument tables say `fromPosition` begins at `1`, while some examples pass `0`. The attachment should expose that nuance rather than smoothing it away.
-  - The "Additional API Interfaces" block needs a source audit or reduced wording because it summarizes API families with known limitations.
+  - 8.1 full English interface manuals are not available in the sampled set, so some 8.1 interface details rely on release notes and verified-source/trunk material.
+  - The iLoader `-rule csv` source language appears internally surprising because it names `-f` as incompatible even though format files are central to many iLoader examples. This needs a targeted maintainer or runtime check before upload.
+  - C Interface and APRE were sampled for API/order/literal preservation, not exhaustively line-by-line.
 
 ## Oracle-Overlap Decision
-
 - Correctly compressed:
-  - Generic Java/JDBC, ODBC, embedded SQL, and iSQL/iLoader workflows are kept practical and focused on Altibase-specific tokens and behavior.
+  - Generic SQL and Oracle-overlapping DML are brief. The reviewed attachments focus mostly on Altibase-specific drivers, tools, API names, LOB locators, iSQL/iLoader behavior, APRE, and connection properties.
 - Too much generic Oracle material:
-  - None significant in this stage.
+  - No significant issue found in this stage.
 - Missing Altibase-specific difference:
-  - The LOB position-base distinction for `SQLGetLob()`, `SQLPutLob()`, and `SQLTrimLob()` needs to be explicit because general ODBC knowledge will not recover it.
+  - 8.1 Empty LOB interface behavior is missing from the development-interface attachments.
+  - The iLoader CSV option compatibility needs Altibase-specific correction before examples are copy-ready.
 
 ## Version Checks
-
 - 7.1:
-  - JDBC URL, PING query, `lob_null_select=off` Hibernate caution, CLI/ODBC LOB APIs, ODBC support table, ACI, APRE, and iSQL/iLoader core command examples were source-supported.
-  - LOB offset wording needs correction for 7.1 as noted above.
+  - JDBC, CLI, ODBC, APRE, iSQL, and iLoader literals are mostly preserved.
+  - Older LOB handling around zero-length LOBs should be protected from being applied to 8.1 Empty LOB answers.
 - 7.3:
-  - Java compatibility, Maven dependency example, Hibernate 6.4 guidance, iSQL generated-file permissions, and iLoader package-specific option cautions were source-supported.
+  - Java compatibility, Maven availability, Hibernate LOB defaults, `socket_immediate_close`, iSQL permissions, and iLoader option families are mostly represented.
+  - `-lightmode` is mentioned but not included in the iLoader syntax block.
 - 8.1:
-  - Statement caching, native JSON caution, Temporary LOB caution, `SQLFreeLob2()`, and 8.1-safe source labeling were generally supported.
-  - No internal `trunk` labels were found in the reviewed attachment text.
+  - Temporary LOB and `SQLFreeLob2()` are represented.
+  - Empty LOB interface changes are not represented for JDBC, CLI, or iLoader and should be added before pass.
 
 ## Retrieval And GPT Answer Quality
-
 - Strengths:
-  - The attachments are highly searchable, with literal driver classes, URLs, connection properties, commands, API names, SQLSTATE values, and version blocks.
-  - JDBC/Spring, CLI/ODBC/ACI/APRE, and iSQL/iLoader answer templates should retrieve well for common customer questions.
-  - Utility examples include operational cautions for credentials, file permissions, LOB imports, Direct-Path INSERT, and replication impact.
+  - Attachments 11 and 12 preserve many exact driver, property, API, callback, and LOB locator literals.
+  - Attachment 13 gives practical iSQL/iLoader workflows with command templates and troubleshooting paths.
+  - Attachment 10 gives clear Temporary LOB and external procedure guidance without overloading ordinary PSM material.
 - Risks:
-  - LOB partial read/update answers could be wrong by one byte/character position if the `fromPosition` base is not clarified.
-  - The "full support" phrasing for additional APIs may cause broad, unsupported answers for PHP/PDO or ADO.NET instead of version- and API-specific guidance.
-  - Source-reviewed utility commands were not executed against installed Altibase clients.
+  - GPT answers about 8.1 Empty LOBs may incorrectly inherit 7.1/7.3 zero-length LOB guidance.
+  - GPT may output an iLoader CSV command that conflicts with the manual-stated `-rule csv` option restrictions.
+  - Less common iLoader options may be hard to retrieve because some literals are absent from the compact syntax and option blocks.
 
 ## Required Follow-Up
-
-- Correct `GPTs/attachments/12_c_cli_odbc_precompiler.md` LOB position guidance for `SQLGetLob()`, `SQLPutLob()`, and `SQLTrimLob()`.
-- Constrain or remove the "Additional API Interfaces" block in `GPTs/attachments/12_c_cli_odbc_precompiler.md`.
-- After fixes, rerun targeted `rg` checks for `fromPosition`, `SQLGetLob`, `SQLPutLob`, `SQLTrimLob`, `SQLFreeLob2`, `PHP`, `PDO`, `ADO.NET`, `CheckServer`, and `iLoader API`.
+- Add 8.1 Empty LOB guidance to `11_java_jdbc_spring.md`, `12_c_cli_odbc_precompiler.md`, and `13_isql_iloader_basic_tools.md`.
+- Rework or qualify the `-rule csv` cookbook commands in `13_isql_iloader_basic_tools.md` so user-facing examples are version-safe.
+- Add version-scoped iLoader option literals for `-dry-run`, `-lightmode`, `-stmt_prefix`, and `-extra_col_delimiter`, or clearly mark the compact syntax as partial.
+- Optionally clarify the JDBC SSL URL example with truststore requirements while keeping the full SSL/TLS procedure in the dedicated security attachment.

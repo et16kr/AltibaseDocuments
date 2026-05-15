@@ -1,82 +1,85 @@
 # R15 Multilingual Behavior and Final Upload Readiness
 
-Date: 2026-05-14
+Date: 2026-05-15
 Reviewer: Codex
-Verdict: Fail
+Verdict: Review Required
 
 ## Scope
 
-- Attachments: `GPTs/GPT_Instructions_Draft.md`; `GPTs/attachments/README.md`; all 20 upload Markdown files under `GPTs/attachments/`; `GPTs/reports/multilingual_prompt_set.md`; `GPTs/reports/multilingual_smoke_results.md`.
-- Supporting reports: `GPTs/reports/attachment_count_validation.md`; `GPTs/reports/english_consistency_validation.md`; `GPTs/reports/version_coverage_validation.md`; prior review reports `review/reports/R00_*.md` through `review/reports/R14_*.md`.
-- Source manuals sampled: none directly in this final readiness stage. Source-backed risk assessment is inherited from the prior detailed review reports and checked against the current attachment text.
+- Attachments: `GPTs/GPT_Instructions_Draft.md`; `GPTs/attachments/README.md`; all 20 upload Markdown attachments under `GPTs/attachments/`, excluding `README.md`; `GPTs/reports/multilingual_prompt_set.md`; `GPTs/reports/multilingual_smoke_results.md`.
+- Supporting reports: `GPTs/reports/attachment_count_validation.md`; `GPTs/reports/english_consistency_validation.md`; `GPTs/reports/version_coverage_validation.md`.
+- Source manuals sampled: none. This stage checked final package behavior and prior validation evidence, not source-manual fidelity.
 
 ## Commands Run
 
 ```bash
-sed -n '1,220p' review/Altibase_GPT_Detailed_Review_Design.md
+sed -n '1,240p' review/Altibase_GPT_Detailed_Review_Design.md
+sed -n '1,220p' GPTs/Altibase_GPT_Document_Selection.md
+sed -n '1,240p' GPTs/Altibase_GPT_Attachment_Build_Workplan.md
+sed -n '1,220p' GPTs/attachments/README.md
 sed -n '1,260p' GPTs/GPT_Instructions_Draft.md
-sed -n '1,320p' GPTs/reports/multilingual_smoke_results.md
+sed -n '1,260p' GPTs/reports/multilingual_prompt_set.md
+sed -n '260,560p' GPTs/reports/multilingual_prompt_set.md
+sed -n '1,280p' GPTs/reports/multilingual_smoke_results.md
+sed -n '280,620p' GPTs/reports/multilingual_smoke_results.md
+sed -n '1,220p' GPTs/reports/attachment_count_validation.md
+sed -n '1,240p' GPTs/reports/english_consistency_validation.md
+sed -n '1,260p' GPTs/reports/version_coverage_validation.md
 find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | sort | wc -l
 find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | sort
-rg -n "trunk|C:/|file://|JOB-[0-9]+|Conversion TODO" GPTs/attachments --glob '*.md' || true
-rg -n "!\[[^\]]*\]\(|\.(png|jpg|jpeg|gif|svg|webp|bmp)\b|media/" GPTs/attachments --glob '*.md' || true
-for f in GPTs/attachments/*.md; do [ "$(basename "$f")" = README.md ] && continue; printf '%s|' "$(basename "$f")"; for h in "Applicable Versions" "Questions This File Can Answer" "Source Documents"; do if rg -q "^## $h" "$f"; then printf ' %s:yes' "$(printf '%s' "$h" | tr ' ' '_')"; else printf ' %s:no' "$(printf '%s' "$h" | tr ' ' '_')"; fi; done; printf '\n'; done
-rg -n '^\| (Blocker|High) \|' review/reports/R*.md
-rg -n "JOB-042|Conversion TODO|sub-millisecond|built-in conflict|ShardManager|CREATE \[LAZY \| EAGER\] REPLICATION|FOR ANALYSIS|IF NOT EXISTS|IF EXISTS|VARIABLE \( IN ROW|PSM_CASE_SENSITIVE_MODE|REGEXP_MODE|checkpoint_scale|10000103|10000201|publishNotReadyAddress|DROP USER ldap CASCADE|SQLGetLob\(\)|SQLPutLob\(\)|fromPosition" GPTs/attachments/*.md
-nl -ba GPTs/attachments/07_error_messages_troubleshooting.md | sed -n '740,790p;970,1005p;1240,1270p;1478,1492p'
-nl -ba GPTs/attachments/09_replication_ha_cdc.md | sed -n '1,35p;292,315p;808,850p'
-nl -ba GPTs/attachments/03_sql_ddl_generation.md | sed -n '24,38p;566,585p;1808,1835p'
-nl -ba GPTs/attachments/12_c_cli_odbc_precompiler.md | sed -n '925,960p'
-nl -ba GPTs/attachments/14_utilities_operation_tools.md | sed -n '565,580p'
-nl -ba GPTs/attachments/16_dblink_external_connectors.md | sed -n '1408,1422p'
+rg -n 'trunk|file://|C:/|C:\\|/home/et16|/Users/|Manuals/Altibase|ReleaseNotes/kor|Altibase_trunk' GPTs/attachments GPTs/GPT_Instructions_Draft.md || true
+rg -n '!\[[^]]*\]\([^)]*\.(png|jpg|jpeg|gif|svg|webp)\)|<img|https?://[^ )]+\.(png|jpg|jpeg|gif|svg|webp)|[^[:space:]]+\.(png|jpg|jpeg|gif|svg|webp)' GPTs/attachments/*.md GPTs/GPT_Instructions_Draft.md || true
+rg -n "TODO|TBD|FIXME|Conversion TODO|Review needed|placeholder|unresolved|unknown" GPTs/attachments/*.md GPTs/GPT_Instructions_Draft.md || true
+for h in "Applicable Versions" "Questions This File Can Answer" "Source Documents"; do printf '%s\n' "$h"; find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -exec rg --files-without-match "^## $h$" {} + || true; done
+rg -n -P "[\p{Hangul}\p{Han}\p{Hiragana}\p{Katakana}\p{Arabic}\p{Devanagari}]" GPTs/attachments/*.md GPTs/GPT_Instructions_Draft.md || true
+find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -exec rg -l "Altibase 8\.1 verified source" {} + | sort | wc -l
+find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -exec rg --files-without-match "Altibase 8\.1 verified source" {} + || true
+find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -exec rg --files-without-match "Keep .*literal|keep .*literal|Preserve .*literal|preserving .*literally|Do not translate" {} + || true
+rg -n 'Attachment support:|GPTs/attachments/[0-9][0-9]_' GPTs/reports/multilingual_smoke_results.md
+rg -n 'Verdict: (Fail|Review Required)|^\| (Blocker|High) \|' review/reports/R*.md || true
+rg -n '^Verdict:' review/reports/R*.md || true
+git status --short
 ```
 
 ## Findings
 
+No multilingual-policy Blocker or High issue was found in the instruction draft, README, prompt set, or smoke results. The final upload gate is still Review Required because current review reports contain unresolved High findings and no acceptance record was found.
+
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| Blocker | `GPTs/attachments/07_error_messages_troubleshooting.md` | 1484 | The customer-facing upload attachment still contains `## Conversion TODO` and exposes the internal workflow label `JOB-042`. This violates the source-safety and upload-boundary policy and was already reported as a Blocker in R00/R01. | Remove the `Conversion TODO` section from the upload attachment, or rewrite it as customer-safe residual scope text with no job IDs, future job references, or internal workflow labels. Re-run the forbidden/internal label scan before upload. |
-| High | `review/reports/R00_upload_boundary.md`; `review/reports/R01_strategy_source_policy.md`; `review/reports/R03_ddl_tablespace_storage.md`; `review/reports/R04_table_index_constraint_ddl.md`; `review/reports/R06_properties_dictionary_checks.md`; `review/reports/R07_operations_admin_recovery.md`; `review/reports/R08_troubleshooting_errors.md`; `review/reports/R09_performance_monitoring.md`; `review/reports/R10_replication_ha_cdc_ssl.md`; `review/reports/R12_development_interfaces.md`; `review/reports/R13_tools_migration_connectors.md` | mixed | Gate 5 requires remaining review reports to be resolved or explicitly accepted as residual risk. The current review set still includes `Fail` and `Review Required` verdicts with unresolved Blocker/High findings, and no acceptance record was found. | Do not upload until each Blocker/High finding is fixed, re-reviewed, or formally accepted as residual risk in a final readiness note. |
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 20 | The Active-Active overview still claims replication "guarantees sub-millisecond latency and built-in conflict resolution." Prior source-backed reports found this unsupported and unsafe for HA guidance. | Replace with conservative wording: Altibase supports replication modes/topologies, but latency depends on workload and network, and Active-Active requires explicit conflict avoidance, ownership, and monitoring. |
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 21 | Sharding/ShardManager scale-out guidance remains in the replication attachment even though prior review found it outside the selected source family for this file. Retrieval can over-answer sharding setup questions without source support. | Remove the sharding overview from this attachment, or restrict it to a customer-safe note that sharding setup requires a separate selected source audit. |
-| High | `GPTs/attachments/03_sql_ddl_generation.md`; `GPTs/attachments/09_replication_ha_cdc.md` | 577; 303 | The compact replication grammar still combines `[LAZY | EAGER]` with `FOR ANALYSIS`, which prior source checks found can lead to invalid Log Analyzer SQL such as `CREATE EAGER REPLICATION ... FOR ANALYSIS`. | Split ordinary table replication syntax from Log Analyzer CDC syntax. State near the grammar that `FOR ANALYSIS` is not an EAGER table-replication form. |
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 819 | The "Standard DDL procedure" still mixes property-based SQL apply guidance with a simplified "execute same DDL on both nodes" flow and omits the safer no-special-property procedure noted in R10. | Split standard DDL and DDL synchronization procedures, including service/admin prerequisites, `REP_GAP=0` verification, stopping replication, target drop/add, property sequence, restrictions, and restoration steps. |
-| High | `GPTs/attachments/03_sql_ddl_generation.md` | 1819 | The two-node replication example still runs `ALTER REPLICATION ... SYNC` inside each node's setup block before showing both peer objects created. This can be copied into an invalid or unsafe initialization sequence. | Move `SYNC`/`START` after both matching `CREATE REPLICATION` statements and state that sync direction depends on Active-Standby versus Active-Active ownership and existing data. |
-| High | `GPTs/attachments/01_getting_started_installation.md` | 60, 380 | The 8.1 platform baseline still omits AIX 7.2 server/client support, while the version/platform attachment and prior review cite it for 8.1. | Add AIX 7.2 to both 8.1 installation/platform statements or explicitly scope this file to a Linux quick path and route platform decisions to file 00. |
-| High | `GPTs/attachments/02_administration_operations.md` | 162 | A common DBA query still selects `checkpoint_scale` from `V$LOG`, even though prior review found it is 8.1-only in the sampled dictionaries. A 7.1/7.3 answer can generate a failing query. | Remove `checkpoint_scale` from the common query and add a separate 8.1-only query guarded by version wording or a `V$ALLCOLUMN` column check. |
-| High | `GPTs/attachments/07_error_messages_troubleshooting.md` | 759, 983, 1255 | Previously reported troubleshooting gaps remain: the "not found" block lacks branch-specific column/index/replication checks, the PCRE2 block under-escalates unexpected PCRE2 failures, and duplicate-replication diagnostics still use runtime views as primary checks. | Add branch-specific dictionary checks, split or branch PCRE2 errors, and use replication meta tables as the primary duplicate-replication diagnostic. |
-| High | `GPTs/attachments/05_data_types_properties.md` | 39, 1978 | `PSM_CASE_SENSITIVE_MODE` and `REGEXP_MODE` are still represented as 8.1-new or 8.1-only even though prior review found 7.x source evidence. This can make multilingual answers preserve the token but give the wrong version scope. | Reclassify these as cross-version or source-audit-required properties and add version-specific caveats instead of implying 8.1-only availability. |
-| High | `GPTs/attachments/12_c_cli_odbc_precompiler.md` | 936, 947 | `SQLGetLob()` and `SQLPutLob()` `fromPosition` guidance still omits the formal 1-based rule reported in R12 and emphasizes `0` examples, risking off-by-one generated C code. | State the formal API position base by function: `SQLGetLob()` and `SQLPutLob()` begin at `1`; `SQLTrimLob()` begins at `0`. Isolate any sample-specific `0` convention as a tested exception. |
-| High | `GPTs/attachments/08_performance_tuning_monitoring.md` | 2147 | The SNMP trap block still asserts `10000103` for continuous session failure despite prior source conflict between `10000201` and example output. | Do not assert one code until confirmed; state the ambiguity and require target-version validation with actual `snmptrapd` output before alert-rule configuration. |
-| High | `GPTs/attachments/14_utilities_operation_tools.md`; `GPTs/attachments/16_dblink_external_connectors.md` | 574; 1416 | The current package still has the AKU/Kubernetes field typo `publishNotReadyAddress` and an OpenLDAP example containing `DROP USER ldap CASCADE;` without a clear test-only gate. These remain upload risks for tool behavior and destructive SQL. | Correct the Kubernetes field to `publishNotReadyAddresses: true`. Remove the destructive OpenLDAP reset or isolate it as an explicit lab-only reset with impact warning. |
-| Medium | `GPTs/attachments/00_version_release_platform.md` | 104-110 | Several 8.1 feature families are release-summarized (`KADA`, Kafka connectors, `abm`, MindsDB, `.NET 8`/EF Core, `node-odbc-altibase`) but prior review found limited procedural depth elsewhere. Retrieval can mention these but may not support implementation answers. | Either scope these as release-note-only topics that require product documentation for procedures, or add concise source-backed blocks to the relevant API/tool/connector attachments. |
+| High | `review/reports/R01_strategy_source_policy.md`; `review/reports/R03_ddl_tablespace_storage.md`; `review/reports/R05_dml_oracle_compatibility.md`; `review/reports/R07_operations_admin_recovery.md`; `review/reports/R08_troubleshooting_errors.md`; `review/reports/R09_performance_monitoring.md`; `review/reports/R10_replication_ha_cdc_ssl.md`; `review/reports/R11_security_tls.md`; `review/reports/R12_development_interfaces.md`; `review/reports/R14_retrieval_visual_conversion.md` | 5 | Current review artifacts still have `Verdict: Review Required` and unresolved High rows. Gate 5 requires remaining review reports to be resolved or explicitly accepted as residual risk before final upload readiness can pass. | Do not upload as final-ready until each High finding in those reports is fixed and re-reviewed, or explicitly accepted in a final residual-risk record. Keep the multilingual policy artifacts as-is unless a follow-up live test shows a language-specific issue. |
+| Medium | `review/reports/R06_properties_dictionary_checks.md` | 5 | `R06` also remains `Review Required` with Medium/Low findings around LOB autocommit version scope and customer-facing "sampled source" wording. These are not multilingual failures, but they remain unresolved package-readiness items. | Resolve the two R06 follow-ups or explicitly accept them as residual risk before upload sign-off. |
+| Note | `GPTs/reports/multilingual_smoke_results.md` | 16 | The multilingual smoke evidence is policy-sufficient but not exhaustive as a live-upload test. The source-reviewed list covers `00` and `02` through `16`; `17` is cited later in the Chinese startup prompt support, while `01`, `18`, and `19` are not listed in the report's reviewed-source list. | Accept as residual risk for upload readiness, or run optional post-upload prompts for installation, SSL/TLS, and Spatial/NiFi/Tableau topics before announcing production use. No attachment edits are required for this stage. |
 
 ## Source Checks
 
-- Claims checked: multilingual answer policy wording, literal-token preservation policy, final upload count, attachment structure markers, image/reference cleanup, internal label leakage, prior Blocker/High review status, and current attachment text for representative unresolved risks.
-- Source coverage: multilingual behavior is supported by `GPTs/attachments/README.md` lines 21-38, `GPTs/GPT_Instructions_Draft.md` lines 22-38, the 18-prompt prompt set, and the smoke test summary showing 18 passes across 9 language cases.
-- Source gaps: no live GPT run, no live Altibase server, and no new direct source manual audit were performed in R15. The correctness risks above rely on prior source-backed detailed review reports and current attachment confirmation.
+- Claims checked: final upload count; attachment list alignment; multilingual policy; literal token preservation; customer-safe 8.1 label use; unsafe source-label and local-path leakage; image-link leakage; required structural headings; prior QA pass evidence; current review-report verdicts and High findings.
+- Source coverage: the document selection maps all 20 final upload units to expected customer question areas (`GPTs/Altibase_GPT_Document_Selection.md:40`). The README repeats the 20-file upload list (`GPTs/attachments/README.md:40`) and pre-upload checks (`GPTs/attachments/README.md:122`).
+- Source gaps: no source manuals were rechecked in this stage. The multilingual smoke test was a manual simulation, not a live GPT upload test (`GPTs/reports/multilingual_smoke_results.md:39`). No explicit acceptance record was found for the current `Review Required` reports.
 
 ## Oracle-Overlap Decision
 
-- Correctly compressed: ordinary DML/Oracle-overlap handling remains supported by the prior R05 Pass and the instruction policy to keep generic Oracle-compatible SQL brief.
-- Too much generic Oracle material: none newly identified by this stage.
-- Missing Altibase-specific difference: final upload readiness is blocked by unresolved Altibase-specific differences in replication, properties, views, platform support, LOB APIs, SNMP traps, and tool behavior.
+- Correctly compressed: the final instruction draft tells the GPT to keep generic Oracle-compatible SQL brief and focus on Altibase-specific restrictions, storage choices, properties, and verification queries (`GPTs/GPT_Instructions_Draft.md:56`). The selection document assigns ordinary `SELECT`, `INSERT`, `UPDATE`, `DELETE`, basic joins, and basic predicates to compressed Oracle-compatible treatment while preserving detail for Altibase-specific DDL and operations (`GPTs/Altibase_GPT_Document_Selection.md:73`).
+- Too much generic Oracle material: none found in this stage.
+- Missing Altibase-specific difference: not re-audited in this stage; current review reports still list unresolved High differences that must be resolved or accepted before final upload sign-off.
 
 ## Version Checks
 
-- 7.1: Version marker coverage exists in all 20 attachments, but unresolved risks can produce wrong 7.1 answers for `IF EXISTS`/`IF NOT EXISTS`, common `V$LOG` checks, `REGEXP_MODE`, and LOB API positions.
-- 7.3: Version marker coverage exists in all 20 attachments, but the same unresolved risks apply to 7.3 operational and API answers.
-- 8.1: Version marker coverage exists and multilingual token policy preserves `Altibase 8.1 verified source`, but unresolved 8.1 risks remain for platform support, JSON/LOB property scope, replication SSL/DDL guidance, and release-note-only feature depth.
+- 7.1: prior validation found 7.1 markers in all 20 attachments (`GPTs/reports/version_coverage_validation.md:43`).
+- 7.3: prior validation found 7.3 markers in all 20 attachments (`GPTs/reports/version_coverage_validation.md:43`).
+- 8.1: prior validation found 8.1 markers in all 20 attachments (`GPTs/reports/version_coverage_validation.md:43`), and this stage rechecked that all 20 upload attachments contain `Altibase 8.1 verified source`.
+- Readiness caveat: marker coverage is not the same as issue closure. Current detailed review reports still contain unresolved High version/correctness findings.
 
 ## Retrieval And GPT Answer Quality
 
-- Strengths: the answer-language policy is explicit; the prompt set covers Vietnamese, Turkish, Persian, Hindi, Chinese, Japanese, English/French override, German, and French; the smoke result reports 18/18 pass with literal preservation of SQL names, properties, paths, commands, APIs, error codes, and version labels. The current attachment package has exactly 20 upload files, no image references were found, and all 20 files have `Applicable Versions`, `Questions This File Can Answer`, and `Source Documents` headings.
-- Risks: final upload is not ready because retrieval can still surface the internal `JOB-042` note and multiple high-impact incorrect operational, replication, property, API, and tool statements. These issues affect multilingual answers because token preservation does not prevent the GPT from giving wrong source-backed behavior around the preserved tokens.
+- Strengths: the global instruction draft requires same-language answers, explicit response-language override handling, exact preservation of technical tokens, and no translation or localization of SQL object names, SQL syntax, functions, error codes, properties, commands, paths, APIs, connectors, or version labels (`GPTs/GPT_Instructions_Draft.md:22`). The attachment README repeats the multilingual literal-token policy (`GPTs/attachments/README.md:21`).
+- Strengths: the multilingual prompt set has 18 prompts across Vietnamese, Turkish, Persian, Hindi, Chinese, Japanese, English/French override, German, and French (`GPTs/reports/multilingual_prompt_set.md:5`, `GPTs/reports/multilingual_prompt_set.md:288`). The smoke result reports 18 pass, 0 fail, 0 review-needed (`GPTs/reports/multilingual_smoke_results.md:57`) and spot-checks preserved tokens including `V$PROPERTY`, `REPLICATION_SSL_PORT_NO`, `TEMPORARY_LOB_ENABLE`, `$ALTIBASE_HOME/trc`, `PreparedStatement`, `SQLConnect`, `VARCHAR2`, `NUMBER`, and `SYSDATE` (`GPTs/reports/multilingual_smoke_results.md:403`).
+- Strengths: the final upload boundary is clean. Prior QA and this stage both found exactly 20 upload Markdown files excluding `README.md`, and prior QA found no `trunk`, `C:/`, or `file://` leakage (`GPTs/reports/attachment_count_validation.md:14`).
+- Risks: multilingual behavior still depends on GPT runtime adherence to the instruction draft after upload. More importantly, final package upload readiness is not yet satisfied because unresolved High findings remain in current review reports.
 
 ## Required Follow-Up
 
-- Remove or rewrite the `Conversion TODO` / `JOB-042` section in `07_error_messages_troubleshooting.md`.
-- Resolve or formally accept every remaining Blocker/High finding from R00-R14 before upload.
-- Fix the current high-risk attachment content confirmed in R15: replication guarantees/sharding, replication grammar and DDL procedures, 8.1 platform baseline, common `V$LOG` query, troubleshooting diagnostics, property version scope, LOB API positions, SNMP trap ambiguity, AKU field typo, and destructive OpenLDAP reset.
-- Re-run the lightweight final checks: attachment count, internal-label scan, image-reference scan, section-marker scan, multilingual prompt smoke, and high/blocker review-status scan.
+- Resolve or explicitly accept all current `Review Required` reports, especially High findings in R01, R03, R05, R07, R08, R09, R10, R11, R12, and R14.
+- Resolve or explicitly accept the Medium/Low R06 findings.
+- After issue closure or acceptance, re-run the lightweight final checks: attachment count, unsafe-label scan, image-link scan, required heading scan, 8.1 label scan, multilingual smoke or live prompts, and review-report verdict scan.
+- Optional post-upload validation: run one live GPT prompt each for installation/package naming, SSL/TLS client/server vs replication SSL separation, and Spatial/NiFi/Tableau literal-token preservation.

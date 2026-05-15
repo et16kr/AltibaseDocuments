@@ -1,4 +1,4 @@
-# R06 System Properties, Data Dictionary, and Check SQL
+# R06 System Properties, Data Dictionary, and Check SQL Review
 
 Date: 2026-05-14
 Reviewer: Codex
@@ -11,20 +11,23 @@ Verdict: Review Required
   - `GPTs/attachments/06_data_dictionary_performance_views.md`
   - `GPTs/attachments/07_error_messages_troubleshooting.md`
 - Supporting reports:
-  - Not used directly; reviewed against the stage design, document selection, workplan, and attachment README.
+  - `review/Altibase_GPT_Detailed_Review_Design.md`
+  - `GPTs/Altibase_GPT_Document_Selection.md`
+  - `GPTs/Altibase_GPT_Attachment_Build_Workplan.md`
+  - `GPTs/attachments/README.md`
 - Source manuals sampled:
   - `Manuals/Altibase_7.1/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_7.1/eng/Error Message Reference.md`
   - `Manuals/Altibase_7.3/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
-  - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_7.3/eng/Error Message Reference.md`
   - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_trunk/eng/Error Message Reference.md`
   - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
-  - `Manuals/Altibase_trunk/eng/Error Message Reference.md`
-  - `Manuals/Altibase_trunk/kor/Error Message Reference.md`
-  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ## Commands Run
 
@@ -33,79 +36,76 @@ sed -n '1,240p' review/Altibase_GPT_Detailed_Review_Design.md
 sed -n '1,220p' GPTs/Altibase_GPT_Document_Selection.md
 sed -n '1,260p' GPTs/Altibase_GPT_Attachment_Build_Workplan.md
 sed -n '1,220p' GPTs/attachments/README.md
-nl -ba GPTs/attachments/05_data_types_properties.md | sed -n '1,2045p'
-nl -ba GPTs/attachments/06_data_dictionary_performance_views.md | sed -n '1,1830p'
-nl -ba GPTs/attachments/07_error_messages_troubleshooting.md | sed -n '1,1500p'
-rg -n 'V\$TEMPORARY_LOBS|V\$MEM_STABLE|V\$LOCK_TABLE_STATS' Manuals/Altibase_trunk Manuals/Altibase_7.1 Manuals/Altibase_7.3 ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md
-rg -n "PSM_CASE_SENSITIVE_MODE|REGEXP_MODE|LISTAGG_PRECISION|VARRAY_MEMORY_MAXIMUM" Manuals/Altibase_7.1 Manuals/Altibase_7.3 Manuals/Altibase_trunk
-rg -n "ALTER SESSION SET QUERY_TIMEOUT|ALTER SESSION SET TIME_ZONE|QUERY_TIME_LIMIT|TIME_ZONE|SESSION_ID" GPTs/attachments/05_data_types_properties.md GPTs/attachments/06_data_dictionary_performance_views.md Manuals/Altibase_trunk/eng
+nl -ba GPTs/attachments/05_data_types_properties.md | sed -n '1,2068p'
+nl -ba GPTs/attachments/06_data_dictionary_performance_views.md | sed -n '1,1824p'
+nl -ba GPTs/attachments/07_error_messages_troubleshooting.md | sed -n '1,1534p'
+rg -n "V\$TEMPORARY_LOBS|V\$MEM_STABLE|V\$LOCK_TABLE_STATS|TEMPORARY_LOB_ENABLE|MEMORY_TEMPLOB|REPLICATION_SSL_PORT_NO|JSON \[|ALTER SESSION SET FREE TEMPORARY LOB" GPTs/attachments/05_data_types_properties.md GPTs/attachments/06_data_dictionary_performance_views.md GPTs/attachments/07_error_messages_troubleshooting.md
+rg -n "V\$LOCK_TABLE_STATS|MEM_STABLE|TEMPORARY_LOBS" Manuals/Altibase_7.1/eng/General\ Reference-2.The\ Data\ Dictionary.md Manuals/Altibase_7.3/eng/General\ Reference-2.The\ Data\ Dictionary.md Manuals/Altibase_trunk/eng/General\ Reference-2.The\ Data\ Dictionary.md Manuals/Altibase_trunk/kor/General_Reference-2.The\ Data\ Dictionary.md
+rg -n "TEMPORARY_LOB_ENABLE|MEMORY_TEMPLOB_MAX_ALLOC_SIZE|MEMORY_TEMPLOB_PIECE_SIZE|REPLICATION_SSL_PORT_NO|CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE|TRCLOG_EXPLAIN_TYPE|TRCLOG_JSON_PLAN_INDENT_DEPTH" ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md Manuals/Altibase_trunk/kor/General_Reference-1.Data\ Types\ \&\ Altibase\ Properties.md
+rg -n "314B4|5112C|91101|LOB_AUTOCOMMIT" Manuals/Altibase_7.1/eng/Error\ Message\ Reference.md Manuals/Altibase_7.3/eng/Error\ Message\ Reference.md Manuals/Altibase_trunk/eng/Error\ Message\ Reference.md
+rg -n "trunk|Altibase_trunk|file://|/home/|C:\\|Manuals/|ReleaseNotes/" GPTs/attachments/05_data_types_properties.md GPTs/attachments/06_data_dictionary_performance_views.md GPTs/attachments/07_error_messages_troubleshooting.md
 find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | sort | wc -l
-rg -n '^### (Property Item|Type Item|Object Block|Error Block):|^## Searchable|^## Conversion TODO|trunk|file://|/home/emlee|C:' GPTs/attachments/05_data_types_properties.md GPTs/attachments/06_data_dictionary_performance_views.md GPTs/attachments/07_error_messages_troubleshooting.md
-git status --short
 ```
 
 ## Findings
 
+No Blocker or High issues were found.
+
 | Severity | File | Line | Finding | Recommendation |
 | --- | --- | ---: | --- | --- |
-| High | `GPTs/attachments/05_data_types_properties.md` | 39 | `PSM_CASE_SENSITIVE_MODE` is listed under 8.1 added or newly documented properties, but the 7.1 and 7.3 General Reference sources already document `PSM_CASE_SENSITIVE_MODE`. This can make the GPT incorrectly treat a valid 7.x property as 8.1-only. | Remove `PSM_CASE_SENSITIVE_MODE` from the 8.1-new property list, or explicitly label it as available in earlier baselines and only changed/verified in 8.1 if a source shows that distinction. |
-| High | `GPTs/attachments/05_data_types_properties.md` | 1976 | `REGEXP_MODE` is labeled as an `8.1 verified source property`, but 7.1 English General Reference and 7.3 Korean General Reference document `REGEXP_MODE`, and 7.x error references use it for PCRE2 troubleshooting. | Reclassify `REGEXP_MODE` as a cross-version property where supported. Add a version note that 7.1/7.3 support should be checked against the installed source, rather than implying 8.1-only availability. |
-| Medium | `GPTs/attachments/05_data_types_properties.md` | 1956 | `LISTAGG_PRECISION` and `VARRAY_MEMORY_MAXIMUM` are labeled as 8.1 verified-source properties, while 7.3 Korean General Reference documents both. This is a version-label source gap. | Run a focused version audit for these properties. If they are supported in 7.3, change the item labels from 8.1-only wording to version-scoped wording. |
-| Medium | `GPTs/attachments/05_data_types_properties.md` | 974 | Individual check SQL for multi-value path properties such as `MEM_DB_DIR`, `LOG_DIR`, and `LOGANCHOR_DIR` selects only `VALUE1`, even though the source marks these as multiple-value properties and `V$PROPERTY` exposes `STOREDCOUNT` plus `VALUE1` through `VALUE8`. | In each affected property item block, use `SELECT name, storedcount, value1, value2, ..., value8 FROM V$PROPERTY ...` so GPT answers do not hide configured paths. |
-| Medium | `GPTs/attachments/05_data_types_properties.md`; `GPTs/attachments/06_data_dictionary_performance_views.md` | 777 | Session-level examples run `ALTER SESSION SET QUERY_TIMEOUT` or `ALTER SESSION SET TIME_ZONE`, then verify only with `V$PROPERTY`. The data dictionary source exposes effective session values in `V$SESSION` columns such as `QUERY_TIME_LIMIT` and `TIME_ZONE`, and SQL Reference documents `SESSION_ID()`. | Keep `V$PROPERTY` for configured/default property checks, but add session-effect checks such as `SELECT query_time_limit, time_zone FROM V$SESSION WHERE id = SESSION_ID();` after `ALTER SESSION` examples. |
+| Medium | `GPTs/attachments/07_error_messages_troubleshooting.md` | 1114 | The LOB autocommit version caution says LOB autocommit errors appear in 7.3 and 8.1 sources. Source sampling found `0x5112C` / `ulERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR` and `0x91101` / `utERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR` in the 7.1 Error Message Reference too; only the SQL-level `0x314B4` / `qpERR_ABORT_QMX_LOB_AUTOCOMMIT_MODE` was not found in 7.1 English source. This could cause a 7.1 customer answer to understate applicable client or utility LOB autocommit diagnostics. | Split the version caution by code: state that `0x5112C` and `0x91101` are present in sampled 7.1, 7.3, and 8.1 sources, while `0x314B4` should be treated as 7.3/8.1 unless confirmed in a target 7.1 build. |
+| Low | `GPTs/attachments/05_data_types_properties.md` | 1989 | The property blocks for `LISTAGG_PRECISION` and `VARRAY_MEMORY_MAXIMUM` use process wording: "sampled 7.3 Korean source". The names and cautions are searchable, but this wording is not ideal for customer-facing GPT knowledge and slightly exposes the review/build method. | Reword to customer-safe source labels, for example "documented in Altibase 7.3 supplemental source and Altibase 8.1 verified source; verify exact availability in the installed build." Apply the same cleanup to the matching `VARRAY_MEMORY_MAXIMUM` line and the broader "sampled 7.x" wording near the version notes. |
 
 ## Source Checks
 
 - Claims checked:
-  - `V$PROPERTY` columns `NAME`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, and `VALUE1` through `VALUE8` are documented in 7.1 and 8.1-source data dictionary manuals.
-  - `V$TABLE` and `V$ALLCOLUMN` are documented and are plausible for performance-view and column availability checks.
-  - `V$LOCK_TABLE_STATS` is documented in 7.1, 7.3, and 8.1-source data dictionary material.
-  - `V$MEM_STABLE` is documented in the 8.1-source data dictionary material.
-  - `V$TEMPORARY_LOBS` is supported by the 8.1 release notes and Korean 8.1-source General Reference 2, with columns `TYPE`, `ID`, `ALLOCED_SIZE`, and `OPEN_COUNT`.
-  - Temporary LOB and JSON core claims were checked against 8.1 release notes and Korean 8.1-source General Reference 1.
-  - Sample error blocks for `ERR-31363`, `0x2106D`, lock timeout, tablespace space, and communication failure preserve source error codes and symbols.
+  - Data type syntax for character, binary, LOB, 8.1 `JSON`, and `IN ROW`.
+  - Temporary LOB lifecycle, `ALTER SESSION SET FREE TEMPORARY LOB`, `V$TEMPORARY_LOBS` columns `TYPE`, `ID`, `ALLOCED_SIZE`, and `OPEN_COUNT`.
+  - Property names and selected defaults/ranges for `LOG_FILE_SIZE`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `REPLICATION_SSL_PORT_NO`, `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`, `TRCLOG_EXPLAIN_TYPE`, and `TRCLOG_JSON_PLAN_INDENT_DEPTH`.
+  - Data dictionary and performance view names/columns for `V$PROPERTY`, `V$TABLE`, `V$ALLCOLUMN`, `V$TIME_ZONE_NAMES`, `V$SQL_PLAN_CACHE`, `V$MEM_STABLE`, `V$LOCK_TABLE_STATS`, `V$TEMPORARY_LOBS`, `SYSTEM_.SYS_TABLES_`, and `SYSTEM_.SYS_COLUMNS_`.
+  - Representative check SQL for properties, object metadata, sessions/statements, locks, tablespaces, replication, plan cache, and Temporary LOB.
 - Source coverage:
-  - Dictionary and performance-view query columns sampled from `V$PROPERTY`, `V$TABLE`, `V$ALLCOLUMN`, `V$SESSION`, `V$STATEMENT`, `V$LOCK_*`, `V$SQL_PLAN_CACHE*`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_INDICES_`, `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_REPLICATIONS_`, and `V$REPGAP`/`V$REPSENDER`/`V$REPRECEIVER` were generally plausible.
-  - Error-message blocks are searchable and mostly preserve literal codes, symbols, property names, and view names.
+  - 7.1 and 7.3 English General Reference sources support the common dictionary/property structures sampled.
+  - 8.1 release notes support the new-property and new-performance-view lists.
+  - 8.1 Korean General Reference fills the current English-source gap for `JSON`, Temporary LOB details, `V$TEMPORARY_LOBS`, and Temporary LOB properties.
 - Source gaps:
-  - 8.1 `V$TEMPORARY_LOBS` and some JSON/Temporary LOB details are not present in the sampled English 8.1-source General Reference files; they rely on release notes and Korean source material.
-  - Property version labels near `REGEXP_MODE`, `LISTAGG_PRECISION`, and `VARRAY_MEMORY_MAXIMUM` need a focused version audit before upload.
+  - SQL was not executed against a live Altibase instance; plausibility was checked against manual object/column definitions.
+  - `TRCLOG_EXPLAIN_TYPE` and `TRCLOG_JSON_PLAN_INDENT_DEPTH` remain release-note-only in the sampled source, and the attachment correctly tells users to verify values with `V$PROPERTY`.
 
 ## Oracle-Overlap Decision
 
 - Correctly compressed:
-  - The reviewed files avoid generic Oracle DML expansion and focus on Altibase properties, dictionary objects, views, errors, JSON, Temporary LOB, replication, and operational check SQL.
+  - Ordinary Oracle-overlapping DML is not expanded in these files.
+  - Oracle compatibility appears only where it affects data type selection and migration cautions, such as `VARCHAR2` to `VARCHAR`, Oracle `NUMBER`, `RAW`, LOB, and JSON design.
 - Too much generic Oracle material:
   - None found in this stage.
 - Missing Altibase-specific difference:
-  - The main missing distinction is not Oracle overlap; it is Altibase version availability for several properties.
+  - No major gap found. The attachments preserve Altibase-specific system properties, meta tables, performance views, Temporary LOB, JSON, replication port, and check SQL patterns.
 
 ## Version Checks
 
 - 7.1:
-  - `PSM_CASE_SENSITIVE_MODE`, `REGEXP_MODE`, `V$PROPERTY`, `V$LOCK_TABLE_STATS`, and core dictionary views are source-backed.
-  - The attachment should not imply that `PSM_CASE_SENSITIVE_MODE` or `REGEXP_MODE` are 8.1-only.
+  - Core data type, property, dictionary, and performance-view names sampled from 7.1 sources are mostly preserved.
+  - The LOB autocommit troubleshooting block should be adjusted because 7.1 includes the client/utility LOB autocommit error codes.
 - 7.3:
-  - `PSM_CASE_SENSITIVE_MODE` is documented in English General Reference 1. Korean 7.3 sources also document `REGEXP_MODE`, `LISTAGG_PRECISION`, and `VARRAY_MEMORY_MAXIMUM`.
-  - 7.3 property availability should be explicitly audited where English source coverage is incomplete.
+  - Common property and dictionary structures match sampled 7.3 source. `V$LOCK_TABLE_STATS` is present in sampled 7.3 General Reference 2.
+  - Some property availability notes are intentionally cautious but should avoid "sampled Korean source" wording in customer-facing text.
 - 8.1:
-  - JSON, Temporary LOB, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `REPLICATION_SSL_PORT_NO`, `V$MEM_STABLE`, and `V$TEMPORARY_LOBS` are represented.
-  - `V$TEMPORARY_LOBS` coverage depends on release notes and Korean General Reference 2, not the sampled English General Reference 2.
+  - New 8.1 properties and performance views are represented with customer-safe `Altibase 8.1 verified source` labeling.
+  - `V$MEM_STABLE`, `V$TEMPORARY_LOBS`, `JSON`, and Temporary LOB checks are version-scoped and generally plausible.
 
 ## Retrieval And GPT Answer Quality
 
 - Strengths:
-  - The target files have strong retrieval structure: `Questions This File Can Answer`, `Type Item`, `Property Item`, `Object Block`, and `Error Block` headings.
-  - Literal system names, property names, view names, error codes, and SQL keywords are mostly preserved.
-  - Temporary LOB and JSON blocks are searchable and tied to 8.1.
+  - The attachments use searchable `Type Item`, `Property Item`, `Object Block`, and `Error Block` headings.
+  - Literal property names, view names, error codes, SQL keywords, and check SQL identifiers are preserved.
+  - The `V$TABLE` and `V$ALLCOLUMN` availability-check pattern is useful for version-sensitive view/column answers.
 - Risks:
-  - Wrong version labels can cause the GPT to deny or hide valid 7.1/7.3 property guidance.
-  - Multi-value path properties may be under-reported if an answer retrieves only the individual property item block.
-  - Session-level property examples need `V$SESSION` verification to avoid misleading operational checks.
+  - A GPT may repeat the LOB autocommit version caution too narrowly for Altibase 7.1 unless the block is corrected.
+  - "sampled ... Korean source" wording can leak build/review provenance into customer answers and should be converted to product/version source labels.
 
 ## Required Follow-Up
 
-- Correct `PSM_CASE_SENSITIVE_MODE` and `REGEXP_MODE` version labels in `05_data_types_properties.md`.
-- Audit and, if needed, correct `LISTAGG_PRECISION` and `VARRAY_MEMORY_MAXIMUM` version labels.
-- Update multi-value property item check SQL for `MEM_DB_DIR`, `LOG_DIR`, and `LOGANCHOR_DIR` to include `STOREDCOUNT` and all `VALUE` columns.
-- Add `V$SESSION`/`SESSION_ID()` verification for `ALTER SESSION` examples involving `QUERY_TIMEOUT`, `TIME_ZONE`, and similar session properties.
+- Update the `07_error_messages_troubleshooting.md` LOB autocommit version caution to distinguish 7.1 client/utility codes from the later SQL-level code.
+- Clean the two `05_data_types_properties.md` property availability notes that mention "sampled 7.3 Korean source" and the broader "sampled 7.x" wording.
+- No attachment changes were made during this review stage.

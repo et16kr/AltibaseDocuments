@@ -1,104 +1,121 @@
-# R10 Replication, HA, CDC, Log Analyzer, and Replication SSL Review
+# R10 Replication, HA, CDC, Log Analyzer, And Replication SSL
 
-Date: 2026-05-14
+Date: 2026-05-15
 Reviewer: Codex
 Verdict: Review Required
 
 ## Scope
 
-- Stage ID: R10
-- Group: G3_Operations
-- Attachments reviewed:
+- Attachments:
   - `GPTs/attachments/09_replication_ha_cdc.md`
   - `GPTs/attachments/18_security_ssl_tls.md`
   - `GPTs/attachments/03_sql_ddl_generation.md`
-- Required project context reviewed:
-  - `review/Altibase_GPT_Detailed_Review_Design.md`
-  - `GPTs/Altibase_GPT_Document_Selection.md`
-  - `GPTs/Altibase_GPT_Attachment_Build_Workplan.md`
-  - `GPTs/attachments/README.md`
-- Source materials sampled:
+- Supporting reports:
+  - `GPTs/reports/source_inventory.md`
+  - `GPTs/reports/8_1_verification.md`
+  - `GPTs/reports/sql_generation_test_results.md`
+  - `review/reports/R02_high_risk_traceability.md`
+  - `review/reports/R03_ddl_tablespace_storage.md`
+- Source manuals sampled:
   - `Manuals/Altibase_7.1/eng/Replication Manual.md`
   - `Manuals/Altibase_7.3/eng/Replication Manual.md`
   - `Manuals/Altibase_trunk/eng/Replication Manual.md`
-  - `Manuals/Altibase_7.1/eng/Log Analyzer User's Manual.md`
-  - `Manuals/Altibase_7.3/eng/Log Analyzer User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/Replication Manual.md`
   - `Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md`
-  - `Manuals/Altibase_7.1/eng/Altibase SSL TLS User's Guide.md`
-  - `Manuals/Altibase_7.3/eng/Altibase SSL TLS User's Guide.md`
-  - `Manuals/Altibase_trunk/eng/Altibase SSL TLS User's Guide.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
   - `Technical Documents/kor/ReplicationCompatibility.md`
   - `Technical Documents/kor/Replication network check.md`
-  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
-## Findings
-
-| Severity | File | Line | Finding | Recommendation |
-|---|---|---:|---|---|
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 20 | The Active-Active overview says it "guarantees sub-millisecond latency and built-in conflict resolution." This is not supported by the replication manuals and is risky for GPT retrieval. The source describes LAZY replication as potentially delayed with lower consistency, states that replication cannot guarantee consistency when conflicts occur, and warns that different updates to the same row in Active-Active can leave different values. | Replace the claim with conservative guidance: Active-Active is possible, but requires explicit write ownership, conflict avoidance, and monitoring. Do not promise sub-millisecond latency or guaranteed conflict resolution. Mention that conflict handling schemes exist but do not guarantee global consistency. |
-| High | `GPTs/attachments/09_replication_ha_cdc.md` | 819 | The DDL section is labeled as a standard procedure but mixes property-based DDL/SQL apply guidance with a simplified "execute same DDL on both nodes" flow. It omits the documented standard procedure steps such as service stop or `ADMIN_MODE`, `REP_GAP=0` verification, stopping replication, dropping and re-adding replication targets, and the DDL sync-specific local/remote property sequence. | Split this into two clearly named procedures. First, document the standard no-special-property procedure from Appendix B: stop service or enter admin flow, flush and verify `REP_GAP=0`, stop replication, drop targets from all replication objects, run DDL on all nodes, add targets, and restart. Second, document DDL synchronization separately: local `ALTER SESSION SET REPLICATION_DDL_SYNC = 1`, remote `ALTER SYSTEM SET REPLICATION_DDL_SYNC = 1` and `REPLICATION_SQL_APPLY_ENABLE = 1`, flush both sides, execute DDL on the local server only, then restore properties. Include the documented restrictions for EAGER and recovery options. |
-| High | `GPTs/attachments/03_sql_ddl_generation.md` | 1819 | Several replication DDL examples run `ALTER REPLICATION ... SYNC` inside each node's setup block. If followed sequentially, the first `SYNC` can occur before the peer replication object exists, which conflicts with the manual requirement to create matching replication objects on both servers before starting replication. Running `SYNC` from both directions also risks being copied as a default Active-Active initialization pattern. | Move `SYNC` and `START` commands after both peer `CREATE REPLICATION` statements. Add a short note that the initial alignment/start direction must be chosen based on Active-Standby versus Active-Active ownership and existing data. Mirror the safer ordering already used in `09_replication_ha_cdc.md`. |
-| Medium | `GPTs/attachments/09_replication_ha_cdc.md` | 19 | The file opens with a sharding overview and mentions `ShardManager`, but this stage attachment is for replication, HA, CDC, and Log Analyzer behavior. The sampled replication sources do not support this as part of the stage topic, and it can pollute retrieval for replication/HA questions. | Remove the sharding overview from this attachment or replace it with a minimal cross-reference to a sharding attachment if that content is source-backed elsewhere. Keep this file focused on replication, HA, CDC, Log Analyzer, and replication SSL. |
-
-## Source Checks
-
-- Replication SSL separation was checked against `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md:125` and `:308`. The attachments correctly distinguish 8.1 replication SSL (`REPLICATION_SSL_PORT_NO`, `USING SSL`) from ordinary client/server SSL (`SSL_PORT_NO`) and do not claim replication SSL support for 7.1 or 7.3.
-- General SSL/TLS guidance in `18_security_ssl_tls.md` matches the SSL/TLS user guides at a high level: 7.1 is older TLS/OpenSSL guidance, while 7.3 and 8.1-era documentation include TLS 1.0/1.2/1.3, OpenSSL 3.0.8, `SSL_CIPHER_SUITES`, `SSL_LOAD_CONFIG`, and FIPS-related handling. No confusion with replication SSL was found.
-- Active-Active claims were checked against `Manuals/Altibase_trunk/eng/Replication Manual.md:470`, `:657`, and `:1018`. The attachment overstates latency and conflict behavior.
-- Replication DDL guidance was checked against `Manuals/Altibase_trunk/eng/Replication Manual.md:1966`, `:3222`, `:3253`, `:3286`, and `:5108`. The current attachment DDL procedure is too compressed and blends distinct documented procedures.
-- Replication object creation and start ordering were checked against `Manuals/Altibase_trunk/eng/Replication Manual.md:548` and `:1023`, plus the corresponding 7.3 replication syntax area. The manual requires matching objects on both servers before replication starts.
-- Compatibility guidance in `09_replication_ha_cdc.md` broadly aligns with `Technical Documents/kor/ReplicationCompatibility.md`, especially the emphasis on exact version and replication protocol checks before 8.1-to-older-node replication.
-- Network troubleshooting guidance was checked against `Technical Documents/kor/Replication network check.md`; the attachment covers directional checks, `netstat`, `tcpdump`, and heartbeat-related troubleshooting.
-- Log Analyzer / CDC guidance was checked against the Log Analyzer manuals. The attachment preserves the key constraints: SYS execution, analyzed table primary key requirement, DDL limitation, sender limit, matching protocol version, TCP/UNIX socket transport, LAZY-only behavior, and `START AT SN` prerequisites.
-
-## Oracle-Overlap Decision
-
-- Correctly compressed: ordinary Oracle-overlapping DML is not expanded in this stage.
-- Too generic: no major generic Oracle content issue was found.
-- Missing or risky Altibase-specific detail: the DDL procedure and replication initialization examples need source-accurate Altibase ordering and restrictions.
-
-## Version Checks
-
-- 7.1: Replication and Log Analyzer coverage is generally version-aware; no replication SSL support is implied.
-- 7.3: Replication and SSL/TLS coverage is generally version-aware; no replication SSL support is implied.
-- 8.1: Replication SSL is separated from general TLS correctly. The main 8.1-era risk is not SSL confusion, but the unsafe replication DDL procedure and the overconfident Active-Active statement.
-
-## Retrieval Quality
-
-- Strengths: `09_replication_ha_cdc.md` has useful task-oriented sections for compatibility checks, network troubleshooting, Log Analyzer, and 8.1 replication SSL. `18_security_ssl_tls.md` clearly keeps general SSL/TLS separate from replication SSL.
-- Risks: the unsupported Active-Active sentence appears near the top of `09_replication_ha_cdc.md` and is likely to be retrieved as authoritative. The DDL procedure block and `03_sql_ddl_generation.md` examples are likely to be copied as operational runbooks, so they need precise ordering and restrictions.
-
-## Validation Commands
-
-Lightweight read-only validation and review commands run during this stage included:
+## Commands Run
 
 ```bash
 sed -n '1,240p' review/Altibase_GPT_Detailed_Review_Design.md
 sed -n '1,220p' GPTs/Altibase_GPT_Document_Selection.md
 sed -n '1,260p' GPTs/Altibase_GPT_Attachment_Build_Workplan.md
 sed -n '1,220p' GPTs/attachments/README.md
-wc -l GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md
-rg -n "REPLICATION_SSL_PORT_NO|USING SSL|SSL_PORT_NO|FOR ANALYSIS|Log Analyzer|REPLICATION_DDL|REPLICATION_DDL_SYNC|Active-Active|sub-millisecond" GPTs/attachments Manuals ReleaseNotes "Technical Documents"
-rg -n "trunk|file://|/home/|C:\\\\|Altibase_trunk|internal" GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md
-nl -ba GPTs/attachments/09_replication_ha_cdc.md | sed -n '1,220p'
-nl -ba GPTs/attachments/09_replication_ha_cdc.md | sed -n '760,860p'
-nl -ba GPTs/attachments/03_sql_ddl_generation.md | sed -n '1800,1865p'
-nl -ba GPTs/attachments/18_security_ssl_tls.md | sed -n '395,485p'
-nl -ba Manuals/Altibase_trunk/eng/Replication\ Manual.md | sed -n '620,720p'
-nl -ba Manuals/Altibase_trunk/eng/Replication\ Manual.md | sed -n '3220,3410p'
-nl -ba Manuals/Altibase_trunk/eng/Replication\ Manual.md | sed -n '5106,5488p'
-nl -ba ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md | sed -n '120,135p'
+wc -l GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md Manuals/Altibase_7.1/eng/Replication\ Manual.md Manuals/Altibase_7.3/eng/Replication\ Manual.md Manuals/Altibase_trunk/eng/Replication\ Manual.md Technical\ Documents/kor/ReplicationCompatibility.md Technical\ Documents/kor/Replication\ network\ check.md
+rg -n "^(#|##|###) " GPTs/attachments/09_replication_ha_cdc.md
+rg -n "^(#|##|###) " GPTs/attachments/18_security_ssl_tls.md
+rg -n "^(#|##|###) |REPLICATION|Replication|replication|CREATE REPLICATION|ALTER REPLICATION|DROP REPLICATION|START REPLICATION|STOP REPLICATION" GPTs/attachments/03_sql_ddl_generation.md
+rg -n "SSL|TLS|replication SSL|Replication SSL|REPLICATION_SSL|SSL_" GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md
+rg -n "XLog|xlog|CDC|Log Analyzer|log analyzer|analysis|analyzer" GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md
+nl -ba GPTs/attachments/09_replication_ha_cdc.md | sed -n '1,1577p'
+nl -ba GPTs/attachments/18_security_ssl_tls.md | sed -n '1,610p'
+nl -ba GPTs/attachments/03_sql_ddl_generation.md | sed -n '560,650p'
+nl -ba GPTs/attachments/03_sql_ddl_generation.md | sed -n '1819,1925p'
+rg -n "USING SSL|REPLICATION_SSL_PORT_NO|SSL|IF NOT EXISTS|UNIX_DOMAIN|FOR ANALYSIS|FOR PROPAGABLE|PROPAGATION|OFFLINE|REPLICATION_DDL_SYNC|REPLICATION_SQL_APPLY_ENABLE|REPLICATION_DDL_ENABLE" Manuals/Altibase_trunk/eng/Replication\ Manual.md ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md Manuals/Altibase_7.1/eng/Replication\ Manual.md Manuals/Altibase_7.3/eng/Replication\ Manual.md
+rg -n "USING SSL|REPLICATION_SSL_PORT_NO|replication|Replication SSL|SSL/TLS" ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md
+nl -ba Manuals/Altibase_trunk/eng/Replication\ Manual.md | sed -n '3196,3314p'
+nl -ba "Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md" | sed -n '1048,1170p'
+nl -ba "Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md" | sed -n '1248,1335p'
+nl -ba Technical\ Documents/kor/ReplicationCompatibility.md | sed -n '1,180p'
+nl -ba Technical\ Documents/kor/Replication\ network\ check.md | sed -n '1,100p'
+find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name README.md | wc -l
+rg -n "REPLICATION_DDL_SYNC|REPLICATION_SQL_APPLY_ENABLE|REPLICATION_SSL_PORT_NO|USING SSL|FOR ANALYSIS|UNIX_DOMAIN" GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md
+rg -n "trunk|Manuals/|ReleaseNotes|Technical Documents|/home/|file://|C:/|ALTIBASE/Documents|github.com/ALTIBASE/Documents" GPTs/attachments/09_replication_ha_cdc.md GPTs/attachments/18_security_ssl_tls.md GPTs/attachments/03_sql_ddl_generation.md
 ```
+
+## Findings
+
+No Blocker findings were identified. The High issue below should be corrected before upload.
+
+| Severity | File | Line | Finding | Recommendation |
+| --- | --- | ---: | --- | --- |
+| High | `GPTs/attachments/09_replication_ha_cdc.md` | 854 | The DDL synchronization procedure is incomplete. It sets `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE`, but omits required `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` enable and reset steps on both local and remote servers. It also omits the local `ALTER SESSION SET REPLICATION = DEFAULT` step and says to flush before DDL on the local server only, while the source procedure requires flushing on both local and remote servers. This was also reported in `R03` and remains unresolved. | Replace the DDL synchronization procedure with the full source sequence: verify required conditions, set `REPLICATION_DDL_ENABLE` and `REPLICATION_DDL_ENABLE_LEVEL` on both servers, set local `REPLICATION_DDL_SYNC` with `ALTER SESSION`, set remote `REPLICATION_DDL_SYNC` and `REPLICATION_SQL_APPLY_ENABLE` with `ALTER SYSTEM`, run `ALTER SESSION SET REPLICATION = DEFAULT`, flush both sides, execute DDL once on the local server, then reset every changed property. Add `REPLICATION_DDL_SYNC` to the properties list. |
+| Medium | `GPTs/attachments/03_sql_ddl_generation.md`<br>`GPTs/attachments/09_replication_ha_cdc.md` | 593<br>313 | The compact CDC XLog Sender syntax blocks omit the `WITH UNIX_DOMAIN` alternative. `09_replication_ha_cdc.md` later has a UNIX-domain example, but the top syntax block and central DDL-generation attachment can still steer answers toward TCP-only CDC syntax. | Add `WITH UNIX_DOMAIN` as an alternative in both compact syntax blocks, with the existing same-host UNIX/Linux and `$ALTIBASE_HOME` cautions. Keep `USING SSL` and `USING IB` excluded from `FOR ANALYSIS`. |
+| Medium | `GPTs/attachments/09_replication_ha_cdc.md` | 1378 | The XLog Sender host-change caution says "Host changes are TCP-only when a UNIX domain connection is used", which is ambiguous. The source says `ADD HOST` is impossible when `UNIX_DOMAIN` was specified, and `ADD HOST`, `DROP HOST`, and `SET HOST` apply only to TCP/IP hosts. | Replace the caution with explicit rules: a UNIX-domain XLog Sender cannot add hosts; host add/drop/set operations are for TCP/IP XLog Collector endpoints only; `SET HOST` takes effect after restart. |
+| Medium | `GPTs/attachments/03_sql_ddl_generation.md` | 349 | The table DDL rule says not to generate any `ALTER TABLE` that changes a replication target. That is safe as a default, but too broad for the documented Altibase procedures that allow DDL execution or DDL synchronization under strict properties, protocol, gap, and service-migration conditions. | Reword as "Do not generate ad hoc `ALTER TABLE` for replication targets." Then point to `09_replication_ha_cdc.md` for the standard remove/re-add procedure and the documented DDL synchronization procedure. |
+
+## Source Checks
+
+- Claims checked:
+  - 8.1 replication SSL is source-backed by `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md:133`-`138` and `:326`, Korean replication syntax at `Manuals/Altibase_trunk/kor/Replication Manual.md:1106`-`1123` and `:1180`-`1202`, and `REPLICATION_SSL_PORT_NO` property detail at `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md:12373`-`12393`.
+  - DDL synchronization requirements are source-backed by `Manuals/Altibase_trunk/eng/Replication Manual.md:3214`-`3218`, `:3257`-`:3273`, `:3276`-`:3290`, and `:3296`-`:3312`.
+  - Cross-version compatibility claims match `Technical Documents/kor/ReplicationCompatibility.md:21`-`28`, `:33`-`:45`, `:53`-`:63`, and protocol rows `:104`-`:121`.
+  - Network troubleshooting guidance matches `Technical Documents/kor/Replication network check.md:3`-`:21` and `:32`-`:42`.
+  - Log Analyzer limitations, API workflow, UNIX-domain syntax, and host restrictions match `Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md:409`-`:427`, `:650`-`:675`, `:1049`-`:1077`, `:1124`-`:1153`, and `:1248`-`:1335`.
+- Source coverage:
+  - `09_replication_ha_cdc.md` has strong coverage of topology, modes, HA, compatibility, network checks, DDL restrictions, offline replication, Log Analyzer, and CDC.
+  - `18_security_ssl_tls.md` correctly separates ordinary client/server SSL/TLS from 8.1 replication SSL.
+  - `03_sql_ddl_generation.md` includes replication DDL examples and version-scoped SSL replication syntax.
+- Source gaps:
+  - English 8.1 manuals do not carry the full replication SSL detail; the existing 8.1 verification report documents release-note plus Korean fallback use.
+  - This review did not validate every replication performance view column against every version's data dictionary. It sampled the views used in the stage attachments.
+
+## Oracle-Overlap Decision
+
+- Correctly compressed:
+  - Ordinary DML is not expanded in this stage. The attachments focus on Altibase-specific replication, DDL, CDC, operations, and SSL behavior.
+- Too much generic Oracle material:
+  - None found in the reviewed stage files.
+- Missing Altibase-specific difference:
+  - The allowed-but-controlled DDL synchronization path needs to be represented more accurately, instead of only a broad "do not alter replication targets" rule in the DDL generation file.
+
+## Version Checks
+
+- 7.1:
+  - Replication, Log Analyzer, compatibility, and non-SSL TCP guidance are represented. Replication SSL is not presented as a 7.1 feature.
+- 7.3:
+  - Replication compatibility and Log Analyzer guidance are represented. Replication SSL is not presented as a 7.3 feature.
+- 8.1:
+  - Replication SSL is correctly scoped to Altibase 8.1 verified source, uses `USING SSL`, and uses peer `REPLICATION_SSL_PORT_NO`.
+  - General TLS is not confused with replication SSL; `SSL_PORT_NO` and `REPLICATION_SSL_PORT_NO` are repeatedly separated.
+
+## Retrieval And GPT Answer Quality
+
+- Strengths:
+  - The SSL material is easy to retrieve and consistently separates application TLS from replication SSL.
+  - The replication attachment has customer-answer templates, topology diagrams, operational check SQL, compatibility guidance, network troubleshooting, and Log Analyzer API blocks.
+  - Literal tokens such as `CREATE REPLICATION`, `USING SSL`, `REPLICATION_SSL_PORT_NO`, `FOR ANALYSIS`, `ALA_Handshake`, and `V$REPSENDER` are preserved.
+- Risks:
+  - A GPT could generate an incomplete DDL synchronization procedure because the high-risk property sequence is missing.
+  - A GPT could miss or mishandle UNIX-domain Log Analyzer CDC if it retrieves the compact syntax block instead of the later example.
+  - A GPT could over-reject replication-target `ALTER TABLE` requests instead of routing them to the documented Altibase procedure.
 
 ## Required Follow-Up
 
-1. Replace the unsupported Active-Active latency/conflict guarantee in `09_replication_ha_cdc.md`.
-2. Rewrite the replication DDL guidance in `09_replication_ha_cdc.md` as separate standard and DDL sync procedures.
-3. Reorder the replication examples in `03_sql_ddl_generation.md` so both peer replication objects are created before any `SYNC` or `START`.
-4. Remove or relocate the sharding overview from `09_replication_ha_cdc.md`.
-
-## Residual Risks
-
-- I did not modify the attachments or source manuals, per stage rules.
-- I did not exhaustively validate every replication SQL example in the full 1,546-line replication attachment; the review concentrated on the requested topology, compatibility, network, DDL, CDC/log analysis, and replication SSL areas.
-- The 8.1 replication SSL source appears in release notes rather than a full English replication manual section in the sampled tree, so the report treats release notes as the authoritative source for `USING SSL` and `REPLICATION_SSL_PORT_NO`.
+- Fix the DDL synchronization procedure in `09_replication_ha_cdc.md`.
+- Add `WITH UNIX_DOMAIN` to the compact CDC syntax in `03_sql_ddl_generation.md` and `09_replication_ha_cdc.md`.
+- Clarify XLog Sender host-change rules for `UNIX_DOMAIN` versus TCP/IP endpoints in `09_replication_ha_cdc.md`.
+- Reword the broad replication-target `ALTER TABLE` prohibition in `03_sql_ddl_generation.md` to point to the documented procedures in `09_replication_ha_cdc.md`.
