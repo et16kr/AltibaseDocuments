@@ -86,7 +86,9 @@ Do not treat bare `run-all` as a one-task command. Use `run` for one task, or us
 
 `run-all` stops on `Fail` by default and records failure information in `review/remediation_failure_log.md`. Use `--keep-going-on-fail` only for explicit manual recovery runs where continuing after a failed task is intentional.
 
-Inside `run-all`, task prompts must use `review <ID> --local` and `finish <ID> Done --local-review` for the worker's self-check. The `run-all` parent process then runs a separate `codex exec` automatic post-review after the worker exits and the task reaches `Done`. Do not require a nested Codex CLI reviewer from inside a worker Codex execution; that is a procedural failure in sandboxed or network-disabled runs, not a document-quality finding.
+`run-all`, `run`, and `start` must not start a new `ToDo` task when uncommitted changes are present. Commit or rollback the existing changes first so the next job has a clean boundary.
+
+Inside `run-all`, task prompts must use `review <ID> --local` and `finish <ID> Done --local-review` for the worker's self-check. The `run-all` parent process then runs a separate `codex exec` automatic post-review after the worker exits and the task reaches `Done`. When the post-review returns `PASS`, `run-all` commits the task changes before starting the next task. Do not require a nested Codex CLI reviewer from inside a worker Codex execution; that is a procedural failure in sandboxed or network-disabled runs, not a document-quality finding.
 
 Use `--no-post-review` only when intentionally disabling the separate automatic Codex review for a recovery/debug run.
 

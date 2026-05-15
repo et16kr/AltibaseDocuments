@@ -298,6 +298,72 @@ def run_process(command: list[str], *, quiet: bool = False) -> int:
     return completed.returncode
 
 
+def git_status_short() -> str:
+    completed = subprocess.run(
+        ["git", "status", "--short"],
+        cwd=ROOT_DIR,
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        message = (completed.stderr or completed.stdout or "git status failed").strip()
+        die(message)
+    return completed.stdout
+
+
+def require_clean_worktree_before_start(task: Task) -> bool:
+    status = git_status_short()
+    if not status.strip():
+        return True
+
+    print(
+        f"error: refusing to start {task.id}; uncommitted changes are present.",
+        file=sys.stderr,
+    )
+    print(status.rstrip(), file=sys.stderr)
+    print(
+        "Commit or rollback the existing changes before starting a new remediation job.",
+        file=sys.stderr,
+    )
+    return False
+
+
+def commit_subject(task: Task) -> str:
+    summary = re.sub(r"`([^`]*)`", r"\1", task.required_change)
+    summary = re.sub(r"\s+", " ", summary).strip()
+    if len(summary) > 72:
+        summary = summary[:69].rstrip() + "..."
+    return f"Remediate {task.id}: {summary}"
+
+
+def commit_task_changes(task: Task) -> int:
+    status = git_status_short()
+    if not status.strip():
+        print(f"==> {task.id} has no uncommitted changes to commit.")
+        return 0
+
+    print(f"==> committing {task.id}")
+    print(status.rstrip())
+
+    add_rc = run_process(["git", "add", "--all", "--", "."])
+    if add_rc != 0:
+        return add_rc
+
+    check_rc = run_process(["git", "diff", "--cached", "--check"])
+    if check_rc != 0:
+        return check_rc
+
+    body = "\n".join(
+        [
+            f"Task: {task.id}",
+            f"Severity: {task.severity}",
+            f"Source reports: {task.source_reports}",
+            f"Targets: {task.target_files}",
+        ]
+    )
+    return run_process(["git", "commit", "-m", commit_subject(task), "-m", body])
+
+
 def task_pathspecs(task: Task, plan_path: Path) -> list[str]:
     pathspecs: list[str] = []
 
@@ -596,6 +662,9 @@ def cmd_start(args: argparse.Namespace) -> int:
             print(f"{task.id} is already Progress.")
             return 0
 
+    if task.state == "ToDo" and not require_clean_worktree_before_start(task):
+        return 3
+
     update_task_state(args.plan, task.id, "Progress", force=args.force)
     return 0
 
@@ -727,7 +796,7 @@ Follow the plan's state rules:
 - After editing, run the listed validation.
 - Run the local remediation review command before marking Done. Do not invoke a nested Codex CLI reviewer from inside this Codex execution.
 - Mark the task Done only when the required change is applied, validation evidence is acceptable, and the local review evidence has no hard failure.
-- The run-all parent process will invoke the separate Codex CLI automatic post-review after this task process exits.
+- The run-all parent process will invoke the separate Codex CLI automatic post-review after this task process exits, then commit the task if the post-review passes.
 - Mark the task Fail if the task is blocked or validation shows the change is not complete. Include `--reason` so the failure log captures the cause.
 - Do not mark R15 final readiness tasks Done until their prerequisite tasks are Done or explicitly accepted as residual risk.
 - Review retry rule: after the first review, if a finding is small, scoped to this task, and source-backed, fix it and run review again. Retry at most {DEFAULT_REVIEW_RETRIES} time(s). If the same issue remains, required source evidence is unclear, or a fix would broaden scope, mark the task Fail and record the reason.
@@ -776,6 +845,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         if args.dry_run:
             print(f"[dry-run] would mark {task.id} Progress")
         else:
+            if not require_clean_worktree_before_start(task):
+                return 3
             update_task_state(args.plan, task.id, "Progress", force=args.force)
             task = task_by_id(parse_tasks(args.plan), task.id)
 
@@ -846,6 +917,7 @@ def cmd_run_all(args: argparse.Namespace) -> int:
         if refreshed.state == "Fail" and args.stop_on_fail:
             print(f"==> {task.id} is Fail; stopping because stop-on-fail is enabled.")
             return 1
+        should_commit = refreshed.state == "Done"
         if refreshed.state == "Done" and not args.no_post_review:
             print(f"==> post-reviewing {task.id}")
             result = run_codex_review(
@@ -866,9 +938,21 @@ def cmd_run_all(args: argparse.Namespace) -> int:
                     source="run-all post-review",
                 )
                 update_task_state(args.plan, task.id, "Fail", force=True)
+                should_commit = False
                 if args.stop_on_fail:
                     print(f"==> {task.id} post-review returned {result.verdict}; stopping.")
                     return 1
+
+        if should_commit:
+            commit_rc = commit_task_changes(refreshed)
+            if commit_rc != 0:
+                append_failure_log(
+                    args.plan,
+                    refreshed,
+                    f"run-all commit failed with exit code {commit_rc}",
+                    source="run-all commit",
+                )
+                return commit_rc
 
     print(f"Stopped after {ran} task(s).")
     return 0
