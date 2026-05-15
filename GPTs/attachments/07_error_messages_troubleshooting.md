@@ -106,6 +106,12 @@ Severity handling:
 | `RETRY` | The reference expects retry after a condition clears. Explain what condition to verify before retrying. |
 | `IGNORE` | Usually informational or non-fatal. Explain when it can be ignored and when to collect logs. |
 
+Inherited escalation default for every error block:
+
+- Every block under `Searchable Error Blocks` inherits this `Escalation:` policy unless the block provides a narrower escalation line.
+- Collect evidence before escalation: exact error code and message, Altibase version, failed SQL or command, module context, relevant dictionary query output, trace log excerpt around the timestamp, and recent corrective actions already attempted.
+- Stop corrective actions and escalate when evidence conflicts with the documented cause, the same failure remains after the listed verification checks, a restart, data movement, tablespace drop, replication rebuild, certificate change, or property change would be needed, or the source action says to contact Altibase Support.
+
 ## Triage Workflow
 
 ```mermaid
