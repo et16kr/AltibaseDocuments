@@ -2147,7 +2147,7 @@ Run-pattern examples:
 snmpd -f -L -c "$ALTISNMPCONF/snmpd.conf" -C -x localhost:<agentx-port> udp:localhost:<snmp-port>
 snmptrapd -f -P udp:localhost:<trap-listen-port>
 altisnmpd -f -L -c "$ALTISNMPCONF/altisnmpd.conf" -x localhost:<agentx-port>
-snmpwalk -v 2c -c private udp:localhost:<snmp-port> altibase
+snmpwalk -v 2c -c <community> udp:localhost:<snmp-port> altibase
 ```
 
 SNMP command block:
