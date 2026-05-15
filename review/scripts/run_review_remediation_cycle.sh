@@ -392,6 +392,16 @@ EOF
   (cd "$ROOT_DIR" && git add --all && git diff --cached --check && git commit -m "$subject" -m "$body")
 }
 
+complete_stage() {
+  local id="$1"
+  set_cycle_status "$id" Done
+  if ! commit_stage "$id"; then
+    set_cycle_status "$id" Fail
+    append_failure "$id" "commit failed after stage reached Pass"
+    return 1
+  fi
+}
+
 handle_interrupted_status() {
   local id="$1"
   local status="$2"
@@ -438,8 +448,7 @@ run_stage_cycle() {
   fi
 
   if ! stage_needs_remediation "$id"; then
-    set_cycle_status "$id" Done
-    commit_stage "$id"
+    complete_stage "$id"
     return 0
   fi
 
@@ -469,8 +478,7 @@ run_stage_cycle() {
     fi
 
     if ! stage_needs_remediation "$id"; then
-      set_cycle_status "$id" Done
-      commit_stage "$id"
+      complete_stage "$id"
       return 0
     fi
 
