@@ -207,16 +207,22 @@ SELECT id,
 FROM V$TABLESPACES
 ORDER BY id;
 
-SELECT id,
-       name,
-       spaceid,
-       currsize,
-       autoextend,
-       opened,
-       modified,
-       state
-FROM V$DATAFILES
-ORDER BY spaceid, id;
+SELECT d.id,
+       d.name,
+       d.spaceid,
+       t.name AS tablespace_name,
+       t.page_size,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.autoextend,
+       d.opened,
+       d.modified,
+       d.state
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+ORDER BY d.spaceid, d.id;
 
 SELECT space_id,
        space_name,
@@ -329,7 +335,7 @@ Role rules:
 Privilege block: system privileges
 
 - Database: `ALTER SYSTEM`, `ALTER DATABASE`, `DROP DATABASE`.
-- Tablespace: `CREATE TABLESPACE`, `ALTER TABLESPACE`, `DROP TABLESPACE`, `MANAGE TABLESPACE`.
+- Tablespace: `CREATE TABLESPACE`, `ALTER TABLESPACE`, `DROP TABLESPACE`. `MANAGE TABLESPACE` is documented as SYS-only; do not grant it or recommend it in customer grant scripts.
 - User: `CREATE USER`, `ALTER USER`, `DROP USER`.
 - Table: `CREATE TABLE`, `CREATE ANY TABLE`, `ALTER ANY TABLE`, `DROP ANY TABLE`, `SELECT ANY TABLE`, `INSERT ANY TABLE`, `UPDATE ANY TABLE`, `DELETE ANY TABLE`, `LOCK ANY TABLE`.
 - Session: `CREATE SESSION`, `ALTER SESSION`.
@@ -572,7 +578,7 @@ Tablespace type block: temporary tablespace
 
 - Disk-based working space for temporary query results.
 - Temporary result data is not persistent user data and is discarded when the session or statement no longer needs it.
-- Temporary tablespaces are not backed up.
+- Disk temporary tablespaces cannot be backed up with online tablespace backup. Offline physical backup plans should still account for discovered temporary files unless the site recovery plan intentionally recreates them.
 - `ONLINE`, `OFFLINE`, and `DISCARD` state changes do not apply to temporary tablespaces.
 
 Tablespace type block: undo tablespace
@@ -796,8 +802,13 @@ SEGMENT MANAGEMENT AUTO;
 
 SELECT t.name AS tablespace_name,
        d.name AS datafile_name,
-       d.currsize,
-       d.maxsize,
+       t.page_size,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.maxsize AS maxsize_pages,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.maxsize * t.page_size / 1048576 AS maxsize_mb,
        d.autoextend,
        d.state
 FROM V$TABLESPACES t, V$DATAFILES d
@@ -840,8 +851,13 @@ Use this as the copy-ready default for media recovery, failed storage, or any lo
 ```sql
 SELECT t.name AS tablespace_name,
        d.name AS datafile_name,
-       d.currsize,
-       d.maxsize,
+       t.page_size,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.maxsize AS maxsize_pages,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.maxsize * t.page_size / 1048576 AS maxsize_mb,
        d.autoextend,
        d.opened,
        d.state
@@ -1063,10 +1079,19 @@ EXTENTSIZE 256K;
 
 SELECT t.name AS tablespace_name,
        d.name AS tempfile_name,
-       d.initsize,
-       d.currsize,
-       d.nextsize,
-       d.maxsize,
+       t.page_size,
+       d.initsize AS initsize_pages,
+       d.initsize * t.page_size AS initsize_bytes,
+       d.initsize * t.page_size / 1048576 AS initsize_mb,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.nextsize AS nextsize_pages,
+       d.nextsize * t.page_size AS nextsize_bytes,
+       d.nextsize * t.page_size / 1048576 AS nextsize_mb,
+       d.maxsize AS maxsize_pages,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.maxsize * t.page_size / 1048576 AS maxsize_mb,
        d.autoextend,
        d.state
 FROM V$TABLESPACES t,
@@ -1078,7 +1103,8 @@ WHERE t.id = d.spaceid
 Rules:
 
 - Temporary tablespaces store temporary query results.
-- They cannot be backed up.
+- They cannot be backed up by online tablespace backup; in media or incremental recovery, missing temporary files may need to be recreated.
+- For offline physical backup, include the discovered temporary data files unless the local recovery plan intentionally recreates them.
 - Use `ALTER USER ... TEMPORARY TABLESPACE app_temp_tbs` to assign a user's temporary tablespace.
 
 Runbook: add or resize temporary file
@@ -1590,7 +1616,7 @@ Use this when the latest usable incremental backup chain and all required archiv
 2. Repair `changeTracking` or `backupInfo` in `PROCESS` only if startup to `CONTROL` fails because those files are missing or invalid.
 3. In `CONTROL`, restore the latest incremental chain.
 4. Apply archive and online logs to the current point.
-5. Recreate missing system temporary tablespace files because temporary files are not backed up.
+5. Recreate missing system temporary tablespace files because incremental restore does not preserve temporary files.
 6. Start service and verify the database.
 
 ```sql
@@ -1740,7 +1766,7 @@ ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
 STARTUP SERVICE;
 ```
 
-Temporary tablespace files are not backed up because temporary data does not need media recovery.
+For media or incremental recovery, recreate missing temporary tablespace files because temporary data does not need media recovery. Offline physical backup plans may copy temporary files or explicitly document that they will be recreated.
 
 Runbook: lost memory checkpoint image file
 
@@ -2007,7 +2033,7 @@ Problem block: archive destination full
 Problem block: datafile autoextend stalls
 
 1. Check filesystem free space.
-2. Check `V$DATAFILES.AUTOEXTEND`, `NEXTSIZE`, and `MAXSIZE`.
+2. Check `V$DATAFILES.AUTOEXTEND`, `NEXTSIZE`, and `MAXSIZE` as page counts; multiply by `V$TABLESPACES.PAGE_SIZE` for bytes.
 3. Increase file size ahead of demand or add another data file.
 4. Avoid tiny autoextend increments on active tablespaces.
 

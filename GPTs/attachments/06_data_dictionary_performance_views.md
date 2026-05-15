@@ -650,22 +650,36 @@ ORDER BY id;
 ### List Datafiles
 
 ```sql
-SELECT id,
-       name,
-       spaceid,
-       initsize,
-       currsize,
-       nextsize,
-       maxsize,
-       autoextend,
-       opened,
-       modified,
-       state,
-       max_open_fd_count,
-       cur_open_fd_count
-FROM V$DATAFILES
-ORDER BY spaceid, id;
+SELECT d.id,
+       d.name,
+       d.spaceid,
+       t.name AS tablespace_name,
+       t.page_size,
+       d.initsize AS initsize_pages,
+       d.initsize * t.page_size AS initsize_bytes,
+       d.initsize * t.page_size / 1048576 AS initsize_mb,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.nextsize AS nextsize_pages,
+       d.nextsize * t.page_size AS nextsize_bytes,
+       d.nextsize * t.page_size / 1048576 AS nextsize_mb,
+       d.maxsize AS maxsize_pages,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.maxsize * t.page_size / 1048576 AS maxsize_mb,
+       d.autoextend,
+       d.opened,
+       d.modified,
+       d.state,
+       d.max_open_fd_count,
+       d.cur_open_fd_count
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+ORDER BY d.spaceid, d.id;
 ```
+
+`V$DATAFILES.INITSIZE`, `CURRSIZE`, `NEXTSIZE`, and `MAXSIZE` are page counts. Use the `PAGE_SIZE`-derived byte or MB aliases for capacity and autoextend decisions.
 
 ### Check Memory Tablespaces
 
@@ -1511,19 +1525,25 @@ ORDER BY lfg_id;
 ### Check File I/O Status
 
 ```sql
-SELECT id,
-       name,
-       spaceid,
-       currsize,
-       autoextend,
-       iocount,
-       opened,
-       modified,
-       state,
-       cur_open_fd_count,
-       max_open_fd_count
-FROM V$DATAFILES
-ORDER BY spaceid, id;
+SELECT d.id,
+       d.name,
+       d.spaceid,
+       t.name AS tablespace_name,
+       t.page_size,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.autoextend,
+       d.iocount,
+       d.opened,
+       d.modified,
+       d.state,
+       d.cur_open_fd_count,
+       d.max_open_fd_count
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+ORDER BY d.spaceid, d.id;
 ```
 
 `OPENED` values are `0` closed and `1` opened. `MODIFIED` value `1` means pages were flushed without subsequent synchronization. `STATE` values include offline, online, backup in progress, and dropped.

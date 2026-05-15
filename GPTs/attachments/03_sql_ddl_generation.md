@@ -176,10 +176,19 @@ ORDER BY id;
 
 SELECT t.name AS tablespace_name,
        d.name AS file_name,
-       d.initsize,
-       d.currsize,
-       d.nextsize,
-       d.maxsize,
+       t.page_size,
+       d.initsize AS initsize_pages,
+       d.initsize * t.page_size AS initsize_bytes,
+       d.initsize * t.page_size / 1048576 AS initsize_mb,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.nextsize AS nextsize_pages,
+       d.nextsize * t.page_size AS nextsize_bytes,
+       d.nextsize * t.page_size / 1048576 AS nextsize_mb,
+       d.maxsize AS maxsize_pages,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.maxsize * t.page_size / 1048576 AS maxsize_mb,
        d.autoextend,
        d.state
 FROM V$TABLESPACES t,
@@ -725,9 +734,10 @@ startup_clause ::=
 archive_backup_recovery_clause ::=
   { ARCHIVELOG | NOARCHIVELOG
   | BACKUP {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [backup_option ...]
-  | INCREMENTAL BACKUP {LEVEL integer | CUMULATIVE | DIFFERENTIAL} [WITH TAG tag_name]
-  | RECOVER {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [FROM TAG tag_name] [UNTIL until_option]
-  | RESTORE {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [FROM TAG tag_name] [UNTIL until_option] }
+  | BACKUP INCREMENTAL LEVEL 0 {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [WITH TAG tag_name]
+  | BACKUP INCREMENTAL LEVEL 1 [CUMULATIVE] {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [WITH TAG tag_name]
+  | RECOVER DATABASE [FROM TAG tag_name | UNTIL TIME time_literal | UNTIL CANCEL]
+  | RESTORE DATABASE [FROM TAG tag_name | UNTIL TIME time_literal] }
 
 directory_ddl ::=
   CREATE [OR REPLACE] DIRECTORY [IF NOT EXISTS] directory_name AS 'path_name'
@@ -865,6 +875,8 @@ noaudit_object_clause ::=
   {ALL | sql_operation [, sql_operation ...]}
   ON [owner.]object_name
 ```
+
+For level 1 incremental backup, omitting `CUMULATIVE` is the differential form; do not generate a `DIFFERENTIAL` keyword. Do not generate `RECOVER TABLESPACE` from this compact grammar. `RESTORE DATABASE UNTIL CANCEL` is not supported for incremental backup restoration; restore with no target, `FROM TAG`, or `UNTIL TIME`, then recover with `UNTIL CANCEL` only when the recovery plan requires it.
 
 Generation notes:
 
@@ -1064,7 +1076,20 @@ FROM V$VOL_TABLESPACES
 WHERE space_name = 'APP_VOL_TBS';
 
 SELECT t.name AS tablespace_name, d.name AS datafile_name,
-       d.initsize, d.currsize, d.nextsize, d.maxsize, d.autoextend
+       t.page_size,
+       d.initsize AS initsize_pages,
+       d.initsize * t.page_size AS initsize_bytes,
+       d.initsize * t.page_size / 1048576 AS initsize_mb,
+       d.currsize AS currsize_pages,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.currsize * t.page_size / 1048576 AS currsize_mb,
+       d.nextsize AS nextsize_pages,
+       d.nextsize * t.page_size AS nextsize_bytes,
+       d.nextsize * t.page_size / 1048576 AS nextsize_mb,
+       d.maxsize AS maxsize_pages,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.maxsize * t.page_size / 1048576 AS maxsize_mb,
+       d.autoextend
 FROM V$TABLESPACES t, V$DATAFILES d
 WHERE t.id = d.spaceid
   AND t.name IN ('APP_DISK_TBS', 'APP_TEMP_TBS');
