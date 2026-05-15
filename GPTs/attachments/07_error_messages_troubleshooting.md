@@ -1112,7 +1112,7 @@ AUTOCOMMIT OFF;
 COMMIT;
 ```
 
-Version Cautions: LOB autocommit errors appear in 7.3 and 8.1 sources. For 8.1 JSON and Temporary LOB, also check `TEMPORARY_LOB_ENABLE`.
+Version Cautions: `0x5112C` and `0x91101` are documented in 7.1, 7.3, and Altibase 8.1 verified source. Treat SQL-level `0x314B4` as 7.3/8.1 unless the target 7.1 build confirms that code. For 8.1 JSON and Temporary LOB, also check `TEMPORARY_LOB_ENABLE`.
 
 Related Document: Data Types and Properties; C CLI ODBC Precompiler; Utilities Operation Tools.
 
