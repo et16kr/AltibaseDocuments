@@ -2,7 +2,7 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 operations, replication, and `aku` utility guidance. AKU supports up to 4 scalable replicas in the 7.1 documentation.
+- 7.1: Based on Altibase 7.1 operations, replication, Utilities Manual AKU guidance, and the AKU sample guide. AKU supports up to 4 scalable replicas in the 7.1 Utilities Manual and AKU sample guide.
 - 7.3: Based on Kubernetes User's Guide for Altibase, Altibase AKU Sample Guide for Kubernetes, Altibase 7.3 utilities guidance, and Altibase 7.3 release notes. AKU supports up to 6 scalable replicas in the 7.3 documentation.
 - 8.1: Based on Altibase 8.1 verified source Kubernetes, AKU, utilities, and release-note guidance. AKU supports up to 6 scalable replicas and adds multiple replication configuration support.
 
@@ -18,7 +18,7 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Installation Guide, Administrator's Manual, Replication Manual, and Utilities Manual.
+- 7.1: Altibase 7.1 Installation Guide, Administrator's Manual, Replication Manual, Utilities Manual, and Altibase AKU Sample Guide for Kubernetes.
 - 7.3: Kubernetes User's Guide for Altibase; Altibase AKU Sample Guide for Kubernetes; Altibase 7.3 Utilities Manual; Altibase 7.3 Release Notes.
 - 8.1: Altibase 8.1 verified source Kubernetes User's Guide for Altibase; Altibase AKU Sample Guide for Kubernetes; Utilities Manual; Altibase 8.1 Release Notes.
 
@@ -54,8 +54,8 @@ flowchart TD
 
 Version block: 7.1
 
-- The 7.1 documentation includes `aku` for StatefulSet-based Pod lifecycle assistance.
-- `AKU_SERVER_COUNT` can be set from 1 to 4 in the 7.1 documentation.
+- The 7.1 Utilities Manual includes `aku` for StatefulSet-based Pod lifecycle assistance.
+- `AKU_SERVER_COUNT` can be set from 1 to 4 in the 7.1 Utilities Manual.
 - The AKU sample guide uses an Altibase 7.1 test environment and shows a 4-Pod StatefulSet.
 - Use `StatefulSet` with `podManagementPolicy: OrderedReady`, a headless `Service`, persistent storage, `startupProbe`, and `terminationGracePeriodSeconds` for AKU-based deployments.
 - For simple container tests, a `Pod` or `Deployment` can run the Altibase image with `MODE=daemon`, but that pattern does not provide the AKU lifecycle model by itself.

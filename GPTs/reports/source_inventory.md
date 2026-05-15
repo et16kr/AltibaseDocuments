@@ -303,6 +303,8 @@ Source purpose: Kubernetes deployment, AKU samples, container operations, releas
   - `Manuals/Altibase_7.1/eng/Installation Guide.md`
   - `Manuals/Altibase_7.1/eng/Administrator's Manual.md`
   - `Manuals/Altibase_7.1/eng/Replication Manual.md`
+  - `Manuals/Altibase_7.1/eng/Utilities Manual.md`
+  - `3rd Party Guide for Altibase/eng/Altibase aku Sample Guide for Kubernetes.md`
 - 7.3:
   - `3rd Party Guide for Altibase/eng/Kubernetes User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/eng/Altibase aku Sample Guide for Kubernetes.md`

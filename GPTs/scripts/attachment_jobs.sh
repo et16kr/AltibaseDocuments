@@ -29,6 +29,7 @@ Usage:
   bash GPTs/scripts/attachment_jobs.sh history <JOB-ID>
   bash GPTs/scripts/attachment_jobs.sh mark <JOB-ID> <ToDo|InProgress|Review|Done|Fail|Blocked|Skip>
   bash GPTs/scripts/attachment_jobs.sh review-fixes [plan|apply|validate] [args...]
+  bash GPTs/scripts/attachment_jobs.sh remediation-plan [status|list|next|show|start|mark|validate|review|finish|prompt|run|run-all] [args...]
   bash GPTs/scripts/attachment_jobs.sh validate
 
 Environment:
@@ -697,6 +698,12 @@ review_fixes() {
   bash "$script" "${@:-plan}"
 }
 
+remediation_plan() {
+  local script="${ROOT_DIR}/GPTs/scripts/remediation_plan.sh"
+  [[ -f "$script" ]] || die "remediation plan runner not found: $script"
+  bash "$script" "${@:-status}"
+}
+
 cmd="${1:-}"
 case "$cmd" in
   list)
@@ -757,6 +764,9 @@ case "$cmd" in
     ;;
   review-fixes)
     review_fixes "${@:2}"
+    ;;
+  remediation-plan)
+    remediation_plan "${@:2}"
     ;;
   validate)
     validate
