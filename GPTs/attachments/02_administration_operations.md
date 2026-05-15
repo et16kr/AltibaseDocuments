@@ -1215,7 +1215,7 @@ Backup method block: offline physical backup
 
 - Scope: entire database.
 - Requires normal database shutdown.
-- Copy all memory checkpoint directories from `MEM_DB_DIR`, all log anchor files from `LOGANCHOR_DIR`, all log files needed for the backup strategy, and all disk tablespace data files.
+- Backup manifest: copy the exact `$ALTIBASE_HOME/conf/altibase.properties` used at backup time, all memory checkpoint directories from `MEM_DB_DIR`, all log anchor files from `LOGANCHOR_DIR`, all log files needed for the backup strategy, and all disk tablespace data files.
 - Works in `NOARCHIVELOG` mode.
 - Restores only to the backup point.
 
@@ -1239,8 +1239,11 @@ The copy commands below are placeholders. Expand them to every discovered path a
 
 ```bash
 server stop
+server status
+# Proceed only after the status check confirms the server is stopped.
 
 # Placeholder examples; replace with paths discovered from V$PROPERTY and V$DATAFILES.
+cp $ALTIBASE_HOME/conf/altibase.properties /backup/altibase/offline/
 cp -r $ALTIBASE_HOME/dbs0 /backup/altibase/offline/
 cp -r $ALTIBASE_HOME/dbs1 /backup/altibase/offline/
 cp -r $ALTIBASE_HOME/logs /backup/altibase/offline/
