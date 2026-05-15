@@ -332,14 +332,51 @@ isql -s <server-host> -u <user> -p <password>
 
 Use `Patch Installation` only over a compatible installed base version. The installer stores patch metadata and rollback material under `$ALTIBASE_HOME/APatch`.
 
-Patch rollback covers files installed by the package installer. It does not back up data files or log files. Back up database data and logs separately before applying a patch.
+Patch rollback covers files installed by the package installer. It does not back up data files or log files. Back up the product home, database data files, log files, and recovery-critical configuration separately before applying or rolling back a patch.
 
 On HP-UX, the package uninstaller can uninstall the full product but does not support patch rollback. Back up the existing product manually before patching.
 
-For meta downgrade tasks, shut down the server first:
+Before scheduling a patch rollback, compare the current and previous meta versions in `SYSTEM_.SYS_DATABASE_`:
+
+```sql
+SELECT META_MAJOR_VER, META_MINOR_VER, META_PATCH_VER,
+       PREV_META_MAJOR_VER, PREV_META_MINOR_VER, PREV_META_PATCH_VER
+  FROM SYSTEM_.SYS_DATABASE_;
+```
+
+Use this execution order when a patch rollback requires meta downgrade:
+
+1. Confirm the product, data, log, and configuration backups are complete.
+2. Shut down the server:
 
 ```bash
 server stop
+```
+
+3. If the current meta version must be reverted to the previous meta version, run:
+
+```bash
+server downgrade
+```
+
+4. Immediately delete or uninstall the patch by running the matching APatch patch uninstaller. Do not start the server between `server downgrade` and this patch delete step; otherwise the patched binary can perform meta upgrade again.
+
+```bash
+cd "$ALTIBASE_HOME/APatch"
+./uninstall-p<patch_version>
+```
+
+Only the most recently installed patch can be rolled back by the package uninstaller method.
+
+5. Verify the restored binary/package version metadata. When the restored binary is started for verification, query the database meta version before returning application traffic:
+
+```bash
+cat "$ALTIBASE_HOME/APatch/patchinfo"
+```
+
+```sql
+SELECT META_MAJOR_VER, META_MINOR_VER, META_PATCH_VER
+  FROM SYSTEM_.SYS_DATABASE_;
 ```
 
 If a meta downgrade is attempted while the server is running, the documented error text is:
