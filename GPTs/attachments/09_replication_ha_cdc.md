@@ -315,8 +315,9 @@ log_analyzer_cdc_replication ::=
   CREATE REPLICATION replication_name
     { FOR ANALYSIS | FOR PROPAGABLE LOGGING | FOR PROPAGATION | FOR ANALYSIS PROPAGATION }
     [OPTIONS option_name [option_name ...]]
-    WITH 'xlog_sender_host_ip_or_name', xlog_sender_port_no
-         [...]
+    { WITH 'xlog_sender_host_ip_or_name', xlog_sender_port_no
+           [...]
+    | WITH UNIX_DOMAIN }
     FROM user_name.table_name
     TO   user_name.table_name
     [, FROM ... TO ...];
@@ -333,6 +334,7 @@ Syntax notes:
 - In Altibase 8.1 verified source SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For InfiniBand, use `USING IB [ib_latency]` and the peer `REPLICATION_IB_PORT_NO`.
 - `FOR ANALYSIS` and related Log Analyzer CDC forms create an XLog Sender and are not ordinary table-to-table apply syntax. Do not combine them with `EAGER`, `USING SSL`, or `USING IB`; Log Analyzer CDC is LAZY/TCP or UNIX-domain-socket scoped.
+- For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `AS MASTER` and `AS SLAVE` affect handshaking. Valid pairings are not-set with not-set, master with slave, and slave with master.
 
 ## CREATE REPLICATION Examples: Non-SSL TCP
