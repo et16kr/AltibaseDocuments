@@ -875,6 +875,14 @@ JSON functions are 8.1 baseline features. Do not use them for 7.1 or 7.3 unless 
 - JSON validation: `JSON_VALID`.
 - JSON condition: `IS JSON`, `IS NOT JSON`.
 
+### JSON Item: Native JSON Column DML Cautions
+
+- Native `JSON` columns are 8.1 baseline features. For 7.1 or 7.3, do not generate native `JSON` column DML unless the customer provides version-specific confirmation.
+- JSON processing uses Temporary LOB internally, so check `TEMPORARY_LOB_ENABLE` when a JSON workload fails or when memory use is being reviewed.
+- Treat JSON columns as LOB-like for DML and object restrictions; check the data type guidance before assuming they can be used like ordinary scalar columns.
+- Do not generate `SELECT FOR UPDATE` against `JSON` columns.
+- For full JSON type, path-expression, storage, and property details, use `05_data_types_properties.md`.
+
 ### JSON Item: JSON_ARRAY
 
 Purpose: create a JSON array from JSON values, SQL scalars, `BOOLEAN`, or `NULL`.
