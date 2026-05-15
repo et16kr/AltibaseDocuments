@@ -153,14 +153,20 @@ Source purpose: execution plans, optimizer behavior, indexes, joins, monitoring 
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/Performance Tuning Guide.md`
+  - `Manuals/Altibase_7.1/eng/Stored Procedures Manual.md`
+  - `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
   - `Manuals/Altibase_7.1/eng/Monitoring API Developer's Guide.md`
   - `Manuals/Altibase_7.1/eng/SNMP Agent Guide.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/Performance Tuning Guide.md`
+  - `Manuals/Altibase_7.3/eng/Stored Procedures Manual.md`
+  - `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
   - `Manuals/Altibase_7.3/eng/Monitoring API Developer's Guide.md`
   - `Manuals/Altibase_7.3/eng/SNMP Agent Guide.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Performance Tuning Guide.md`
+  - `Manuals/Altibase_trunk/eng/Stored Procedures Manual.md`
+  - `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
   - `Manuals/Altibase_trunk/eng/Monitoring API Developer's Guide.md`
   - `Manuals/Altibase_trunk/eng/SNMP Agent Guide.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`

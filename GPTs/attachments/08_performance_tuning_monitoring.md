@@ -2,9 +2,9 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 Performance Tuning Guide, Monitoring API Developer's Guide, and SNMP Agent Guide.
-- 7.3: Based on Altibase 7.3 Performance Tuning Guide, Monitoring API Developer's Guide, and SNMP Agent Guide.
-- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide, Monitoring API Developer's Guide, SNMP Agent Guide, and release notes.
+- 7.1: Based on Altibase 7.1 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
+- 7.3: Based on Altibase 7.3 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
+- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, Monitoring API Developer's Guide, SNMP Agent Guide, and release notes.
 
 ## Questions This File Can Answer
 
@@ -19,9 +19,9 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Performance Tuning Guide; Monitoring API Developer's Guide; SNMP Agent Guide.
-- 7.3: Altibase 7.3 Performance Tuning Guide; Monitoring API Developer's Guide; SNMP Agent Guide.
-- 8.1: Altibase 8.1 verified source Performance Tuning Guide; Monitoring API Developer's Guide; SNMP Agent Guide; Altibase 8.1 release notes.
+- 7.1: Altibase 7.1 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 7.3: Altibase 7.3 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 8.1: Altibase 8.1 verified source Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; Monitoring API Developer's Guide; SNMP Agent Guide; Altibase 8.1 release notes.
 
 ## Response Rules
 
@@ -1645,9 +1645,9 @@ Shared cache areas:
 
 Version-aware plan pinning:
 
-- 7.3 and 8.1 sources document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN(sql_text_id)` and `DBMS_SQL_PLAN_CACHE.UNKEEP_PLAN(sql_text_id)` for keeping or releasing a specific cached execution plan.
-- Do not present `DBMS_SQL_PLAN_CACHE` as common to 7.1 unless the customer confirms equivalent support in the installed source.
-- Verify pinned plan state with `V$SQL_PLAN_CACHE_SQLTEXT.PLAN_CACHE_KEEP` and `V$SQL_PLAN_CACHE_PCO.PLAN_CACHE_KEEP`.
+- Selected 7.1, 7.3, and Altibase 8.1 verified source manuals document `DBMS_SQL_PLAN_CACHE.KEEP_PLAN(sql_text_id)` and `DBMS_SQL_PLAN_CACHE.UNKEEP_PLAN(sql_text_id)` for keeping or releasing a specific cached execution plan.
+- Treat plan-cache pinning as target-server verified operational guidance: before using it, verify that the installed server supports the package and exposes `V$SQL_PLAN_CACHE_SQLTEXT.PLAN_CACHE_KEEP` and `V$SQL_PLAN_CACHE_PCO.PLAN_CACHE_KEEP`.
+- After `KEEP_PLAN` or `UNKEEP_PLAN`, confirm the target server's keep state with those `PLAN_CACHE_KEEP` columns; do not assume the column names or values if the target build differs.
 
 SQL Plan Cache architecture:
 
