@@ -24,6 +24,7 @@
 - 7.1: Altibase 7.1 Administrator's Manual.
 - 7.3: Altibase 7.3 Administrator's Manual.
 - 8.1: Altibase 8.1 verified source Administrator's Manual.
+- SQL Reference: datafile rename phase wording for 7.1, 7.3, and Altibase 8.1 verified source.
 
 ## Response Rules
 
@@ -802,23 +803,122 @@ Rules:
 - A data file size or max size must remain greater than currently used space.
 - Autoextension can make active work wait while the file grows; leave enough headroom.
 
-Runbook: rename or move disk datafile
+Runbook: recovery or strict-policy disk datafile move in `CONTROL`
+
+Use this as the copy-ready default for media recovery, failed storage, or any local runbook that must follow the stricter SQL Reference phase rule. The target file in `TO` must already exist and must be an absolute path.
 
 ```sql
-ALTER TABLESPACE app_disk_tbs OFFLINE;
+SELECT t.name AS tablespace_name,
+       d.name AS datafile_name,
+       d.currsize,
+       d.maxsize,
+       d.autoextend,
+       d.opened,
+       d.state
+FROM V$TABLESPACES t, V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND d.name = '/data/altibase/dbs/app_disk01.dbf';
+```
 
+```bash
+server stop
+SYS_PASSWORD='replace_with_site_sys_password'
+isql -u sys -p "$SYS_PASSWORD" -sysdba
+```
+
+```sql
+STARTUP CONTROL;
+```
+
+```bash
+SOURCE_DATAFILE=/backup/altibase/app_disk01.dbf
+TARGET_DATAFILE=/data2/altibase/dbs/app_disk01.dbf
+# For a planned strict-policy move while the old disk is healthy, use:
+# SOURCE_DATAFILE=/data/altibase/dbs/app_disk01.dbf
+
+mkdir -p "$(dirname "$TARGET_DATAFILE")"
+cp -p "$SOURCE_DATAFILE" "$TARGET_DATAFILE"
+# Use mv instead of cp only after the service window and rollback plan are approved.
+# Change these variables if Altibase runs under a different OS account.
+ALTIBASE_OS_USER=altibase
+ALTIBASE_OS_GROUP=altibase
+chown "${ALTIBASE_OS_USER}:${ALTIBASE_OS_GROUP}" "$TARGET_DATAFILE"
+chmod --reference="$SOURCE_DATAFILE" "$TARGET_DATAFILE"
+stat -c '%U %G %A %n' "$SOURCE_DATAFILE" "$TARGET_DATAFILE"
+test -r "$TARGET_DATAFILE" && test -w "$TARGET_DATAFILE"
+```
+
+```sql
+ALTER DATABASE RENAME DATAFILE
+'/data/altibase/dbs/app_disk01.dbf'
+TO
+'/data2/altibase/dbs/app_disk01.dbf';
+
+SELECT t.name AS tablespace_name,
+       d.name AS datafile_name,
+       d.opened,
+       d.state
+FROM V$TABLESPACES t, V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND d.name = '/data2/altibase/dbs/app_disk01.dbf';
+
+-- Recovery case only. For a planned strict-policy move with no media failure, omit this statement.
+ALTER DATABASE RECOVER DATABASE;
+STARTUP SERVICE;
+```
+
+Runbook: planned service/offline disk datafile move
+
+Use this only when site source policy explicitly accepts the Administrator's Manual wording for service-phase rename of an offline tablespace. Do not use it for system tablespaces, temporary or volatile tablespaces, replicated tablespaces that cannot be taken offline, or media recovery.
+
+```sql
+SELECT t.name AS tablespace_name,
+       t.state AS tablespace_state,
+       d.name AS datafile_name,
+       d.opened,
+       d.state AS datafile_state
+FROM V$TABLESPACES t, V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND t.name = 'APP_DISK_TBS';
+
+ALTER TABLESPACE app_disk_tbs OFFLINE;
+```
+
+```bash
+mkdir -p /data2/altibase/dbs
+cp -p /data/altibase/dbs/app_disk01.dbf /data2/altibase/dbs/app_disk01.dbf
+# Use mv instead of cp only after rollback requirements are clear.
+ALTIBASE_OS_USER=altibase
+ALTIBASE_OS_GROUP=altibase
+chown "${ALTIBASE_OS_USER}:${ALTIBASE_OS_GROUP}" /data2/altibase/dbs/app_disk01.dbf
+chmod --reference=/data/altibase/dbs/app_disk01.dbf /data2/altibase/dbs/app_disk01.dbf
+stat -c '%U %G %A %n' /data/altibase/dbs/app_disk01.dbf /data2/altibase/dbs/app_disk01.dbf
+test -r /data2/altibase/dbs/app_disk01.dbf && test -w /data2/altibase/dbs/app_disk01.dbf
+```
+
+```sql
 ALTER TABLESPACE app_disk_tbs
 RENAME DATAFILE '/data/altibase/dbs/app_disk01.dbf'
 TO '/data2/altibase/dbs/app_disk01.dbf';
 
+SELECT t.name AS tablespace_name,
+       t.state AS tablespace_state,
+       d.name AS datafile_name,
+       d.opened,
+       d.state AS datafile_state
+FROM V$TABLESPACES t, V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND t.name = 'APP_DISK_TBS'
+  AND d.name = '/data2/altibase/dbs/app_disk01.dbf';
+
 ALTER TABLESPACE app_disk_tbs ONLINE;
 ```
 
-Operational notes:
+Source-audit note:
 
-- In `SERVICE`, rename a data file only for an offline tablespace.
-- In `CONTROL`, data file references can be renamed with `ALTER DATABASE RENAME DATAFILE` or `ALTER TABLESPACE ... RENAME DATAFILE`, depending on the recovery case.
-- Move the physical file at the OS level and ensure ownership and permissions before bringing the tablespace online.
+- The Administrator's Manual says `ALTER TABLESPACE ... RENAME DATAFILE` can change a datafile location in any startup phase, but in `SERVICE` only for an offline tablespace.
+- The SQL Reference says `RENAME DATAFILE` is available only in `CONTROL`.
+- For customer answers, prefer the `CONTROL` runbook unless the customer's version, maintenance policy, and test result explicitly accept the Administrator's Manual service/offline wording.
 
 Runbook: create memory tablespace
 

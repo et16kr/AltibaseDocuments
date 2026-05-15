@@ -70,10 +70,13 @@ Source purpose: administration, accounts, backup/recovery, tablespaces, server o
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/Administrator's Manual.md`
+  - `Manuals/Altibase_7.1/eng/SQL Reference.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/Administrator’s Manual.md`
+  - `Manuals/Altibase_7.3/eng/SQL Reference.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Administrator’s Manual.md`
+  - `Manuals/Altibase_trunk/eng/SQL Reference.md`
 
 ### 03_sql_ddl_generation.md
 
