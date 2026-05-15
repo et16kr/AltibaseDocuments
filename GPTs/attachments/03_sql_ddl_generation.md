@@ -346,7 +346,7 @@ Generation notes:
 - `ENABLE ROW MOVEMENT` allows updates that move rows between partitions when partition key values change. If omitted, `DISABLE ROW MOVEMENT` is the default.
 - `ADD PARTITION` and `COALESCE PARTITION` are for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
 - Moving a non-partitioned table with `ALTER TABLE ... ALTER TABLESPACE` moves records. Moving a partitioned table's table-level tablespace does not move existing partition records; use partition-level clauses to move partition data.
-- When a table is a replication target, do not generate `ALTER TABLE` that changes the table definition.
+- Do not generate ad hoc `ALTER TABLE` for replication targets. For replication-target DDL, use the standard remove/re-add flow or the documented DDL synchronization procedure in `09_replication_ha_cdc.md`.
 - `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns or explicit target data types; expression columns need aliases.
 - `PCTFREE` and `PCTUSED` are meaningful for disk-based table pages. Do not copy Oracle storage clauses without checking Altibase syntax and storage target.
 - `JSON` columns are an 8.1 baseline feature. Use `JSON [IN ROW size]` when needed, ensure `TEMPORARY_LOB_ENABLE=1`, and avoid JSON columns for 7.1 or 7.3 unless the customer confirms support.
