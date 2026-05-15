@@ -1728,13 +1728,13 @@ GROUP BY create_reason
 ORDER BY count(*) DESC;
 
 SELECT a.sql_text,
-       b.child_pco_count,
+       a.child_pco_count,
        b.hit_count,
        b.rebuild_count
 FROM V$SQL_PLAN_CACHE_SQLTEXT a,
      V$SQL_PLAN_CACHE_PCO b
 WHERE a.sql_text_id = b.sql_text_id
-ORDER BY b.child_pco_count DESC;
+ORDER BY a.child_pco_count DESC;
 ```
 
 Interpretation:
