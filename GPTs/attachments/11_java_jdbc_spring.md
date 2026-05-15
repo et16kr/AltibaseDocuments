@@ -144,7 +144,11 @@ jdbc:Altibase://db1.example.com:20300/mydb?lob_null_select=off
 
 # SSL/TLS client connection
 jdbc:Altibase://db1.example.com:20443/mydb?ssl_enable=true&verify_server_certificate=true
+```
 
+With `verify_server_certificate=true`, server verification requires a configured JVM default truststore or explicit `truststore_url` and `truststore_password`.
+
+```text
 # IPv6 literal
 jdbc:Altibase://[::1]:20300/mydb
 ```
