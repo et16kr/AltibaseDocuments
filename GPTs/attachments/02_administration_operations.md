@@ -92,6 +92,8 @@ Connect as `SYSDBA` for startup, shutdown, backup, recovery, and most database-l
 isql -u sys -p manager -sysdba
 ```
 
+`manager` is an example password from the manuals. Use the site-specific `SYS` password, and do not embed production passwords in reusable scripts.
+
 Startup phases move forward only:
 
 ```sql
