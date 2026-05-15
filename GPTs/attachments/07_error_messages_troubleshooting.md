@@ -8,7 +8,7 @@
 
 ## Questions This File Can Answer
 
-- What are the cause and action for a specific Altibase error code?
+- What are the cause and action for covered/common Altibase error codes?
 - How should a GPT answer when the user provides only `ERR-xxxxx`, an error message, or a trace log excerpt?
 - Which log files, SQL checks, and commands should be requested for startup, SQL execution, connection, replication, SSL, LOB, JSON, regular expression, tablespace, and lock errors?
 - Which errors are version-sensitive in 7.1, 7.3, and 8.1?
@@ -26,6 +26,7 @@
 - Keep SQL object names, function names, error codes, reference symbols, property names, commands, file paths, and environment variables literal.
 - Preserve the exact error code and message the user provided. Do not translate or rewrite `ERR-31363`, `0x31363`, `qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE`, `TEMPORARY_LOB_ENABLE`, `REGEXP_MODE`, `ALTIBASE_SSL_PORT_NO`, or similar tokens.
 - If the user gives only an error code, ask for the full error line, Altibase version, SQL or command, and relevant trace log excerpt before making a final diagnosis.
+- If the user gives an uncovered or not covered specific Altibase error code, preserve the supplied code and message, state that the exact cause/action is not covered here, set cause/action beyond the user's evidence to `Unknown from the supplied message`, and ask for the Altibase version, full error line, SQL or command, and relevant trace log excerpt. Do not infer cause, action, `SQLSTATE`, module, or severity from the prefix or code family alone.
 - Runtime messages often appear as `[ERR-31363 : Cannot execute DDL when a temporary table is in use.]`. The Error Message Reference may list the same code as `0x31363 (201571)` with a reference symbol. Keep both forms when known.
 - Treat placeholders such as `<0%s>`, `<1%d>`, and `<0%lu>` as values that Altibase substitutes at runtime. Do not ask users to type placeholders literally.
 - If the reference action says to contact support, first collect version, exact command, SQL text, timestamp, trace log excerpts, OS error number if present, and reproduction steps.
