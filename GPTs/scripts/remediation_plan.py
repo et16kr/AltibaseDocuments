@@ -68,6 +68,13 @@ def one_line(value: str | None) -> str:
     return re.sub(r"\s+", " ", text)
 
 
+def clipped_one_line(value: str | None, limit: int = 1200) -> str:
+    text = one_line(value)
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3] + "..."
+
+
 def append_failure_log(plan_path: Path, task: Task, reason: str, *, source: str) -> None:
     if not FAILURE_LOG.exists():
         FAILURE_LOG.write_text(
@@ -657,23 +664,7 @@ def cmd_finish(args: argparse.Namespace) -> int:
         die(f"finish expects Progress; {task.id} is {task.state}. Use --force for recovery.")
 
     if args.state == "Done" and not args.no_review:
-        if args.local_review:
-            rc = run_review_checks(
-                args.plan,
-                task,
-                strict_validation=args.strict_review,
-                include_common=not args.no_common_review,
-                quiet=False,
-            )
-            if rc != 0:
-                append_failure_log(
-                    args.plan,
-                    task,
-                    "local review checks found hard failures; task was not marked Done",
-                    source="finish Done local-review",
-                )
-                die("local review checks found hard failures; task was not marked Done")
-        else:
+        if args.codex_review:
             result = run_codex_review(
                 args.plan,
                 task,
@@ -689,6 +680,22 @@ def cmd_finish(args: argparse.Namespace) -> int:
                     source="finish Done review",
                 )
                 die(f"Codex review returned {result.verdict}; task was not marked Done")
+        else:
+            rc = run_review_checks(
+                args.plan,
+                task,
+                strict_validation=args.strict_review,
+                include_common=not args.no_common_review,
+                quiet=False,
+            )
+            if rc != 0:
+                append_failure_log(
+                    args.plan,
+                    task,
+                    "local review checks found hard failures; task was not marked Done",
+                    source="finish Done local-review",
+                )
+                die("local review checks found hard failures; task was not marked Done")
     elif args.state == "Done" and not args.no_validate:
         command = command_for_task(args.plan, task)
         if command:
@@ -718,12 +725,13 @@ Follow the plan's state rules:
 - If any task is already Progress, continue that task before starting another.
 - Before editing a ToDo task, mark it Progress.
 - After editing, run the listed validation.
-- Run the remediation review command before marking Done. This invokes a separate Codex CLI reviewer.
-- Mark the task Done only when the required change is applied, validation evidence is acceptable, and Codex review returns `REMEDIATION_REVIEW_RESULT: PASS`.
+- Run the local remediation review command before marking Done. Do not invoke a nested Codex CLI reviewer from inside this Codex execution.
+- Mark the task Done only when the required change is applied, validation evidence is acceptable, and the local review evidence has no hard failure.
+- The run-all parent process will invoke the separate Codex CLI automatic post-review after this task process exits.
 - Mark the task Fail if the task is blocked or validation shows the change is not complete. Include `--reason` so the failure log captures the cause.
 - Do not mark R15 final readiness tasks Done until their prerequisite tasks are Done or explicitly accepted as residual risk.
 - Review retry rule: after the first review, if a finding is small, scoped to this task, and source-backed, fix it and run review again. Retry at most {DEFAULT_REVIEW_RETRIES} time(s). If the same issue remains, required source evidence is unclear, or a fix would broaden scope, mark the task Fail and record the reason.
-- If Codex review returns `RETRY`, fix only the reported scoped issue and rerun review. If Codex review returns `FAIL`, mark the task Fail.
+- If the local review shows stale report findings that the diff has actually fixed, use the target-file diff and validation command as the deciding evidence.
 
 Task:
 ID: {task.id}
@@ -738,12 +746,12 @@ Validation command:
 Use these commands for state transitions:
 - Start: bash GPTs/scripts/remediation_plan.sh start {task.id}
 - Validate: bash GPTs/scripts/remediation_plan.sh validate {task.id}
-- Review: bash GPTs/scripts/remediation_plan.sh review {task.id}
-- Finish Done: bash GPTs/scripts/remediation_plan.sh finish {task.id} Done
+- Review: bash GPTs/scripts/remediation_plan.sh review {task.id} --local
+- Finish Done: bash GPTs/scripts/remediation_plan.sh finish {task.id} Done --local-review
 - Finish Fail: bash GPTs/scripts/remediation_plan.sh finish {task.id} Fail --force --reason "short failure reason"
 
 Keep edits scoped to the target files and any directly required supporting report or source-inventory files. Do not change unrelated tasks.
-Do not use `finish {task.id} Done` until Codex review has returned PASS after the final edit. The finish command runs a final Codex review gate as a safeguard.
+Do not use `finish {task.id} Done --codex-review` from inside run-all; nested Codex CLI review can fail in sandboxed environments. The run-all parent process performs the separate automatic Codex post-review outside this task process.
 """
 
 
@@ -838,6 +846,29 @@ def cmd_run_all(args: argparse.Namespace) -> int:
         if refreshed.state == "Fail" and args.stop_on_fail:
             print(f"==> {task.id} is Fail; stopping because stop-on-fail is enabled.")
             return 1
+        if refreshed.state == "Done" and not args.no_post_review:
+            print(f"==> post-reviewing {task.id}")
+            result = run_codex_review(
+                args.plan,
+                refreshed,
+                codex_bin=args.codex_bin,
+                codex_subcommand=args.codex_subcommand,
+                quiet=False,
+            )
+            if result.verdict != "PASS":
+                append_failure_log(
+                    args.plan,
+                    refreshed,
+                    (
+                        f"run-all post-review returned {result.verdict}; "
+                        f"task marked Fail. Review output: {clipped_one_line(result.output)}"
+                    ),
+                    source="run-all post-review",
+                )
+                update_task_state(args.plan, task.id, "Fail", force=True)
+                if args.stop_on_fail:
+                    print(f"==> {task.id} post-review returned {result.verdict}; stopping.")
+                    return 1
 
     print(f"Stopped after {ran} task(s).")
     return 0
@@ -896,7 +927,8 @@ def build_parser() -> argparse.ArgumentParser:
     finish_parser.add_argument("--force", action="store_true", help="Allow finishing a non-Progress task.")
     finish_parser.add_argument("--no-review", action="store_true", help="Skip the review gate before Done.")
     finish_parser.add_argument("--reviewed", action="store_true", help="Deprecated no-op kept for older prompts.")
-    finish_parser.add_argument("--local-review", action="store_true", help="Use local evidence checks instead of Codex CLI review.")
+    finish_parser.add_argument("--local-review", action="store_true", help="Use local evidence checks. This is the default for Done.")
+    finish_parser.add_argument("--codex-review", action="store_true", help="Use a separate Codex CLI review before Done.")
     finish_parser.add_argument("--strict-review", action="store_true", help="Fail Done when the task validation command is non-zero.")
     finish_parser.add_argument("--no-common-review", action="store_true", help="Skip common upload-boundary checks in the Done review gate.")
     finish_parser.add_argument("--no-validate", action="store_true", help="Skip validation before Done.")
@@ -941,6 +973,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run_all_parser.add_argument("--force", action="store_true", help="Bypass single-Progress checks.")
     run_all_parser.add_argument("--dry-run", action="store_true", help="Print prompts without running Codex.")
+    run_all_parser.add_argument(
+        "--no-post-review",
+        action="store_true",
+        help="Skip the separate Codex CLI automatic post-review after a task reaches Done.",
+    )
     run_all_parser.add_argument("--codex-bin", help="Codex binary. Default: CODEX_BIN or codex.")
     run_all_parser.add_argument("--codex-subcommand", help="Codex subcommand. Default: CODEX_SUBCOMMAND or exec.")
     run_all_parser.set_defaults(func=cmd_run_all)

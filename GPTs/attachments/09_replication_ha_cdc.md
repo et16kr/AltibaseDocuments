@@ -289,6 +289,7 @@ WHERE name IN (
   'REPLICATION_SQL_APPLY_ENABLE',
   'REPLICATION_DDL_ENABLE',
   'REPLICATION_DDL_ENABLE_LEVEL',
+  'REPLICATION_DDL_SYNC',
   'REPLICATION_EAGER_PARALLEL_FACTOR',
   'REPLICATION_SENDER_AUTO_START'
 )
@@ -798,6 +799,7 @@ Properties:
 
 - `REPLICATION_DDL_ENABLE`: enables DDL execution on replication targets when set to `1`.
 - `REPLICATION_DDL_ENABLE_LEVEL`: controls which DDL categories are allowed.
+- `REPLICATION_DDL_SYNC`: enables DDL synchronization from the local server executing the DDL to the remote server.
 - `REPLICATION_SQL_APPLY_ENABLE`: enables SQL apply mode on the Receiver side.
 
 DDL Level 0 examples:
@@ -855,23 +857,45 @@ DDL synchronization procedure with SQL apply mode:
 
 ```sql
 -- 1. Use this only for documented DDL synchronization cases, not for EAGER targets or RECOVERY-enabled objects.
--- 2. On the local server that will execute the DDL:
+--    Replication must already be started on both servers, protocol versions must match,
+--    and the replication target owner and name must match on both servers.
+
+-- 2. On the local server that will execute the DDL, enable DDL execution and session DDL sync.
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1;
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1;
 ALTER SESSION SET REPLICATION_DDL_SYNC = 1;
 
--- 3. On the remote server, enable DDL sync and SQL apply support for the receiver side.
+-- 3. On the remote server, enable DDL execution, DDL sync, and SQL apply support.
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 1;
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 1;
 ALTER SYSTEM SET REPLICATION_DDL_SYNC = 1;
 ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 1;
 
--- 4. Flush before executing the DDL on the local server only.
-ALTER REPLICATION rep1 FLUSH ALL WAIT 60;
+-- 4. On the local server, use the replication mode defined by the replication object.
+ALTER SESSION SET REPLICATION = DEFAULT;
+
+-- 5. On both the local and remote servers, flush before executing the DDL.
+-- Local server:
+ALTER REPLICATION rep1 FLUSH;
+-- Remote server:
+ALTER REPLICATION rep1 FLUSH;
+
+-- 6. Execute the DDL one time on the local server only.
 -- ALTER TABLE app.t1 ...;
 
--- 5. Verify apply completion, then restore properties.
+-- 7. Verify apply completion, then restore every changed property immediately.
 SELECT rep_name, sql_apply_table_count
 FROM V$REPRECEIVER
 WHERE rep_name = 'REP1';
 
+-- 8. On the local server, reset local DDL properties and the session DDL sync flag.
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 0;
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 0;
 ALTER SESSION SET REPLICATION_DDL_SYNC = 0;
+
+-- 9. On the remote server, reset remote DDL sync and SQL apply properties.
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE = 0;
+ALTER SYSTEM SET REPLICATION_DDL_ENABLE_LEVEL = 0;
 ALTER SYSTEM SET REPLICATION_DDL_SYNC = 0;
 ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 0;
 ```
