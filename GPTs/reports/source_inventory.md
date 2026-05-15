@@ -172,6 +172,10 @@ Source purpose: meta tables, data dictionary, performance views, operational che
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
 
 ### 07_error_messages_troubleshooting.md
 
@@ -217,6 +221,16 @@ Source purpose: execution plans, optimizer behavior, indexes, joins, monitoring 
   - `Manuals/Altibase_trunk/eng/Monitoring API Developer's Guide.md`
   - `Manuals/Altibase_trunk/eng/SNMP Agent Guide.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_7.1/kor/Monitoring API Developer's Guide.md`
+  - `Manuals/Altibase_7.1/kor/SNMP Agent Guide.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_7.3/kor/Monitoring API Developer's Guide.md`
+  - `Manuals/Altibase_7.3/kor/SNMP Agent Guide.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+  - `Manuals/Altibase_trunk/kor/Monitoring API Developer's Guide.md`
+  - `Manuals/Altibase_trunk/kor/SNMP Agent Guide.md`
 
 ### 09_replication_ha_cdc.md
 

@@ -1037,6 +1037,7 @@ SELECT s.id AS session_id,
        st.id AS stmt_id,
        st.execute_state,
        st.fetch_state,
+       st.execute_flag,
        st.total_time,
        st.execute_time,
        st.fetch_time,
@@ -1045,10 +1046,11 @@ SELECT s.id AS session_id,
 FROM V$SESSION s,
      V$STATEMENT st
 WHERE s.id = st.session_id
+  AND st.execute_flag = 1
 ORDER BY st.total_time DESC;
 ```
 
-`V$STATEMENT.TOTAL_TIME`, `PARSE_TIME`, `VALIDATE_TIME`, `OPTIMIZE_TIME`, `EXECUTE_TIME`, and `FETCH_TIME` are in microseconds.
+`V$STATEMENT.EXECUTE_FLAG = 1` means the statement is currently executing. `V$STATEMENT.TOTAL_TIME`, `PARSE_TIME`, `VALIDATE_TIME`, `OPTIMIZE_TIME`, `EXECUTE_TIME`, and `FETCH_TIME` are in microseconds.
 
 For SQL text fragments:
 

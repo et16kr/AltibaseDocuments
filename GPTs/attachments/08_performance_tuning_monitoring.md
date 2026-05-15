@@ -1890,7 +1890,7 @@ FROM V$PROPERTY
 WHERE name = 'MULTIPLEXING_THREAD_COUNT';
 ```
 
-- Immediate Action: Tune or cancel long-running SQL before changing thread properties. Treat nonzero or rising `READY_TASK_COUNT` as the queue signal, then compare `MULTIPLEXING_THREAD_COUNT` only with the multiplexing/shared rows (`RUN_MODE = 'SHARED'` and `TYPE` reported as `SOCKET (MULTIPLEXING)` or the target server's equivalent spelling). Do not count `SOCKET (DEDICATED)`, IPC, IPCDA, or `RUN_MODE = 'DEDICATED'` rows against the multiplexing setting. If shared service-thread pressure remains after SQL triage, plan a bounded `MULTIPLEXING_THREAD_COUNT` review only after confirming the target version's property attributes, service impact, previous value, and restart requirements.
+- Immediate Action: Tune or cancel long-running SQL before changing thread properties. Treat nonzero or rising `READY_TASK_COUNT` as the queue signal, then compare `MULTIPLEXING_THREAD_COUNT` only with the multiplexing/shared rows (`RUN_MODE = 'SHARED'` and `TYPE` reported as `SOCKET(MULTIPLEXING)` or the target server's equivalent spelling). Do not count `SOCKET(DEDICATED)`, IPC, IPCDA, or `RUN_MODE = 'DEDICATED'` rows against the multiplexing setting. If shared service-thread pressure remains after SQL triage, plan a bounded `MULTIPLEXING_THREAD_COUNT` review only after confirming the target version's property attributes, service impact, previous value, and restart requirements.
 - Verification: Repeat the `V$SERVICE_THREAD` and `V$PROPERTY` check during a comparable workload window. `READY_TASK_COUNT` should flatten or return to zero on shared/multiplexing rows, thread growth should stabilize, and user-visible waits should fall after the SQL or property action.
 - Version Cautions: `V$SERVICE_THREAD` type spellings and multiplexing property attributes can vary by server version and configuration; verify `TYPE`, `RUN_MODE`, `READY_TASK_COUNT`, and `MULTIPLEXING_THREAD_COUNT` on the target server before recommending a property change.
 - Escalation: If waits continue after SQL tuning and bounded thread review, collect Altibase version, session count, grouped `V$SERVICE_THREAD` snapshots with `TYPE`, `RUN_MODE`, `TASK_COUNT`, and `READY_TASK_COUNT`, `MULTIPLEXING_THREAD_COUNT` values and attributes, active statement evidence, and trace log excerpts.
@@ -1981,7 +1981,10 @@ Important constraints:
 - The Monitoring API application connects to Altibase through a Unix domain socket. The application and Altibase must run on the same server.
 - Memory allocated internally by Monitoring API functions is shared by the library and is not thread-safe.
 - If multiple threads call the API, synchronize calls with a mutex.
-- Do not allocate or free result-structure memory directly. Declare a pointer, pass its address to the API, and read only the returned row count.
+- Do not allocate or free result-structure memory directly.
+- For row-set functions such as `ABIGetVSession`, declare a result pointer, pass its address to the API, and use the returned row count as the array bound.
+- For success-code result-pointer functions such as `ABIGetSqlText`, `ABIGetDBInfo`, and `ABIGetReadCount`, `0` means success and a negative return value is an error; read the structure pointer returned through the handle.
+- For scalar count functions such as `ABIGetSessionCount`, `ABIGetMaxClientCount`, and `ABIGetLockWaitSessionCount`, the return value is the count and a negative value is an error.
 
 Build essentials:
 
@@ -2011,7 +2014,7 @@ rc = ABIInitialize();
 rc = ABIFinalize();
 ```
 
-Result pointer pattern:
+Row-set result pointer pattern:
 
 ```c
 ABIVSession *session = NULL;
@@ -2036,7 +2039,7 @@ Monitoring API function block: sessions and statements
 
 - `ABIGetVSession`: selects `V$SESSION`; `aExecutingOnly = 0` returns all sessions and `1` returns active sessions only.
 - `ABIGetVSessionBySID`: selects one `V$SESSION` row by session ID.
-- `ABIGetSqlText`: returns SQL text, session ID, statement ID, query start time, execution flag, parse time, soft prepare time, execute time, fetch time, total time, validation time, and optimization time. If `aStmtID` is `0`, it returns currently active statement information.
+- `ABIGetSqlText`: returns `0` on success and stores SQL text, session ID, statement ID, query start time, execution flag, parse time, soft prepare time, execute time, fetch time, total time, validation time, and optimization time through the result handle. If `aStmtID` is `0`, it returns currently active statement information.
 - `ABIGetSessionCount`: returns total or active session count depending on `aExecutingOnly`.
 - `ABIGetMaxClientCount`: returns the maximum number of clients allowed by the `MAX_CLIENT` property.
 
@@ -2057,8 +2060,8 @@ Monitoring API function block: locks, database, I/O, and replication
 
 - `ABIGetLockPairBetweenSessions`: returns holder session ID, waiter session ID, and lock mode.
 - `ABIGetLockWaitSessionCount`: returns the count of sessions waiting for locks.
-- `ABIGetDBInfo`: returns database name and version.
-- `ABIGetReadCount`: returns logical and physical read counts.
+- `ABIGetDBInfo`: returns `0` on success and stores database name and version through the result handle.
+- `ABIGetReadCount`: returns `0` on success and stores logical and physical read counts through the result handle.
 - `ABIGetRepGap`: reads replication gap from `V$REPGAP`.
 - `ABIGetRepSentLogCount`: reads sent log counts by DML type from `V$REPSENDER_SENT_LOG_COUNT`.
 
@@ -2206,9 +2209,9 @@ SNMP command block:
 Trap code blocks:
 
 - `10000001`: Altibase is running. Level `3`.
-- `10000002`: Altibase is not running. Level `1`.
+- `10000002`: Altibase is not running. The manual's `Level` entry shows `3`, but its sample trap output shows `altiTrapLevel = 1`; validate target-version `snmptrapd` output before hard-coding alert severity.
 - `10000003`: `altisnmpd` is running. Level `3`.
-- `10000004`: `altisnmpd` is not running. Level `1`.
+- `10000004`: `altisnmpd` is not running. The manual's `Level` entry shows `3`, but its sample trap output shows `altiTrapLevel = 1`; validate target-version `snmptrapd` output before hard-coding alert severity.
 - `10000101`: query timeout when `altiPropertyAlarmQueryTimeout` is enabled. Level `2`.
 - `10000102`: fetch timeout when `altiPropertyAlarmFetchTimeout` is enabled. Level `2`.
 - `10000103`: update transaction timeout when `altiPropertyAlarmUtransTimeout` is enabled. Level `2`.
@@ -2305,7 +2308,7 @@ Monitoring API answer pattern:
 1. State that the API runs locally through Unix domain socket.
 2. Initialize with ABISetProperty and ABIInitialize.
 3. Use the API function that maps to the required performance view.
-4. Read only the returned row count and result array.
+4. Handle the API return style correctly: row-set count, success-code result pointer, or scalar count.
 5. Use a mutex if multiple threads call Monitoring API.
 6. Call ABIFinalize.
 ```
