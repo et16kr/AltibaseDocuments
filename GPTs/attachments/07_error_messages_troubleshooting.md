@@ -913,6 +913,34 @@ WHERE cs.user_id = t.user_id
   AND t.table_name = '<TABLE_NAME>'
   AND cs.constraint_type IN (2, 3, 6)
 ORDER BY cs.constraint_name;
+
+-- Also check standalone unique indexes; not every unique violation is
+-- represented by a constraint row.
+SELECT i.index_name,
+       i.index_id,
+       i.is_unique,
+       i.column_cnt,
+       ic.index_col_order,
+       c.column_name,
+       ic.sort_order
+FROM SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_INDEX_COLUMNS_ ic,
+     SYSTEM_.SYS_COLUMNS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.user_id = ic.user_id
+  AND i.index_id = ic.index_id
+  AND i.table_id = ic.table_id
+  AND ic.user_id = c.user_id
+  AND ic.table_id = c.table_id
+  AND ic.column_id = c.column_id
+  AND i.user_id = t.user_id
+  AND i.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>'
+  AND i.is_unique = 'T'
+ORDER BY i.index_name, ic.index_col_order;
 ```
 
 Version Cautions: Replication conflicts require replication-specific investigation before changing data.
@@ -1168,13 +1196,31 @@ Related Document: Data Types and Properties; SQL DML and Oracle Compatibility.
 
 ### Error Block: JSON Function Return or Path Error
 
-Error Code: `0x314BC` through `0x314CA`.
-
-Reference Symbol: `qpERR_ABORT_JSON_INVALID_TYPE`, `qpERR_ABORT_JSON_NUMBER_OVERFLOW`, `qpERR_ABORT_JSON_EXCEEDED_OBJECT_MAX_DEPTH`, `qpERR_ABORT_JSON_EMPTY_RESULTS`, `qpERR_ABORT_JSON_WRAPPER_IS_NEEDED`, `qpERR_ABORT_JSON_DEFAULT_VALUE_TOO_LONG`, `qpERR_ABORT_JSON_INVALID_KEY_TYPE`, `qpERR_ABORT_JSON_OBJECT_INCOMPLETE`, `qpERR_ABORT_JSON_TEXT_OVERFLOW`, `qpERR_ABORT_JSON_INVALID_JSON_PATH`, `qpERR_ABORT_JSON_INVALID_JSON_DATA`, `qpERR_ABORT_JSON_INAPPROPRIATE_JSON_PATH_VALUE`, `qpERR_ABORT_JSON_MULTIPLE_RESULTS`, `qpERR_ABORT_JSON_FAILED_TO_CONVERT_NUMERIC`, `qpERR_ABORT_JSON_RETURNS_NON_SCALAR_VALUE`.
+Error Codes: listed individually in the exact code map below.
 
 Module / Severity: QP / `ABORT`.
 
-Message: JSON function returned an unsupported type, overflowed, exceeded maximum object depth, found no result, required an array wrapper, received invalid JSON data, received an invalid JSON path, returned multiple results, failed numeric conversion, or returned non-scalar values.
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | Cause / action focus |
+| --- | --- | --- | --- |
+| `ERR-314BC` / `0x314BC (201916)` | `qpERR_ABORT_JSON_INVALID_TYPE` | `Unsupported data type for the returned value.` | Check the JSON function `RETURNING` type. |
+| `ERR-314BD` / `0x314BD (201917)` | `qpERR_ABORT_JSON_NUMBER_OVERFLOW` | `The returned number value exceeds the minimum or maximum limits.` | Check returned numeric range and `RETURNING` type. |
+| `ERR-314BE` / `0x314BE (201918)` | `qpERR_ABORT_JSON_EXCEEDED_OBJECT_MAX_DEPTH` | `The JSON object exceeds the maximum depth (<0%d>).` | Check JSON data depth. |
+| `ERR-314BF` / `0x314BF (201919)` | `qpERR_ABORT_JSON_EMPTY_RESULTS` | `No results were found.` | Check the JSON path expression. |
+| `ERR-314C0` / `0x314C0 (201920)` | `qpERR_ABORT_JSON_WRAPPER_IS_NEEDED` | `An array wrapper is required.` | Use the array wrapper option when multiple results are possible. |
+| `ERR-314C1` / `0x314C1 (201921)` | `qpERR_ABORT_JSON_DEFAULT_VALUE_TOO_LONG` | `The default value exceeds the maximum length.` | Check the default value and `RETURNING` type. |
+| `ERR-314C2` / `0x314C2 (201922)` | `qpERR_ABORT_JSON_INVALID_KEY_TYPE` | `Invalid date type for key.` | Check the JSON object key value type. |
+| `ERR-314C3` / `0x314C3 (201923)` | `qpERR_ABORT_JSON_OBJECT_INCOMPLETE` | `Invalid key-value pair for the JSON_OBJECT function.` | Check `JSON_OBJECT` key-value arguments. |
+| `ERR-314C4` / `0x314C4 (201924)` | `qpERR_ABORT_JSON_TEXT_OVERFLOW` | `The returned text value exceeds the maximum limits.` | Check returned text length and `RETURNING` type. |
+| `ERR-314C5` / `0x314C5 (201925)` | `qpERR_ABORT_JSON_INVALID_JSON_PATH` | `JSON path syntax error. <0%s>` | Check JSON path syntax. |
+| `ERR-314C6` / `0x314C6 (201926)` | `qpERR_ABORT_JSON_INVALID_JSON_DATA` | `Invalid JSON data. <0%s>` | Validate the JSON data. |
+| `ERR-314C7` / `0x314C7 (201927)` | `qpERR_ABORT_JSON_INAPPROPRIATE_JSON_PATH_VALUE` | `The JSON path expression cannot be null or non-literal value.` | Use a non-null literal JSON path expression. |
+| `ERR-314C8` / `0x314C8 (201928)` | `qpERR_ABORT_JSON_MULTIPLE_RESULTS` | `JSON function returns multiple results.` | Check path selectivity or wrapper options. |
+| `ERR-314C9` / `0x314C9 (201929)` | `qpERR_ABORT_JSON_FAILED_TO_CONVERT_NUMERIC` | `Unable to convert the value to the numeric type.` | Check numeric format and `RETURNING` type. |
+| `ERR-314CA` / `0x314CA (201930)` | `qpERR_ABORT_JSON_RETURNS_NON_SCALAR_VALUE` | `JSON function returns non-scalar values.` | Check path result shape and scalar-return expectations. |
+
+Message Summary: JSON function returned an unsupported type, overflowed, exceeded maximum object depth, found no result, required an array wrapper, received invalid JSON data, received an invalid JSON path, returned multiple results, failed numeric conversion, or returned non-scalar values.
 
 Applies To: Altibase 8.1 JSON functions and JSON path processing.
 
@@ -1342,11 +1388,19 @@ Related Document: Replication HA CDC; SQL DDL Generation.
 
 Error Code: `0x5120C (332300)`, `0x5120D (332301)`, `0x5120E (332302)`, `0x5121D (332317)`, `0x5121E (332318)`.
 
-Reference Symbol: `ulERR_ABORT_SSL_OPERATION_FAILURE`, `ulERR_ABORT_SSL_LIBRARY_ERROR`, `ulERR_ABORT_SSL_LINK_FAILURE`, `ulERR_ABORT_INVALID_ALTIBASE_SSL_PORT_NO`, `ulERR_ABORT_PORT_NO_ALTIBASE_SSL_PORT_NO_NOT_SET`.
-
 Module / Severity: CLI/ODBC / `ABORT`.
 
-Message: SSL operation failure, failed to load OpenSSL library, SSL link failure, invalid `ALTIBASE_SSL_PORT_NO`, or missing SSL port.
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | Action focus |
+| --- | --- | --- | --- |
+| `ERR-5120C` / `0x5120C (332300)` | `ulERR_ABORT_SSL_OPERATION_FAILURE` | `SSL operation failure. <0%s>` | Check the detailed SSL error text. |
+| `ERR-5120D` / `0x5120D (332301)` | `ulERR_ABORT_SSL_LIBRARY_ERROR` | `Failed to load the OpenSSL library - <0%s>` | Check whether the OpenSSL library is installed and configured. |
+| `ERR-5120E` / `0x5120E (332302)` | `ulERR_ABORT_SSL_LINK_FAILURE` | `SSL link failure. <0%s>` | Check the detailed SSL link error code. |
+| `ERR-5121D` / `0x5121D (332317)` | `ulERR_ABORT_INVALID_ALTIBASE_SSL_PORT_NO` | `Connection string does not have PORT_NO, and environment variable ALTIBASE_SSL_PORT_NO does not have a valid value : <0%s>.` | Set `ALTIBASE_SSL_PORT_NO` correctly or specify `PORT_NO` in the connection string. |
+| `ERR-5121E` / `0x5121E (332318)` | `ulERR_ABORT_PORT_NO_ALTIBASE_SSL_PORT_NO_NOT_SET` | `Neither PORT_NO in the connection string nor the ALTIBASE_SSL_PORT_NO environment variable has been set.` | Set `PORT_NO` in the connection string or set `ALTIBASE_SSL_PORT_NO`. |
+
+Message Summary: SSL operation failure, failed to load OpenSSL library, SSL link failure, invalid `ALTIBASE_SSL_PORT_NO`, or missing SSL port.
 
 Applies To: CLI, ODBC, and client connection strings using SSL.
 
@@ -1371,13 +1425,28 @@ Related Document: Security SSL TLS; C CLI ODBC Precompiler.
 
 ### Error Block: Server SSL Certificate or Handshake Failure
 
-Error Code: `0x710A0` through `0x710AB`.
-
-Reference Symbol: `cmERR_ABORT_INVALID_CERTIFICATE`, `cmERR_ABORT_INVALID_PRIVATE_KEY`, `cmERR_ABORT_PRIVATE_KEY_VERIFICATION`, `cmERR_ABORT_SSL_HANDSHAKE`, `cmERR_ABORT_SSL_READ`, `cmERR_ABORT_SSL_WRITE`, `cmERR_ABORT_SSL_SHUTDOWN`, `cmERR_ABORT_INVALID_VERIFY_LOCATION`, `cmERR_ABORT_INVALID_CA_LIST_FILE`, `cmERR_ABORT_SSL_CONNECT`, `cmERR_ABORT_VERIFY_PEER_CERITIFICATE`, `cmERR_ABORT_SSL_OPERATION`.
+Error Codes: listed individually in the exact code map below.
 
 Module / Severity: CM / `ABORT`.
 
-Message: SSL certificate, private key, CA, peer certificate, handshake, read, write, connect, shutdown, or operation failure.
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | Action focus |
+| --- | --- | --- | --- |
+| `ERR-710A0` / `0x710A0 (463008)` | `cmERR_ABORT_INVALID_CERTIFICATE` | `Failed to load a certificate. SSL error: <0%s>` | Check the certificate file and location. |
+| `ERR-710A1` / `0x710A1 (463009)` | `cmERR_ABORT_INVALID_PRIVATE_KEY` | `Failed to load a private key. SSL error: <0%s>` | Check the private key file and location. |
+| `ERR-710A2` / `0x710A2 (463010)` | `cmERR_ABORT_PRIVATE_KEY_VERIFICATION` | `Failed to verify the private key. SSL error: <0%s>` | Check whether the private key matches the certificate. |
+| `ERR-710A3` / `0x710A3 (463011)` | `cmERR_ABORT_SSL_HANDSHAKE` | `SSL handshake failed. SSL error: <0%s>` | Check `altibase_boot.log` for the detailed handshake failure. |
+| `ERR-710A4` / `0x710A4 (463012)` | `cmERR_ABORT_SSL_READ` | `SSL read failed. SSL error: <0%s>` | Check `altibase_boot.log` for detailed SSL read failure text. |
+| `ERR-710A5` / `0x710A5 (463013)` | `cmERR_ABORT_SSL_WRITE` | `SSL write failed. SSL error: <0%s>` | Check `altibase_boot.log` for detailed SSL write failure text. |
+| `ERR-710A6` / `0x710A6 (463014)` | `cmERR_ABORT_SSL_SHUTDOWN` | `SSL shutdown failed. SSL error: <0%s>` | Check `altibase_boot.log` for detailed SSL shutdown failure text. |
+| `ERR-710A7` / `0x710A7 (463015)` | `cmERR_ABORT_INVALID_VERIFY_LOCATION` | `Failed to load trusted certificates from the specified location(s). SSL error: <0%s>` | Check `CA` and `CAPath` property values. |
+| `ERR-710A8` / `0x710A8 (463016)` | `cmERR_ABORT_INVALID_CA_LIST_FILE` | `Failed to load trusted certificates from the CA file. SSL error: <0%s>` | Check whether the CA file is valid. |
+| `ERR-710A9` / `0x710A9 (463017)` | `cmERR_ABORT_SSL_CONNECT` | `SSL connect failed.` | Check `altibase_boot.log` for the detailed connect failure. |
+| `ERR-710AA` / `0x710AA (463018)` | `cmERR_ABORT_VERIFY_PEER_CERITIFICATE` | `Failed to verify the peer certificate. SSL error: <0%s>` | Check whether the peer has a valid certificate. |
+| `ERR-710AB` / `0x710AB (463019)` | `cmERR_ABORT_SSL_OPERATION` | `SSL operation failed. SSL error: <0%s>` | Check `altibase_boot.log` for detailed SSL operation failure text. |
+
+Message Summary: SSL certificate, private key, CA, peer certificate, handshake, read, write, connect, shutdown, or operation failure.
 
 Applies To: server-side SSL/TLS and communication module.
 
@@ -1413,7 +1482,7 @@ Symptom: SSL initialization fails because the OpenSSL version is unsupported.
 
 Primary Causes: OpenSSL version does not match the supported library version for the Altibase build.
 
-Immediate Action: Check the installed OpenSSL version and align it with the version required by the target Altibase release.
+Immediate Action: Check whether the installed OpenSSL version is 3.x. Collect the Altibase patch level, platform, library path, and OpenSSL version before changing libraries.
 
 Check SQL or Command:
 
@@ -1423,7 +1492,7 @@ altibase -v
 tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
 ```
 
-Version Cautions: Check the exact Altibase patch level and platform guidance before changing OpenSSL libraries.
+Version Cautions: Use this block for 7.3 and Altibase 8.1 verified source. Do not map a 7.1 SSL symptom to `0x710CB` unless the target 7.1 runtime shows that exact code.
 
 Related Document: Security SSL TLS; Version Release Platform.
 

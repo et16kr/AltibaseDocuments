@@ -1896,30 +1896,43 @@ Server issue block: `MVCC garbage collector pressure`
 
 ```sql
 SELECT gc_name,
+       minmemscnintxs,
+       oldesttx,
        add_oid_cnt,
        gc_oid_cnt,
        add_oid_cnt - gc_oid_cnt AS gcgap
-FROM V$MEMGC;
+FROM V$MEMGC
+ORDER BY gc_name;
 
-SELECT session_id,
-       total_time,
-       execute_time,
-       tx_id,
-       query
-FROM V$STATEMENT
-WHERE tx_id IN (
-  SELECT id
-  FROM V$TRANSACTION
-  WHERE memory_view_scn = (
-    SELECT minmemscnintxs FROM V$MEMGC LIMIT 1
-  )
-)
-AND execute_flag = 1
-ORDER BY total_time DESC;
+SELECT m.gc_name,
+       m.minmemscnintxs,
+       m.oldesttx,
+       t.session_id,
+       t.memory_view_scn
+FROM V$MEMGC m,
+     V$TRANSACTION t
+WHERE m.oldesttx = t.id
+ORDER BY m.gc_name, t.session_id;
+
+SELECT m.gc_name,
+       m.minmemscnintxs,
+       m.oldesttx,
+       s.session_id,
+       s.total_time,
+       s.execute_time,
+       s.tx_id,
+       s.query
+FROM V$MEMGC m,
+     V$TRANSACTION t,
+     V$STATEMENT s
+WHERE m.oldesttx = t.id
+  AND t.id = s.tx_id
+  AND s.execute_flag = 1
+ORDER BY m.gc_name, s.total_time DESC;
 ```
 
-- Immediate Action: Tune or end the long transaction that holds the oldest memory view SCN, review bulk-update batching, and consider `AGER_WAIT_MINIMUM` or `AGER_WAIT_MAXIMUM` only after confirming the transaction pattern. Keep previous property values for rollback.
-- Verification: Re-run the `V$MEMGC` and active-statement checks. `GCGAP` should narrow or stabilize, the same long transaction should no longer hold the oldest memory view SCN, and memory, undo, or log growth should stop accelerating.
+- Immediate Action: Tune or end the transaction identified by `V$MEMGC.OLDESTTX`, review bulk-update batching, and consider `AGER_WAIT_MINIMUM` or `AGER_WAIT_MAXIMUM` only after confirming the transaction pattern. If the active-statement query returns no row, use the `OLDESTTX` transaction and `SESSION_ID` evidence instead of guessing from `MINMEMSCNINTXS`. Keep previous property values for rollback.
+- Verification: Re-run the `V$MEMGC`, transaction, and active-statement checks. `GCGAP` should narrow or stabilize, the same `OLDESTTX` should no longer hold the oldest memory view SCN, and memory, undo, or log growth should stop accelerating.
 - Version Cautions: Verify `V$MEMGC`, `V$STATEMENT`, and `V$TRANSACTION` column availability on the target server before relying on this exact query.
 - Escalation: If GC pressure continues after resolving long transactions or if the blocking transaction cannot be safely ended, collect Altibase version, `V$MEMGC` snapshots, blocker SQL, transaction age, memory/undo/log growth evidence, and trace log excerpts.
 
