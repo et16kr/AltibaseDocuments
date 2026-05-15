@@ -1380,7 +1380,9 @@ ALTER REPLICATION log_analysis STOP;
 DROP REPLICATION log_analysis;
 ```
 
-Modify XLog Sender targets or hosts:
+Modify XLog Sender targets or TCP/IP collector hosts:
+
+The host statements below apply only to TCP/IP XLog Collector endpoints, not to an XLog Sender created with `WITH UNIX_DOMAIN`.
 
 ```sql
 ALTER REPLICATION log_analysis ADD TABLE
@@ -1401,7 +1403,9 @@ XLog Sender cautions:
 - The XLog Collector must be online and waiting before XLog Sender start.
 - `START AT SN` requires Archivelog mode and `REPLICATION_LOG_BUFFER_SIZE = 0`.
 - With UNIX domain sockets, `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
-- Host changes are TCP-only when a UNIX domain connection is used.
+- A UNIX-domain XLog Sender cannot add hosts.
+- `ADD HOST`, `DROP HOST`, and `SET HOST` are only for TCP/IP XLog Collector endpoints.
+- `SET HOST` takes effect after the XLog Sender is restarted.
 - `FLUSH` can time out if the XLog Collector does not send ACK.
 
 ## XLog Types
