@@ -133,6 +133,34 @@ recording or remediating gaps.
 - Required remediation shape: View item blocks with purpose, version availability, key
   columns, safe query timing, example check SQL, and a portable layout check using
   `V$TABLE`, `V$ALLCOLUMN`, `SYSTEM_.SYS_TABLES_`, and `SYSTEM_.SYS_COLUMNS_`.
+- J017 update: `GPTs/reports/dictionary_view_inventory.md` now provides the
+  source-backed dictionary/performance view name, version-availability, and grouping
+  baseline, and `GPTs/attachments/06_data_dictionary_performance_views.md` includes a
+  compact customer-facing inventory index. This gap remains open for exhaustive
+  per-view column blocks and patch-sensitive column validation in J018-J021.
+
+### GAP-J017-001: Dictionary and performance view inventory source drift
+
+- Status: `Guardrail`
+- Source family and version scope: `general_reference_2_dictionary_views`,
+  `release_notes_platform`; Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified
+  source.
+- Missing item or behavior: Reconciled source explanation for list drift around
+  `SYS_REPL_TABLE_OID_IN_USE_`, `V$QUEUE_DELETE_OFF`, `V$TEMPORARY_LOBS`, and
+  `V$ST_ANGULAR_UNIT`/`V$ST_AREA_UNIT`/`V$ST_LINEAR_UNIT`.
+- Affected attachments: `06_data_dictionary_performance_views.md`,
+  `09_replication_ha_cdc.md`, `19_spatial_nifi_tableau_misc.md`.
+- Evidence: `GPTs/reports/dictionary_view_inventory.md`;
+  `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`;
+  `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`;
+  `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`;
+  `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`.
+- Required remediation shape: Keep Korean-source precedence in customer-facing
+  attachments. For `SYS_REPL_TABLE_OID_IN_USE_`, require an installed-version metadata
+  check before relying on 8.1 availability. For `V$QUEUE_DELETE_OFF` and
+  `V$TEMPORARY_LOBS`, keep the Korean-source-backed names despite English list
+  omissions. For the reserved `V$ST_*` spatial unit views, treat them as 7.1
+  Korean-source-only unless a later selected Korean source proves wider availability.
 
 ### GAP-J002-007: Platform and patch support needs exact-version guardrails
 

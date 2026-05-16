@@ -51,6 +51,106 @@ WHERE tablename IN ('V$SESSION', 'V$STATEMENT', 'V$TEMPORARY_LOBS')
 ORDER BY tablename, colname;
 ```
 
+## Dictionary and Performance View Inventory Baseline
+
+Use this baseline to choose the right object family before moving to the cookbook SQL
+or detailed object blocks below. It is a name, version, and grouping baseline, not a
+promise that every column is identical across every patch. When a final answer depends
+on an uncommon column, exact patch level, or installed metadata layout, check the
+target database first with `V$TABLE`, `V$ALLCOLUMN`, `SYSTEM_.SYS_TABLES_`, and
+`SYSTEM_.SYS_COLUMNS_`.
+
+Inventory summary:
+
+- Meta tables: 71 names are common to 7.1, 7.3, and the Altibase 8.1 verified source.
+  `SYS_REPL_TABLE_OID_IN_USE_` is listed in 7.1 and 7.3 General Reference 2; verify
+  installed 8.1 metadata before relying on it because the checked 8.1 General Reference
+  2 table does not list it even though the 8.1 release notes state that no meta tables
+  were added, deleted, or changed.
+- Performance views: 125 names are common to 7.1, 7.3, and the Altibase 8.1 verified
+  source. `V$MEM_STABLE` and `V$TEMPORARY_LOBS` are Altibase 8.1 verified source views.
+  `V$ST_ANGULAR_UNIT`, `V$ST_AREA_UNIT`, and `V$ST_LINEAR_UNIT` are listed in Altibase
+  7.1 General Reference 2 as reserved spatial unit views; check `V$TABLE` before using
+  them on later versions.
+- `V$LOCK_TABLE_STATS` is documented in 7.1 and 7.3 General Reference 2 and is also
+  listed in the 8.1 release notes. For portable SQL, still check `V$TABLE` before
+  assuming the view exists.
+
+### Meta Table Inventory Groups
+
+Unless an exception is called out, these groups are available in 7.1, 7.3, and the
+Altibase 8.1 verified source.
+
+| Group | Names |
+| --- | --- |
+| Audit and security | `SYS_AUDIT_`, `SYS_AUDIT_OPTS_`, `SYS_SECURITY_`, `SYS_ENCRYPTED_COLUMNS_` |
+| Core database and internal support | `SYS_DATABASE_`, `SYS_DN_USERS_`, `SYS_DUMMY_` |
+| Objects, columns, comments, LOBs, and size | `SYS_TABLES_`, `SYS_COLUMNS_`, `SYS_COMMENTS_`, `SYS_COMPRESSION_TABLES_`, `SYS_LOBS_`, `SYS_TABLE_SIZE_`, `SYS_RECYCLEBIN_` |
+| Constraints, indexes, and partitions | `SYS_CONSTRAINTS_`, `SYS_CONSTRAINT_COLUMNS_`, `SYS_CONSTRAINT_RELATED_`, `SYS_INDICES_`, `SYS_INDEX_COLUMNS_`, `SYS_INDEX_PARTITIONS_`, `SYS_INDEX_RELATED_`, `SYS_PART_INDICES_`, `SYS_PART_KEY_COLUMNS_`, `SYS_PART_LOBS_`, `SYS_PART_TABLES_`, `SYS_TABLE_PARTITIONS_` |
+| Users, roles, privileges, passwords, and tablespace access | `SYS_USERS_`, `DBA_USERS_`, `SYS_USER_ROLES_`, `SYS_PRIVILEGES_`, `SYS_GRANT_SYSTEM_`, `SYS_GRANT_OBJECT_`, `SYS_TBS_USERS_`, `SYS_PASSWORD_HISTORY_`, `SYS_PASSWORD_LIMITS_` |
+| Procedures, packages, views, triggers, jobs, and schema helpers | `SYS_PROCEDURES_`, `SYS_PROC_PARAS_`, `SYS_PROC_PARSE_`, `SYS_PROC_RELATED_`, `SYS_PACKAGES_`, `SYS_PACKAGE_PARAS_`, `SYS_PACKAGE_PARSE_`, `SYS_PACKAGE_RELATED_`, `SYS_DIRECTORIES_`, `SYS_LIBRARIES_`, `SYS_MATERIALIZED_VIEWS_`, `SYS_SYNONYMS_`, `SYS_VIEWS_`, `SYS_VIEW_PARSE_`, `SYS_VIEW_RELATED_`, `SYS_JOBS_`, `SYS_TRIGGERS_`, `SYS_TRIGGER_DML_TABLES_`, `SYS_TRIGGER_STRINGS_`, `SYS_TRIGGER_UPDATE_COLUMNS_` |
+| Replication metadata | `SYS_REPLICATIONS_`, `SYS_REPL_HOSTS_`, `SYS_REPL_ITEMS_`, `SYS_REPL_OFFLINE_DIR_`, `SYS_REPL_OLD_CHECKS_`, `SYS_REPL_OLD_CHECK_COLUMNS_`, `SYS_REPL_OLD_COLUMNS_`, `SYS_REPL_OLD_INDEX_COLUMNS_`, `SYS_REPL_OLD_INDICES_`, `SYS_REPL_OLD_ITEMS_`, `SYS_REPL_RECOVERY_INFOS_`; `SYS_REPL_TABLE_OID_IN_USE_` is listed in 7.1 and 7.3 and should be verified on 8.1 before use. |
+| Database link and distributed transaction metadata | `SYS_DATABASE_LINKS_`, `SYS_XA_HEURISTIC_TRANS_` |
+| Spatial metadata | `SYS_GEOMETRIES_`, `SYS_GEOMETRY_COLUMNS_`, `USER_SRS_` |
+
+### Performance View Inventory Groups
+
+Unless an exception is called out, these groups are available in 7.1, 7.3, and the
+Altibase 8.1 verified source.
+
+| Group | Names |
+| --- | --- |
+| Inventory, catalog, properties, NLS, and object metadata | `V$TABLE`, `V$ALLCOLUMN`, `V$CATALOG`, `V$DATATYPE`, `V$PROPERTY`, `V$VERSION`, `V$TIME_ZONE_NAMES`, `V$NLS_PARAMETERS`, `V$NLS_TERRITORY`, `V$QUEUE_DELETE_OFF`, `V$SEQ`, `V$EXTPROC_AGENT` |
+| Server access, sessions, statements, text, and service threads | `V$ACCESS_LIST`, `V$DB_PROTOCOL`, `V$INSTANCE`, `V$SESSION`, `V$INTERNAL_SESSION`, `V$SESSIONMGR`, `V$STATEMENT`, `V$SQLTEXT`, `V$PLANTEXT`, `V$PROCTEXT`, `V$PKGTEXT`, `V$SERVICE_THREAD`, `V$SERVICE_THREAD_MGR` |
+| Wait events, locks, transactions, and distributed transaction state | `V$EVENT_NAME`, `V$WAIT_CLASS_NAME`, `V$SESSION_EVENT`, `V$SESSION_WAIT`, `V$SESSION_WAIT_CLASS`, `V$SYSTEM_EVENT`, `V$SYSTEM_WAIT_CLASS`, `V$SYSTEM_CONFLICT_PAGE`, `V$LATCH`, `V$MUTEX`, `V$LOCK`, `V$LOCK_WAIT`, `V$LOCK_STATEMENT`, `V$LOCK_TABLE_STATS`, `V$TRANSACTION`, `V$TRANSACTION_MGR`, `V$DBA_2PC_PENDING`, `V$XID` |
+| System/session statistics, memory, and process counters | `V$STATNAME`, `V$SYSSTAT`, `V$SESSTAT`, `V$MEMSTAT`, `V$MEMGC` |
+| Tablespaces, files, logs, backup, archive, and checkpoint state | `V$DATABASE`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES`, `V$DATAFILES`, `V$STABLE_MEM_DATAFILES`, `V$MEM_TABLESPACE_CHECKPOINT_PATHS`, `V$MEM_TABLESPACE_STATUS_DESC`, `V$ARCHIVE`, `V$BACKUP_INFO`, `V$OBSOLETE_BACKUP_INFO`, `V$LOG`, `V$LFG`, `V$FILESTAT`, `V$TRACELOG`, `V$SNAPSHOT`; `V$MEM_STABLE` and `V$TEMPORARY_LOBS` are Altibase 8.1 verified source views. |
+| Table, index, segment, space, and temporary storage internals | `V$MEMTBL_INFO`, `V$DISKTBL_INFO`, `V$INDEX`, `V$MEM_BTREE_HEADER`, `V$MEM_BTREE_NODEPOOL`, `V$DISK_BTREE_HEADER`, `V$DISK_RTREE_HEADER`, `V$MEM_RTREE_HEADER`, `V$MEM_RTREE_NODEPOOL`, `V$SEGMENT`, `V$USAGE`, `V$DB_FREEPAGELISTS`, `V$TSSEGS`, `V$TXSEGS`, `V$UDSEGS`, `V$DISK_UNDO_USAGE`, `V$DISK_TEMP_INFO`, `V$DISK_TEMP_STAT`, `V$DIRECT_PATH_INSERT` |
+| Buffer pool, secondary buffer, and flush statistics | `V$BUFFPAGEINFO`, `V$BUFFPOOL_STAT`, `V$UNDO_BUFF_STAT`, `V$SBUFFER_STAT`, `V$FLUSHER`, `V$FLUSHINFO`, `V$SFLUSHER`, `V$SFLUSHINFO` |
+| Optimizer statistics and SQL plan cache | `V$DBMS_STATS`, `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT` |
+| Replication runtime and recovery | `V$REPEXEC`, `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPLOGBUFFER`, `V$REPOFFLINE_STATUS`, `V$REPRECEIVER`, `V$REPRECEIVER_COLUMN`, `V$REPRECEIVER_PARALLEL`, `V$REPRECEIVER_PARALLEL_APPLY`, `V$REPRECEIVER_STATISTICS`, `V$REPRECEIVER_TRANSTBL`, `V$REPRECEIVER_TRANSTBL_PARALLEL`, `V$REPRECOVERY`, `V$REPSENDER`, `V$REPSENDER_PARALLEL`, `V$REPSENDER_SENT_LOG_COUNT`, `V$REPSENDER_SENT_LOG_COUNT_PARALLEL`, `V$REPSENDER_STATISTICS`, `V$REPSENDER_TRANSTBL`, `V$REPSENDER_TRANSTBL_PARALLEL`, `V$REPSYNC` |
+| Database link runtime | `V$DBLINK_ALTILINKER_STATUS`, `V$DBLINK_DATABASE_LINK_INFO`, `V$DBLINK_GLOBAL_TRANSACTION_INFO`, `V$DBLINK_LINKER_CONTROL_SESSION_INFO`, `V$DBLINK_LINKER_DATA_SESSION_INFO`, `V$DBLINK_LINKER_SESSION_INFO`, `V$DBLINK_NOTIFIER_TRANSACTION_INFO`, `V$DBLINK_REMOTE_STATEMENT_INFO`, `V$DBLINK_REMOTE_TRANSACTION_INFO` |
+| Spatial unit catalog | `V$ST_ANGULAR_UNIT`, `V$ST_AREA_UNIT`, `V$ST_LINEAR_UNIT` are listed in Altibase 7.1 General Reference 2 as reserved spatial unit views. Check `V$TABLE` before using them on 7.3 or 8.1. |
+
+### Inventory Verification SQL
+
+```sql
+SELECT name, slotsize, columncount
+FROM V$TABLE
+WHERE name IN (
+  'V$LOCK_TABLE_STATS',
+  'V$MEM_STABLE',
+  'V$TEMPORARY_LOBS',
+  'V$ST_ANGULAR_UNIT',
+  'V$ST_AREA_UNIT',
+  'V$ST_LINEAR_UNIT',
+  'V$QUEUE_DELETE_OFF'
+)
+ORDER BY name;
+
+SELECT tablename, colname
+FROM V$ALLCOLUMN
+WHERE tablename IN (
+  'V$LOCK_TABLE_STATS',
+  'V$MEM_STABLE',
+  'V$TEMPORARY_LOBS',
+  'V$QUEUE_DELETE_OFF'
+)
+ORDER BY tablename, colname;
+
+SELECT t.table_name
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE t.user_id = u.user_id
+  AND u.user_name = 'SYSTEM_'
+  AND t.table_name IN (
+    'SYS_REPL_TABLE_OID_IN_USE_',
+    'SYS_REPL_ITEMS_',
+    'SYS_REPLICATIONS_'
+  )
+ORDER BY t.table_name;
+```
+
 ## Fast Object Map
 
 Use these first when selecting the right source:

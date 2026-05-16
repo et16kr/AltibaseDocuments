@@ -158,7 +158,10 @@ for 8.1 customer-facing labels.
   `05_data_types_properties.md` and JSON migration cautions in
   `15_migration_oracle_compatibility.md`. The SQL syntax queue remains open for J016
   and later specialized SQL families.
-- J017-J021 should use `general_reference_2_dictionary_views`, `performance_tuning`,
+- J017 created `GPTs/reports/dictionary_view_inventory.md` as the dictionary and
+  performance-view name/version/group baseline and added a compact inventory index to
+  `06_data_dictionary_performance_views.md`. J018-J021 should use that baseline with
+  `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
 - J022-J026 should use `error_message_reference` and related operational sources to
   expand exact-code troubleshooting and close error-block gaps.

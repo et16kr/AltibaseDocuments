@@ -270,6 +270,39 @@ Scoped source paths checked for J015:
 No new manual/source-backed gap was discovered during J015. The shared SQL syntax
 conversion queue remains open for J016 and later specialized SQL families.
 
+## J017 Dictionary View Inventory Baseline Addendum
+
+J017 uses the `general_reference_2_dictionary_views`, `performance_tuning`,
+`replication_manual`, and release-note source families for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean General Reference 2 manuals remain
+authoritative for meta table and performance view names, grouping, version availability,
+and view descriptions; matching English manuals were used only for customer-facing
+terminology when consistent.
+
+J017 adds `GPTs/reports/dictionary_view_inventory.md` as the source-backed name,
+version, and group baseline for later J018-J021 view expansion. It updates
+`GPTs/attachments/06_data_dictionary_performance_views.md` with compact customer-facing
+inventory groups and portable existence checks using `V$TABLE`, `V$ALLCOLUMN`,
+`SYSTEM_.SYS_TABLES_`, and `SYSTEM_.SYS_USERS_`. It does not close the remaining
+per-view column coverage gap.
+
+Scoped source paths checked for J017:
+
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+- `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+
+J017 records `GAP-J017-001` for source drift around
+`SYS_REPL_TABLE_OID_IN_USE_`, `V$QUEUE_DELETE_OFF`, `V$TEMPORARY_LOBS`, and the
+reserved `V$ST_*` spatial unit views. Later jobs should keep Korean-source precedence
+and require installed-version metadata checks when these names affect final customer
+SQL.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
