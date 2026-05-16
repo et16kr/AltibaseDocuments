@@ -16,6 +16,8 @@ The inventory is generated from detailed property headings, not from the summary
 
 Duplicate detailed headings are preserved in the evidence columns. `PARALLEL_QUERY_THREAD_MAX` and `PARALLEL_QUERY_QUEUE_SIZE` appear under both `P` and `E` categories in the selected Korean manuals; customer-facing answers should use the exact property name and target version first, then the most relevant operational category.
 
+J005 expands the customer-facing initialization and storage property blocks in `GPTs/attachments/05_data_types_properties.md`. It keeps the J004 property-name inventory as the version-availability baseline, then adds source-backed defaults, ranges, dynamic-change methods, `V$PROPERTY` checks, and cautions for path, memory, disk, volatile, log, recycle-bin, datafile, tablespace extent, and temporary-page storage properties. Korean source precedence was applied for extraction drift found in the matching English 8.1 manual, including temporary tablespace extent defaults such as `SYS_TEMP_TBS_EXTENT_SIZE` and `USER_TEMP_TBS_EXTENT_SIZE`.
+
 ## Scoped Sources
 
 - Altibase 7.1 Korean authority: `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
@@ -571,6 +573,7 @@ Duplicate detailed headings are preserved in the evidence columns. `PARALLEL_QUE
 ## Later-Job Handoff
 
 - Use this report as the canonical property-name/version baseline for J005-J009 property expansion work.
+- J005 has expanded the initialization/path/memory/disk/volatile/log/storage subset in `GPTs/attachments/05_data_types_properties.md`; later property jobs should avoid re-opening that subset unless exact-version source review finds a default, range, or alter-level drift.
 - When adding a customer-facing property block, keep the version scope from this inventory, then source the default, range, dynamic-change support, change method, and cautions from the target version manual section and `V$PROPERTY` check patterns.
 - If a later job finds a property name in a selected General Reference 1 source that is absent from this inventory, update this report and split or amend `GAP-J004-001` in `GPTs/reports/gap_register.md`.
 - For properties listed here but not yet decomposed in `GPTs/attachments/05_data_types_properties.md`, answer with the property-name/version availability, ask for the exact installed version when defaults or runtime behavior matter, and verify details through `V$PROPERTY` and the target version manual instead of inventing values.

@@ -362,3 +362,10 @@ recording or remediating gaps.
   object properties, J007 with performance/optimizer properties, J008 with session,
   network, security, and replication properties, and J009 with catalog QA and remaining
   property gaps.
+- Progress notes:
+  - J005 expanded initialization/path/memory/disk/volatile/log/storage property blocks
+    in `GPTs/attachments/05_data_types_properties.md`, including `DEFAULT_MEM_DB_FILE_SIZE`,
+    `DEFAULT_SEGMENT_STORAGE_*`, `DOUBLE_WRITE_DIRECTORY`, `DRDB_FD_MAX_COUNT_PER_DATAFILE`,
+    log compression thresholds, recycle-bin sizing, system/user datafile defaults,
+    tablespace extent defaults, and temporary page storage defaults. This gap remains
+    `Open` for J006-J009 non-J005 property families and final catalog QA.

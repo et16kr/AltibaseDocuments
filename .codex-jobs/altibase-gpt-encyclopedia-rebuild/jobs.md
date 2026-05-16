@@ -36,7 +36,7 @@ one oversized remediation pass. The partitioning is:
 | `J002` | `Done` | Coverage matrix and gap register | Map selected source families to the 20 attachments and record item-level gaps. |
 | `J003` | `Done` | Catalog schema and extraction rules | Define reusable item block schemas and Korean-first extraction rules for later jobs. |
 | `J004` | `Done` | Property inventory baseline | Inventory property names and version availability from General Reference 1 sources. |
-| `J005` | `ToDo` | Initialization and storage properties | Expand initialization, path, memory, disk, volatile, log, and storage property blocks. |
+| `J005` | `Done` | Initialization and storage properties | Expand initialization, path, memory, disk, volatile, log, and storage property blocks. |
 | `J006` | `ToDo` | LOB JSON and temporary object properties | Expand LOB, JSON, Temporary LOB, PSM, VARRAY, and object-size property blocks. |
 | `J007` | `ToDo` | Performance and optimizer properties | Expand buffer, checkpoint, optimizer, plan cache, sort, hash, and execution memory properties. |
 | `J008` | `ToDo` | Session network security and replication properties | Expand timeout, NLS, client, network, SSL/TLS, and replication property blocks. |

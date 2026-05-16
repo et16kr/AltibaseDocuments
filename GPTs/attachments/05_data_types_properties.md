@@ -738,6 +738,35 @@ WHERE name IN (
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name LIKE 'REPLICATION%PORT%';
+
+SELECT name, storedcount,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
+FROM V$PROPERTY
+WHERE name IN (
+  'DEFAULT_DISK_DB_DIR',
+  'MEM_DB_DIR',
+  'LOG_DIR',
+  'LOGANCHOR_DIR',
+  'DOUBLE_WRITE_DIRECTORY'
+)
+ORDER BY name;
+
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'DEFAULT_MEM_DB_FILE_SIZE',
+  'SYS_DATA_FILE_INIT_SIZE',
+  'SYS_DATA_FILE_MAX_SIZE',
+  'SYS_DATA_FILE_NEXT_SIZE',
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE',
+  'USER_DATA_FILE_NEXT_SIZE',
+  'MEM_MAX_DB_SIZE',
+  'DISK_MAX_DB_SIZE',
+  'VOLATILE_MAX_DB_SIZE'
+)
+ORDER BY name;
 ```
 
 Use property-specific performance views when available:
@@ -852,13 +881,28 @@ Representative properties:
 
 - `DB_NAME`
 - `DEFAULT_DISK_DB_DIR`
+- `DEFAULT_MEM_DB_FILE_SIZE`
 - `MEM_DB_DIR`
 - `LOG_DIR`
 - `LOGANCHOR_DIR`
+- `DOUBLE_WRITE_DIRECTORY`
+- `DOUBLE_WRITE_DIRECTORY_COUNT`
 - `LOG_FILE_SIZE`
 - `MEM_MAX_DB_SIZE`
 - `DISK_MAX_DB_SIZE`
 - `VOLATILE_MAX_DB_SIZE`
+- `SYS_DATA_FILE_INIT_SIZE`
+- `SYS_DATA_FILE_MAX_SIZE`
+- `SYS_DATA_FILE_NEXT_SIZE`
+- `SYS_TEMP_FILE_INIT_SIZE`
+- `SYS_TEMP_FILE_MAX_SIZE`
+- `SYS_TEMP_FILE_NEXT_SIZE`
+- `SYS_UNDO_FILE_INIT_SIZE`
+- `SYS_UNDO_FILE_MAX_SIZE`
+- `SYS_UNDO_FILE_NEXT_SIZE`
+- `USER_DATA_FILE_INIT_SIZE`
+- `USER_DATA_FILE_MAX_SIZE`
+- `USER_DATA_FILE_NEXT_SIZE`
 - `DISK_LOB_COLUMN_IN_ROW_SIZE`
 - `MEMORY_LOB_COLUMN_IN_ROW_SIZE`
 - `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE`
@@ -1092,6 +1136,8 @@ Altibase 8.1 verified source only:
 
 ## Decomposed Property Blocks
 
+Unless a property block states a narrower scope, the block is documented for Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source. Version-specific General Reference sources are the basis for defaults, ranges, attributes, and change methods. For static initialization and storage properties, prefer `V$PROPERTY` checks plus restart or database-creation planning over generated `ALTER SYSTEM` SQL.
+
 ### Property Item: `DB_NAME`
 
 Meaning: database name used when creating the database.
@@ -1110,6 +1156,29 @@ FROM V$PROPERTY
 WHERE name = 'DB_NAME';
 ```
 
+### Property Item: `DDL_SUPPLEMENTAL_LOG_ENABLE`
+
+Meaning: controls whether DDL operations write supplemental log records.
+
+Default: `0`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Range: `[0, 1]`.
+
+Values:
+
+- `0`: disabled; do not write supplemental DDL logs.
+- `1`: enabled; write supplemental DDL logs.
+
+Check SQL:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'DDL_SUPPLEMENTAL_LOG_ENABLE';
+```
+
 ### Property Item: `DEFAULT_DISK_DB_DIR`
 
 Meaning: default directory for disk database files.
@@ -1120,12 +1189,80 @@ Dynamic Change Support: read-only; restart and file-layout planning are required
 
 Range: directory path.
 
+Important note: this path must be configured even when disk database features are not used.
+
 Check SQL:
 
 ```sql
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'DEFAULT_DISK_DB_DIR';
+```
+
+### Property Item: `DEFAULT_MEM_DB_FILE_SIZE`
+
+Meaning: default size, in bytes, of checkpoint image files for memory tablespaces.
+
+Default: `1073741824` bytes (`1G`).
+
+Dynamic Change Support: read-only; set before database creation or recreate/replan the database file layout.
+
+Range: `[4194304, 2^64 - 1]`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'DEFAULT_MEM_DB_FILE_SIZE';
+```
+
+### Property Item: `DEFAULT_SEGMENT_MANAGEMENT_TYPE`
+
+Meaning: default segment space-management method when a disk tablespace is created.
+
+Default: `1`.
+
+Dynamic Change Support: read-only default for new disk tablespace creation.
+
+Values:
+
+- `0`: `MANUAL`; create segments that manage free space with freelists.
+- `1`: `AUTO`; create segments that manage free space with bitmap index based management.
+
+Check SQL:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'DEFAULT_SEGMENT_MANAGEMENT_TYPE';
+```
+
+### Property Item Group: `DEFAULT_SEGMENT_STORAGE_*`
+
+Meaning: default extent-count values used when a segment is created without explicit storage extent clauses.
+
+Dynamic Change Support: read-only defaults; use explicit storage clauses in DDL when a specific object needs different values.
+
+Properties:
+
+- `DEFAULT_SEGMENT_STORAGE_INITEXTENTS`: initial extent count; default `1`; range `[1, 2^32 - 1]`.
+- `DEFAULT_SEGMENT_STORAGE_MINEXTENTS`: minimum extent count; default `1`; range `[1, 2^32 - 1]`.
+- `DEFAULT_SEGMENT_STORAGE_MAXEXTENTS`: maximum extent count; default `2^32 - 1`; range `[1, 2^32 - 1]`.
+- `DEFAULT_SEGMENT_STORAGE_NEXTEXTENTS`: next extension extent count; default `1`; range `[1, 2^32 - 1]`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'DEFAULT_SEGMENT_STORAGE_INITEXTENTS',
+  'DEFAULT_SEGMENT_STORAGE_MINEXTENTS',
+  'DEFAULT_SEGMENT_STORAGE_MAXEXTENTS',
+  'DEFAULT_SEGMENT_STORAGE_NEXTEXTENTS'
+)
+ORDER BY name;
 ```
 
 ### Property Item: `MEM_DB_DIR`
@@ -1137,6 +1274,8 @@ Default: `$ALTIBASE_HOME/dbs`.
 Dynamic Change Support: read-only; restart and storage planning are required.
 
 Range: one to eight actual paths.
+
+Behavior: when more than one path is configured, memory database files are distributed across the paths. The documented default path count is two, and both default entries use `$ALTIBASE_HOME/dbs`.
 
 Check SQL:
 
@@ -1192,11 +1331,11 @@ WHERE name = 'LOGANCHOR_DIR';
 
 Meaning: size in bytes of each log file. When an active log file fills, writing continues in a new log file.
 
-Default: `100 * 1024 * 1024` bytes in the 8.1 baseline. The 8.1 release notes record this default as changed from `10485760` to `104857600`.
+Default: 7.1 uses `10 * 1024 * 1024`; 7.3 and the 8.1 baseline use `100 * 1024 * 1024`. The 8.1 release notes record this default as changed from `10485760` to `104857600`.
 
 Dynamic Change Support: read-only. Set only at database creation; create a new database to change it.
 
-Range: `[64 * 1024, 2^32 - 1]` in the 8.1 baseline. The 8.1 release notes record the maximum as changed to `4294967295`.
+Range: 7.1 `[1024 * 1024, 2^64 - 1]`; 7.3 and the 8.1 baseline `[64 * 1024, 2^32 - 1]`. The 8.1 release notes record the maximum as changed to `4294967295`.
 
 Important note: for offline replication, set this property identically on local and remote servers.
 
@@ -1206,6 +1345,27 @@ Check SQL:
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'LOG_FILE_SIZE';
+```
+
+### Property Item Group: Log compression storage properties
+
+Meaning: configure the minimum compression resource pool and the log-record size threshold for log compression.
+
+Properties:
+
+- `MIN_COMPRESSION_RESOURCE_COUNT`: minimum number of buffer chunks used by the log manager for log compression; default `16`; range `[1, 16384]`; read-only. One compression buffer chunk is about `16KB`.
+- `MIN_LOG_RECORD_SIZE_FOR_COMPRESS`: log size threshold for compression; default `512` bytes; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` disables log compression, and records larger than the configured value are compressed.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'MIN_COMPRESSION_RESOURCE_COUNT',
+  'MIN_LOG_RECORD_SIZE_FOR_COMPRESS'
+)
+ORDER BY name;
 ```
 
 ### Property Item: `MEM_MAX_DB_SIZE`
@@ -1228,6 +1388,42 @@ FROM V$PROPERTY
 WHERE name = 'MEM_MAX_DB_SIZE';
 ```
 
+### Property Item: `EXPAND_CHUNK_PAGE_COUNT`
+
+Meaning: number of pages in one expand chunk, the allocation unit used when the memory database expands.
+
+Default: `128`.
+
+Dynamic Change Support: read-only. Set during database creation; recreate the database to change the page count.
+
+Range: `[64, 2^32 - 1]`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'EXPAND_CHUNK_PAGE_COUNT';
+```
+
+### Property Item: `MEM_SIZE_CLASS_COUNT`
+
+Meaning: number of free-space classes used to classify memory pages.
+
+Default: `4`.
+
+Dynamic Change Support: read-only.
+
+Range: `[1, 4]`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'MEM_SIZE_CLASS_COUNT';
+```
+
 ### Property Item: `DISK_MAX_DB_SIZE`
 
 Meaning: maximum disk database size in bytes.
@@ -1248,15 +1444,66 @@ FROM V$PROPERTY
 WHERE name = 'DISK_MAX_DB_SIZE';
 ```
 
+### Property Item Group: `DOUBLE_WRITE_DIRECTORY` and `DOUBLE_WRITE_DIRECTORY_COUNT`
+
+Meaning: configure where double write files are stored and how many double write directories are used.
+
+Defaults:
+
+- `DOUBLE_WRITE_DIRECTORY`: none.
+- `DOUBLE_WRITE_DIRECTORY_COUNT`: `2`.
+
+Dynamic Change Support: read-only; plan directory placement before startup and database storage rollout.
+
+Range or values:
+
+- `DOUBLE_WRITE_DIRECTORY`: directory path values; multiple values can be specified according to `DOUBLE_WRITE_DIRECTORY_COUNT`.
+- `DOUBLE_WRITE_DIRECTORY_COUNT`: `[1, 16]`.
+
+Behavior: double write files can be placed on different disks. Because each flusher uses a separate double write file, distributing directories across disks can improve flush performance.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
+FROM V$PROPERTY
+WHERE name IN ('DOUBLE_WRITE_DIRECTORY', 'DOUBLE_WRITE_DIRECTORY_COUNT')
+ORDER BY name;
+```
+
+### Property Item: `DRDB_FD_MAX_COUNT_PER_DATAFILE`
+
+Meaning: maximum number of file descriptors that can be opened for I/O on one disk data file.
+
+Default: `8`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Range: `[1, 1024]`.
+
+Behavior: if file descriptors for a data file are already open up to this limit, later I/O waits until another I/O completes.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'DRDB_FD_MAX_COUNT_PER_DATAFILE';
+```
+
 ### Property Item: `VOLATILE_MAX_DB_SIZE`
 
-Meaning: maximum size of volatile tablespaces.
+Meaning: maximum total size of all volatile tablespaces.
 
 Default: `2^32 + 1`.
 
 Dynamic Change Support: read-only.
 
 Range: `32-bit [2097152, 2^32 + 1]`; `64-bit [2097152, 2^64]`.
+
+Caution: the configured volatile tablespace total cannot exceed memory capacity available from the operating system.
 
 Check SQL:
 
@@ -1342,6 +1589,268 @@ Check SQL:
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'LOB_OBJECT_BUFFER_SIZE';
+```
+
+### Property Item Group: Free-page and memory-allocation thresholds
+
+Meaning: configure storage-manager thresholds used when memory pages, table free lists, and query-processor memory chunks are allocated.
+
+Properties:
+
+- `MIN_PAGES_ON_DB_FREE_LIST`: minimum free pages to retain on each database free-page list when pages are distributed; default `16`; range `[1, 2^32 - 1]`; read-only.
+- `MIN_PAGES_ON_TABLE_FREE_LIST`: minimum free pages retained for each table free-list operation; default `1`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `QP_MEMORY_CHUNK_SIZE`: memory allocation extension unit for the query processor; default `65536` bytes; range `[1024, 2^64 - 1]`; read-only.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'MIN_PAGES_ON_DB_FREE_LIST',
+  'MIN_PAGES_ON_TABLE_FREE_LIST',
+  'QP_MEMORY_CHUNK_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: `RECYCLEBIN_*`
+
+Meaning: configure whether dropped tables are moved to the recycle bin and how much disk or memory table data the recycle bin can hold.
+
+Properties:
+
+- `RECYCLEBIN_ENABLE`: default `0`; range `[0, 1]`; read-write; the documented change method is `ALTER SESSION`. `0` drops tables directly from the database system; `1` moves dropped tables to the recycle bin.
+- `RECYCLEBIN_DISK_MAX_SIZE`: disk-table recycle bin size in bytes; default `2^64 - 1`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `RECYCLEBIN_MEM_MAX_SIZE`: memory-table recycle bin size in bytes; default `4GB`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+
+Behavior: tables in the recycle bin are renamed and marked as type `R`; DDL and `INSERT`/`UPDATE`/`DELETE` are not allowed on them, but `SELECT`, `FLASHBACK`, and `PURGE` handling remain possible. If the recycle bin already contains tables, changing `RECYCLEBIN_ENABLE` to `0` does not prevent querying, recovering, or purging those existing recycle-bin tables.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'RECYCLEBIN_ENABLE',
+  'RECYCLEBIN_DISK_MAX_SIZE',
+  'RECYCLEBIN_MEM_MAX_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item: `REDUCE_TEMP_MEMORY_ENABLE`
+
+Meaning: controls whether variable-length column data temporarily stored in a memory tablespace uses the defined column length or only the actual data length.
+
+Default: `0`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Range: `[0, 1]`.
+
+Values:
+
+- `0`: use temporary storage according to the defined variable-column length.
+- `1`: use temporary storage according to the actual variable-column data length.
+
+Caution: setting `1` can reduce memory use for temporary intermediate results in memory tablespaces, but query processing can become slower. Disk temporary tablespace remains the default intermediate-result location for disk tables or views unless a supported memory temporary tablespace hint is used.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'REDUCE_TEMP_MEMORY_ENABLE';
+```
+
+### Property Item Group: System disk data tablespace file defaults
+
+Meaning: defaults used when `SYS_TBS_DISK_DATA` is created and when data files are added without explicit size clauses.
+
+Properties:
+
+- `SYS_DATA_FILE_INIT_SIZE`: initial size of `system001.dbf` and default initial size for later added data files; default `100 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `SYS_DATA_FILE_MAX_SIZE`: maximum size of the allocated data file; default `2 * 1024 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only; must be at least `SYS_DATA_FILE_INIT_SIZE`, with documented minimum `64KB`.
+- `SYS_DATA_FILE_NEXT_SIZE`: autoextend increment when `SYS_TBS_DISK_DATA` data files need more space; default `1 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `SYS_DATA_TBS_EXTENT_SIZE`: extent size when `SYS_TBS_DISK_DATA` is created; default `512 * 1024`; range `[40KB, 32GB]`; read-only.
+
+Caution: if a data file reaches `SYS_DATA_FILE_MAX_SIZE` and other data files do not have at least `SYS_DATA_FILE_NEXT_SIZE` of available space, a tablespace-space error can occur. Extent size is decided at creation and cannot be changed afterward.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'SYS_DATA_FILE_INIT_SIZE',
+  'SYS_DATA_FILE_MAX_SIZE',
+  'SYS_DATA_FILE_NEXT_SIZE',
+  'SYS_DATA_TBS_EXTENT_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: System disk temporary tablespace file defaults
+
+Meaning: defaults used when `SYS_TBS_DISK_TEMP` is created and when temporary data files are added without explicit size clauses.
+
+Properties:
+
+- `SYS_TEMP_FILE_INIT_SIZE`: initial size of `temp001.dbf` and default initial size for later added temporary data files; default `100 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `SYS_TEMP_FILE_MAX_SIZE`: maximum size of `temp001.dbf` or later temporary data files when no maximum is specified; default `2 * 1024 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only; must be at least `SYS_TEMP_FILE_INIT_SIZE`, with documented minimum `64KB`.
+- `SYS_TEMP_FILE_NEXT_SIZE`: increment used when a `SYS_TBS_DISK_TEMP` data file lacks space; default `1 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `SYS_TEMP_TBS_EXTENT_SIZE`: extent size when `SYS_TBS_DISK_TEMP` is created; default `512 * 1024` in the authoritative source; range `[40KB, 32GB]`; read-only.
+
+Caution: use the installed server's `V$PROPERTY` when a customer environment or extraction aid shows a different `SYS_TEMP_TBS_EXTENT_SIZE` default.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'SYS_TEMP_FILE_INIT_SIZE',
+  'SYS_TEMP_FILE_MAX_SIZE',
+  'SYS_TEMP_FILE_NEXT_SIZE',
+  'SYS_TEMP_TBS_EXTENT_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: System disk undo tablespace file defaults
+
+Meaning: defaults used when `SYS_TBS_DISK_UNDO` is created and when undo data files are added without explicit size clauses.
+
+Properties:
+
+- `SYS_UNDO_FILE_INIT_SIZE`: initial size of `undo001.dbf` and default initial size for later added undo data files; default `100 * 1024 * 1024`; range `[32 * 8KB, 32GB]`; read-only.
+- `SYS_UNDO_FILE_MAX_SIZE`: maximum size of `undo001.dbf` or later undo data files when no maximum is specified; default `2 * 1024 * 1024 * 1024`; range `[32 * 8KB, 32GB]`; read-only; must be at least `SYS_UNDO_FILE_INIT_SIZE`, with documented minimum `256KB`.
+- `SYS_UNDO_FILE_NEXT_SIZE`: increment used when a `SYS_TBS_DISK_UNDO` data file lacks space; default `1 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `SYS_UNDO_TBS_EXTENT_SIZE`: extent size when `SYS_TBS_DISK_UNDO` is created; default `256 * 1024`; range `[40KB, 32GB]`; read-only.
+
+Caution: `SYS_TBS_DISK_UNDO` is the single system disk undo tablespace used only for undo information. Users cannot create or delete tables, indexes, or other objects in this tablespace.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'SYS_UNDO_FILE_INIT_SIZE',
+  'SYS_UNDO_FILE_MAX_SIZE',
+  'SYS_UNDO_FILE_NEXT_SIZE',
+  'SYS_UNDO_TBS_EXTENT_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: User disk data tablespace file defaults
+
+Meaning: defaults used when user disk data tablespace files are created or added without explicit size or extent clauses.
+
+Properties:
+
+- `USER_DATA_FILE_INIT_SIZE`: initial size of a user-defined data file; default `100 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `USER_DATA_FILE_MAX_SIZE`: maximum size of a user-defined data file when no maximum is specified; default `2 * 1024 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only; must be at least `USER_DATA_FILE_INIT_SIZE`, with documented minimum `64KB`.
+- `USER_DATA_FILE_NEXT_SIZE`: increment used when a user disk data tablespace data file lacks space; default `1 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `USER_DATA_TBS_EXTENT_SIZE`: extent size when a user disk data tablespace is created; default `512 * 1024`; range `[2 * 8KB, 2^64 - 1]`; read-only.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE',
+  'USER_DATA_FILE_NEXT_SIZE',
+  'USER_DATA_TBS_EXTENT_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: User temporary tablespace file defaults
+
+Meaning: defaults used when user temporary tablespace files are created or added without explicit size or extent clauses.
+
+Properties:
+
+- `USER_TEMP_FILE_INIT_SIZE`: initial size of a user-defined temporary data file; default `100 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `USER_TEMP_FILE_MAX_SIZE`: maximum size of a user-defined temporary data file when no maximum is specified; default `2 * 1024 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only; selected sources state that it must be at least `USER_DATA_FILE_INIT_SIZE`, with documented minimum `64KB`.
+- `USER_TEMP_FILE_NEXT_SIZE`: increment used when a user temporary data file lacks space; default `1 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
+- `USER_TEMP_TBS_EXTENT_SIZE`: extent size when a user temporary tablespace is created; default `512 * 1024` in the authoritative source; range `[5 * 8KB, 2^64 - 1]`; read-only.
+
+Caution: selected sources state a minimum of two pages for `USER_TEMP_TBS_EXTENT_SIZE` in the description while the value range is `[5 * 8KB, 2^64 - 1]`; ask for the exact installed version and check `V$PROPERTY` before resolving a boundary-size dispute.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'USER_TEMP_FILE_INIT_SIZE',
+  'USER_TEMP_FILE_MAX_SIZE',
+  'USER_TEMP_FILE_NEXT_SIZE',
+  'USER_TEMP_TBS_EXTENT_SIZE'
+)
+ORDER BY name;
+```
+
+### Property Item: `TABLE_BACKUP_FILE_BUFFER_SIZE`
+
+Meaning: I/O buffer size, in bytes, for table backup files used when adding or dropping columns in memory tables.
+
+Default: `1024`.
+
+Dynamic Change Support: read-only.
+
+Range: `[0, 1048576]`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'TABLE_BACKUP_FILE_BUFFER_SIZE';
+```
+
+### Property Item: `TABLE_COMPACT_AT_SHUTDOWN`
+
+Meaning: controls whether tables are compacted when the database shuts down.
+
+Default: `1`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Range: `[0, 1]`.
+
+Caution: the manuals recommend `1` to reduce memory waste for tables after database restart.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'TABLE_COMPACT_AT_SHUTDOWN';
+```
+
+### Property Item Group: Temporary page storage defaults
+
+Meaning: configure hash bucket density and allocation chunk size for temporary data pages.
+
+Properties:
+
+- `TEMP_HASH_BUCKET_DENSITY`: percentage controlling how many temporary table page frames one hash bucket manages; default `1`; range `[1, 100]` in the authoritative sources; read-only. Larger values reduce the number of buckets and memory use, but increase per-bucket operation cost.
+- `TEMP_PAGE_CHUNK_COUNT`: number of temporary data pages allocated at one time; default `128`; range `[1, 2^32 - 1]`; read-only.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN ('TEMP_HASH_BUCKET_DENSITY', 'TEMP_PAGE_CHUNK_COUNT')
+ORDER BY name;
 ```
 
 ### Property Item: `TEMPORARY_LOB_ENABLE`
