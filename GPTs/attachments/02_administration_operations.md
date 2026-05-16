@@ -1857,6 +1857,24 @@ After removing `backupInfo`, reinitialize incremental backup: enable page change
 
 ## Recovery Strategy
 
+Recovery planning inputs:
+
+- Target version: Altibase 7.1, Altibase 7.3, or Altibase 8.1 verified source.
+- Failure class: abnormal shutdown only, lost disk data file, lost memory checkpoint image, lost temporary file, lost archive or online log, filesystem relocation, accidental table or tablespace drop, or inconsistent incremental-backup metadata.
+- Database mode: `ARCHIVELOG` or `NOARCHIVELOG`.
+- Backup evidence: offline full backup, online database backup, online tablespace backup, incremental backup chain, `backupInfo`, saved `loganchor*`, archive-log backups, and online log availability.
+- Startup phase: ordinary media restore and recovery work is performed in `CONTROL`; incremental metadata repair may require `PROCESS` first.
+- Object scope: full database, selected tablespace, individual disk data file, memory checkpoint image, or temporary tablespace file.
+
+Recovery stop conditions:
+
+- Do not run complete media recovery unless all required archive logs and online logs are available.
+- Do not run incomplete recovery until the business accepts losing changes after the target time or last valid log.
+- Do not restore historical `loganchor*` files for ordinary complete recovery. Use current log anchors unless recovering dropped metadata, planned past-time recovery, or a source-backed incremental tag plan requires historical metadata.
+- Do not run `META RESETLOGS` after complete recovery. `META RESETLOGS` is required after incomplete recovery before returning to service.
+- Do not resume level 1 incremental backups after losing or disabling `changeTracking` until change tracking is enabled again and a new level 0 incremental backup is taken.
+- If replication exists, prevent automatic sender restart when appropriate and plan replication `RESET` or object recreation after recovery.
+
 Recovery type block: logical restore
 
 - Use `iLoader` `in` to reload table data from a logical backup.
@@ -1872,6 +1890,8 @@ Recovery type block: complete media recovery
 
 - Restores data files to the current point when required online and archive logs are available.
 - Requires `CONTROL` phase.
+- Usually restores only the affected files from backup or recreates a missing disk data file from log-anchor metadata.
+- Uses current `loganchor*` files whenever possible.
 
 ```sql
 STARTUP CONTROL;
@@ -1883,6 +1903,8 @@ Recovery type block: incomplete media recovery to time
 
 - Rewinds the database to a specified past time.
 - Requires `CONTROL` phase.
+- Usually restores a full backup set and historical `loganchor*` files for the target recovery window.
+- Requires all archive or online logs from the backup point through the requested time.
 - Requires `META RESETLOGS` before returning to service.
 - Requires a full backup after `RESETLOGS`.
 
@@ -1897,6 +1919,7 @@ ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
 Recovery type block: incomplete media recovery until cancel
 
 - Recovers only to the point before missing or corrupt log files.
+- Usually starts from a backup set and historical `loganchor*` files that can reach the valid log range.
 - Requires `META RESETLOGS`.
 - Requires a full backup after `RESETLOGS`.
 
@@ -1909,6 +1932,16 @@ ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
 ```
 
 Recovery type block: incremental restore and recovery
+
+Incremental restore/recovery decision block:
+
+- Complete restore then complete recovery: use the latest usable level 0 and level 1 chain, then apply archive and online logs to the current point.
+- Incomplete restore then complete recovery: restore from the last usable tag before a missing incremental backup file, then apply archive and online logs to the current point.
+- Complete restore then incomplete recovery: restore the latest usable chain, apply logs only until `UNTIL TIME` or `UNTIL CANCEL`, then run `META RESETLOGS`.
+- Incomplete restore then incomplete recovery: restore a selected tag before the recovery target, apply logs only until `UNTIL TIME` or `UNTIL CANCEL`, then run `META RESETLOGS`.
+- Tag restore and tag recovery: when using `RESTORE DATABASE FROM TAG '<tag>'` with `RECOVER DATABASE FROM TAG '<tag>'`, the tag values must match.
+- Tag restore and later log recovery: when restoring from a tag and recovering beyond that tag, use `RECOVER DATABASE UNTIL TIME ...` or `RECOVER DATABASE UNTIL CANCEL`; do not use a different `FROM TAG` for recovery.
+- Tablespace restore grammar: `ALTER DATABASE RESTORE TABLESPACE ...` is source-audited for 7.1, 7.3, and Altibase 8.1 verified source. It performs selected tablespace restoration; choose it only when the backup evidence and recovery plan call for SQL-driven tablespace restore. If media recovery is needed afterward, run `ALTER DATABASE RECOVER DATABASE`, not `RECOVER TABLESPACE`.
 
 Metadata repair before incremental restore:
 
@@ -1946,6 +1979,43 @@ STARTUP CONTROL;
 ALTER DATABASE RESTORE DATABASE;
 ALTER DATABASE RECOVER DATABASE;
 ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
+ALTER DATABASE mydb SERVICE;
+```
+
+Runbook: incremental complete recovery from an earlier usable tag
+
+Use this when a later incremental backup file is missing or corrupt, but an earlier tag plus archive and online logs can still reach the current point.
+
+1. Preserve the current `loganchor*`, `backupInfo`, `changeTracking`, archive logs, online logs, and failed backup directory before replacing files.
+2. Verify that the selected tag is earlier than the missing or corrupt incremental file and that all logs after that tag are available.
+3. In `CONTROL`, restore from the selected tag.
+4. Run complete media recovery with archive and online logs.
+5. Recreate any missing system temporary tablespace files.
+6. Start service, verify application tablespaces, and take a fresh backup if the recovery plan abandoned part of the incremental chain.
+
+```sql
+STARTUP CONTROL;
+ALTER DATABASE RESTORE DATABASE FROM TAG 'WEDNESDAY';
+ALTER DATABASE RECOVER DATABASE;
+ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
+ALTER DATABASE mydb SERVICE;
+```
+
+Runbook: SQL-driven restore of selected tablespaces
+
+Use this when the recovery scope is one or more tablespaces and the selected source manuals support `RESTORE TABLESPACE` for the target version. Do not use this as a substitute for DBA-copied online tablespace backup files; choose the procedure that matches the backup evidence.
+
+1. Confirm the selected source manuals support `RESTORE TABLESPACE` for the target version and that the backup evidence matches SQL-driven restore.
+2. Confirm current `loganchor*` files still contain the tablespace metadata. If the tablespace was dropped or renamed after the backup, use the incomplete recovery runbook instead.
+3. Start to `CONTROL`.
+4. Restore the selected tablespace or tablespaces.
+5. Run database media recovery if logs must be applied after the restore.
+6. Recreate any missing temporary files, start service, and verify the affected tablespace state.
+
+```sql
+STARTUP CONTROL;
+ALTER DATABASE RESTORE TABLESPACE app_data, app_index;
+ALTER DATABASE RECOVER DATABASE;
 ALTER DATABASE mydb SERVICE;
 ```
 
@@ -2041,13 +2111,39 @@ flowchart TD
 
 ## Media Recovery Runbooks
 
+Runbook: complete media recovery from online database or tablespace backup
+
+Use this when an online backup exists and all required archive and online logs are available.
+
+1. Keep or copy aside the current `loganchor*`, online logs, archive logs, and trace files before replacing data files.
+2. Identify the affected files and tablespaces with `V$DATAFILES`, `V$TABLESPACES`, log anchors, file headers, or administrator logs.
+3. Restore only the affected disk data files or stable memory checkpoint image files from the backup. For ordinary complete recovery, leave current `loganchor*` files in place.
+4. If the restored files move to a new filesystem, rename the data files in `CONTROL`.
+5. Make required archive logs available under the configured archive/log location.
+6. Run `ALTER DATABASE RECOVER DATABASE`.
+7. Start service and verify affected tablespaces, data files, and application checks.
+
+```sql
+STARTUP CONTROL;
+
+ALTER DATABASE RENAME DATAFILE
+'/old_disk/altibase/dbs/app_disk01.dbf'
+TO
+'/data/altibase/dbs/app_disk01.dbf';
+
+ALTER DATABASE RECOVER DATABASE;
+STARTUP SERVICE;
+```
+
 Runbook: lost disk data file with online backup
 
 1. Stop service or keep the database stopped after startup failure.
-2. Copy the backup data file to the original location, or to a new healthy filesystem.
-3. If the file location changed, update the data file reference in `CONTROL`.
-4. Run complete recovery.
-5. Start service and verify.
+2. Preserve current `loganchor*` and logs; do not replace them for ordinary complete recovery.
+3. Check the restored file header with `dumpddf` when needed to identify the required archive log range.
+4. Copy the backup data file to the original location, or to a new healthy filesystem.
+5. If the file location changed, update the data file reference in `CONTROL`.
+6. Run complete recovery.
+7. Start service and verify.
 
 ```bash
 cp /backup/altibase/app_data/app_disk01.dbf /data/altibase/dbs/
@@ -2065,6 +2161,24 @@ ALTER DATABASE RECOVER DATABASE;
 STARTUP SERVICE;
 ```
 
+Verification SQL:
+
+```sql
+SELECT id,
+       name,
+       currsize,
+       maxsize,
+       autoextensible
+FROM V$DATAFILES
+WHERE name LIKE '%app_disk01.dbf%';
+
+SELECT id,
+       name,
+       state
+FROM V$TABLESPACES
+WHERE name = 'APP_DATA';
+```
+
 Runbook: lost disk data file with no backup copy but available logs
 
 ```sql
@@ -2079,6 +2193,29 @@ Rules:
 - The file path must be absolute.
 - Required archive and online logs must be available from the data file creation LSN onward.
 - This approach does not apply to memory checkpoint image files; use memory-specific recovery.
+- Stop if the database is in `NOARCHIVELOG` mode and the lost file is not a temporary tablespace file.
+
+Runbook: restore selected tablespaces from DBA-copied online backup
+
+Use this when a tablespace-level online backup was created with `ALTER DATABASE BACKUP TABLESPACE ...` or `ALTER TABLESPACE ... BEGIN BACKUP` plus OS copy, and the current log anchors still describe the tablespace.
+
+1. Confirm the tablespace state is not `DISCARDED` or `DROPPED`.
+2. Preserve current `loganchor*` and logs.
+3. Copy every data file or stable memory checkpoint image for the affected tablespace from the backup.
+4. If the destination path changed, rename each disk data file in `CONTROL`. For memory checkpoint image files, restore the stable image file with the correct name for the current log-anchor metadata.
+5. Copy or retain all required archive logs and online logs.
+6. Run database media recovery.
+7. Start service and verify the tablespace.
+
+```bash
+cp /backup/altibase/app_data/*.dbf /data/altibase/dbs/
+```
+
+```sql
+STARTUP CONTROL;
+ALTER DATABASE RECOVER DATABASE;
+STARTUP SERVICE;
+```
 
 Runbook: lost temporary tablespace data file
 
@@ -2089,6 +2226,12 @@ STARTUP SERVICE;
 ```
 
 For media or incremental recovery, recreate missing temporary tablespace files because temporary data does not need media recovery. Offline physical backup plans may copy temporary files or explicitly document that they will be recreated.
+
+Rules:
+
+- Temporary tablespace files are the special case where media recovery can be unnecessary even in `NOARCHIVELOG` mode.
+- Use the exact path expected by log-anchor metadata or the startup error. If the path must change, use the documented tempfile rename procedure after service is stable.
+- Do not run `ALTER DATABASE RECOVER DATABASE` only for a lost temporary file unless another file also needs media recovery.
 
 Runbook: lost memory checkpoint image file
 
@@ -2140,6 +2283,33 @@ WHERE space_name = 'APP_MEM_TBS'
 ORDER BY file_num;
 ```
 
+Runbook: incomplete recovery to a past time
+
+Use this when the database must be rewound to a known safe time, such as before accidental DDL or logical corruption. This is a database-level recovery decision, even when the original mistake affected one table or tablespace.
+
+1. Stop service and preserve current files for investigation.
+2. Restore the full backup set from before the target time, including disk data files and stable memory checkpoint image files.
+3. Restore the historical `loganchor*` files associated with that backup or recovery window.
+4. Copy required archive logs and online logs into the location expected by the recovery plan. For incomplete recovery, duplicate log files between archive and log directories may be unavoidable.
+5. Recreate missing temporary tablespace files.
+6. Recover to the selected time.
+7. Run `META RESETLOGS`, start service, verify the restored object state, and take a full backup immediately.
+
+```bash
+cp /backup/altibase/full/*.dbf /data/altibase/dbs/
+cp /backup/altibase/full/SYS_TBS_MEM_* $ALTIBASE_HOME/dbs/
+cp /backup/altibase/full/loganchor* $ALTIBASE_HOME/logs/
+```
+
+```sql
+STARTUP CONTROL;
+ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/temp001.dbf';
+ALTER DATABASE RECOVER DATABASE UNTIL TIME '2026-05-13:14:30:00';
+ALTER DATABASE mydb META RESETLOGS;
+ALTER DATABASE mydb SERVICE;
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
+```
+
 Runbook: accidental table or tablespace drop requiring past-time recovery
 
 1. Restore database data files and memory checkpoint images from a backup before the accidental drop.
@@ -2159,6 +2329,15 @@ ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
 ```
 
 Runbook: missing or corrupt online log requiring `UNTIL CANCEL`
+
+Use this when complete recovery cannot pass a missing or corrupt log and the business accepts recovery only to the last valid log before that failure.
+
+1. Preserve the current failed state for investigation.
+2. Restore the required backup data files and historical `loganchor*` files for the recovery window.
+3. Stage every valid archive and online log before the missing or corrupt log.
+4. Recreate missing temporary files if the restored backup does not include them.
+5. Run `RECOVER DATABASE UNTIL CANCEL`.
+6. Run `META RESETLOGS`, start service, verify, and take a full backup immediately.
 
 ```sql
 STARTUP CONTROL;

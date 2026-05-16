@@ -744,6 +744,50 @@ copy-ready SQL/command examples, archive/log-anchor stop conditions, and view-ba
 validation hooks. No new manual/source-backed gap was discovered during the scoped
 backup, archive, log-anchor, and incremental-backup review.
 
+## J029 Restore Recovery And Media Failure Runbook Addendum
+
+J029 uses the `administrator_operations`, `sql_reference`, and
+`general_reference_2_dictionary_views` source families for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Administrator and SQL Reference manuals
+remain authoritative for complete and incomplete media recovery, incremental restore
+and recovery, selected tablespace restore grammar, disk datafile recreation, temporary
+file recreation, memory checkpoint image recovery, `META RESETLOGS`, and log-anchor
+handling; matching English manuals remain extraction aids only when consistent.
+
+Design note: J029 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/02_administration_operations.md` rather than creating a separate
+recovery file. The recovery section now uses a triage-and-runbook structure: recovery
+planning inputs, stop conditions, complete/incomplete/incremental decision blocks,
+SQL-driven selected-tablespace restore, complete recovery from online backup,
+DBA-copied tablespace restore, lost disk datafile recovery with or without a backup
+copy, temporary file recreation, memory checkpoint image recovery, past-time recovery,
+and `UNTIL CANCEL` recovery. `GPTs/attachments/03_sql_ddl_generation.md` already
+contains the source-audited recovery and restore grammar, so J029 did not change it.
+
+Scoped source paths checked for J029:
+
+- `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
+- `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
+- `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/eng/Administrator’s Manual.md`
+- `Manuals/Altibase_trunk/eng/SQL Reference.md`
+- `GPTs/attachments/02_administration_operations.md`
+- `GPTs/attachments/03_sql_ddl_generation.md`
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J029 adds no new attachment filename, source family, or Korean/English source-drift
+case. It narrows `GAP-J002-018` for the restore/media-failure workflow slice by
+replacing high-risk manual examples with searchable English recovery inputs, stop
+conditions, copy-ready SQL and command examples, and cross-references to SQL generation
+and dictionary-view validation. No new manual/source-backed gap was discovered during
+the scoped restore, media recovery, incremental restore, tablespace, datafile, or
+temporary-file review.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

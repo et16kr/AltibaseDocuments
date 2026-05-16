@@ -512,6 +512,17 @@ recording or remediating gaps.
   version scope are recorded in `GPTs/reports/source_inventory.md`. This gap remains
   `Open` for later restore/media failure, replication, Kubernetes/AKU, and
   security/replication SSL high-risk procedure slices.
+- J029 update: the restore/media failure workflow slice for
+  `02_administration_operations.md` is now represented by procedural runbooks for
+  complete media recovery, incomplete recovery with `UNTIL TIME` or `UNTIL CANCEL`,
+  incremental restore and recovery, SQL-driven selected tablespace restore, DBA-copied
+  tablespace restore, disk datafile recovery with or without a backup copy, temporary file
+  recreation, memory checkpoint image recovery, `META RESETLOGS`, and log-anchor
+  selection. `03_sql_ddl_generation.md` already contains the source-audited
+  restore/recovery grammar, so no syntax attachment change was needed. Source paths and
+  version scope are recorded in `GPTs/reports/source_inventory.md`. This gap remains
+  `Open` for later replication, Kubernetes/AKU, and security/replication SSL
+  high-risk procedure slices.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 
