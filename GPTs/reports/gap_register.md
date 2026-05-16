@@ -138,6 +138,13 @@ recording or remediating gaps.
   baseline, and `GPTs/attachments/06_data_dictionary_performance_views.md` includes a
   compact customer-facing inventory index. This gap remains open for exhaustive
   per-view column blocks and patch-sensitive column validation in J018-J021.
+- J018 update: the storage/log/archive/backup/checkpoint slice now has richer
+  customer-facing cookbook checks and object blocks for `V$DATABASE`, `V$TABLESPACES`,
+  `V$DATAFILES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES`, checkpoint-path/stable-file
+  views, `V$LOG`, `V$LFG`, `V$ARCHIVE`, `V$BACKUP_INFO`,
+  `V$OBSOLETE_BACKUP_INFO`, `V$FILESTAT`, `V$SNAPSHOT`, `V$TRACELOG`, and
+  `V$TEMPORARY_LOBS`. The gap remains open for J019-J021 view families and exhaustive
+  per-view, patch-sensitive column proof beyond the J018 scope.
 
 ### GAP-J017-001: Dictionary and performance view inventory source drift
 

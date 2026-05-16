@@ -11,6 +11,7 @@
 - Which meta table or performance view should be queried for a table, index, column, user, privilege, session, lock, transaction, replication, tablespace, property, or plan cache question?
 - How do I generate check SQL for a specific object name?
 - How do I check running sessions, statements, waits, locks, and replication gap?
+- How do I inspect tablespaces, datafiles, archive log mode, backup metadata, checkpoint image state, and file I/O hotspots?
 - Which dictionary and performance view checks are version-sensitive in 8.1?
 - How should a GPT answer data dictionary questions in the user's language while preserving SQL names and object names literally?
 
@@ -34,7 +35,7 @@
 
 - 7.1 and 7.3: Use the General Reference 2 meta table and performance view definitions for the target version.
 - 8.1: The release notes state that no meta tables were added, deleted, or changed.
-- 8.1: `V$MEM_STABLE` is documented in the Altibase 8.1 verified source data dictionary and is used with `V$LOG.CHECKPOINT_SCALE` and `V$MEM_TABLESPACES.CURRENT_DB` for memory checkpoint image checks.
+- 8.1: `V$LOG.CHECKPOINT_SCALE` and `V$MEM_STABLE` are documented in the Altibase 8.1 verified source data dictionary and are used with `V$MEM_TABLESPACES.CURRENT_DB` for memory checkpoint image checks. For 7.1/7.3-compatible SQL, check `V$ALLCOLUMN` before selecting `CHECKPOINT_SCALE`.
 - 8.1: Temporary LOB support is documented in the Altibase 8.1 release notes. Check Temporary LOB usage with `V$TEMPORARY_LOBS` when that view exists.
 - Version-sensitive view check: the 8.1 release notes list `V$LOCK_TABLE_STATS`, `V$MEM_STABLE`, and `V$TEMPORARY_LOBS`; 7.1 and 7.3 General Reference 2 also document `V$LOCK_TABLE_STATS`. For portable answers, check `V$TABLE` before relying on these views.
 - Version-sensitive meta-table column check: `SYSTEM_.SYS_REPL_ITEMS_.IS_CONDITION_SYNCED` is documented for 7.3 and 8.1, but not for the 7.1 `SYSTEM_.SYS_REPL_ITEMS_` layout. For 7.1-compatible SQL, omit that column unless the target database exposes it.
@@ -175,7 +176,9 @@ Use these first when selecting the right source:
 | Users and roles | `SYSTEM_.SYS_USERS_`, `SYSTEM_.DBA_USERS_`, `SYSTEM_.SYS_USER_ROLES_` |
 | Privileges | `SYSTEM_.SYS_PRIVILEGES_`, `SYSTEM_.SYS_GRANT_SYSTEM_`, `SYSTEM_.SYS_GRANT_OBJECT_` |
 | Trigger metadata | `SYSTEM_.SYS_TRIGGERS_`, `SYSTEM_.SYS_TRIGGER_STRINGS_`, `SYSTEM_.SYS_TRIGGER_DML_TABLES_`, `SYSTEM_.SYS_TRIGGER_UPDATE_COLUMNS_` |
-| Tablespaces and datafiles | `V$TABLESPACES`, `V$DATAFILES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES` |
+| Memory database identity and size | `V$DATABASE` |
+| Tablespaces and datafiles | `V$TABLESPACES`, `V$DATAFILES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES`, `V$MEM_TABLESPACE_STATUS_DESC` |
+| Memory checkpoint files and paths | `V$MEM_TABLESPACE_CHECKPOINT_PATHS`, `V$STABLE_MEM_DATAFILES`, `V$MEM_STABLE` for Altibase 8.1 verified source |
 | Sessions | `V$SESSION`, `V$INTERNAL_SESSION`, `V$SESSIONMGR` |
 | SQL text and statements | `V$STATEMENT`, `V$SQLTEXT` |
 | Waits and locks | `V$SESSION_WAIT`, `V$SESSION_WAIT_CLASS`, `V$LOCK`, `V$LOCK_WAIT`, `V$LOCK_STATEMENT` |
@@ -188,7 +191,9 @@ Use these first when selecting the right source:
 | Replication definition | `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, `SYSTEM_.SYS_REPL_ITEMS_` |
 | Replication runtime | `V$REPEXEC`, `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSENDER`, `V$REPRECEIVER` |
 | Database links | `SYSTEM_.SYS_DATABASE_LINKS_`, `V$DBLINK_*` |
-| Backup, archive, log, recovery | `V$LOG`, `V$ARCHIVE`, `V$BACKUP_INFO`, `V$DATAFILES` |
+| Backup, archive, log, recovery | `V$LOG`, `V$LFG`, `V$ARCHIVE`, `V$BACKUP_INFO`, `V$OBSOLETE_BACKUP_INFO`, `V$DATAFILES` |
+| Disk file I/O hotspots | `V$FILESTAT`, `V$DATAFILES`, `V$TABLESPACES` |
+| Snapshot and trace log state | `V$SNAPSHOT`, `V$TRACELOG` |
 | Temporary LOB in 8.1 | `V$TEMPORARY_LOBS`, `V$PROPERTY` |
 
 ## Cookbook: Version, Properties, and View Availability
@@ -825,6 +830,12 @@ ORDER BY id;
 
 `TYPE` values include memory system dictionary, memory system data, memory user data, disk system data, disk user data, disk temporary, disk undo, and volatile user data. `STATE` values include online, offline, backup, dropped, and discarded states.
 
+Use these source-backed code meanings when explaining `V$TABLESPACES` output:
+
+- `TYPE`: `0` memory system dictionary, `1` memory system data, `2` memory user data, `3` disk system data, `4` disk user data, `5` disk system temporary, `6` disk user temporary, `7` disk system undo, `8` volatile user data.
+- `STATE`: `1` offline, `2` online, `5` offline tablespace being backed up, `6` online tablespace being backed up, `128` dropped, `1024` discarded, `1028` discarded tablespace being backed up.
+- `ATTR_LOG_COMPRESS`: `0` means DML on tables in the tablespace is not log-compressed; `1` means it is log-compressed.
+
 ### List Datafiles
 
 ```sql
@@ -862,28 +873,85 @@ ORDER BY d.spaceid, d.id;
 ### Check Memory Tablespaces
 
 ```sql
-SELECT space_id,
-       space_name,
-       space_status,
-       autoextend_mode,
-       autoextend_nextsize,
-       maxsize,
-       current_size,
-       alloc_page_count,
-       free_page_count,
-       current_db,
-       high_limit_page,
-       page_count_per_file,
-       page_count_in_disk
-FROM V$MEM_TABLESPACES
-ORDER BY space_id;
+SELECT m.space_id,
+       m.space_name,
+       m.space_status,
+       s.status_desc,
+       m.autoextend_mode,
+       m.autoextend_nextsize,
+       m.maxsize,
+       m.current_size,
+       m.alloc_page_count,
+       m.free_page_count,
+       m.current_db,
+       m.high_limit_page,
+       m.page_count_per_file,
+       m.page_count_in_disk
+FROM V$MEM_TABLESPACES m,
+     V$MEM_TABLESPACE_STATUS_DESC s
+WHERE m.space_status = s.status
+ORDER BY m.space_id;
 ```
+
+`AUTOEXTEND_MODE = 1` means memory tablespace autoextend is enabled. `CURRENT_DB` is the ping-pong checkpoint file group for pair checkpoint scale; in 8.1 single checkpoint scale it can be `-1`, and `V$MEM_STABLE` holds the stable image ping-pong value per file.
+
+### Check Memory Tablespace Checkpoint Paths
+
+```sql
+SELECT m.space_id,
+       m.space_name,
+       p.checkpoint_path
+FROM V$MEM_TABLESPACES m,
+     V$MEM_TABLESPACE_CHECKPOINT_PATHS p
+WHERE m.space_id = p.space_id
+ORDER BY m.space_id, p.checkpoint_path;
+```
+
+Use this before changing checkpoint-path DDL or diagnosing missing memory database image files.
+
+### Check Volatile Tablespaces
+
+```sql
+SELECT v.space_id,
+       v.space_name,
+       v.space_status,
+       s.status_desc,
+       v.init_size,
+       v.autoextend_mode,
+       v.next_size,
+       v.max_size,
+       v.current_size,
+       v.alloc_page_count,
+       v.free_page_count
+FROM V$VOL_TABLESPACES v,
+     V$MEM_TABLESPACE_STATUS_DESC s
+WHERE v.space_status = s.status
+ORDER BY v.space_id;
+```
+
+Volatile tablespaces exist in memory and use the same status-description view as memory tablespaces.
+
+### Check Stable Memory Datafile Paths
+
+```sql
+SELECT mem_data_file
+FROM V$STABLE_MEM_DATAFILES
+ORDER BY mem_data_file;
+```
+
+This view lists the full paths of stable memory data files known to the database.
 
 ### Check 8.1 Stable Checkpoint Image Files
 
 Use this when `V$LOG.CHECKPOINT_SCALE` is `SINGLE`, or when investigating memory checkpoint image file state in 8.1.
 
 ```sql
+SELECT tablename, colname
+FROM V$ALLCOLUMN
+WHERE tablename IN ('V$LOG', 'V$MEM_STABLE')
+  AND colname IN ('CHECKPOINT_SCALE', 'SPACE_ID', 'FILE_NUM', 'CURRENT_DB')
+ORDER BY tablename, colname;
+
 SELECT checkpoint_scale
 FROM V$LOG;
 
@@ -1788,6 +1856,32 @@ FROM V$LOG;
 
 `SERVER_STATUS` values include server shutdown and server started. `ARCHIVELOG_MODE` values include `ARCHIVE` and `NOARCHIVE`. For `CHECKPOINT_SCALE`, use the 8.1-only stable checkpoint check instead of adding it to this common query.
 
+### Check Log File Group and Group Commit State
+
+```sql
+SELECT lfg_id,
+       cur_write_lf_no,
+       cur_write_lf_offset,
+       lf_open_count,
+       lf_prepare_count,
+       lf_prepare_wait_count,
+       lst_prepare_lf_no,
+       end_lsn_file_no,
+       end_lsn_offset,
+       first_deleted_logfile,
+       last_deleted_logfile,
+       reset_lsn_file_no,
+       reset_lsn_offset,
+       update_tx_count,
+       gc_wait_count,
+       gc_already_sync_count,
+       gc_real_sync_count
+FROM V$LFG
+ORDER BY lfg_id;
+```
+
+Use `LF_PREPARE_WAIT_COUNT` when checking whether log-file preparation is falling behind, and use `GC_WAIT_COUNT` with the group-commit counters only as cumulative evidence since server start.
+
 ### Check Archive Progress
 
 ```sql
@@ -1803,6 +1897,73 @@ ORDER BY lfg_id;
 ```
 
 `ARCHIVE_MODE` values are `0` no archive log mode and `1` archive log mode.
+
+### Check Backup Metadata
+
+```sql
+SELECT begin_backup_time,
+       end_backup_time,
+       incremental_backup_chunk_count,
+       backup_target,
+       backup_level,
+       backup_type,
+       tablespace_id,
+       file_id,
+       backup_tag,
+       backup_file
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+`BACKUP_TARGET` values are `1` database and `2` tablespace. `BACKUP_LEVEL` values are `1` level 0 and `2` level 1. `BACKUP_TYPE` values are `1` full backup, `2` differential incremental backup, and `4` cumulative incremental backup.
+
+### Check Obsolete Backup Metadata
+
+```sql
+SELECT begin_backup_time,
+       end_backup_time,
+       backup_target,
+       backup_level,
+       backup_type,
+       tablespace_id,
+       file_id,
+       backup_tag,
+       backup_file
+FROM V$OBSOLETE_BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+Use this as evidence for backup-retention cleanup questions. Do not recommend deleting backup files until the requested recovery target, retention rule, and current backup catalog are known.
+
+### Check File I/O Hotspots
+
+```sql
+SELECT f.spaceid,
+       t.name AS tablespace_name,
+       f.fileid,
+       d.name AS datafile_name,
+       f.phyrds,
+       f.phywrts,
+       f.phyblkrd,
+       f.phyblkwrt,
+       f.singleblkrds,
+       f.readtim,
+       f.writetim,
+       f.avgiotim,
+       f.lstiotim,
+       f.miniotim,
+       f.maxiortm,
+       f.maxiowtm
+FROM V$FILESTAT f,
+     V$DATAFILES d,
+     V$TABLESPACES t
+WHERE f.spaceid = d.spaceid
+  AND f.fileid = d.id
+  AND d.spaceid = t.id
+ORDER BY f.avgiotim DESC, f.spaceid, f.fileid;
+```
+
+`V$FILESTAT` counters are cumulative since server start. Use them for relative hot-spot evidence and pair them with OS storage metrics before concluding that a device is faulty.
 
 ### Check File I/O Status
 
@@ -1829,6 +1990,36 @@ ORDER BY d.spaceid, d.id;
 ```
 
 `OPENED` values are `0` closed and `1` opened. `MODIFIED` value `1` means pages were flushed without subsequent synchronization. `STATE` values include offline, online, backup in progress, and dropped.
+
+### Check Snapshot Usage
+
+```sql
+SELECT scn,
+       begin_time,
+       begin_mem_usage,
+       begin_disk_undo_usage,
+       current_time,
+       current_mem_usage,
+       current_disk_undo_usage
+FROM V$SNAPSHOT;
+```
+
+Use `V$SNAPSHOT` when `BEGIN SNAPSHOT` is in use, especially before advising long-running export or undo-space actions.
+
+### Check Trace Logging Flags
+
+```sql
+SELECT module_name,
+       trclevel,
+       flag,
+       powlevel,
+       description
+FROM V$TRACELOG
+WHERE module_name IN ('SM', 'SERVER', 'RP')
+ORDER BY module_name, trclevel;
+```
+
+`FLAG` values include `O` output enabled, `X` output disabled, and `SUM` for the module's combined `POWLEVEL` value. Change message-log properties only after confirming the target module and support purpose.
 
 ## Cookbook: Temporary LOB in 8.1
 
@@ -2537,23 +2728,324 @@ FROM V$REPSYNC
 ORDER BY rep_name, sync_table, sync_partition;
 ```
 
-### Object Block: `V$TABLESPACES`, `V$DATAFILES`, and `V$MEM_TABLESPACES`
+### Object Block: `V$DATABASE`
 
-Purpose: show tablespace, datafile, and memory tablespace state.
+Purpose: shows memory database identity, product and database signatures, storage-manager version, log file size, transaction table size, memory database page counts, and maximum accessible file size.
 
-Key columns: `ID`, `NAME`, `TYPE`, `STATE`, `PAGE_SIZE`, `TOTAL_PAGE_COUNT`, `DATAFILE_COUNT`, `SPACE_ID`, `SPACE_NAME`, `CURRENT_SIZE`, `FREE_PAGE_COUNT`, `CURRENT_DB`.
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `DB_NAME`, `PRODUCT_SIGNATURE`, `DB_SIGNATURE`, `VERSION_ID`, `COMPILE_BIT`, `ENDIAN`, `LOGFILE_SIZE`, `TX_TBL_SIZE`, `DURABLE_SYSTEM_SCN`, `MEM_MAX_DB_SIZE`, `MEM_ALLOC_PAGE_COUNT`, `MEM_FREE_PAGE_COUNT`, `MAX_ACCESS_FILE_SIZ`.
 
 Representative SQL:
 
 ```sql
-SELECT id, name, type, state, total_page_count, page_size
+SELECT db_name,
+       version_id,
+       logfile_size,
+       tx_tbl_size,
+       durable_system_scn,
+       mem_max_db_size,
+       mem_alloc_page_count,
+       mem_free_page_count
+FROM V$DATABASE;
+```
+
+Caution: `MEM_ALLOC_PAGE_COUNT` and `MEM_FREE_PAGE_COUNT` describe current memory database space, not the maximum possible size. The General Reference states that memory database page size is 32 KB when converting these counts.
+
+### Object Block: `V$TABLESPACES`
+
+Purpose: shows tablespace identity, type, state, extent/segment management, datafile count, page counts, page size, and log-compression attribute.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `ID`, `NAME`, `NEXT_FILE_ID`, `TYPE`, `STATE`, `EXTENT_MANAGEMENT`, `SEGMENT_MANAGEMENT`, `DATAFILE_COUNT`, `TOTAL_PAGE_COUNT`, `EXTENT_PAGE_COUNT`, `ALLOCATED_PAGE_COUNT`, `PAGE_SIZE`, `ATTR_LOG_COMPRESS`.
+
+Representative SQL:
+
+```sql
+SELECT id,
+       name,
+       type,
+       state,
+       datafile_count,
+       total_page_count,
+       allocated_page_count,
+       page_size,
+       total_page_count * page_size AS total_bytes,
+       attr_log_compress
 FROM V$TABLESPACES
 ORDER BY id;
 ```
 
+Caution: Do not turn a `STATE` code into operational advice until the tablespace type, backup status, and requested action are known. For DDL generation, use `03_sql_ddl_generation.md`; for runbooks, use `02_administration_operations.md`.
+
+### Object Block: `V$DATAFILES`
+
+Purpose: shows disk datafile path, owning tablespace, creation and oldest checkpoint LSN pieces, autoextend sizes, current size, I/O-open state, modified state, and file status.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `ID`, `NAME`, `SPACEID`, `OLDEST_LSN_FILENO`, `OLDEST_LSN_OFFSET`, `CREATE_LSN_FILENO`, `CREATE_LSN_OFFSET`, `SM_VERSION`, `NEXTSIZE`, `MAXSIZE`, `INITSIZE`, `CURRSIZE`, `AUTOEXTEND`, `IOCOUNT`, `OPENED`, `MODIFIED`, `STATE`, `MAX_OPEN_FD_COUNT`, `CUR_OPEN_FD_COUNT`.
+
+Representative SQL:
+
+```sql
+SELECT d.id,
+       d.name,
+       d.spaceid,
+       t.name AS tablespace_name,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.nextsize * t.page_size AS nextsize_bytes,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.autoextend,
+       d.opened,
+       d.modified,
+       d.state
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+ORDER BY d.spaceid, d.id;
+```
+
+Caution: `INITSIZE`, `CURRSIZE`, `NEXTSIZE`, and `MAXSIZE` are page counts in the datafile view; multiply by `V$TABLESPACES.PAGE_SIZE` before reporting bytes.
+
+### Object Block: `V$MEM_TABLESPACES`, `V$MEM_TABLESPACE_CHECKPOINT_PATHS`, and `V$MEM_TABLESPACE_STATUS_DESC`
+
+Purpose: show memory tablespace size, free pages, autoextend state, restore/load mode, ping-pong checkpoint group, checkpoint image paths, and status-code descriptions.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source; 8.1 adds checkpoint-scale interpretation with `V$LOG.CHECKPOINT_SCALE` and `V$MEM_STABLE`.
+
+Key columns: `SPACE_ID`, `SPACE_NAME`, `SPACE_STATUS`, `STATUS_DESC`, `AUTOEXTEND_MODE`, `AUTOEXTEND_NEXTSIZE`, `MAXSIZE`, `CURRENT_SIZE`, `DBFILE_SIZE`, `DBFILE_COUNT_0`, `DBFILE_COUNT_1`, `ALLOC_PAGE_COUNT`, `FREE_PAGE_COUNT`, `RESTORE_TYPE`, `CURRENT_DB`, `HIGH_LIMIT_PAGE`, `PAGE_COUNT_PER_FILE`, `PAGE_COUNT_IN_DISK`, `CHECKPOINT_PATH`.
+
+Representative SQL:
+
+```sql
+SELECT m.space_id,
+       m.space_name,
+       s.status_desc,
+       m.current_size,
+       m.alloc_page_count,
+       m.free_page_count,
+       m.current_db,
+       p.checkpoint_path
+FROM V$MEM_TABLESPACES m,
+     V$MEM_TABLESPACE_STATUS_DESC s,
+     V$MEM_TABLESPACE_CHECKPOINT_PATHS p
+WHERE m.space_status = s.status
+  AND m.space_id = p.space_id
+ORDER BY m.space_id, p.checkpoint_path;
+```
+
+Caution: `RESTORE_TYPE` values distinguish dynamic memory, shared-memory create, and shared-memory attach load behavior. Ask for the exact startup mode and tablespace name before interpreting it as a failure.
+
+### Object Block: `V$VOL_TABLESPACES`
+
+Purpose: shows volatile tablespace identity, status, initial/current/max sizes, autoextend settings, and free pages.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `SPACE_ID`, `SPACE_NAME`, `SPACE_STATUS`, `INIT_SIZE`, `AUTOEXTEND_MODE`, `NEXT_SIZE`, `MAX_SIZE`, `CURRENT_SIZE`, `ALLOC_PAGE_COUNT`, `FREE_PAGE_COUNT`.
+
+Representative SQL:
+
+```sql
+SELECT v.space_id,
+       v.space_name,
+       s.status_desc,
+       v.current_size,
+       v.max_size,
+       v.alloc_page_count,
+       v.free_page_count
+FROM V$VOL_TABLESPACES v,
+     V$MEM_TABLESPACE_STATUS_DESC s
+WHERE v.space_status = s.status
+ORDER BY v.space_id;
+```
+
+Caution: Volatile tablespaces exist in memory and are distinct from memory tablespaces used for persistent memory database image files.
+
+### Object Block: `V$STABLE_MEM_DATAFILES` and `V$MEM_STABLE`
+
+Purpose: `V$STABLE_MEM_DATAFILES` lists full paths for stable memory data files. `V$MEM_STABLE` shows the stable checkpoint image file number and ping-pong value for memory tablespaces.
+
+Version scope: `V$STABLE_MEM_DATAFILES` is common to 7.1, 7.3, and the Altibase 8.1 verified source. `V$MEM_STABLE` is an Altibase 8.1 verified source view listed in the 8.1 release notes and Korean General Reference 2.
+
+Key columns: `MEM_DATA_FILE`, `SPACE_ID`, `SPACE_NAME`, `FILE_NUM`, `CURRENT_DB`.
+
+Representative SQL:
+
+```sql
+SELECT mem_data_file
+FROM V$STABLE_MEM_DATAFILES
+ORDER BY mem_data_file;
+
+SELECT space_id, space_name, file_num, current_db
+FROM V$MEM_STABLE
+ORDER BY space_id, file_num;
+```
+
+Caution: Check `V$TABLE` before querying `V$MEM_STABLE` on non-8.1 targets. In 8.1, use it with `V$LOG.CHECKPOINT_SCALE`; when checkpoint scale is `PAIR`, the stable file number can be inferred from file number `0`, and when it is `SINGLE`, all stable checkpoint image files are listed.
+
+### Object Block: `V$LOG` and `V$LFG`
+
+Purpose: `V$LOG` shows log-anchor checkpoint positions, server status, archive log mode, transaction segment count, oldest restart-redo log position, and 8.1 checkpoint scale. `V$LFG` shows log file group and group-commit statistics.
+
+Version scope: common log-anchor columns are in 7.1, 7.3, and the Altibase 8.1 verified source. `V$LOG.CHECKPOINT_SCALE` is Altibase 8.1 verified source.
+
+Key columns: `BEGIN_CHKPT_FILE_NO`, `BEGIN_CHKPT_FILE_OFFSET`, `END_CHKPT_FILE_NO`, `END_CHKPT_FILE_OFFSET`, `SERVER_STATUS`, `ARCHIVELOG_MODE`, `TRANSACTION_SEGMENT_COUNT`, `OLDEST_LOGFILE_NO`, `OLDEST_LOGFILE_OFFSET`, `CHECKPOINT_SCALE`, `CUR_WRITE_LF_NO`, `CUR_WRITE_LF_OFFSET`, `LF_PREPARE_COUNT`, `LF_PREPARE_WAIT_COUNT`, `END_LSN_FILE_NO`, `END_LSN_OFFSET`, `FIRST_DELETED_LOGFILE`, `LAST_DELETED_LOGFILE`, `GC_WAIT_COUNT`, `GC_REAL_SYNC_COUNT`.
+
+Representative SQL:
+
+```sql
+SELECT server_status,
+       archivelog_mode,
+       begin_chkpt_file_no,
+       end_chkpt_file_no,
+       oldest_logfile_no,
+       transaction_segment_count
+FROM V$LOG;
+
+SELECT lfg_id,
+       cur_write_lf_no,
+       cur_write_lf_offset,
+       lf_prepare_wait_count,
+       gc_wait_count,
+       gc_real_sync_count
+FROM V$LFG
+ORDER BY lfg_id;
+```
+
+Caution: Do not include `CHECKPOINT_SCALE` in portable 7.1/7.3 SQL unless `V$ALLCOLUMN` proves the target exposes it.
+
+### Object Block: `V$ARCHIVE`
+
+Purpose: shows archive log mode and archiver progress for each log file group.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `LFG_ID`, `ARCHIVE_MODE`, `ARCHIVE_THR_RUNNING`, `ARCHIVE_DEST`, `NEXTLOGFILE_TO_ARCH`, `OLDEST_ACTIVE_LOGFILE`, `CURRENT_LOGFILE`.
+
+Representative SQL:
+
+```sql
+SELECT lfg_id,
+       archive_mode,
+       archive_thr_running,
+       archive_dest,
+       nextlogfile_to_arch,
+       oldest_active_logfile,
+       current_logfile
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+```
+
+Caution: `ARCHIVE_MODE` values are numeric in `V$ARCHIVE` (`0` no archive log mode, `1` archive log mode), while `V$LOG.ARCHIVELOG_MODE` exposes character values such as `ARCHIVE` and `NOARCHIVE`.
+
+### Object Block: `V$BACKUP_INFO` and `V$OBSOLETE_BACKUP_INFO`
+
+Purpose: show incremental-backup catalog records and backup records that are no longer required to be retained.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `BEGIN_BACKUP_TIME`, `END_BACKUP_TIME`, `INCREMENTAL_BACKUP_CHUNK_COUNT`, `BACKUP_TARGET`, `BACKUP_LEVEL`, `BACKUP_TYPE`, `TABLESPACE_ID`, `FILE_ID`, `BACKUP_TAG`, `BACKUP_FILE`.
+
+Representative SQL:
+
+```sql
+SELECT begin_backup_time,
+       end_backup_time,
+       backup_target,
+       backup_level,
+       backup_type,
+       tablespace_id,
+       file_id,
+       backup_tag,
+       backup_file
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+Caution: `V$OBSOLETE_BACKUP_INFO` uses the same column family as `V$BACKUP_INFO`. Treat it as retention evidence, not as permission to remove files without a recovery objective and current backup policy.
+
+### Object Block: `V$FILESTAT`
+
+Purpose: shows cumulative read/write I/O counters and timings for each disk datafile since server start.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `SPACEID`, `FILEID`, `PHYRDS`, `PHYWRTS`, `PHYBLKRD`, `PHYBLKWRT`, `SINGLEBLKRDS`, `READTIM`, `WRITETIM`, `SINGLEBLKRDTIM`, `AVGIOTIM`, `LSTIOTIM`, `MINIOTIM`, `MAXIORTM`, `MAXIOWTM`.
+
+Representative SQL:
+
+```sql
+SELECT f.spaceid,
+       f.fileid,
+       f.phyrds,
+       f.phywrts,
+       f.readtim,
+       f.writetim,
+       f.avgiotim,
+       d.name AS datafile_name
+FROM V$FILESTAT f,
+     V$DATAFILES d
+WHERE f.spaceid = d.spaceid
+  AND f.fileid = d.id
+ORDER BY f.avgiotim DESC, f.spaceid, f.fileid;
+```
+
+Caution: These are cumulative counters. Compare intervals or use OS storage data before diagnosing a storage device bottleneck.
+
+### Object Block: `V$SNAPSHOT`
+
+Purpose: shows `BEGIN SNAPSHOT` SCN, begin/current times, and memory/disk undo usage ratios for snapshot-based operations such as export.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `SCN`, `BEGIN_TIME`, `BEGIN_MEM_USAGE`, `BEGIN_DISK_UNDO_USAGE`, `CURRENT_TIME`, `CURRENT_MEM_USAGE`, `CURRENT_DISK_UNDO_USAGE`.
+
+Representative SQL:
+
+```sql
+SELECT scn,
+       begin_time,
+       begin_mem_usage,
+       begin_disk_undo_usage,
+       current_time,
+       current_mem_usage,
+       current_disk_undo_usage
+FROM V$SNAPSHOT;
+```
+
+Caution: When the user asks about snapshot retention or undo pressure, ask for the export/snapshot command, elapsed time, and current undo-space evidence before recommending cleanup.
+
+### Object Block: `V$TRACELOG`
+
+Purpose: shows message logging modules, trace levels, enabled flags, power-of-two bit values, and descriptions.
+
+Version scope: common to 7.1, 7.3, and the Altibase 8.1 verified source.
+
+Key columns: `MODULE_NAME`, `TRCLEVEL`, `FLAG`, `POWLEVEL`, `DESCRIPTION`.
+
+Representative SQL:
+
+```sql
+SELECT module_name,
+       trclevel,
+       flag,
+       powlevel,
+       description
+FROM V$TRACELOG
+WHERE module_name IN ('SM', 'SERVER', 'RP')
+ORDER BY module_name, trclevel;
+```
+
+Caution: `FLAG = SUM` is the combined power-level row for a module. Change `*_MSGLOG_FLAG` properties only with a clear support or diagnostic purpose.
+
 ### Object Block: `V$TEMPORARY_LOBS`
 
-Purpose: 8.1 Temporary LOB usage check.
+Purpose: shows Temporary LOB allocation and open-count state.
+
+Version scope: Altibase 8.1 verified source. The Korean General Reference 2 and 8.1 release notes list this view; the checked English General Reference 2 list did not.
 
 Key columns: `TYPE`, `ID`, `ALLOCED_SIZE`, `OPEN_COUNT`.
 
@@ -2565,10 +3057,13 @@ FROM V$TEMPORARY_LOBS
 ORDER BY type, id;
 ```
 
+Caution: `TYPE = 0` is a transaction Temporary LOB and `TYPE = 1` is a session Temporary LOB. Check `TEMPORARY_LOB_ENABLE` and related properties before interpreting usage.
+
 ## Attachment Cross-References
 
 - Use `02_administration_operations.md` when dictionary or performance-view evidence leads to tablespace, backup, recovery, startup, or shutdown action.
 - Use `03_sql_ddl_generation.md` when metadata lookup must turn into corrected DDL for objects, privileges, indexes, partitions, sequences, or replication.
+- Use `05_data_types_properties.md` when a storage, log, backup, checkpoint, or Temporary LOB answer depends on a property value, range, dynamic-change support, or restart rule.
 - Use `07_error_messages_troubleshooting.md` when the view query is part of an error-code response or log-message triage.
 - Use `08_performance_tuning_monitoring.md` for deeper interpretation of sessions, statements, waits, locks, plan cache, statistics, and server bottlenecks.
 - Use `09_replication_ha_cdc.md` for replication topology, mode, failover, gap, Sender, Receiver, and CDC interpretation after view lookup.
@@ -2609,6 +3104,18 @@ Use this when the user asks "is replication delayed or failing":
 5. Query `V$REPSENDER` and `V$REPRECEIVER`.
 6. Treat `NET_ERROR_FLAG = 1`, large `REP_GAP_SIZE`, and receiver failure counts as investigation triggers.
 7. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
+
+### Template: Storage, Backup, or Archive Request
+
+Use this when the user asks "is there enough space", "is archive log enabled", "which backup exists", or "which datafile is hot":
+
+1. Query `V$VERSION` when version-sensitive columns or 8.1-only checkpoint/Temporary LOB views may be used.
+2. Query `V$TABLESPACES`, `V$DATAFILES`, `V$MEM_TABLESPACES`, and `V$VOL_TABLESPACES` for storage layout and state.
+3. Query `V$LOG`, `V$LFG`, and `V$ARCHIVE` for log-anchor, log-file-group, archive mode, and archive progress evidence.
+4. Query `V$BACKUP_INFO` and `V$OBSOLETE_BACKUP_INFO` for backup catalog evidence.
+5. Query `V$FILESTAT` for cumulative datafile I/O evidence and pair it with OS storage data before concluding that storage is slow or faulty.
+6. For 8.1 checkpoint-scale questions, verify `V$LOG.CHECKPOINT_SCALE` and `V$MEM_STABLE` availability with `V$ALLCOLUMN` and `V$TABLE`.
+7. Route any corrective action to `02_administration_operations.md` or SQL generation to `03_sql_ddl_generation.md`; keep this file as the evidence-gathering source.
 
 ### Template: Version-Sensitive 8.1 Request
 

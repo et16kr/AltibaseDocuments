@@ -163,6 +163,12 @@ for 8.1 customer-facing labels.
   `06_data_dictionary_performance_views.md`. J018-J021 should use that baseline with
   `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
+- J018 expanded the storage, tablespace, datafile, log, archive, backup, checkpoint,
+  snapshot, trace log, and Temporary LOB performance-view slice in
+  `06_data_dictionary_performance_views.md`. It keeps operational actions routed to
+  `02_administration_operations.md` and generated SQL routed to
+  `03_sql_ddl_generation.md`; the broader per-view column gap remains open for J019-J021
+  and non-scoped patch-sensitive details.
 - J022-J026 should use `error_message_reference` and related operational sources to
   expand exact-code troubleshooting and close error-block gaps.
 - J027-J033 should use operations, replication, networking, and TLS source families to

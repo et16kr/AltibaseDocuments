@@ -303,6 +303,48 @@ reserved `V$ST_*` spatial unit views. Later jobs should keep Korean-source prece
 and require installed-version metadata checks when these names affect final customer
 SQL.
 
+## J018 Storage Log Archive Backup And Tablespace View Addendum
+
+J018 uses the `general_reference_2_dictionary_views`, `administrator_operations`, and
+release-note source families for Altibase 7.1, Altibase 7.3, and the Altibase 8.1
+verified source. Korean General Reference 2 manuals remain authoritative for storage,
+tablespace, datafile, log, archive, backup, checkpoint, snapshot, trace log, and
+Temporary LOB performance-view behavior; matching English manuals were used only for
+customer-facing terminology when consistent.
+
+Design note: J018 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/06_data_dictionary_performance_views.md` in place. The documentation
+structure now separates evidence-gathering view blocks from operational runbooks:
+storage and backup corrective actions continue to live in
+`02_administration_operations.md`, and generated DDL/administrative SQL continues to
+live in `03_sql_ddl_generation.md`.
+
+J018 updates `GPTs/attachments/06_data_dictionary_performance_views.md` with richer
+cookbook checks and searchable object blocks for `V$DATABASE`, `V$TABLESPACES`,
+`V$DATAFILES`, `V$MEM_TABLESPACES`, `V$MEM_TABLESPACE_CHECKPOINT_PATHS`,
+`V$MEM_TABLESPACE_STATUS_DESC`, `V$VOL_TABLESPACES`, `V$STABLE_MEM_DATAFILES`,
+`V$MEM_STABLE`, `V$LOG`, `V$LFG`, `V$ARCHIVE`, `V$BACKUP_INFO`,
+`V$OBSOLETE_BACKUP_INFO`, `V$FILESTAT`, `V$SNAPSHOT`, `V$TRACELOG`, and
+`V$TEMPORARY_LOBS`. `V$MEM_STABLE`, `V$LOG.CHECKPOINT_SCALE`, and
+`V$TEMPORARY_LOBS` remain scoped to Altibase 8.1 verified source with portable
+`V$TABLE`/`V$ALLCOLUMN` checks.
+
+Scoped source paths checked for J018:
+
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+- `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+
+No new manual/source-backed gap was discovered during J018. `GAP-J002-006` remains
+open for later J019-J021 slices and for exhaustive per-view, patch-sensitive column
+coverage outside the J018 storage/log/archive/backup/checkpoint scope.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
