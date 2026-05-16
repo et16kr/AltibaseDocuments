@@ -1643,8 +1643,24 @@ Source purpose: Spatial SQL, `GEOMETRY`, altiShapeLoader, NiFi, Tableau.
   J039; `GAP-J002-017` is closed, while live third-party/tool execution remains
   environment-specific verification.
 
-## Follow-Up Notes
+## J040 Final Readiness Addendum
 
-- JOB-011 should verify the 8.1-specific source claims against `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`, especially JSON, Temporary LOB, replication SSL, JSON plan output, new properties, and new performance views.
-- JOB-012 records that Korean manuals are authoritative when English and Korean manuals differ; later jobs should check Korean manuals for version-sensitive claims and record any English-source drift.
-- JOB-013 and JOB-014 should start from the manuals listed here, especially SQL Reference, Performance Tuning Guide, Replication Manual, Installation Guide, Administrator manual, and the third-party UI-heavy guides.
+J040 uses this report as the final source-root and attachment-to-source mapping support
+artifact. No new source family, attachment filename, or customer-facing source label was
+added. The final upload package remains the 20 Markdown files listed in
+`GPTs/attachments/README.md`, with `GPTs/GPT_Instructions_Draft.md` as the instruction
+basis.
+
+The early follow-up notes in this source inventory are superseded by the J002-J040
+support reports. In particular:
+
+- `GPTs/reports/coverage_matrix.md` records final source-family ownership and handoff.
+- `GPTs/reports/gap_register.md` records final closed, guardrail, and
+  verification-limited dispositions.
+- `GPTs/reports/final_upload_readiness.md` records the J040 retrieval, multilingual,
+  final gap review, and upload-readiness decision.
+
+Korean source precedence remains active for version-sensitive claims. Customer-facing
+attachments must continue using `Altibase 8.1 verified source` for 8.1 material and
+must not expose internal source paths, branch names, local filesystem paths, or build
+labels.

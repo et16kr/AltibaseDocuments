@@ -303,6 +303,8 @@ for 8.1 customer-facing labels.
   rule in `GPTs/reports/source_inventory.md`. `GAP-J002-017` is closed; live
   tool/integration execution remains environment-specific verification rather than a
   selected-source coverage gap.
-- J040 should run final retrieval and multilingual checks and verify that every open
-  register item is either closed, split into a later accepted work item, or documented
-  as a selected-source limitation.
+- J040 completed final retrieval, multilingual, validation-report, gap-register, and
+  upload-readiness checks. No attachment boundary, filename, or customer-facing source
+  label change was required. Final readiness evidence is recorded in
+  `GPTs/reports/final_upload_readiness.md`; remaining non-closed gap-register entries
+  are documented as guardrails or verification limits rather than unresolved open work.

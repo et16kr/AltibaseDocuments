@@ -38,4 +38,4 @@ J036	Done	docs	CLI ODBC C Interface Precompiler and LOB APIs	Expand CLI, ODBC, A
 J037	Done	docs	iSQL iLoader utilities dataCompJ and dump tools	Expand iSQL, iLoader, utilities, dataCompJ, dump tools, and operational tool workflows.
 J038	Done	docs	DB Link connectors Kubernetes and AKU	Expand DB Link, Hadoop, third-party connectors, Kubernetes, AKU, and cloud/container workflows.
 J039	Done	docs	Migration Oracle compatibility Spatial NiFi and Tableau	Expand Migration Center, Adapter for Oracle, Spatial, altiShapeLoader, NiFi, and Tableau coverage.
-J040	ToDo	docs	Retrieval multilingual validation and final readiness	Finalize retrieval structure, multilingual policy, validation reports, final gap review, and upload readiness.
+J040	Done	docs	Retrieval multilingual validation and final readiness	Finalize retrieval structure, multilingual policy, validation reports, final gap review, and upload readiness.

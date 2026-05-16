@@ -27,6 +27,28 @@ Use `GPTs/reports/catalog_schema_extraction_rules.md` for the required item bloc
 BNF-like syntax, runbook, example, cross-reference, and validation-note shapes when
 recording or remediating gaps.
 
+## J040 Final Gap Review
+
+J040 removed `Open` as a final handoff state. Remaining non-closed entries are accepted
+guardrails or verification limits: the attachment set must not invent unsupported
+detail, and answers must ask for exact version, patch level, object definition, log
+excerpt, installed header/manual evidence, runtime environment, or live integration
+evidence where the entry says those inputs are required.
+
+| Gap | Final disposition |
+| --- | --- |
+| `GAP-J002-001` | Guardrail for JSON execution-plan schema and examples. |
+| `GAP-J002-002` | Guardrail for unsupported cross-version 8.1 Sender and replication SSL compatibility claims. |
+| `GAP-J002-004` | Guardrail for exact direct-key type/width matrix detail beyond the summarized attachment blocks. |
+| `GAP-J002-006` | Guardrail for exhaustive per-view, patch-sensitive column proof; use installed metadata checks when exact columns matter. |
+| `GAP-J002-007` | Guardrail for exact patch/platform support boundaries. |
+| `GAP-J002-008` | Guardrail for exact error codes not yet consolidated into grouped blocks. |
+| `GAP-J022-001` | Guardrail for `sdERR_*` source drift and installed-version evidence. |
+| `GAP-J026-001` | Guardrail for Spatial `stERR_*` exact-code itemization. |
+| `GAP-J002-009`, `GAP-J002-012`, `GAP-J002-013`, `GAP-J002-016`, `GAP-J002-018` | Verification-limited because source-backed documentation exists but live execution was not performed. |
+| `GAP-J002-011`, `GAP-J002-014`, `GAP-J002-015`, `GAP-J004-001` | Guardrail for installed tool/client/package, Java/runtime, exact header, or lower-retrieval property detail limits. |
+| `GAP-J010-001` | Closed-trace after J040 final retrieval validation; exact-version SQL edge cases remain governed by the general missing-input rule. |
+
 ## Gaps
 
 ### GAP-J002-001: JSON execution plan schema and examples
@@ -95,7 +117,7 @@ recording or remediating gaps.
 
 ### GAP-J002-004: Direct key supported-type matrix is summarized
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `sql_reference`,
   `general_reference_1_datatypes_properties`; 7.1, 7.3, and 8.1.
 - Missing item or behavior: Exhaustive direct-key supported/unsupported type matrix and
@@ -105,6 +127,11 @@ recording or remediating gaps.
 - Evidence: `review/reports/R05_table_partition_index_constraint.md`.
 - Required remediation shape: Searchable item block by key type with supported data
   types, unsupported combinations, version scope, DDL example, and validation query.
+- J040 final disposition: the attachment set preserves direct-key restrictions,
+  default `MAXSIZE`, composite-first-column behavior, and the rule to ask for target
+  column type and width before final DDL. Do not invent the exhaustive direct-key
+  supported-type matrix from memory; require exact target version and type evidence
+  when the matrix determines correctness.
 
 ### GAP-J002-005: JSON SQL and function option grammar source-audited by J015
 
@@ -133,7 +160,7 @@ recording or remediating gaps.
 
 ### GAP-J002-006: Dictionary and performance view columns are not exhaustively proven
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `general_reference_2_dictionary_views`,
   `performance_tuning`, `replication_manual`; 7.1, 7.3, and 8.1.
 - Missing item or behavior: Exhaustive per-view column coverage across all large
@@ -193,6 +220,11 @@ recording or remediating gaps.
   `GPTs/attachments/09_replication_ha_cdc.md`, and
   `GPTs/attachments/18_security_ssl_tls.md`. The gap remains open only for exhaustive
   per-view, patch-sensitive column proof outside the J018-J021 scoped slices.
+- J040 final disposition: exhaustive per-view column proof remains patch-sensitive and
+  installed-version-sensitive. The customer-facing attachment provides view purpose,
+  key-column, and check-query coverage plus portable metadata checks; ask for the exact
+  installed version or run metadata layout checks before asserting a complete column
+  list.
 
 ### GAP-J017-001: Dictionary and performance view inventory source drift
 
@@ -240,7 +272,7 @@ recording or remediating gaps.
 
 ### GAP-J002-008: Error reference expansion remains item-level work
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `error_message_reference` plus related SQL,
   property, replication, and TLS sources; 7.1, 7.3, and 8.1.
 - Missing item or behavior: Exhaustive exact-code blocks for grouped or low-frequency
@@ -285,10 +317,15 @@ recording or remediating gaps.
   Spatial `ST Error Code` exact-code work into `GAP-J026-001`. This gap remains
   `Open` only for exhaustive exact-code coverage outside the J023-J025 grouped blocks
   and the explicitly split spatial/sharding follow-up gaps.
+- J040 final disposition: uncovered exact-code entries are governed by the attachment's
+  exact-code response rule. Preserve the supplied code and message, set unsupported
+  cause/action fields to `Unknown from the supplied message`, ask for version, patch,
+  full error line, SQL/command, object definition, and trace excerpt, and provide only
+  source-backed next checks.
 
 ### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `error_message_reference`; Altibase 7.1, Altibase
   7.3, and Altibase 8.1 verified source, with English extraction-aid drift.
 - Missing item or behavior: The 7.1 Korean Error Message Reference lists `SD Error
@@ -312,10 +349,13 @@ recording or remediating gaps.
   evidence, and avoid broad 7.3 or 8.1 `sdERR_*` claims. If later accepted sharding
   sources are added, create exact-code maps with version scope, cause/action, and
   metadata/topology checks.
+- J040 final disposition: keep this as a final guardrail. Do not claim 7.3 or 8.1
+  `sdERR_*` support from the checked Korean sources alone; require exact installed
+  version and runtime/manual evidence.
 
 ### GAP-J026-001: Spatial `ST Error Code` exact-code blocks need itemization
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `error_message_reference` plus
   `spatial_nifi_tableau` and related dictionary metadata; Altibase 7.1, Altibase 7.3,
   and Altibase 8.1 verified source, with Korean Error Message Reference and Spatial
@@ -345,6 +385,12 @@ recording or remediating gaps.
   `altiShapeLoader` command/source file when relevant, exact version and patch level,
   and trace or utility output. Cross-reference `19_spatial_nifi_tableau_misc.md` for
   Spatial syntax and metadata procedures.
+- J040 final disposition: keep as a guardrail rather than an unresolved attachment
+  blocker. `19_spatial_nifi_tableau_misc.md` now carries Spatial SQL, SRID, WKB/EWKB,
+  metadata, migration, and loader context; `07_error_messages_troubleshooting.md`
+  requires exact-code evidence and Spatial metadata checks for `stERR_*` questions.
+  Do not invent a Spatial error cause/action without the exact code and failed Spatial
+  operation.
 
 ### GAP-J002-009: Monitoring API and SNMP behavior was source-reviewed, not live-tested
 
@@ -492,7 +538,7 @@ recording or remediating gaps.
 
 ### GAP-J002-015: Compile-ready CLI LOB signatures need exact header/manual source
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `c_cli_odbc_precompiler`,
   `general_reference_1_datatypes_properties`; Altibase 8.1 verified source and
   7.x client manuals where applicable.
@@ -511,6 +557,9 @@ recording or remediating gaps.
   `SQLEmptyLob()` and `SQLGetLobLength2()` and do not provide complete callable
   signatures, so this gap remains `Open` for exact installed-header or later manual
   proof of those two functions.
+- J040 final disposition: keep as a final guardrail. Generate compile-ready
+  `SQLEmptyLob()` or `SQLGetLobLength2()` code only from an exact installed 8.1 client
+  header or a later source-backed manual page.
 
 ### GAP-J002-016: Low-frequency utility and iLoader options are intentionally partial
 
@@ -541,7 +590,7 @@ recording or remediating gaps.
 
 ### GAP-J002-017: Spatial, migration, NiFi, and Tableau examples need deeper itemization
 
-- Status: `Closed`
+- Status: `Closed-trace`
 - Source family and version scope: `spatial_nifi_tableau`, `migration_oracle`,
   `jdbc_java`, `isql_iloader`, `utilities_datacompj`; 7.1, 7.3, and 8.1.
 - Missing item or behavior: Exhaustive Spatial function examples, Adapter for Oracle
@@ -678,7 +727,7 @@ recording or remediating gaps.
 
 ### GAP-J004-001: Full per-property detail blocks remain split across property jobs
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `general_reference_1_datatypes_properties`; Altibase
   7.1, Altibase 7.3, and Altibase 8.1 verified source.
 - Missing item or behavior: J004 inventories `484` source-backed property names and
@@ -753,10 +802,16 @@ recording or remediating gaps.
     `AltiLinker` defaults and ranges, and Altibase 8.1 verified source `altiEncrypt`
     password boundaries for `dblink.conf`. This gap remains `Open` for unrelated
     low-retrieval property families outside the J038 connector scope.
+- J040 final disposition: keep as a final guardrail. The attachment contains all
+  inventoried property names, high-retrieval decomposed property blocks, dynamic-change
+  or verification cues, and `V$PROPERTY` check patterns. For lower-retrieval properties
+  that are inventoried by name but not fully decomposed, ask for the exact version and
+  verify default, range, dynamic-change support, and caution fields against the target
+  version before making a definitive claim.
 
-### GAP-J010-001: SQL Reference syntax diagram conversion queue remains open
+### GAP-J010-001: SQL Reference syntax diagram conversion queue source-audited by J040
 
-- Status: `Open`
+- Status: `Closed-trace`
 - Source family and version scope: `sql_reference` with supporting
   `administrator_operations`, `replication_manual`, `log_analyzer`,
   `performance_tuning`, `migration_oracle`, `dblink_hadoop_external_connectors`,
@@ -848,3 +903,7 @@ recording or remediating gaps.
   `ILOADER_GEOM = WKB` and `-geom WKB`, and an `altiShapeLoader` command grammar.
   The shared syntax queue remains open only for J040 final retrieval validation and
   exact-version edge cases outside the selected source slices.
+- J040 final disposition: the staged SQL syntax conversion queue is closed for the
+  selected source slices. Exact-version edge cases outside the selected source slices
+  remain governed by the general missing-input rule and should not be answered without
+  target-version evidence.

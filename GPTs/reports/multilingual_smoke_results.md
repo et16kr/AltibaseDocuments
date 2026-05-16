@@ -1,8 +1,8 @@
 # Multilingual Smoke Test Results
 
-Job: `JOB-085`
-Phase: P8 QA
-Date: 2026-05-14
+Job: `J040` final readiness validation; original smoke run from `JOB-085`
+Phase: Final upload readiness
+Date: 2026-05-17
 Result: Pass
 
 ## Objective
@@ -39,7 +39,9 @@ Acceptance criterion: user-language response works.
 ## Method
 
 The checks were run as manual Codex prompt simulations using the 18 prompts from
-`GPTs/reports/multilingual_prompt_set.md`. No live Altibase server was used.
+`GPTs/reports/multilingual_prompt_set.md`. No live Altibase server was used. J040
+revalidated the report as the final multilingual policy evidence for upload readiness;
+live GPT platform retrieval remains a post-upload operational smoke check.
 
 For each prompt, the simulated answer was checked for:
 

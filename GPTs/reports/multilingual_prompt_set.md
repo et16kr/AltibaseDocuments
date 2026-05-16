@@ -1,7 +1,7 @@
 # Multilingual Prompt Set
 
-Job: `JOB-024`
-Status: work output
+Job: `J040` final readiness support; original prompt set from `JOB-024`
+Status: active validation artifact
 Prompt count: 18
 
 Purpose: provide reusable multilingual smoke-test prompts for the Altibase GPT answer
