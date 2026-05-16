@@ -125,6 +125,19 @@ All other question fields are judge-only. Runner code must record the exact proj
 answering input for audit and must fail a leakage check if judge-only keys appear in the
 prompt text or request payload.
 
+The durable runner is `scripts/answer_runner.py`. It supports:
+
+- `dry_run` mode for projection, context construction, output-schema validation, and
+  leakage checks without answer generation;
+- `offline_fixture` mode for deterministic fixture answers without live model calls;
+- `live` mode through a configurable provider, including stdin/stdout command providers
+  and optional OpenAI client support.
+
+By default the runner requests English answers, preserves literal technical tokens, and
+uses lexical chunk selection from `GPTs/attachments/*.md` to keep prompts bounded. Use
+`--context-mode full` only when the selected model can safely accept the whole attachment
+set.
+
 ## Judge Contract
 
 The judge may use the complete question record, expected facts, required tokens,
@@ -183,3 +196,16 @@ python3 evals/altibase_answerability/scripts/validate_benchmark.py \
 For production manifests, omit `--profile fixture`. The default full profile fails when
 the selected question set has fewer than 200 total records or any domain is below its
 required minimum in `policy.json`.
+
+Use the runner fixture checks after editing answer-generation code:
+
+```bash
+python3 evals/altibase_answerability/scripts/answer_runner.py --self-test
+
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --mode offline_fixture \
+  --limit 2 \
+  --validate-output \
+  --output-dir /tmp/altibase-answer-runner-fixture
+```

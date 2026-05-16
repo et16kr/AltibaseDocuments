@@ -21,3 +21,14 @@ python3 evals/altibase_answerability/scripts/validate_benchmark.py \
   --manifest evals/altibase_answerability/manifests/fixture_seed.json \
   --profile fixture
 ```
+
+Run the answer runner against a small fixture slice without live model calls:
+
+```bash
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --mode offline_fixture \
+  --limit 2 \
+  --validate-output \
+  --output-dir /tmp/altibase-answer-runner-fixture
+```
