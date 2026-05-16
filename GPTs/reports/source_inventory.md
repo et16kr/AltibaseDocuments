@@ -1376,6 +1376,15 @@ Source purpose: JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, Hib
   - `3rd Party Guide for Altibase/kor/Spring Data JPA with Hibernate 6.4 User's Guide for Altibase.md`
 - Korean supplemental technical documents:
   - `Technical Documents/kor/JavaCompatibility.md`
+- J035 design note: `11_java_jdbc_spring.md` remains the Java/JDBC/Spring/Adapter
+  packaging file; no attachment boundary or file-name change was required. J035
+  expanded item-block coverage from Korean JDBC and Adapter manuals, Korean
+  Spring/Hibernate guides, and `Technical Documents/kor/JavaCompatibility.md` with
+  driver jar selection, patch-sensitive Java compatibility cautions, additional
+  connection attributes, failover grammar and retry handling, validation-query rules,
+  Spring/Hibernate examples, Altibase-specific Java APIs, and Adapter platform/version
+  boundaries. J035 did not perform live JDBC, Spring, Hibernate, or `jdbcAdapter`
+  execution tests, so runtime examples remain source-backed documentation examples.
 
 ### 12_c_cli_odbc_precompiler.md
 

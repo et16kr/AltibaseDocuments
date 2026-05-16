@@ -55,32 +55,39 @@ Version block: 7.1
 
 - Driver class: `Altibase.jdbc.driver.AltibaseDriver`.
 - Local driver file: `$ALTIBASE_HOME/lib/Altibase.jar`.
-- Logging and non-logging JARs: `Altibase.jar` supports logging; `Altibase_t.jar` does not support logging.
+- Logging and non-logging JARs: `Altibase.jar` is the ordinary driver; `Altibase_t.jar` is the logging driver for the JDBC 3.0 driver path. The 7.1 JDBC guide does not provide a logging driver for the JDBC 4.2 partial-support driver.
 - JDBC 3.0 driver baseline: `Altibase.jar` is a Type 4 pure Java driver and operates on JDK 1.5 or later according to the 7.1 JDBC guide.
 - JDBC 4.2 support: `Altibase42.jar` supports JDBC 4.2 APIs and Java 8 time conversion.
+- Multi-version 7.1 driver jars: `Altibase7_1.jar` and `Altibase42_7_1.jar` use `Altibase7_1.jdbc.driver.AltibaseDriver` so one Java application can distinguish the 7.1 driver from another Altibase driver version on the same classpath.
 - Maven Central driver-patch example: the Spring/Hibernate guide uses `com.altibase:altibase-jdbc:7.1.0.9.2` as a 7.1 example. Verify Maven Central availability and support against the exact target 7.1 JDBC driver patch before recommending this dependency.
 - Hibernate LOB caution: in 7.1, set `lob_null_select=off` when Hibernate LOB features are used, because the 7.1 default is `on`.
 - `socket_immediate_close`: supported by Altibase JDBC driver 7.1.0.9.8 and later.
 - Java compatibility driver-patch examples: supplemental compatibility material lists `Altibase.jar` from Java 5 through Java 17-21 and `Altibase42.jar` from Java 8 through Java 17-21, with Java 11 or later support for the JDBC 3.0 driver starting from Altibase 7.1.0.2.6. Verify the exact 7.1 driver patch and target Java runtime before treating these ranges as supported.
 - Adapter for JDBC Java compatibility example: supplemental compatibility material lists 7.1 Adapter for JDBC from Java 7 through Java 17-21, with Java 11 or later support starting from Altibase 7.1.0.2.6. Verify the target Adapter for JDBC patch before committing to a Java runtime.
+- Adapter for JDBC source boundary: the 7.1 Adapter guide assumes an Altibase source server 6.3.1 or later; the target database must support JDBC v4.1 or lower and use DML syntax compatible with Altibase.
 
 Version block: 7.3
 
 - Driver class and URL format remain `Altibase.jdbc.driver.AltibaseDriver` and `jdbc:Altibase://host:port/database`.
+- The 7.3 JDBC guide describes `Altibase.jar` as a Type 4 pure Java JDBC driver that complies with JDBC 4.2 except for documented unsupported features and runs on JRE 1.8 or later.
+- `Altibase_t.jar` is the logging driver option shipped with the 7.3 package.
 - Maven Central availability: from Altibase 7.3.0.0.2; the Spring Hibernate 6.4 guide uses `com.altibase:altibase-jdbc:7.3.0.0.2` as the 7.3 example.
 - Hibernate LOB behavior: `lob_null_select` default is `off`, so 7.3 users normally do not need to add `lob_null_select=off` for Hibernate.
 - `socket_immediate_close`: supported by Altibase JDBC driver 7.3.0.0.7 and later.
 - Java compatibility note: 7.3 `Altibase.jar` and Adapter for JDBC are listed as tested from Java 8 through Java 17-21, and not supported on Java 5, Java 6, or Java 7.
+- Adapter for JDBC source boundary: the 7.3 Adapter guide assumes an Altibase source server 6.5.1 or later; the target database must support JDBC v4.2 or lower and use DML syntax compatible with Altibase.
 
 Version block: 8.1
 
 - Use Altibase 8.1 verified source for JDBC and Adapter for JDBC behavior.
 - Altibase 8.1 release notes state that Altibase 8.1 is compatible with JDK 1.8 and higher.
+- The Altibase 8.1 verified source JDBC guide keeps the 7.3-style JDBC 4.2 driver model and JRE 1.8-or-later baseline unless a target 8.1 driver package states otherwise.
 - Altibase 8.1 verified source includes `stmt_cache_enable`, `stmt_cache_size`, and `stmt_cache_sql_limit` for JDBC statement caching.
 - Altibase 8.1 verified source keeps the 7.3-and-later Hibernate LOB guidance: `lob_null_select` default is `off`.
 - Altibase 8.1 adds a native `JSON` data type, JSON path support, and JSON functions such as `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, and `JSON_VALID`. JDBC-specific JSON binding details are not expanded in the English JDBC guide; answer JSON/JDBC binding questions conservatively and ask for the exact driver version.
 - Altibase 8.1 adds Temporary LOB support and `V$TEMPORARY_LOBS`; do not assume older JDBC LOB sections cover Temporary LOB behavior unless the answer is limited to ordinary `BLOB` and `CLOB` handling.
 - Altibase 8.1 verified source adds improved JDBC behavior for Empty LOB values, meaning `BLOB` or `CLOB` data with length 0. Do not apply older 7.1/7.3 zero-length LOB guidance to 8.1 Empty LOB behavior without checking the target 8.1 driver.
+- Adapter for JDBC source boundary: the Altibase 8.1 verified source Adapter guide assumes an Altibase source server 6.5.1 or later; the target database must support JDBC v4.2 or lower and use DML syntax compatible with Altibase.
 
 ## Core JDBC Cookbook
 
@@ -95,6 +102,15 @@ Driver and classpath checklist:
 ```sh
 java -jar $ALTIBASE_HOME/lib/Altibase.jar
 ```
+
+Driver jar selection block:
+
+- `Altibase.jar`: ordinary driver jar. In 7.1 it is the JDBC 3.0 driver; in 7.3 and Altibase 8.1 verified source it is the JDBC 4.2 driver with documented unsupported APIs.
+- `Altibase42.jar`: 7.1 JDBC 4.2 partial-support driver. Use it when a 7.1 application needs JDBC 4.2 APIs or Java 8 time conversion.
+- `Altibase7_1.jar`: 7.1 JDBC 3.0 driver with class `Altibase7_1.jdbc.driver.AltibaseDriver`, used to distinguish the 7.1 driver in applications that load multiple Altibase driver versions.
+- `Altibase42_7_1.jar`: 7.1 JDBC 4.2 partial-support driver with class `Altibase7_1.jdbc.driver.AltibaseDriver`, used for the same multi-version classpath case.
+- `Altibase_t.jar`: logging driver for supported logging-driver paths. For 7.1, do not assume a logging driver exists for `Altibase42.jar`.
+- Maven Central: source-backed examples start from 7.1.0.9.0 for 7.1 and 7.3.0.0.2 for 7.3, but production answers must verify the exact driver patch and artifact availability.
 
 Basic URL syntax:
 
@@ -209,11 +225,36 @@ Connection attribute block: `time_zone`, `date_format`
 - `time_zone`: sets session time zone; default behavior is `DB_TZ`.
 - `date_format`: sets the DATE input/output format; if client input does not match, the driver returns an error instead of treating the value as DATE.
 
+Connection attribute block: `app_info`
+
+- Purpose: stores a client application string in `V$SESSION.CLIENT_APP_INFO`.
+- Range: arbitrary string.
+- Use when: operations teams need to identify Java application sessions from Altibase session views.
+
 Connection attribute block: `fetch_enough`, `fetch_async`, `fetch_auto_tuning`
 
 - `fetch_enough`: session fetch size; default `0`, which fetches the maximum data that fits in one network packet.
 - `fetch_async`: values `off` or `preferred`; asynchronous prefetch can improve fetch performance, but only one statement per connection is performed asynchronously.
 - `fetch_auto_tuning`: values `on` or `off`; Linux default is `on`, non-Linux default is `off`; requires the JNI module for auto-tuning.
+
+Connection attribute block: `defer_prepares`
+
+- Purpose: delays server-side prepare communication until execution for `PreparedStatement`.
+- Values: `on` or `off`; default `off`.
+- Immediate prepare exceptions: `getMetaData`, `getParameterMetaData`, `setObject(int, Object, int)`, and, in the Korean 7.x and Altibase 8.1 verified source, `setBigDecimal(int, BigDecimal)` force the prepare request immediately.
+- Cautions: do not combine with JDBC statement caching or DBCP statement pooling; when binding `NCHAR` or `NVARCHAR` with deferred prepare, use `setNString()`.
+
+Connection attribute block: `loadbalance`, `alternateservers`
+
+- Purpose: controls how the driver chooses among the primary server and `alternateservers`.
+- `loadbalance=off`: try the primary server first; on failure, try alternate servers in order. During STF, retry the previous server first, then alternate servers in order.
+- `loadbalance=on`: choose the first connection target randomly from the primary and alternate servers. During STF, retry the previous server first, then choose randomly.
+- Production caution: test the exact 7.1, 7.3, or Altibase 8.1 verified-source driver because documented examples differ on whether the alternate-server list is wrapped in parentheses.
+
+Connection attribute block: `isolation_level`, `max_statements_per_session`
+
+- `isolation_level`: values `2`, `4`, or `8`, corresponding to `TRANSACTION_READ_COMMITTED`, `TRANSACTION_REPEATABLE_READ`, and `TRANSACTION_SERIALIZABLE`.
+- `max_statements_per_session`: maximum executable statements in one session; `0` means infinity.
 
 Connection attribute block: `lob_cache_threshold`, `lob_null_select`, `batch_setbytes_use_lob`
 
@@ -237,6 +278,25 @@ Connection attribute block: `ssl_enable`, `port`, `verify_server_certificate`, `
 - For 7.1 SSL/TLS JDBC answers, keep the property set to `ssl_enable`, `port`, `ciphersuite_list`, `verify_server_certificate`, truststore keys, and keystore keys, then use the SSL/TLS attachment for 7.1 TLS 1.0 and OpenSSL limitations.
 - Use the SSL/TLS attachment for certificate preparation and server-side SSL/TLS properties.
 
+Connection attribute block: `conntype`, `ib_latency`
+
+- Source boundary: Korean JDBC manuals list these connection attributes; use them only when the target driver and platform support the selected connection type.
+- `conntype`: values `0`, `TCP`, `6`, `SSL`, `8`, or `IB`; use ordinary `ssl_enable=true` guidance for SSL/TLS unless a source-backed reason requires `conntype`.
+- `ib_latency`: values `true` or `false`; applies when `conntype=IB` and lower latency is worth higher CPU use.
+
+Connection attribute block: `prefer_ipv6`, `PREFER_IPV6`, Java IPv6 flags
+
+- `prefer_ipv6`: JDBC connection attribute that controls whether IPv6 addresses are used directly or converted to IPv4.
+- `PREFER_IPV6`: equivalent property key shown in the IPv6 examples.
+- JVM flags: `java.net.preferIPv4Stack` and `java.net.preferIPv6Addresses` affect Java socket selection; coordinate them with the JDBC property instead of changing one side only.
+- URL rule: enclose IPv6 literals in square brackets, for example `jdbc:Altibase://[::1]:20300/mydb`.
+
+Connection attribute block: `remove_redundant_transmission`, `sock_rcvbuf_block_ratio`, `socket_immediate_close`
+
+- `remove_redundant_transmission`: values `0` or `1`; controls duplicate-data compression for `CHAR`, `VARCHAR`, `NCHAR`, and `NVARCHAR` strings.
+- `sock_rcvbuf_block_ratio`: socket receive buffer sizing in 32 KB increments; OS TCP receive-buffer limits can cap or reject the requested size.
+- `socket_immediate_close`: values `true` or `false`; controls `SO_LINGER` behavior. It is supported by 7.1 driver 7.1.0.9.8 or later and 7.3 driver 7.3.0.0.7 or later; verify exact 8.1 driver behavior before using it as a production fix.
+
 Connection attribute block: `stmt_cache_enable`, `stmt_cache_size`, `stmt_cache_sql_limit`
 
 - Version: Altibase 8.1 verified source.
@@ -246,6 +306,11 @@ Connection attribute block: `stmt_cache_enable`, `stmt_cache_size`, `stmt_cache_
 - `stmt_cache_sql_limit`: default `1024`; SQL text length limit for cached statements.
 - Exclusions: `Statement` objects are not cached.
 - Cautions: do not combine statement caching with `defer_prepares`; avoid duplicate caching with DBCP `poolPreparedStatements`; DDL on cached database objects can lead to errors; tune Java heap and cache limits.
+
+Connection attribute block: JDBC metadata result options
+
+- `getprocedures_return_functions`: controls whether `DatabaseMetaData.getProcedures()` and `DatabaseMetaData.getProcedureColumns()` include stored functions. If set `false`, retrieve stored function information separately with `DatabaseMetaData.getFunctions()` and `DatabaseMetaData.getFunctionColumns()`.
+- `getcolumns_return_jdbctype`: controls the `DATA_TYPE` value returned by `DatabaseMetaData.getColumns()`. If set `true`, it returns a `java.sql.Types` SQL type; if set `false`, it returns the type specified in `V$DATATYPE`.
 
 Statement caching example:
 
@@ -267,7 +332,7 @@ Connection validation query:
 /* PING */ SELECT 1
 ```
 
-Use this lightweight ping pattern for connection-pool validation when the pool supports `validationQuery`, `poolPingQuery`, or an equivalent setting.
+Use this lightweight ping pattern for connection-pool validation when the pool supports `validationQuery`, `poolPingQuery`, or an equivalent setting. The comment and `SELECT 1` must remain separated by whitespace. Do not rewrite it as `/* PING */SELECT 1`, `/* ping */ select 1 from dual`, `/*+ ping */ select 1`, or malformed comment text.
 
 ## Failover Cookbook
 
@@ -288,6 +353,16 @@ props.put("connectionretrydelay", "2");
 props.put("sessionfailover", "off");
 ```
 
+Alternate-server grammar:
+
+```text
+host_name:port_number[/dbname][, host_name:port_number[/dbname]]*
+```
+
+- The documented property grammar is a comma-separated server list with optional `/dbname` per entry.
+- The 7.1 and 7.3/8.1 examples differ on whether the property value is wrapped in parentheses. Preserve the exact form accepted by the target driver in customer code and test the URL or `Properties` object with the exact driver patch.
+- The English 7.3 and Altibase 8.1 verified-source extraction states that up to two alternate servers can be configured; do not design a larger list without target-driver confirmation.
+
 STF property change:
 
 ```java
@@ -299,12 +374,15 @@ Failover attribute block: `alternateservers`
 - Purpose: server list used for connection failover.
 - Format: `[ host_name:port_number[/dbname] [, host_name:port_number[/dbname] ]*`.
 - Example value: `(db1.example.com:20300, db2.example.com:20300)`.
+- If a database name is included for an alternate server, write it as `host:port/dbname`.
+- `loadbalance` changes whether the primary and alternate servers are tried in order or randomly.
 
 Failover attribute block: `connectionretrycount`, `connectionretrydelay`
 
 - `connectionretrycount`: number of alternate connection retries.
 - `connectionretrydelay`: wait time between retry attempts.
 - Unit for `connectionretrydelay`: seconds.
+- If `connectionretrycount=1`, the driver makes one retry against another server, so the total connection attempts can be two.
 
 Failover callback API:
 
@@ -335,6 +413,30 @@ Registration pattern:
 ((AltibaseConnection) conn).deregisterFailoverCallback();
 ```
 
+STF success handling pattern:
+
+```java
+while (true) {
+    try {
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT C1 FROM T1")) {
+            while (rs.next()) {
+                // process row
+            }
+        }
+        break;
+    } catch (SQLException e) {
+        if (e.getErrorCode()
+            == AltibaseFailoverCallback.FailoverValidation.FAILOVER_SUCCESS) {
+            continue; // failover succeeded; retry the interrupted unit of work
+        }
+        throw e;
+    }
+}
+```
+
+STF caution: after successful session failover, the driver raises a failover success exception so the application notices that the previous operation must be retried. Make the retried unit idempotent or protect it with application-level transaction logic.
+
 ## DataSource And Connection Pool Cookbook
 
 `altibase_cli.ini` DataSource file:
@@ -347,6 +449,7 @@ Server=localhost
 Port=20300
 User=sys
 Password=manager
+fetch_enough=1000
 ```
 
 Search order for `altibase_cli.ini`:
@@ -413,6 +516,13 @@ Context envContext = (Context) initContext.lookup("java:/comp/env");
 DataSource ds = (DataSource) envContext.lookup("jdbc/altihdb");
 Connection conn = ds.getConnection();
 ```
+
+Connection-pool validation rules:
+
+- Preferred lightweight validation SQL: `/* PING */ SELECT 1`.
+- Allowed shape: a block comment containing `PING` or `ping`, followed by whitespace, followed by `SELECT 1` with ordinary SQL spacing.
+- Disallowed shapes: `/* PING */SELECT 1`, hint-style `/*+ ping */ select 1`, `/* ping */ select 1 from dual`, or malformed comments.
+- Hikari example for older Spring Boot guide compatibility: `spring.datasource.hikari.connection-test-query=select 1 from dual`. Prefer the lightweight ping pattern when the pool accepts it and the target driver has been checked.
 
 WebLogic configuration values:
 
@@ -548,6 +658,138 @@ Connection success evidence:
 ```text
 Added connection Altibase.jdbc.driver.AltibaseConnection
 ```
+
+Minimal Spring Boot 3.2 / Hibernate 6.4 entity example:
+
+```java
+package com.example.AltitestJPA;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Book {
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Integer id;
+    private String title;
+    private String author;
+}
+```
+
+Spring/Hibernate example cautions:
+
+- The guide uses sample schema generation with `spring.jpa.hibernate.ddl-auto=create`; do not recommend that value for production without an explicit rebuild plan.
+- `GenerationType.SEQUENCE` is the documented generated-key pattern. Altibase does not support an `AUTO INCREMENT` column property.
+- For Spring Boot 2.7 and older Hibernate examples, the guide uses `javax.persistence.*`; for Spring Boot 3.2 / Hibernate 6.4, the guide uses `jakarta.persistence.*`.
+
+## Java API Examples And Altibase Extensions
+
+Statement family selection:
+
+- `Statement`: direct static SQL; no prepare, no IN parameter, no OUT parameter.
+- `PreparedStatement`: prepared SQL with IN parameters; use it for repeated SQL and bind variables.
+- `CallableStatement`: prepared calls with IN and OUT parameters; use it for stored procedures or stored functions.
+
+PreparedStatement IN-parameter example:
+
+```java
+PreparedStatement ps = conn.prepareStatement("INSERT INTO t1 VALUES (?, ?)");
+ps.setInt(1, 1);
+ps.setString(2, "string-value");
+ps.execute();
+ps.close();
+```
+
+CallableStatement IN/OUT example:
+
+```java
+CallableStatement cs = conn.prepareCall("{call p1(?, ?)}");
+cs.setInt(1, 1);
+cs.registerOutParameter(2, Types.VARCHAR);
+cs.execute();
+String outValue = cs.getString(2);
+cs.close();
+```
+
+National character literal example:
+
+```java
+Properties props = new Properties();
+props.put("user", "SYS");
+props.put("password", "MANAGER");
+props.put("ncharliteralreplace", "true");
+
+Connection conn = DriverManager.getConnection(url, props);
+Statement stmt = conn.createStatement();
+stmt.execute("INSERT INTO t1 VALUES (N'<nchar_text>')");
+ResultSet rs = stmt.executeQuery("SELECT * FROM t1 WHERE c1 LIKE N'%<nchar_text>%'");
+```
+
+When `defer_prepares=on`, bind `NCHAR` and `NVARCHAR` values with `setNString()` instead of relying on `setString()`.
+
+Auto-generated key pattern:
+
+- Altibase generated-key retrieval is for simple `INSERT` statements.
+- Since Altibase does not support an `AUTO INCREMENT` column property, use a sequence as the generated-key source.
+
+```sql
+INSERT INTO t1 (id, val) VALUES (t1_id_seq.nextval, ?);
+```
+
+```java
+stmt.executeUpdate(sql, Statement.RETURN_GENERATED_KEYS);
+ResultSet keys = stmt.getGeneratedKeys();
+while (keys.next()) {
+    int key = keys.getInt(1);
+}
+keys.close();
+```
+
+Multiple result sets from PSM:
+
+- Altibase PSM stored procedures and functions can return multiple result sets to JDBC clients.
+- Use `CallableStatement.getResultSet()` and `getMoreResults()` to iterate through them.
+- Cross-reference `10_psm_stored_external_procedures.md` for `REF CURSOR` PSM syntax and restrictions.
+
+```java
+CallableStatement cs = conn.prepareCall("{call p1()}");
+cs.execute();
+do {
+    ResultSet rs = cs.getResultSet();
+    if (rs != null) {
+        while (rs.next()) {
+            // process row
+        }
+        rs.close();
+    }
+} while (cs.getMoreResults());
+cs.close();
+```
+
+Altibase-specific explain-plan API:
+
+- `AltibaseConnection.setExplainPlan(byte mode)` sets whether the SQL plan is collected.
+- Modes: `AltibaseConnection.EXPLAIN_PLAN_OFF`, `AltibaseConnection.EXPLAIN_PLAN_ON`, and `AltibaseConnection.EXPLAIN_PLAN_ONLY`.
+- `AltibaseStatement.getExplainPlan()` returns the plan string.
+- Use `08_performance_tuning_monitoring.md` for plan-node interpretation.
+
+```java
+AltibaseConnection altibaseConn =
+    (AltibaseConnection) DriverManager.getConnection(url, props);
+altibaseConn.setExplainPlan(AltibaseConnection.EXPLAIN_PLAN_ONLY);
+
+AltibaseStatement stmt =
+    (AltibaseStatement) altibaseConn.prepareStatement("SELECT sysdate FROM dual");
+System.out.println(stmt.getExplainPlan());
+```
+
+Wrapper and unwrap block:
+
+- JDBC 4.x wrapper-capable classes include `AltibaseConnection`, `AltibaseStatement`, `AltibaseResultSet`, `AltibaseResultSetMetaData`, `AltibaseDataSource`, `AltibaseParameterMetaData`, and `Altibase42DatabaseMetaData`.
+- Use `unwrap(...)` or a checked cast before calling Altibase-specific methods such as `setExplainPlan()`, `getExplainPlan()`, or `AltibasePreparedStatement.setAtomicBatch(boolean)`.
 
 ## JDBC Data Type And API Cookbook
 
@@ -1244,15 +1486,25 @@ flowchart LR
 
 Adapter prerequisites:
 
-- OS: Linux x86-64bit.
-- Source Altibase version: 6.3.1 or later according to the Adapter for JDBC guide.
-- Target database: a database reachable through a compatible JDBC driver.
+- OS: 7.1 and 7.3 Adapter guides list `LINUX`, `AIX`, and `HP-UX`; the Altibase 8.1 verified source Adapter guide lists `LINUX`, `AIX`, `HP-UX`, and `WINDOWS`.
+- Source Altibase version: 7.1 Adapter guide assumes Altibase 6.3.1 or later; 7.3 and Altibase 8.1 verified source Adapter guides assume Altibase 6.5.1 or later.
+- Target database: a database reachable through a compatible JDBC driver and compatible DML syntax. The checked guides list `Altibase`, `Oracle`, and `MariaDB` as confirmed target DB examples.
+- Target JDBC API boundary: 7.1 Adapter source says JDBC v4.1 or lower; 7.3 and Altibase 8.1 verified source say JDBC v4.2 or lower.
 - Install the target database JDBC driver on the host where `jdbcAdapter` runs.
-- Install a JRE compatible with both `jdbcAdapter` and the target JDBC driver.
+- Install a JRE compatible with both `jdbcAdapter` and the target JDBC driver. The Altibase 8.1 verified source Adapter guide states that `jdbcAdapter 7.4` requires JRE 8 or later.
 - Configure `JAVA_HOME`, `CLASSPATH`, `PATH`, and `LD_LIBRARY_PATH` for the JRE.
 - Configure `JDBC_ADAPTER_HOME` and `ALTIBASE_NLS_USE`.
 - Install `jdbcAdapter` under a different OS user from the source Altibase server account when possible.
 - Use a `jdbcAdapter` version that matches the Altibase version it runs with.
+
+Adapter version check:
+
+```sh
+cd $JDBC_ADAPTER_HOME/bin
+./jdbcAdapter -v
+```
+
+Use the output to record the Adapter for JDBC version before deciding Java runtime support, LOB support, or patch-sensitive behavior.
 
 Required directory layout under `$JDBC_ADAPTER_HOME`:
 
@@ -1297,6 +1549,19 @@ Target database JDBC property block:
 - `OTHER_DATABASE_JDBC_DRIVER_PATH`: target JDBC driver path.
 - `OTHER_DATABASE_JDBC_DRIVER_CLASS`: target JDBC driver class name.
 - `OTHER_DATABASE_JDBC_CONNECTION_URL`: target database JDBC URL.
+
+Example target JDBC property shape:
+
+```properties
+OTHER_DATABASE_USER=target_user
+OTHER_DATABASE_PASSWORD=target_password
+OTHER_DATABASE_JDBC_MAX_HEAP_SIZE=2048
+OTHER_DATABASE_JDBC_DRIVER_PATH=/opt/jdbc/target-driver.jar
+OTHER_DATABASE_JDBC_DRIVER_CLASS=com.vendor.Driver
+OTHER_DATABASE_JDBC_CONNECTION_URL=jdbc:vendor://target-host:port/database
+```
+
+If a property value contains spaces or tabs, redesign the path or value; the Adapter property rule does not allow spaces or tabs in property values.
 
 DML property block:
 
@@ -1345,6 +1610,7 @@ oaUtility start
 oaUtility stop
 oaUtility status
 oaUtility check
+./jdbcAdapter -v
 ```
 
 Adapter constraints:
@@ -1355,6 +1621,8 @@ Adapter constraints:
 - The maximum number of XLog senders and replicated connections depends on `REPLICATION_MAX_COUNT`.
 - Replication can be slower than source service workload speed.
 - Some target conflicts can cancel or skip operations depending on error settings.
+- `ALA_SOCKET_TYPE=UNIX` requires Altibase and `jdbcAdapter` on the same host.
+- Adapter property or environment changes require a `jdbcAdapter` restart.
 
 Adapter DDL rule:
 
@@ -1368,6 +1636,7 @@ Adapter LOB rules:
 - Set `ADAPTER_LOB_TYPE_SUPPORT=1` to replicate `CLOB` or `BLOB`.
 - Tables containing LOB columns are constrained by `OTHER_DATABASE_ERROR_RETRY_COUNT`, `OTHER_DATABASE_SKIP_ERROR`, and `OTHER_DATABASE_BATCH_DML_MAX_SIZE`.
 - When LOB data is modified through `SELECT FOR UPDATE` on the source Altibase server, commit the transaction before relying on replication.
+- If an error occurs while processing a LOB XLog, `OTHER_DATABASE_SKIP_ERROR` and retry settings do not make the Adapter discard that LOB record; the Adapter terminates instead.
 
 Adapter supported Altibase data type groups:
 
@@ -1417,7 +1686,7 @@ Use `alternateservers`, `connectionretrycount`, and `connectionretrydelay` for C
 
 Template: Adapter for JDBC setup
 
-Install `jdbcAdapter` on Linux x86-64bit with a compatible JRE and target database JDBC driver. Configure `JDBC_ADAPTER_HOME`, `ALTIBASE_NLS_USE`, `jdbcAdapter.conf`, `ALA_*` properties, source `ALTIBASE_*` properties, target `OTHER_DATABASE_JDBC_*` properties, and DML behavior properties. Create `CREATE REPLICATION ... FOR ANALYSIS`, start `jdbcAdapter`, then run `ALTER REPLICATION ... START`.
+Install `jdbcAdapter` on a platform supported by the target Adapter guide, with a compatible JRE and target database JDBC driver. Configure `JDBC_ADAPTER_HOME`, `ALTIBASE_NLS_USE`, `jdbcAdapter.conf`, `ALA_*` properties, source `ALTIBASE_*` properties, target `OTHER_DATABASE_JDBC_*` properties, and DML behavior properties. Check `./jdbcAdapter -v`, create `CREATE REPLICATION ... FOR ANALYSIS`, start `jdbcAdapter`, then run `ALTER REPLICATION ... START`.
 
 ## Attachment Cross-References
 

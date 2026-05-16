@@ -268,7 +268,14 @@ for 8.1 customer-facing labels.
   boundaries, external procedure diagnostics, and source-backed residual compile/runtime
   limits. Source traceability and remaining verification limits are recorded in
   `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
-- J035-J039 should use development, tool, connector, migration, and third-party guide
+- J035 expanded the Java/JDBC/Spring/Hibernate/Adapter slice in
+  `11_java_jdbc_spring.md`, including driver jar selection, patch-sensitive Java
+  compatibility guardrails, Korean-source connection attributes, failover grammar,
+  validation-query rules, Spring/Hibernate examples, generated-key and multiple-result
+  examples, Altibase-specific explain-plan APIs, and Adapter platform/version
+  boundaries. Source traceability and remaining live-execution limits are recorded in
+  `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
+- J036-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open
   register item is either closed, split into a later accepted work item, or documented

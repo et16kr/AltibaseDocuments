@@ -422,6 +422,11 @@ recording or remediating gaps.
   port/surface separation, certificate-verification triage, and replication SSL
   diagnostic routing. This entry remains `Verification-limited` because J033 did not
   perform live TLS handshakes or connector execution tests.
+- J035 update: `11_java_jdbc_spring.md` now expands source-backed JDBC connection
+  attributes, failover handling, validation-query patterns, Spring/Hibernate examples,
+  and Adapter for JDBC setup/version checks. This entry remains
+  `Verification-limited` because J035 did not perform live JDBC, Spring, Hibernate,
+  TLS, or `jdbcAdapter` execution tests.
 
 ### GAP-J002-013: PSM and external procedure examples lack compile/runtime validation
 
@@ -447,7 +452,7 @@ recording or remediating gaps.
 
 ### GAP-J002-014: Java compatibility and alternate-server behavior are patch sensitive
 
-- Status: `Open`
+- Status: `Guardrail`
 - Source family and version scope: `jdbc_java`, `technical_documents_support`,
   `dblink_hadoop_external_connectors`; especially 7.1 patch/client driver scope.
 - Missing item or behavior: Patch-sensitive Java runtime/JDBC 4.2 boundary and exact
@@ -458,6 +463,14 @@ recording or remediating gaps.
 - Required remediation shape: Item blocks for JDBC URL repeated-list grammar, Java
   compatibility by server/client patch, Adapter version boundaries, and production
   prompt asking for exact driver or Adapter patch.
+- J035 update: `11_java_jdbc_spring.md` now has item blocks for 7.1/7.3/8.1 driver jar
+  selection, supplemental Java compatibility boundaries, Adapter source/target/JDBC API
+  version boundaries, `jdbcAdapter -v`, alternate-server grammar, `loadbalance`, retry
+  semantics, and exact-driver production prompts. The entry is no longer an uncovered
+  documentation gap for `11_java_jdbc_spring.md`; it remains `Guardrail` because final
+  production answers still require exact JDBC driver, Adapter, Java runtime, and target
+  connector patch confirmation, and because `16_dblink_external_connectors.md` keeps DB
+  Link Java compatibility as a connector-specific cross-reference.
 
 ### GAP-J002-015: Compile-ready CLI LOB signatures need exact header/manual source
 
