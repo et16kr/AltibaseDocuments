@@ -127,7 +127,7 @@ for 8.1 customer-facing labels.
   property/data type gaps from `GAP-J002-001`, `GAP-J002-004`, `GAP-J002-005`, and
   `GAP-J004-001`.
 - J010 created `GPTs/reports/sql_syntax_inventory.md` as the SQL statement-family
-  inventory, BNF conversion contract, and J011-J016 queue. J012-J016 should continue
+  inventory, BNF conversion contract, and J011-J016 queue. J013-J016 should continue
   using that report with `sql_reference`, `administrator_operations`,
   `migration_oracle`, and `spatial_nifi_tableau` to convert syntax diagrams and SQL
   families into compact BNF-like item blocks.
@@ -136,6 +136,13 @@ for 8.1 customer-facing labels.
   archive, backup, restore, and recovery SQL is now expanded in
   `03_sql_ddl_generation.md`, with operational restore guardrails in
   `02_administration_operations.md`.
+- J012 expanded the `sql_reference` table/queue SQL slice in
+  `03_sql_ddl_generation.md`: table, column, constraint, partition, LOB storage,
+  table-maintenance, lock, and queue syntax now has source-audited compact BNF,
+  examples, destructive-operation cautions, version boundaries, and dictionary/view
+  validation hooks. Queue DML wait semantics are cross-referenced in
+  `04_sql_dml_oracle_compatibility.md`, and LOB storage routing is cross-referenced in
+  `05_data_types_properties.md`.
 - J017-J021 should use `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
 - J022-J026 should use `error_message_reference` and related operational sources to

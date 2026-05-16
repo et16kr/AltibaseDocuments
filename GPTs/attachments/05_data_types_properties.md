@@ -487,6 +487,7 @@ Related properties and checks:
 - `LOB_OBJECT_BUFFER_SIZE`: maximum LOB object buffer used for LOB parameters, variables, or return values in PSM and triggers.
 - `LOB_CACHE_THRESHOLD`: maximum client LOB cache size for small LOB values.
 - Check `SYSTEM_.SYS_COLUMNS_` for column storage metadata and `V$PROPERTY` for property values before changing DDL or LOB client behavior.
+- For table DDL, use `03_sql_ddl_generation.md` to generate `LOB (lob_column) STORE AS (TABLESPACE lob_tablespace)`, partition-level LOB storage, `ALTER TABLE ... ALTER LOB (...)`, and `ALTER TABLE ... ALTER TABLESPACE ... LOB (...)` storage changes. Separate LOB tablespace placement is for disk-table LOB storage.
 
 ### Type Item: `CLOB`
 

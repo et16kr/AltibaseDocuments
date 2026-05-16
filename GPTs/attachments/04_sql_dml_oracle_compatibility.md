@@ -1095,6 +1095,12 @@ WHERE 'invalid_json' IS NOT JSON;
 
 `ENQUEUE` inserts a message into a queue table and is similar to `INSERT`.
 
+```text
+enqueue_usage ::=
+  ENQUEUE INTO [owner.]queue_name (queue_column [, queue_column ...])
+  VALUES (value [, value ...])
+```
+
 ```sql
 ENQUEUE INTO q1(message, corrid)
 VALUES ('This is a message', 237);
@@ -1104,10 +1110,21 @@ VALUES ('This is a message', 237);
 
 `DEQUEUE` retrieves a message that satisfies the condition and deletes it.
 
+```text
+dequeue_usage ::=
+  DEQUEUE queue_column [, queue_column ...]
+  FROM [owner.]queue_name
+  [WHERE condition]
+  [{FIFO | LIFO}]
+  [{WAIT integer [{SEC | MSEC | USEC}] | NOWAIT}]
+```
+
 ```sql
 DEQUEUE message, corrid
 FROM q1
-WHERE corrid = 237;
+WHERE corrid = 237
+FIFO
+WAIT 5 SEC;
 ```
 
 Checks:
@@ -1115,7 +1132,9 @@ Checks:
 - Only one queue table can appear in the `FROM` clause of `DEQUEUE`.
 - A subquery cannot be used in a `DEQUEUE` `WHERE` clause.
 - `FIFO` retrieves the oldest matching message. `LIFO` retrieves the newest matching message.
-- `WAIT integer` waits for a message when no matching message exists.
+- `WAIT integer` waits for a message when no matching message exists; seconds are used unless `SEC`, `MSEC`, or `USEC` is specified.
+- If `WAIT` is omitted, `DEQUEUE` waits indefinitely. Use `NOWAIT` when the request must return immediately if no matching row exists.
+- For queue creation, `DELETE ON|OFF`, queue tablespace placement, and `V$QUEUE_DELETE_OFF` checks, use `03_sql_ddl_generation.md`.
 
 ## Version Differences
 

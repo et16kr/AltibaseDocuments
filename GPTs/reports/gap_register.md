@@ -440,7 +440,7 @@ recording or remediating gaps.
   `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`.
-- Required remediation shape: J012-J016 should continue following the statement-family queue in
+- Required remediation shape: J013-J016 should continue following the statement-family queue in
   `GPTs/reports/sql_syntax_inventory.md`, adding or verifying compact BNF roots and
   named clause productions, version scope, prerequisites, examples, validation SQL,
   destructive-operation and implicit-commit cautions, and cross-references. J034 and
@@ -452,4 +452,10 @@ recording or remediating gaps.
   `GPTs/attachments/03_sql_ddl_generation.md`, with the operational
   `RESTORE TABLESPACE` guardrail cross-referenced in
   `GPTs/attachments/02_administration_operations.md`. This queue remains open for
-  J012-J016 and later specialized SQL families.
+  J013-J016 and later specialized SQL families.
+- J012 update: The table, column, constraint, partition, LOB storage, queue, and
+  table-maintenance SQL family is source-audited and expanded in
+  `GPTs/attachments/03_sql_ddl_generation.md`, with queue DML wait semantics in
+  `GPTs/attachments/04_sql_dml_oracle_compatibility.md` and LOB storage cross-reference
+  guidance in `GPTs/attachments/05_data_types_properties.md`. The shared syntax queue
+  remains open for J013-J016 and later specialized SQL families.

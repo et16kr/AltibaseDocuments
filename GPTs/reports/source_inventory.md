@@ -106,8 +106,10 @@ consistent.
 J010 does not change the 20 customer-facing attachment filenames and does not directly
 rewrite the SQL attachments. The source-backed reason is that this job defines the
 shared SQL conversion queue and BNF rules. J011 has since completed the database,
-tablespace, datafile, archive, backup, restore, and recovery SQL family; remaining
-item-level SQL expansion continues across J012-J016 and later specialized jobs. The
+tablespace, datafile, archive, backup, restore, and recovery SQL family; J012 has
+since completed the table, column, constraint, partition, LOB storage, and queue SQL
+family. Remaining item-level SQL expansion continues across J013-J016 and later
+specialized jobs. The
 remaining SQL syntax conversion queue is tracked in `GPTs/reports/gap_register.md` as
 `GAP-J010-001`.
 
@@ -127,6 +129,26 @@ backup, restore, recovery, backup-file management, change tracking, snapshot, an
 checkpoint scale. J011 also updates `GPTs/attachments/02_administration_operations.md`
 with the guarded `RESTORE TABLESPACE` operational note and closes
 `GAP-J002-003` as a trace entry in `GPTs/reports/gap_register.md`.
+
+## J012 Table, Column, Constraint, Partition, LOB Storage, And Queue SQL Addendum
+
+J012 uses the `sql_reference`, `general_reference_1_datatypes_properties`, and
+`general_reference_2_dictionary_views` source families for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean SQL Reference manuals remain authoritative
+for table, column, constraint, partition, LOB storage, queue, and table-maintenance
+syntax; matching English manuals were used only for English extraction when consistent.
+Korean General Reference 2 manuals were used for `V$QUEUE_DELETE_OFF` verification
+because the queue `DELETE OFF` state is exposed through that performance view.
+
+J012 updates `GPTs/attachments/03_sql_ddl_generation.md` with source-audited compact
+BNF and examples for `CREATE TABLE`, `DROP TABLE`, `ALTER TABLE` column/default/type
+changes, constraint add/modify/rename/drop forms, partition maintenance, LOB storage
+movement, table maintenance, `LOCK TABLE`, `CREATE QUEUE`, `ALTER QUEUE`, `DROP QUEUE`,
+`ENQUEUE`, and `DEQUEUE`. It preserves the 7.1 default-range-partition boundary, the
+7.3/8.1 default-less range `ADD PARTITION` boundary, and the 8.1-only
+`IF NOT EXISTS`/`IF EXISTS` table and queue clauses. It also updates
+`GPTs/attachments/04_sql_dml_oracle_compatibility.md` for queue DML wait semantics and
+`GPTs/attachments/05_data_types_properties.md` for LOB DDL cross-reference coverage.
 
 ## Source Roots
 

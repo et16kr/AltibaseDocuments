@@ -298,6 +298,7 @@ table ::=
 
 drop_table ::=
   DROP TABLE [drop_if_exists] [owner.]table_name
+  [CASCADE | CASCADE CONSTRAINTS]
 ```
 
 #### Column and Constraint Syntax
@@ -335,19 +336,36 @@ constraint_index_options ::=
 alter_table_core ::=
   ALTER TABLE [owner.]table_name
   { ADD COLUMN (column_definition [, column_definition ...])
+  | ALTER [COLUMN] (column_name {SET DEFAULT expression | DROP DEFAULT | [NOT] NULL})
+  | ALTER [COLUMN] LOB (lob_column [, lob_column ...]) STORE AS (lob_attributes)
+  | ALTER [COLUMN] PARTITION partition_name LOB (lob_column [, lob_column ...]) STORE AS (lob_attributes)
+  | MODIFY COLUMN (modify_column_spec [, modify_column_spec ...])
   | DROP COLUMN {column_name | (column_name [, column_name ...])}
   | RENAME COLUMN old_column_name TO new_column_name
-  | ADD CONSTRAINT constraint_definition
+  | REORGANIZE [COLUMN] (column_name [, column_name ...])
+  | ADD constraint_definition
+  | MODIFY CONSTRAINT constraint_name [ENABLE] [{VALIDATE | NOVALIDATE}]
+  | RENAME CONSTRAINT old_constraint_name TO new_constraint_name
   | DROP {CONSTRAINT constraint_name | PRIMARY KEY | UNIQUE (column_name [, ...]) | LOCALUNIQUE (column_name [, ...])}
   | RENAME TO new_table_name
   | MAXROWS integer
+  | ALL INDEX {ENABLE | DISABLE}
   | ACCESS {READ ONLY | READ WRITE | READ APPEND}
   | ENABLE ROW MOVEMENT
   | DISABLE ROW MOVEMENT
-  | ALTER TABLESPACE tablespace_name [INDEX (...)] [LOB (...)]
+  | ALTER TABLESPACE tablespace_name [INDEX (index_name TABLESPACE tablespace_name [, ...])] [LOB (lob_column TABLESPACE tablespace_name [, ...])]
   | ALLOCATE EXTENT (SIZE size)
   | COMPACT
   | TOUCH }
+
+modify_column_spec ::=
+  column_name [data_type [FIXED | VARIABLE] [TOLERATE DATA LOSS]]
+  [DEFAULT expression]
+  [[NOT] NULL]
+  [SRID integer]
+
+lob_attributes ::=
+  [LOGGING | NOLOGGING] [BUFFER | NOBUFFER]
 ```
 
 #### Table Partitioning Syntax
@@ -391,7 +409,8 @@ alter_table_partition ::=
   | RENAME PARTITION old_partition_name TO new_partition_name
   | SPLIT PARTITION partition_name {AT (value [, ...]) | VALUES (value [, ...])} INTO (partition_description, partition_description)
   | TRUNCATE PARTITION partition_name
-  | ALTER PARTITION partition_name TABLESPACE tablespace_name [INDEX (...)] [LOB (...)] }
+  | ALTER PARTITION partition_name TABLESPACE tablespace_name [INDEX (...)] [LOB (...)]
+  | ACCESS PARTITION partition_name {READ ONLY | READ WRITE | READ APPEND} }
 ```
 
 Generation notes:
@@ -400,8 +419,14 @@ Generation notes:
 - Required privilege: `SYS`, `CREATE TABLE` or `CREATE ANY TABLE` for the target schema when creating tables; `SYS`, owner, `ALTER` object privilege, or `ALTER ANY TABLE` for `ALTER TABLE`; `SYS`, owner, or `DROP ANY TABLE` for `DROP TABLE`.
 - If `TABLESPACE` is omitted, Altibase uses the creating user's `DEFAULT TABLESPACE`; if that is not set, the system memory default tablespace is used.
 - Use memory tablespaces for persistent hot data, disk tablespaces for large persistent data, volatile tablespaces for restart-discardable data and `GLOBAL TEMPORARY TABLE` rows, and disk temporary tablespaces for sort/work space rather than ordinary table storage.
+- `DROP TABLE CASCADE` or `DROP TABLE CASCADE CONSTRAINTS` also drops referential constraints in other tables that reference the dropped table's primary or unique key. If `RECYCLEBIN_ENABLE=1`, ordinary `DROP TABLE` moves the table to the recycle bin instead of immediately removing it.
 - For `PRIMARY KEY`, `UNIQUE`, and `LOCALUNIQUE`, Altibase creates supporting indexes. The supporting index uses the table's tablespace unless a `USING INDEX` clause specifies otherwise.
 - `MAXROWS` limits the number of records and is not supported with partitioned tables.
+- `ALTER TABLE ... ADD COLUMN` initializes existing rows to `NULL` when no default is supplied. A new `NOT NULL` column must have a default value.
+- `ALTER (column_name SET DEFAULT expression)` changes a column default. `ALTER (column_name DROP DEFAULT)` removes it. Do not change or drop the default for a `TIMESTAMP` column because Altibase supplies the system time.
+- `MODIFY COLUMN` can change supported data types, `FIXED`/`VARIABLE` storage, default, nullability, or `SRID`. Use `TOLERATE DATA LOSS` only when the source type conversion matrix allows it and the customer accepts possible non-null data loss. For character-to-date conversion, align input values with `DEFAULT_DATE_FORMAT` before modifying the column.
+- A column involved in a foreign key, or referenced by a foreign key through a primary or unique key, cannot have its data type changed. Validate referential metadata before generating column-type DDL.
+- Column add/drop cannot leave the table with zero columns and cannot exceed the source-backed maximum of `1024` columns. Tables using `VARIABLE ... IN ROW` can have a lower practical maximum depending on the `IN ROW` size.
 - A table can have only one `PRIMARY KEY`; primary and unique constraints can use up to 32 columns.
 - A `PRIMARY KEY` is equivalent to `UNIQUE` plus `NOT NULL`; all primary-key columns must be non-null.
 - Do not define `PRIMARY KEY` and `UNIQUE` on the same column list in the same table. Use one named constraint for the intended rule.
@@ -413,8 +438,12 @@ Generation notes:
 - A column-level `CHECK` condition can reference only that column. Use a table-level `CHECK` constraint for cross-column rules.
 - Multiple `CHECK` constraints may be defined on one column, but Altibase does not guarantee their evaluation order or prove that they are mutually compatible.
 - Be explicit with full date literals in `CHECK` constraints. If the year or month is omitted in a `DATE` constant, Altibase can derive it from the current date.
+- `MODIFY CONSTRAINT constraint_name ENABLE VALIDATE` enforces and validates a constraint. `ENABLE NOVALIDATE` enables future enforcement without validating existing rows. Use `RENAME CONSTRAINT old_name TO new_name` when only the constraint name changes.
+- A `TIMESTAMP` constraint cannot be added to or dropped from an existing column through `ADD CONSTRAINT` or `DROP CONSTRAINT`.
+- A table can have at most `64` indexes. The combined number of primary-key and unique-key constraints in one table is also limited to `64`.
 - LOB columns in disk tables can be stored in a separate disk LOB tablespace. LOB columns in memory tables cannot be stored separately from the table; memory LOB `IN ROW` sizing belongs in the data type definition.
 - LOB type columns cannot be used in volatile tables or disk temporary tablespaces, cannot be partition keys, cannot be indexed, and should not normally be declared `NOT NULL`.
+- `ALTER TABLE ... ALTER LOB (...) STORE AS (...)` changes LOB column storage attributes. `ALTER TABLE ... ALTER TABLESPACE ... LOB (lob_column TABLESPACE lob_tablespace)` moves disk-table LOB storage; use only disk LOB tablespaces for separate LOB placement.
 - Temporary tables can use `ON COMMIT DELETE ROWS` for transaction-specific data or `ON COMMIT PRESERVE ROWS` for session-specific data.
 - For `GLOBAL TEMPORARY TABLE`, specify a volatile tablespace in the table `TABLESPACE` clause, not a disk temporary tablespace.
 - Temporary table definitions are shared metadata, but rows are private to the session that inserts them. Session-specific temporary table DDL is allowed only when the session is not bound to the table; transaction-specific temporary table DDL causes the internal DDL commit behavior to remove transaction-level rows.
@@ -423,7 +452,11 @@ Generation notes:
 - List partitioned tables require a `DEFAULT` partition. Range and hash partition keys can use up to 32 columns; list partitioning uses a single partition key column.
 - `ENABLE ROW MOVEMENT` allows updates that move rows between partitions when partition key values change. If omitted, `DISABLE ROW MOVEMENT` is the default.
 - `ADD PARTITION` is for hash partitioning, and for 7.3 or Altibase 8.1 verified source default-less range tables when appending the last range with `VALUES LESS THAN (...)`. Do not use `ADD PARTITION` to add a range `DEFAULT` partition or insert a middle range; use `SPLIT PARTITION` for middle/default range changes. `COALESCE PARTITION` is for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
+- `ACCESS PARTITION partition_name READ ONLY|READ WRITE|READ APPEND` changes one partition's access mode. Table-level or partition-level read-only/read-append mode still permits replication changes, `TRUNCATE`, and LOB column changes documented by the SQL Reference.
 - Moving a non-partitioned table with `ALTER TABLE ... ALTER TABLESPACE` moves records. Moving a partitioned table's table-level tablespace does not move existing partition records; use partition-level clauses to move partition data.
+- Changing a non-partitioned table from a disk tablespace to memory or volatile can implicitly change eligible columns to `VARIABLE`; changing from memory or volatile to disk changes columns to `FIXED`. Temporary tables cannot be moved with `ALTER TABLE ... ALTER TABLESPACE`.
+- `ALL INDEX DISABLE` and `ALL INDEX ENABLE` can reduce bulk-load cost when a table has many indexes. Re-enable and verify indexes before returning the table to normal application traffic.
+- `COMPACT` returns empty pages for memory and volatile tables without moving data. `AGING` physically removes old versions of logically deleted records. Both can be run for a named partition where the syntax permits.
 - Do not generate ad hoc `ALTER TABLE` for replication targets. For replication-target DDL, use the standard remove/re-add flow or the documented DDL synchronization procedure in `09_replication_ha_cdc.md`.
 - `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns, explicit target data types, or `CHECK` constraints; expression columns need aliases. If CTAS output needs validation, review existing rows and then use `ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)`.
 - `PCTFREE` and `PCTUSED` are meaningful for disk-based table pages. Do not copy Oracle storage clauses without checking Altibase syntax and storage target.
@@ -460,7 +493,7 @@ queue_column_definition ::=
   column_name data_type
 
 alter_queue ::=
-  ALTER QUEUE [owner.]queue_name {COMPACT | MSGID RESET}
+  ALTER QUEUE [owner.]queue_name {COMPACT | MSGID RESET | DELETE {ON | OFF}}
 
 drop_queue ::=
   DROP QUEUE [drop_if_exists] [owner.]queue_name
@@ -474,7 +507,7 @@ dequeue_usage ::=
   FROM [owner.]queue_name
   [WHERE condition]
   [{FIFO | LIFO}]
-  [WAIT integer [time_unit]]
+  [{WAIT integer [time_unit] | NOWAIT}]
 
 time_unit ::=
   SEC | MSEC | USEC
@@ -490,11 +523,13 @@ Generation notes:
 - The column-definition form uses `CREATE TABLE` column definitions but does not support column constraints, encryption clauses, or `TIMESTAMP`.
 - `MAXROWS` ranges from `1` through `4294967295`; the default is `4294967295`.
 - `FIXED` uses fixed-length message storage. `VARIABLE` uses variable-length queue storage.
-- `DELETE ON` or `DELETE OFF` controls delete behavior for queue messages when the option is available in the target version. If the customer targets 7.1 or 7.3, verify support before generating it.
+- `DELETE ON` or `DELETE OFF` controls whether ordinary `DELETE` is allowed on the queue table. This clause is source-backed in the selected 7.1, 7.3, and 8.1 SQL Reference manuals. If omitted, `CREATE QUEUE` uses `DELETE ON`.
+- `DELETE OFF` can improve parallel `DEQUEUE` performance by disallowing ordinary `DELETE`; verify it with `V$QUEUE_DELETE_OFF`.
 - Use `TABLESPACE tablespace_name` when queue placement matters; otherwise Altibase uses the creator's default tablespace.
-- `ALTER QUEUE ... COMPACT` returns empty pages to the queue tablespace without moving queue data. `ALTER QUEUE ... MSGID RESET` resets the queue message id.
+- `ALTER QUEUE ... COMPACT` returns empty pages to the queue tablespace without moving queue data. `ALTER QUEUE ... MSGID RESET` resets the queue message id. `ALTER QUEUE ... DELETE ON|OFF` changes ordinary `DELETE` permission for the queue table.
 - `DROP QUEUE` removes the queue table, its index, and the sequence used for `MSGID` values.
-- `DEQUEUE` reads and removes the matching message. `FIFO` is the default; `LIFO` reads the newest matching message. `DEQUEUE` can reference only one queue table, and a `DEQUEUE` `WHERE` clause cannot contain a subquery.
+- `DEQUEUE` reads and removes the matching message. `FIFO` is the default; `LIFO` reads the newest matching message. `WAIT integer` waits in seconds unless `SEC`, `MSEC`, or `USEC` is specified; omitted wait time means indefinite wait. `NOWAIT` returns immediately when no matching message is available.
+- `DEQUEUE` can reference only one queue table, and a `DEQUEUE` `WHERE` clause cannot contain a subquery.
 
 ### Index Syntax
 
@@ -1044,6 +1079,9 @@ table_maintenance_ddl ::=
 | TRUNCATE TABLE [owner.]table_name
 | PURGE TABLE [owner.]table_name
 | FLASHBACK TABLE [owner.]table_name TO BEFORE DROP [RENAME TO new_table_name]
+| LOCK TABLE [owner.]table_name [PARTITION (partition_name)]
+    IN {ROW SHARE | SHARE UPDATE | ROW EXCLUSIVE | SHARE ROW EXCLUSIVE | SHARE | EXCLUSIVE} MODE
+    [{WAIT integer | NOWAIT}]
 | CONJOIN TABLE table_name PARTITION BY
     { RANGE (column_name [, column_name ...]) (range_table_to_partition_clause [, ...])
     | LIST (column_name) (list_table_to_partition_clause [, ...]) }
@@ -1059,6 +1097,15 @@ list_table_to_partition_clause ::=
 partition_to_table_clause ::=
   PARTITION partition_name TO TABLE table_name
 ```
+
+Table maintenance generation notes:
+
+- `TRUNCATE TABLE` is DDL. After successful completion, deleted rows cannot be rolled back. If the target is a queue table, `TRUNCATE TABLE queue_name` removes enqueued messages.
+- `PURGE TABLE` permanently removes a recycle-bin table. `FLASHBACK TABLE ... TO BEFORE DROP` restores a table from the recycle bin; when multiple dropped tables share the same original name, Altibase restores or purges the first dropped matching object. Use `RENAME TO` when the original name is already in use.
+- `LOCK TABLE` holds the requested table or partition lock until the transaction commits or rolls back. Use `WAIT n` or `NOWAIT` explicitly when producing operational SQL for a live system.
+- `CONJOIN TABLE` converts one or more non-partitioned tables into a new range- or list-partitioned table; the source tables are removed and data is moved into the new partitions. Do not qualify the source or target table names with owners.
+- `DISJOIN TABLE` converts partitions of a partitioned table into non-partitioned tables; the partitioned table is removed and data is moved into the new tables. Do not qualify the source or target table names with owners.
+- `CONJOIN TABLE` and `DISJOIN TABLE` do not support hash partitioning or range tables that omit the default partition. Check dependent PSM objects, packages, views, triggers, hidden/security/compressed columns, schema equality, column order, data types, `IN ROW`, compressed logging, `CHECK`, and `NOT NULL` compatibility before generating them.
 
 #### Session and System Control Syntax
 
@@ -1757,6 +1804,15 @@ ALTER TABLE app.app_document
 ADD COLUMN (updated_at DATE DEFAULT SYSDATE);
 
 ALTER TABLE app.app_document
+ALTER (title SET DEFAULT 'untitled');
+
+ALTER TABLE app.app_document
+MODIFY COLUMN (title VARCHAR(240));
+
+ALTER TABLE app.app_document
+RENAME COLUMN updated_at TO modified_at;
+
+ALTER TABLE app.app_document
 ALTER TABLESPACE app_disk_tbs
 LOB (body TABLESPACE app_disk_tbs);
 
@@ -1787,6 +1843,10 @@ CREATE QUEUE app.app_event_q (
     corrid      INTEGER
 ) MAXROWS 1000000;
 
+CREATE QUEUE app.app_audit_q (32000 VARIABLE)
+DELETE OFF
+TABLESPACE app_mem_tbs;
+
 ENQUEUE INTO app.app_event_q (event_id, payload, corrid)
 VALUES (1001, '{"type":"signup"}', 10);
 
@@ -1798,6 +1858,7 @@ WAIT 5;
 
 ALTER QUEUE app.app_event_q COMPACT;
 ALTER QUEUE app.app_event_q MSGID RESET;
+ALTER QUEUE app.app_audit_q DELETE ON;
 ```
 
 For an 8.1 verified source target, idempotent queue DDL can be generated:
@@ -1810,6 +1871,24 @@ CREATE QUEUE IF NOT EXISTS app.app_event_q (
 ) MAXROWS 1000000;
 
 DROP QUEUE IF EXISTS app.app_event_q;
+```
+
+Table maintenance examples:
+
+```sql
+LOCK TABLE app.order_history PARTITION (p_2025)
+IN SHARE MODE WAIT 5;
+
+TRUNCATE TABLE app.tmp_order_stage;
+
+RENAME app.app_document TO app_document_archive;
+
+-- Use after RECYCLEBIN_ENABLE=1 and DROP TABLE moved the table to the recycle bin.
+FLASHBACK TABLE app_document_old TO BEFORE DROP
+RENAME TO app_document_restored;
+
+-- Use instead when the recycle-bin table must be permanently removed.
+PURGE TABLE app_document_old;
 ```
 
 Verify table definitions:
@@ -1885,6 +1964,15 @@ WHERE name = 'TEMPORARY_LOB_ENABLE';
 -- 8.1 Temporary LOB check for JSON or Temporary LOB workloads.
 SELECT type, open_count
 FROM V$TEMPORARY_LOBS;
+
+SELECT u.user_name, t.table_name AS delete_off_queue_name, q.table_oid
+FROM V$QUEUE_DELETE_OFF q,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE q.table_oid = t.table_oid
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'APP_AUDIT_Q';
 ```
 
 ### Constraint Examples

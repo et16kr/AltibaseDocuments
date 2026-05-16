@@ -12,8 +12,9 @@ attachment text.
 
 This is a documentation-scope baseline. It does not attempt to complete every SQL
 statement, clause, function, hint, or operator block in the customer-facing attachments.
-Those item-level expansions are split across J011-J016, with J011 now source-audited
-and the remaining SQL families continuing in J012-J016. PSM, Spatial, tool, and
+Those item-level expansions are split across J011-J016, with J011 and J012 now
+source-audited and the remaining SQL families continuing in J013-J016. PSM, Spatial,
+tool, and
 connector-specific syntax are handled by their later source-family jobs. No attachment
 filename, upload boundary, or customer-facing 8.1 source label change was found.
 
@@ -155,6 +156,17 @@ Korean source.
 - Required conversion shape: Searchable item blocks for object creation, change, and
   destruction, BNF for complex clauses, examples, rollback/destructive cautions, and
   dictionary validation SQL.
+- J012 completion note: `GPTs/attachments/03_sql_ddl_generation.md` now contains
+  source-audited BNF-like blocks and examples for `CREATE TABLE`, `DROP TABLE`,
+  `ALTER TABLE`, column default/type/nullability changes, constraint add/modify/rename
+  and drop forms, partition maintenance, LOB storage movement, table maintenance,
+  recycle-bin table operations, `LOCK TABLE`, queue creation/alter/drop, and
+  `ENQUEUE`/`DEQUEUE`. The update preserves 8.1-only idempotent table/queue clauses,
+  7.1 range-default partition requirements, 7.3/8.1 default-less range add-partition
+  behavior, queue `DELETE ON|OFF`, `NOWAIT` and wait-unit semantics, and
+  `V$QUEUE_DELETE_OFF` validation. `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
+  carries the queue DML wait semantics, and `GPTs/attachments/05_data_types_properties.md`
+  cross-references disk-table LOB storage DDL.
 
 ### J013 Baseline: Index, Hint, And Plan SQL
 
