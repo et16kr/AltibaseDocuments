@@ -201,6 +201,13 @@ for 8.1 customer-facing labels.
   It keeps corrective runbooks routed to `02`, generated administrative SQL routed to
   `03`, property context routed to `05`, and storage/backup check views routed to `06`;
   `GAP-J002-008` remains open for J024-J026 and non-scoped exact-code coverage.
+- J024 expanded the SQL parser, DDL, table/column/data type, constraint, conversion,
+  date, regular-expression, JSON, Temporary LOB, ordinary LOB, client LOB, Precompiler
+  LOB, and utility LOB error slice in `07_error_messages_troubleshooting.md`. It keeps
+  corrected SQL routed to `03` and `04`, data type/property context routed to `05`,
+  dictionary checks routed to `06`, and LOB API/tool workflows routed to `12`, `13`,
+  and `14`; `GAP-J002-008` remains open for J025-J026 and non-scoped exact-code
+  coverage.
 - J027-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide

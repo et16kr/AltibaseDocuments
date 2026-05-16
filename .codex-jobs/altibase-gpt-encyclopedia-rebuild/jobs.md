@@ -55,7 +55,7 @@ one oversized remediation pass. The partitioning is:
 | `J021` | `ToDo` | Replication CDC security monitoring and SNMP views | Expand replication, CDC, security, Monitoring API, and SNMP view/API mappings. |
 | `J022` | `ToDo` | Error reference inventory and response schema | Inventory error code families and define error block and troubleshooting response schema. |
 | `J023` | `ToDo` | Storage backup recovery and tablespace errors | Expand storage, backup, recovery, datafile, log, and tablespace error coverage. |
-| `J024` | `ToDo` | SQL DDL data type JSON and LOB errors | Expand SQL, DDL, data type, constraint, JSON, LOB, and Temporary LOB error coverage. |
+| `J024` | `Done` | SQL DDL data type JSON and LOB errors | Expand SQL, DDL, data type, constraint, JSON, LOB, and Temporary LOB error coverage. |
 | `J025` | `ToDo` | Client network security replication and tool errors | Expand client, network, SSL/TLS, replication, utility, and tool error coverage. |
 | `J026` | `ToDo` | Troubleshooting QA and unresolved error gaps | Validate troubleshooting structure, exact-code handling, escalation wording, and gaps. |
 | `J027` | `ToDo` | Installation platform startup and shutdown runbooks | Expand installation, platform, database creation, startup, shutdown, and first-run runbooks. |

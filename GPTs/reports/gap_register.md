@@ -245,6 +245,13 @@ recording or remediating gaps.
   7.3, and Altibase 8.1 verified source Error Message References, with supporting
   checks and stop conditions. This gap remains `Open` for the J024-J026 error slices
   and for exhaustive exact-code coverage outside the J023 grouped blocks.
+- J024 update: `GPTs/attachments/07_error_messages_troubleshooting.md` now contains
+  grouped exact-code maps for SQL parser, DDL, table/column/data type, constraint,
+  conversion, date, regular-expression, JSON, Temporary LOB, ordinary LOB, client/API
+  LOB, Precompiler LOB, and utility LOB errors from the selected Korean 7.1, 7.3, and
+  Altibase 8.1 verified source Error Message References, with supporting checks and
+  version cautions. This gap remains `Open` for the J025-J026 error slices and for
+  exhaustive exact-code coverage outside the J023-J024 grouped blocks.
 
 ### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
 

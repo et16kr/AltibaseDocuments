@@ -516,6 +516,49 @@ stop conditions before destructive recovery actions. No new manual/source-backed
 was discovered during J023; `GAP-J002-008` remains open for the later J024-J026 error
 slices and for exhaustive exact-code coverage outside the J023 grouped blocks.
 
+## J024 SQL DDL Data Type JSON And LOB Error Addendum
+
+J024 uses the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Error Message Reference manuals remain
+authoritative for exact code, decimal code, symbol, severity heading, message, cause,
+and action; matching English manuals were used only as extraction aids when consistent.
+Supporting source families for checks and response guardrails are `sql_reference`,
+`general_reference_1_datatypes_properties`, `general_reference_2_dictionary_views`,
+`c_cli_odbc_precompiler`, `isql_iloader`, and `utilities_datacompj`.
+
+Design note: J024 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/07_error_messages_troubleshooting.md` in place with grouped
+exact-code maps. Corrected SQL remains in `03_sql_ddl_generation.md` and
+`04_sql_dml_oracle_compatibility.md`, data type and property semantics remain in
+`05_data_types_properties.md`, dictionary checks remain in
+`06_data_dictionary_performance_views.md`, and LOB client/tool workflows remain in
+`12_c_cli_odbc_precompiler.md`, `13_isql_iloader_basic_tools.md`, and
+`14_utilities_operation_tools.md`.
+
+Scoped source paths checked for J024:
+
+- `Manuals/Altibase_7.1/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.3/kor/Error Message Reference.md`
+- `Manuals/Altibase_trunk/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.1/eng/Error Message Reference.md`
+- `Manuals/Altibase_7.3/eng/Error Message Reference.md`
+- `Manuals/Altibase_trunk/eng/Error Message Reference.md`
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+
+J024 updated `GPTs/attachments/07_error_messages_troubleshooting.md` with SQL parser,
+DDL clause, table/column/data type, constraint, conversion, date, regular-expression,
+ordinary LOB, client/utility LOB, JSON, and Temporary LOB grouped blocks. The grouped
+blocks include exact reference codes and symbols, source-backed message/action focus,
+object/column/constraint/property check SQL, required customer-input prompts, and
+version cautions. No new manual/source-backed gap was discovered during J024;
+`GAP-J002-008` remains open for the later J025-J026 error slices and for exhaustive
+exact-code coverage outside the J023-J024 grouped blocks.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

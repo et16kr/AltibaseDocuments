@@ -260,3 +260,40 @@ No new source-drift gap was found in the scoped slice: the listed grouped-block 
 are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error
 Message References. `GAP-J002-008` remains open for the later J024-J026 error slices
 and for exhaustive exact-code coverage outside the J023 grouped blocks.
+
+## J024 Completion Addendum
+
+J024 used the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source, with Korean Error Message Reference manuals
+checked first and matching English manuals used only for customer-facing extraction
+when consistent. Supporting source families for diagnostics and guardrails were
+`sql_reference`, `general_reference_1_datatypes_properties`,
+`general_reference_2_dictionary_views`, `c_cli_odbc_precompiler`,
+`isql_iloader`, and `utilities_datacompj`.
+
+Design note: J024 keeps the attachment boundary unchanged and expands
+`GPTs/attachments/07_error_messages_troubleshooting.md` in place. Corrected SQL,
+data type semantics, LOB API details, utility workflows, and JSON function syntax
+remain routed to their owning attachments; the error attachment now carries grouped
+exact-code maps, first checks, required customer input, and version cautions for the
+J024 error slice.
+
+J024 added customer-facing grouped blocks for:
+
+- SQL parser, clause, and statement-shape errors from `QP/QCP`;
+- table, column, data type, temporary-table, compression, and LOB DDL errors from
+  `QP/QDB`;
+- constraint definition, unique-index, check-constraint, and referential errors from
+  `SM`, `QP/QDN`, `QP/QDB`, and `QP/QMX`;
+- conversion, literal, numeric, date, and regular-expression errors from `MT`;
+- ordinary LOB locator, SQL-shape, client/API, Precompiler, and utility LOB errors
+  from `SM`, `QP`, `ODBC`, `APRE`, and `Utilities`;
+- 8.1-scoped JSON and Temporary LOB errors from `MT` and `QP`.
+
+No new source-drift gap was found in the scoped slice. The listed non-JSON grouped-block
+codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source
+Error Message References except the explicitly noted SQL-level LOB autocommit code
+`0x314B4`, which is checked in 7.3 and Altibase 8.1 verified source. JSON and Temporary
+LOB codes remain Altibase 8.1 verified source material. `GAP-J002-008` remains open
+for the later J025-J026 error slices and for exhaustive exact-code coverage outside the
+J023-J024 grouped blocks.

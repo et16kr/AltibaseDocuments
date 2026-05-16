@@ -1138,65 +1138,67 @@ Version Cautions: Do not drop system, undo, or temporary tablespaces. State dest
 
 Related Document: Administration and Operations.
 
-### Error Block: SQL Syntax Error
+### Error Block: SQL Parser, Clause, and Statement-Shape Errors
 
-Error Code: `ERR-31001` / `0x31001 (200705)`.
-
-Reference Symbol: `qpERR_ABORT_QCP_SYNTAX`.
+Error Codes: listed individually in the exact code map below.
 
 Module / Severity: QP / `ABORT`.
 
-Message: `SQL syntax error <0%s>`.
+Exact code map:
 
-Applies To: SQL parser.
+| Runtime / reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `ERR-31001` / `0x31001 (200705)` | `qpERR_ABORT_QCP_SYNTAX` | SQL syntax error; check reserved words, delimiters, and target-version SQL grammar. |
+| `ERR-31003` / `0x31003 (200707)` | `qpERR_ABORT_QCP_NOT_SUPPORTED_SYNTAX` | Unsupported syntax; rewrite using a supported Altibase form. |
+| `ERR-31004` / `0x31004 (200708)` | `qpERR_ABORT_QCP_CONFLICT_NULL_CONSTRAINT` | Duplicate or conflicting `NULL` / `NOT NULL` constraints; remove the duplicate or conflict. |
+| `ERR-31005` / `0x31005 (200709)` | `qpERR_ABORT_QCP_NO_HAVE_DATATYPE_IN_CRT_TBL` | `CREATE TABLE` or `ALTER TABLE ADD COLUMN` column lacks a data type; specify one. |
+| `ERR-31006` / `0x31006 (200710)` | `qpERR_ABORT_QCP_HAVE_DATATYPE_IN_CRT_TBL_AS_SELECT` | `CREATE TABLE AS SELECT` column definition has a data type; remove data types from the column list. |
+| `ERR-31007` / `0x31007 (200711)` | `qpERR_ABORT_QCP_DUPLICATE_COLUMN_NAME` | Duplicate column name in statement text; make column names unique. |
+| `ERR-31234` / `0x31234 (201268)` | `qpERR_ABORT_QCP_DUPLICATE_CONSTRAINT_NAME` | Duplicate constraint name in statement text; make constraint names unique. |
+| `ERR-31008` / `0x31008 (200712)` | `qpERR_ABORT_QCP_HAVE_NO_COLUMN` | `CREATE TABLE` or `ALTER TABLE ADD COLUMN` has no column; specify at least one column. |
+| `ERR-3118B` / `0x3118B (201099)` | `qpERR_ABORT_QCP_MAX_NAME_LENGTH_OVERFLOW` | Object name length exceeds the limit; shorten the name. |
+| `ERR-3121C` / `0x3121C (201244)` | `qpERR_ABORT_QCP_INVALID_LOGGING_OPTION` | Duplicate `LOGGING` / `NOLOGGING` option; keep one option. |
+| `ERR-3121D` / `0x3121D (201245)` | `qpERR_ABORT_QCP_INVALID_PARALLEL_OPTION` | Duplicate `PARALLEL` / `NOPARALLEL` option; keep one option. |
+| `ERR-3121E` / `0x3121E (201246)` | `qpERR_ABORT_QCP_INVALID_TABLESPACE_OPTION` | Duplicate tablespace-name clause; remove the duplicate. |
+| `ERR-31242` / `0x31242 (201282)` | `qpERR_ABORT_QCP_INVALID_BUFFER_OPTION` | Duplicate `BUFFER` / `NOBUFFER` option; keep one option. |
+| `ERR-312DD` / `0x312DD (201437)` | `qpERR_ABORT_QCP_INVALID_DATABASE_CHARSET` | Database character set is missing; specify `CHARACTER SET`. |
+| `ERR-312DE` / `0x312DE (201438)` | `qpERR_ABORT_QCP_INVALID_NATIONAL_CHARSET` | National character set is missing; specify `NATIONAL CHARACTER SET`. |
+| `ERR-31388` / `0x31388 (201608)` | `qpERR_ABORT_QCP_COLUMN_CHECK_CONSTRAINT_REFERENCE_OTHER_COLUMN` | Column-level `CHECK` references another column; revise as a table constraint or rewrite. |
+| `ERR-31389` / `0x31389 (201609)` | `qpERR_ABORT_QCP_SET_USER_NAME_OR_TABLE_NAME_TO_CONSTRAINT_COLUMN` | Column constraint specified user or table name; remove owner/table qualification. |
+| `ERR-3139A` / `0x3139A (201626)` | `qpERR_ABORT_QCP_CANNOT_SPECIFY_USER_NAME_OR_TABLE_NAME` | Function-based index column specified user or table name; remove the qualification. |
+| `ERR-3139F` / `0x3139F (201631)` | `qpERR_ABORT_QCP_REQUIRE_OWNER_NAME_IN_DEFAULT_EXPR` | Stored function owner is required in a function-based index definition; qualify the function. |
+| `ERR-313A0` / `0x313A0 (201632)` | `qpERR_ABORT_QCP_REQUIRE_OWNER_NAME_IN_CHECK_EXPR` | Stored function owner is required in a check-constraint expression; qualify the function. |
 
-Symptom: Altibase rejects a SQL statement before execution.
+Applies To: parser and validator checks for `CREATE TABLE`, `ALTER TABLE`, `CREATE TABLE AS SELECT`, tablespace clauses, storage options, check constraints, function-based indexes, and database character-set clauses.
 
-Primary Causes: Unsupported delimiter, reserved word misuse, invalid grammar, misplaced clause, or syntax copied from another DBMS.
+Symptom: Altibase rejects the statement before it can execute object changes or DML.
 
-Immediate Action: Check Altibase SQL Reference for the target version and simplify the statement until the failing clause is isolated.
+Primary Causes: unsupported dialect syntax, a statement shape that violates Altibase SQL Reference grammar, duplicated clauses, missing column data types, wrong `CREATE TABLE AS SELECT` column-list form, duplicate names, missing character-set clauses, or invalid check/function expression qualification.
+
+Immediate Action: Confirm target version first, then isolate the failing clause. Rewrite from the Altibase SQL Reference for that version instead of translating Oracle or another DBMS grammar mechanically.
 
 Check SQL or Command:
 
 ```sql
--- Check object and column names separately before blaming syntax.
-SELECT u.user_name, t.table_name, t.table_type
-FROM SYSTEM_.SYS_TABLES_ t, SYSTEM_.SYS_USERS_ u
+SELECT product_version,
+       meta_version,
+       protocol_version
+FROM V$VERSION;
+
+-- Check object and column names separately before treating every parser error as grammar.
+SELECT u.user_name,
+       t.table_name,
+       t.table_type
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
 WHERE t.user_id = u.user_id
   AND u.user_name = '<OWNER_NAME>'
   AND t.table_name = '<TABLE_NAME>';
 ```
 
-Version Cautions: Confirm 7.1, 7.3, or 8.1 before using newer syntax.
+Required Customer Input: exact version and patch level, full SQL text, object owner/name, whether the SQL was generated from another DBMS, and the full error line including the substituted parser detail.
 
-Related Document: SQL DDL Generation; SQL DML and Oracle Compatibility.
-
-### Error Block: Unsupported Syntax
-
-Error Code: `ERR-31003` / `0x31003 (200707)`.
-
-Reference Symbol: `qpERR_ABORT_QCP_NOT_SUPPORTED_SYNTAX`.
-
-Module / Severity: QP / `ABORT`.
-
-Message: `Unsupported syntax`.
-
-Applies To: SQL parser.
-
-Symptom: The statement is valid in another SQL dialect or later Altibase version but not supported in the current context.
-
-Primary Causes: Oracle-specific syntax, feature not available in the target Altibase version, or unsupported option in the statement.
-
-Immediate Action: Rewrite using supported Altibase syntax and state the version-specific alternative.
-
-Check SQL or Command:
-
-```sql
-SELECT product_version, meta_version
-FROM V$VERSION;
-```
-
-Version Cautions: Some SQL features differ between 7.1, 7.3, and 8.1. JSON SQL is 8.1-specific in this attachment set.
+Version Cautions: The listed parser/DDL-shape codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Do not apply 8.1-only syntax such as native `JSON`, `IF EXISTS`, or `IF NOT EXISTS` to 7.1 or 7.3 without exact target-source proof.
 
 Related Document: SQL DDL Generation; SQL DML and Oracle Compatibility.
 
@@ -1236,6 +1238,89 @@ WHERE t.user_id = u.user_id
 Version Cautions: Use exact stored case for quoted identifiers.
 
 Related Document: SQL DDL Generation; Data Dictionary and Performance Views.
+
+### Error Block: Table, Column, Data Type, Temporary Table, and LOB DDL Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: QP / `ABORT`.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `ERR-31022` / `0x31022 (200738)` | `qpERR_ABORT_QDB_EXIST_OBJECT_NAME` | Object name is already used; choose a unique object name or handle the existing object. |
+| `ERR-31023` / `0x31023 (200739)` | `qpERR_ABORT_QDB_DUPLICATE_COLUMN` | Duplicate column name in a table; rename one column. |
+| `ERR-31025` / `0x31025 (200741)` | `qpERR_ABORT_QDB_MISMATCH_COL_COUNT` | `CREATE TABLE AS SELECT` column count differs from target-list expression count. |
+| `ERR-31026` / `0x31026 (200742)` | `qpERR_ABORT_QDB_INVALID_COLUMN_COUNT` | Table has too many, too few, or zero columns after add/drop; review column count. |
+| `ERR-31028` / `0x31028 (200744)` | `qpERR_ABORT_QDB_CREATE_DISABLE_DATA_TYPE` | Column cannot be created with the specified data type; verify allowed data types. |
+| `ERR-31233` / `0x31233 (201267)` | `qpERR_ABORT_QDB_FIXED_PAGE_SIZE_ERROR` | Fixed record size exceeds page size; reduce fixed-length columns. |
+| `ERR-31236` / `0x31236 (201270)` | `qpERR_ABORT_QDB_IN_ROW_SIZE_ERROR` | `IN ROW` size exceeds maximum; reduce the `IN ROW` size. |
+| `ERR-31243` / `0x31243 (201283)` | `qpERR_ABORT_QDB_MISMATCHED_LOB_TYPE_COLUMN` | LOB type column mismatch; check `BLOB`/`CLOB` column specification. |
+| `ERR-31244` / `0x31244 (201284)` | `qpERR_ABORT_QDB_NOT_FOUND_LOB_TYPE_COLUMN` | LOB type column not found; verify the target LOB column name. |
+| `ERR-31257` / `0x31257 (201303)` | `qpERR_ABORT_QDB_LOB_VIOLATION_ON_VOLATILE_TABLE` | Volatile table cannot have a LOB column; remove the LOB column or change storage design. |
+| `ERR-312ED` / `0x312ED (201453)` | `qpERR_ABORT_QDB_INVALID_MODIFICATION` | Invalid column modification; data-type change is restricted for types such as `CHAR`, `BLOB`, `CLOB`, `NIBBLE`, `BYTE`, `TIMESTAMP`, and `GEOMETRY`, and cannot change into `BLOB`, `CLOB`, `TIMESTAMP`, or `GEOMETRY`. |
+| `ERR-312EE` / `0x312EE (201454)` | `qpERR_ABORT_QDB_INVALID_LENGTH` | Invalid length for the specified data type; check type length. |
+| `ERR-3135F` / `0x3135F (201567)` | `qpERR_ABORT_QDB_CANNOT_CREATE_TEMPORARY_TABLE_IN_NONVOLATILE_TBS` | Temporary tables cannot be created in non-volatile tablespaces; use a volatile tablespace. |
+| `ERR-31360` / `0x31360 (201568)` | `qpERR_ABORT_QDB_NOT_SUPPORTED_TEMPORARY_TABLE_FEATURE` | Unsupported temporary-table feature; remove unsupported table options. |
+| `ERR-31363` / `0x31363 (201571)` | `qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE` | DDL cannot execute while a related temporary table is in use; truncate related temporary tables before retry. |
+| `ERR-313B6` / `0x313B6 (201654)` | `qpERR_ABORT_QDB_COMPRESSION_NOT_SUPPORTED_DATATYPE` | Unsupported data type for compression column; check column type. |
+| `ERR-313B7` / `0x313B7 (201655)` | `qpERR_ABORT_QDB_COMPRESSION_NOT_SUPPORTED_TABLESPACE` | Compression column supports only memory tablespaces; check tablespace type. |
+| `ERR-31458` / `0x31458 (201816)` | `qpERR_ABORT_QDB_CANNOT_ALTER_TABLESPACE_TEMPORARY_TABLE` | Temporary table cannot modify tablespace; do not use `ALTER TABLESPACE` syntax on the temporary table. |
+
+Applies To: table creation, `ALTER TABLE`, column add/drop/modify, `IN ROW` sizing, LOB column clauses, compression columns, volatile/temporary table placement, and DDL against active temporary tables.
+
+Symptom: DDL fails because a column shape, storage target, type change, LOB clause, temporary-table rule, or compression/storage combination is not valid for Altibase.
+
+Primary Causes: generated DDL used an unsupported data type, a row or `IN ROW` size exceeded limits, a LOB column was placed in volatile storage, a LOB clause named a non-LOB column, a column type change crossed an unsupported boundary, a temporary table was created outside volatile storage, or a temporary table was active when DDL was attempted.
+
+Immediate Action: Query current object, column, tablespace, and constraint metadata before rewriting DDL. For active temporary-table cases, use the source action of truncating related temporary tables; do not invent a session-kill procedure unless the target-version source provides one.
+
+Check SQL or Command:
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       t.table_type,
+       t.tbs_name,
+       t.temporary,
+       t.is_partitioned,
+       t.access
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE t.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>';
+
+SELECT c.column_order,
+       c.column_name,
+       c.data_type,
+       c.precision,
+       c.scale,
+       c.is_nullable,
+       c.store_type
+FROM SYSTEM_.SYS_COLUMNS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.user_id = t.user_id
+  AND c.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>'
+ORDER BY c.column_order;
+
+SELECT id, name, type, state
+FROM V$TABLESPACES
+ORDER BY id;
+```
+
+Required Customer Input: target version, full DDL, owner/table/column names, current table definition, target tablespace type, whether the object is replicated, and whether temporary tables are active.
+
+Version Cautions: The listed non-JSON DDL codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Native `JSON` and Temporary LOB behavior are 8.1-specific in this attachment set; use the JSON blocks for 8.1 JSON errors.
+
+Escalation: Escalate before dropping or rebuilding objects when metadata checks show replicated tables, hidden/compressed/encrypted columns, active temporary tables, or storage limits that cannot be resolved by a documented DDL rewrite.
+
+Related Document: SQL DDL Generation; Data Types and Properties; Data Dictionary and Performance Views.
 
 ### Error Block: User, Table, Column, Sequence, Index, or Replication Not Found
 
@@ -1342,23 +1427,49 @@ Version Cautions: Applies across 7.1, 7.3, and 8.1. Explain least-privilege alte
 
 Related Document: Administration and Operations; SQL DDL Generation.
 
-### Error Block: Unique Constraint or Unique Index Violation
+### Error Block: Constraint Definition, Unique Index, and Referential Errors
 
-Error Code: `0x11058 (69720)`.
+Error Codes: listed individually in the exact code map below.
 
-Reference Symbol: `smERR_ABORT_smnUniqueViolation`.
+Module / Severity: SM or QP / `ABORT`.
 
-Module / Severity: SM / `ABORT`.
+Exact code map:
 
-Message: `The row already exists in a unique index.`
+| Runtime / reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `ERR-11058` / `0x11058 (69720)` | `smERR_ABORT_smnUniqueViolation` | Row already exists in a unique index; check unique/primary key values and standalone unique indexes. |
+| `ERR-31042` / `0x31042 (200770)` | `qpERR_ABORT_QDN_NOT_EXISTS_CONSTRAINT` | Constraint not found; check `SYSTEM_.SYS_CONSTRAINTS_`. |
+| `ERR-31043` / `0x31043 (200771)` | `qpERR_ABORT_QDN_NOT_EXISTS_UNIQUE_KEY` | `UNIQUE KEY` constraint not found; check key metadata. |
+| `ERR-31044` / `0x31044 (200772)` | `qpERR_ABORT_QDN_NOT_EXISTS_PRIMARY_KEY` | `PRIMARY KEY` constraint not found; check key metadata. |
+| `ERR-31045` / `0x31045 (200773)` | `qpERR_ABORT_QDN_DUPLICATE_PRIMARY_KEY` | Primary key already exists; drop the existing key before creating a new one. |
+| `ERR-31046` / `0x31046 (200774)` | `qpERR_ABORT_QDN_DUPLICATE_CONSTRAINT` | Constraint name already exists; use a different constraint name. |
+| `ERR-31047` / `0x31047 (200775)` | `qpERR_ABORT_QDN_MAX_KEY_COLUMN_COUNT` | Too many key columns; reduce index/key column count. |
+| `ERR-31049` / `0x31049 (200777)` | `qpERR_ABORT_QDN_REFERENCED_CONSTRAINT_NOT_FOUND` | Referenced primary/unique constraint not found; create or reference a valid key. |
+| `ERR-3104A` / `0x3104A (200778)` | `qpERR_ABORT_QDN_ADD_COL_NO_DEFAULT_NOTNULL` | Cannot add `NOT NULL` column without a default value; add a default or remove `NOT NULL`. |
+| `ERR-3104B` / `0x3104B (200779)` | `qpERR_ABORT_QDN_DUPLICATE_CONSTRAINT_SPEC` | Column already has the same constraint; check duplicate constraint definition. |
+| `ERR-31190` / `0x31190 (201104)` | `qpERR_ABORT_QDN_NOT_COMPATIBLE_TYPE` | Incompatible data types in key/constraint definition; align referencing and referenced types. |
+| `ERR-31238` / `0x31238 (201272)` | `qpERR_ABORT_QDN_MISMATCHED_REFERENCING_COLUMN_COUNT` | Referencing-column count does not match referenced key count. |
+| `ERR-31291` / `0x31291 (201361)` | `qpERR_ABORT_QDN_CANNOT_CREATE_LOCAL_UNIQUE_KEY_CONSTR_ON_NON_PART_TABLE` | Local unique key cannot be created on a non-partitioned table. |
+| `ERR-31321` / `0x31321 (201505)` | `qpERR_ABORT_QDB_DROP_MULTI_COLUMN_CONSTRAINT_EXIST` | Cannot drop a column with multi-column constraints; drop related constraints first. |
+| `ERR-31361` / `0x31361 (201569)` | `qpERR_ABORT_QDN_CANNOT_CREATE_FOREIGN_KEY_ON_TEMPORARY_TABLE` | Cannot create a foreign key on a temporary table; remove the foreign key. |
+| `ERR-3138C` / `0x3138C (201612)` | `qpERR_ABORT_QDB_USE_SEQUENCE_IN_CHECK_CONSTRAINT` | Sequence cannot be used in `CHECK`; remove sequence use. |
+| `ERR-3138D` / `0x3138D (201613)` | `qpERR_ABORT_QDB_USE_VARIABLE_IN_CHECK_CONSTRAINT` | Variable cannot be used in `CHECK`; remove variable use. |
+| `ERR-3138E` / `0x3138E (201614)` | `qpERR_ABORT_QDB_NOT_ALLOWED_CHECK_CONSTRAINT` | `CHECK` constraint is not allowed in this statement position; remove or relocate it. |
+| `ERR-31390` / `0x31390 (201616)` | `qpERR_ABORT_QDN_NOT_SUPPORT_LOB_COLUMN_IN_CHECK_CONSTRAINT` | LOB column is not supported in a `CHECK` constraint; remove LOB columns from the expression. |
+| `ERR-31391` / `0x31391 (201617)` | `qpERR_ABORT_QDN_INVALID_CHECK_CONSTRAINT_EXPRESSION` | Invalid `CHECK` expression; revise expression. |
+| `ERR-31392` / `0x31392 (201618)` | `qpERR_ABORT_QDN_VIOLATE_CHECK_CONSTRAINT` | Existing or incoming rows violate `CHECK`; inspect related rows. |
+| `ERR-31076` / `0x31076 (200822)` | `qpERR_ABORT_QMX_CHILD_EXIST` | Child records exist; check referential constraints before parent update/delete. |
+| `ERR-31077` / `0x31077 (200823)` | `qpERR_ABORT_QMX_NOT_FOUND_PARENT_ROW` | Parent row not found; insert or correct parent key before child DML. |
+| `ERR-313FB` / `0x313FB (201723)` | `qpERR_ABORT_QDN_NOT_SUPPORT_CONSTRAINT_IN_COMPRESSED_COLUMN` | Primary key, unique key, or timestamp constraint is not allowed on compressed column. |
+| `ERR-31415` / `0x31415 (201749)` | `qpERR_ABORT_QDN_NOT_ALLOW_MEM_TBS_PK_UK_OF_GLOBAL_INDEX` | Primary/unique key constraint must match the non-partitioned-index and disk-partitioned-table rule. |
 
-Applies To: `INSERT`, `UPDATE`, `MERGE`, replication apply, and unique index maintenance.
+Applies To: primary keys, unique keys, local unique keys, foreign keys, `CHECK`, `NOT NULL`, timestamp constraints, key/index column-count limits, compressed columns, DML referential checks, and unique-index enforcement.
 
-Symptom: A row cannot be inserted or updated because the target unique key already exists.
+Symptom: DDL cannot create, alter, or drop a constraint, or DML cannot insert/update/delete rows because key or referential rules are violated.
 
-Primary Causes: Duplicate key values, wrong sequence value, application retry without idempotency, or replication conflict.
+Primary Causes: duplicate key values, duplicate constraint names, missing referenced key, incompatible referencing/referenced column types, mismatched column count, adding `NOT NULL` without default or with existing nulls, using disallowed expressions in `CHECK`, referencing LOB columns in `CHECK`, defining foreign keys on temporary tables, or DML order violating parent-child relationships.
 
-Immediate Action: Check the unique index or constraint columns, then correct the input data or resolve the duplicate row.
+Immediate Action: Identify whether the error is definition-time or data-time. For definition-time errors, inspect constraint and column metadata before generating `ALTER TABLE`. For data-time errors, inspect the offending key values and fix DML order or data; do not drop constraints as a first response.
 
 Check SQL or Command:
 
@@ -1366,7 +1477,11 @@ Check SQL or Command:
 SELECT cs.constraint_name,
        cs.constraint_type,
        cs.index_id,
-       cs.column_cnt
+       cs.column_cnt,
+       cs.referenced_table_id,
+       cs.delete_rule,
+       cs.check_condition,
+       cs.validated
 FROM SYSTEM_.SYS_CONSTRAINTS_ cs,
      SYSTEM_.SYS_TABLES_ t,
      SYSTEM_.SYS_USERS_ u
@@ -1375,11 +1490,9 @@ WHERE cs.user_id = t.user_id
   AND t.user_id = u.user_id
   AND u.user_name = '<OWNER_NAME>'
   AND t.table_name = '<TABLE_NAME>'
-  AND cs.constraint_type IN (2, 3, 6)
 ORDER BY cs.constraint_name;
 
--- Also check standalone unique indexes; not every unique violation is
--- represented by a constraint row.
+-- Standalone unique indexes can also raise unique violations.
 SELECT i.index_name,
        i.index_id,
        i.is_unique,
@@ -1407,68 +1520,57 @@ WHERE i.user_id = ic.user_id
 ORDER BY i.index_name, ic.index_col_order;
 ```
 
-Version Cautions: Replication conflicts require replication-specific investigation before changing data.
+Required Customer Input: exact version, full error line, failed DDL or DML, owner/table/constraint/index names, key column list, sample offending key value if safe to share, and whether replication is involved.
 
-Related Document: SQL DDL Generation; Replication HA CDC.
+Version Cautions: The listed codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Replication conflicts require replication-specific checks before changing rows or constraints.
 
-### Error Block: Check or Referential Constraint Violation
+Related Document: SQL DDL Generation; SQL DML and Oracle Compatibility; Data Dictionary and Performance Views; Replication HA CDC.
 
-Error Code: `0x31392 (201618)`, `0x31076 (200822)`, `0x31077 (200823)`.
+### Error Block: Data Type, Conversion, Literal, Numeric, and Date Errors
 
-Reference Symbol: `qpERR_ABORT_QDN_VIOLATE_CHECK_CONSTRAINT`, `qpERR_ABORT_QMX_CHILD_EXIST`, `qpERR_ABORT_QMX_NOT_FOUND_PARENT_ROW`.
-
-Module / Severity: QP / `ABORT`.
-
-Message: `Check constraint <0%s> violated`, `Unable to modify records that have child records`, or `The parent record was not found`.
-
-Applies To: `INSERT`, `UPDATE`, `DELETE`, and DDL touching constrained columns.
-
-Symptom: DML violates a `CHECK`, `FOREIGN KEY`, or parent-child relationship.
-
-Primary Causes: Input rows do not meet check conditions, deleting parent rows with child rows, or inserting child rows without parent rows.
-
-Immediate Action: Query the related constraints, inspect offending data, and fix DML order or data values.
-
-Check SQL or Command:
-
-```sql
-SELECT cs.constraint_name,
-       cs.constraint_type,
-       cs.referenced_table_id,
-       cs.delete_rule,
-       cs.check_condition
-FROM SYSTEM_.SYS_CONSTRAINTS_ cs,
-     SYSTEM_.SYS_TABLES_ t,
-     SYSTEM_.SYS_USERS_ u
-WHERE cs.user_id = t.user_id
-  AND cs.table_id = t.table_id
-  AND t.user_id = u.user_id
-  AND u.user_name = '<OWNER_NAME>'
-  AND t.table_name = '<TABLE_NAME>'
-ORDER BY cs.constraint_name;
-```
-
-Version Cautions: Constraint metadata is available across 7.1, 7.3, and 8.1.
-
-Related Document: Data Dictionary and Performance Views; SQL DML and Oracle Compatibility.
-
-### Error Block: Conversion, Invalid Literal, or Value Overflow
-
-Error Code: `0x2100C (135180)`, `0x21010 (135184)`, `0x21011 (135185)`, `0x21048 (135240)`.
-
-Reference Symbol: `mtERR_ABORT_CONVERSION_NOT_APPLICABLE`, `mtERR_ABORT_VALUE_OVERFLOW`, `mtERR_ABORT_INVALID_LITERAL`, `mtERR_ABORT_OVERFLOW`.
+Error Codes: listed individually in the exact code map below.
 
 Module / Severity: MT / `ABORT`.
 
-Message: `Conversion not applicable.`, `Value overflow`, `Invalid literal`, or `Out of range of value supported by the type`.
+Exact code map:
 
-Applies To: casts, implicit conversion, `INSERT`, `UPDATE`, function arguments, and bind values.
+| Runtime / reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `ERR-2100C` / `0x2100C (135180)` | `mtERR_ABORT_CONVERSION_NOT_APPLICABLE` | Conversion not applicable; check source and target data types. |
+| `ERR-2100D` / `0x2100D (135181)` | `mtERR_ABORT_INVALID_LENGTH` | Invalid data type length; check declared length. |
+| `ERR-2100E` / `0x2100E (135182)` | `mtERR_ABORT_INVALID_PRECISION` | Invalid precision; check precision limit. |
+| `ERR-2100F` / `0x2100F (135183)` | `mtERR_ABORT_INVALID_SCALE` | Invalid scale; check scale relative to precision. |
+| `ERR-21010` / `0x21010 (135184)` | `mtERR_ABORT_VALUE_OVERFLOW` | Value overflow; reduce value or widen target type when valid. |
+| `ERR-21011` / `0x21011 (135185)` | `mtERR_ABORT_INVALID_LITERAL` | Invalid literal; check literal syntax and target type. |
+| `ERR-21016` / `0x21016 (135190)` | `mtERR_ABORT_DIVIDE_BY_ZERO` | Division by zero; correct expression or input data. |
+| `ERR-21017` / `0x21017 (135191)` | `mtERR_ABORT_ARGUMENT_NOT_APPLICABLE` | Function argument is not applicable; check function signature and argument type. |
+| `ERR-21020` / `0x21020 (135200)` | `mtERR_ABORT_INVALID_LITERAL_AFTER_ESCAPE` | Missing or invalid literal after escape character; check escaped string. |
+| `ERR-21021` / `0x21021 (135201)` | `mtERR_ABORT_INVALID_ESCAPE` | Invalid escape literal; check escape character usage. |
+| `ERR-21022` / `0x21022 (135202)` | `mtERR_ABORT_INVALID_DATE` | Invalid date literal; check date value. |
+| `ERR-21023` / `0x21023 (135203)` | `mtERR_ABORT_INVALID_YEAR` | Year is invalid or out of range. |
+| `ERR-21024` / `0x21024 (135204)` | `mtERR_ABORT_INVALID_MONTH` | Month must be `1` through `12`. |
+| `ERR-21025` / `0x21025 (135205)` | `mtERR_ABORT_INVALID_DAY` | Day of month is invalid. |
+| `ERR-21026` / `0x21026 (135206)` | `mtERR_ABORT_INVALID_HOUR` | Hour must be in the supported range. |
+| `ERR-21027` / `0x21027 (135207)` | `mtERR_ABORT_INVALID_MINUTE` | Minute must be `0` through `59`. |
+| `ERR-21028` / `0x21028 (135208)` | `mtERR_ABORT_INVALID_SECOND` | Second must be `0` through `59`. |
+| `ERR-21029` / `0x21029 (135209)` | `mtERR_ABORT_INVALID_MICROSECOND` | Microsecond must be `0` through `999999`. |
+| `ERR-21032` / `0x21032 (135218)` | `mtERR_ABORT_DATE_NOT_ENOUGH_INPUT` | Input literal is too short for the date format. |
+| `ERR-21033` / `0x21033 (135219)` | `mtERR_ABORT_DATE_NOT_ENOUGH_FORMAT` | Date format ends before the whole input is converted. |
+| `ERR-21034` / `0x21034 (135220)` | `mtERR_ABORT_DATE_INVALID_HOUR24` | 24-hour value must be `0` through `23`. |
+| `ERR-21038` / `0x21038 (135224)` | `mtERR_ABORT_DATE_LITERAL_MISMATCH` | Input literal characters do not match the format string. |
+| `ERR-21039` / `0x21039 (135225)` | `mtERR_ABORT_DATE_NOT_RECOGNIZED_FORMAT` | Date format was not recognized; check format model. |
+| `ERR-2103A` / `0x2103A (135226)` | `mtERR_ABORT_DATE_NON_NUMERIC_INPUT` | Non-numeric character appeared where numeric date input was expected. |
+| `ERR-21047` / `0x21047 (135239)` | `mtERR_ABORT_NULL_VALUE` | `NULL` value is not allowed for the data type. |
+| `ERR-21048` / `0x21048 (135240)` | `mtERR_ABORT_OVERFLOW` | Value is out of range for the supported type. |
+| `ERR-21049` / `0x21049 (135241)` | `mtERR_ABORT_INVALID_NUMERIC` | String cannot be cast to `INTEGER`; check numeric text and bind type. |
 
-Symptom: Altibase cannot convert a value to the target type or the value exceeds the target type range.
+Applies To: explicit casts, implicit conversions, literals, date/time format models, function arguments, arithmetic expressions, `INSERT`, `UPDATE`, client bind values, and SQL generated by tools.
 
-Primary Causes: Wrong literal format, incompatible source and target types, precision or scale too small, or application bind type mismatch.
+Symptom: Altibase cannot convert a value to the target type, parse a literal, fit a value into target precision/scale/range, or parse a date/time input.
 
-Immediate Action: Check source value, target column type, precision, scale, and bind type. Use explicit casts only when supported and safe.
+Primary Causes: incompatible source and target types, invalid literal syntax, value overflow, invalid precision/scale/length, invalid function argument, invalid date format model, date part out of range, or client bind metadata not matching the target column.
+
+Immediate Action: Check the source value, target column type, precision, scale, nullability, function signature, and bind type. Reproduce with one literal or bind at a time before changing table definitions.
 
 Check SQL or Command:
 
@@ -1487,59 +1589,50 @@ WHERE c.user_id = t.user_id
   AND u.user_name = '<OWNER_NAME>'
   AND t.table_name = '<TABLE_NAME>'
 ORDER BY c.column_order;
-```
 
-Version Cautions: JSON and Temporary LOB conversion errors are 8.1-sensitive; use JSON blocks below for JSON-specific messages.
-
-Related Document: Data Types and Properties; SQL DML and Oracle Compatibility.
-
-### Error Block: Date Format or Date Literal Error
-
-Error Code: `0x21032 (135218)`, `0x21039 (135225)`, `0x2103A (135226)`.
-
-Reference Symbol: `mtERR_ABORT_DATE_NOT_ENOUGH_INPUT`, `mtERR_ABORT_DATE_NOT_RECOGNIZED_FORMAT`, `mtERR_ABORT_DATE_NON_NUMERIC_INPUT`.
-
-Module / Severity: MT / `ABORT`.
-
-Message: Date literal is too short, date format was not recognized, or non-numeric input appeared where numeric input was expected.
-
-Applies To: date conversion functions, date literals, application bind strings.
-
-Symptom: A date or timestamp value cannot be parsed.
-
-Primary Causes: Input value does not match the format model, invalid format token, missing digits, or non-numeric character in a numeric date field.
-
-Immediate Action: Make the input string and format model match exactly. Validate year, month, day, hour, minute, second, and fractional second ranges.
-
-Check SQL or Command:
-
-```sql
--- Reproduce with one literal at a time.
+-- Reproduce date parsing with one literal at a time.
 SELECT TO_DATE('<DATE_TEXT>', '<FORMAT_MODEL>')
 FROM DUAL;
 ```
 
-Version Cautions: Date format support can vary. Confirm the target version before recommending format tokens.
+Required Customer Input: exact version, full SQL or client bind call, target table definition, literal value or sanitized sample, client/tool name, NLS/date format assumptions, and full error line.
 
-Related Document: Data Types and Properties; SQL DML and Oracle Compatibility.
+Version Cautions: The listed non-JSON MT codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. JSON and Temporary LOB conversion errors are 8.1-sensitive; use the JSON blocks below for JSON-specific messages.
 
-### Error Block: Regular Expression PCRE2 Character Set Error
+Related Document: Data Types and Properties; SQL DML and Oracle Compatibility; C CLI ODBC Precompiler.
 
-Error Code: `0x2106B (135275)`, `0x2106C (135276)`.
+### Error Block: Regular Expression Pattern and PCRE2 Errors
 
-Reference Symbol: `mtERR_ABORT_PCRE2_NOT_SUPPORTED_ENCODING`, `mtERR_ABORT_PCRE2_UNEXPECTED_ERROR`.
+Error Codes: listed individually in the exact code map below.
 
 Module / Severity: MT / `ABORT`.
 
-Message: `Unsupported character set by PCRE2 library` or `error: <1%s> (occurred in <0%s>)`.
+Exact code map:
 
-Applies To: regular expression functions when `REGEXP_MODE` is `1`.
+| Runtime / reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `ERR-2104D` / `0x2104D (135245)` | `mtERR_ABORT_WRONG_PATTERN` | Invalid pattern string; check regular-expression syntax. |
+| `ERR-21052` / `0x21052 (135250)` | `mtERR_ABORT_LONG_PATTERN` | Pattern string is too long; shorten pattern. |
+| `ERR-21053` / `0x21053 (135251)` | `mtERR_ABORT_REGEXP_REQUIRED_PAREN` | Pattern requires parentheses, brackets, or braces. |
+| `ERR-21054` / `0x21054 (135252)` | `mtERR_ABORT_REGEXP_CLASS_EMPTY` | Empty bracket class; fix character class. |
+| `ERR-21055` / `0x21055 (135253)` | `mtERR_ABORT_REGEXP_CONST_OVERFLOW` | Pattern numeric range exceeds supported range; reduce numeric quantifier. |
+| `ERR-21056` / `0x21056 (135254)` | `mtERR_ABORT_REGEXP_REQUIRED_NUMBER` | Quantifier requires numeric values; fix `{m}`, `{m,}`, or `{m,n}`. |
+| `ERR-21057` / `0x21057 (135255)` | `mtERR_ABORT_REGEXP_REQUIRED_COMMA` | Braces or comma are required; fix quantifier syntax. |
+| `ERR-21058` / `0x21058 (135256)` | `mtERR_ABORT_REGEXP_UNEXPECTED_CAHR` | Pattern contains an unexpected character; check syntax near that character. |
+| `ERR-21059` / `0x21059 (135257)` | `mtERR_ABORT_REGEXP_UNFINISHED_RANGE` | Character range is unfinished; close the range. |
+| `ERR-2105A` / `0x2105A (135258)` | `mtERR_ABORT_REGEXP_INVALID_RANGE` | Character range is invalid; check range bounds. |
+| `ERR-2105B` / `0x2105B (135259)` | `mtERR_ABORT_REGEXP_CLASS_INVALID_CHAR` | Invalid predefined character class; use supported class syntax. |
+| `ERR-2105C` / `0x2105C (135260)` | `mtERR_ABORT_REGEXP_LONG_PATTERN` | Pattern size exceeds `1024`; shorten pattern. |
+| `ERR-2106B` / `0x2106B (135275)` | `mtERR_ABORT_PCRE2_NOT_SUPPORTED_ENCODING` | `REGEXP_MODE=1` uses PCRE2 and current server character set is not supported by PCRE2. |
+| `ERR-2106C` / `0x2106C (135276)` | `mtERR_ABORT_PCRE2_UNEXPECTED_ERROR` | PCRE2 returned an unexpected detail error; collect detail text and context. |
 
-Symptom: A regular expression statement fails because the server character set is not supported by PCRE2, or PCRE2 reports an unexpected error.
+Applies To: regular expression functions and pattern processing, especially when `REGEXP_MODE=1`.
 
-Primary Causes: `REGEXP_MODE=1` with an unsupported Altibase server character set, invalid pattern, or PCRE2 runtime error.
+Symptom: A regular expression statement fails during pattern parsing or PCRE2 execution.
 
-Immediate Action: Branch by error code. For `0x2106B`, check `REGEXP_MODE`, server character set, and pattern; if the character set is unsupported, set `REGEXP_MODE` to `0` or plan a database recreation with a supported character set. For `0x2106C`, collect the PCRE2 detail text, Altibase version, SQL text, `REGEXP_MODE`, server character set, and trace context before escalating to Altibase Support.
+Primary Causes: invalid pattern syntax, too-long pattern, invalid or unfinished character class/range, unsupported quantifier form, unsupported PCRE2 server character set, or PCRE2 runtime error.
+
+Immediate Action: Test the smallest pattern that reproduces the failure. For `0x2106B`, check `REGEXP_MODE` and server character set before considering a property change or database recreation. For `0x2106C`, preserve the PCRE2 detail text and collect trace context before escalating.
 
 Check SQL or Command:
 
@@ -1549,7 +1642,9 @@ FROM V$PROPERTY
 WHERE name = 'REGEXP_MODE';
 ```
 
-Version Cautions: Applies to versions whose Error Message Reference includes PCRE2 regular expression processing. Ask for version and character set before recommending database recreation.
+Required Customer Input: exact version, server character set, `REGEXP_MODE`, SQL text, pattern text, input sample, and the complete error line including PCRE2 detail text.
+
+Version Cautions: The listed regex and PCRE2 codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Do not recommend database recreation for character-set changes without explicit DBA approval and a migration plan.
 
 Related Document: SQL DML and Oracle Compatibility; Data Types and Properties.
 
@@ -1593,23 +1688,51 @@ Escalation: If the blocking session or temporary table cannot be identified from
 
 Related Document: Administration and Operations; SQL DDL Generation.
 
-### Error Block: LOB Operation in Autocommit Mode
+### Error Block: LOB DDL, Locator, Client, and Utility Errors
 
-Error Code: `0x314B4 (201908)`, `0x5112C (332076)`, `0x91101 (594177)`.
+Error Codes: listed individually in the exact code map below.
 
-Reference Symbol: `qpERR_ABORT_QMX_LOB_AUTOCOMMIT_MODE`, `ulERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR`, `utERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR`.
+Module / Severity: SM, QP, CLI/ODBC, APRE, or Utilities / `ABORT`, with noted CLI fatal locator-state entries.
 
-Module / Severity: QP, CLI/ODBC, or Utilities / `ABORT`.
+Exact code map:
 
-Message: `The connection is in autocommit mode. The operation cannot operate on LOB data in autocommit mode.`
+| Runtime / reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `ERR-110C4` / `0x110C4 (69828)` | `smERR_ABORT_CannotSpanTransByLobLocator` | `LobLocator` cannot span transaction; reopen locator in the current transaction. |
+| `ERR-110C5` / `0x110C5 (69829)` | `smERR_ABORT_LobCursorClosed` | LOB cursor is already closed; reopen cursor before use. |
+| `ERR-110C6` / `0x110C6 (69830)` | `smERR_ABORT_CanNotModifyLob` | Cannot modify LOB through a read-only LOB cursor. |
+| `ERR-110C8` / `0x110C8 (69832)` | `smERR_ABORT_overflowLobCursorID` | Too many LOB cursors opened; close LOB cursors. |
+| `ERR-110CB` / `0x110CB (69835)` | `smERR_ABORT_RangeError` | LOB operation range is outside target range; check offset and length. |
+| `ERR-110CC` / `0x110CC (69836)` | `smERR_ABORT_LobCursorTooOld` | LOB cursor became too old after another update; reopen the LOB cursor. |
+| `ERR-110CD` / `0x110CD (69837)` | `smERR_ABORT_InvalidLobStartOffset` | LOB start offset is greater than current LOB length; check offset. |
+| `ERR-110D0` / `0x110D0 (69840)` | `smERR_ABORT_MaxLobErrorSize` | LOB size is bigger than maximum LOB size; verify size. |
+| `ERR-110D1` / `0x110D1 (69841)` | `smERR_ABORT_INVALIDE_LOB_CURSOR_MODE` | Read-only table cursor requires read-only LOB cursor. |
+| `ERR-3134C` / `0x3134C (201548)` | `qpERR_ABORT_QMV_NOT_SUPPORT_LOB_COLUMN` | LOB column is not supported in `RETURNING INTO`; remove LOB columns from `RETURNING`. |
+| `ERR-31382` / `0x31382 (201602)` | `qpERR_ABORT_QMV_NOT_ALLOW_PRIOR_LOB` | `PRIOR` is not supported with LOB columns; use a non-LOB column. |
+| `ERR-31390` / `0x31390 (201616)` | `qpERR_ABORT_QDN_NOT_SUPPORT_LOB_COLUMN_IN_CHECK_CONSTRAINT` | LOB columns are not supported in `CHECK` constraints; remove LOB references. |
+| `ERR-3139B` / `0x3139B (201627)` | `qpERR_ABORT_QDX_NOT_SUPPORT_LOB_COLUMN` | LOB column is not supported for function-based index; remove LOB expression. |
+| `ERR-3145F` / `0x3145F (201823)` | `qpERR_ABORT_QMO_NOT_ALLOWED_LOB_FILTER` | LOB filter is not supported in the documented hierarchy/`SELECT FOR UPDATE` context. |
+| `ERR-314B4` / `0x314B4 (201908)` | `qpERR_ABORT_QMX_LOB_AUTOCOMMIT_MODE` | SQL LOB operation cannot run in autocommit mode; turn off autocommit. |
+| `ERR-50137` / `0x50137 (327991)` | `ulERR_FATAL_LOB_NOT_OPENED` | CLI LOB locator operation was attempted when locator was not open; collect client trace. |
+| `ERR-50139` / `0x50139 (327993)` | `ulERR_FATAL_LOB_INVALID_STATE` | CLI LOB function called in invalid state; collect client trace. |
+| `ERR-5112C` / `0x5112C (332076)` | `ulERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR` | CLI/ODBC LOB operation cannot run in autocommit mode; turn off autocommit. |
+| `ERR-5112D` / `0x5112D (332077)` | `ulERR_ABORT_LOB_FILE_WRITE_ERR` | Failed to write LOB data to file; check file path and write permission. |
+| `ERR-5112E` / `0x5112E (332078)` | `ulERR_ABORT_LOB_FILE_READ_ERR` | Failed to read from file; check file path and read permission. |
+| `ERR-5113C` / `0x5113C (332092)` | `ulERR_ABORT_INVALID_APP_BUFFER_TYPE_LOB` | Invalid application buffer type for LOB source; check bind buffer type. |
+| `ERR-51140` / `0x51140 (332096)` | `ulERR_ABORT_INVALID_LOB_RANGE` | Invalid LOB range; check offset and length. |
+| `ERR-51029` / `0x51029 (331817)` | `ulpERR_ABORT_COMP_Lob_Locator_Error` | Precompiler `FREE LOB` host variable must be a LOB locator. |
+| `ERR-91022` / `0x91022 (593954)` | `utERR_ABORT_UNDISPLAYABLE_DATATYPE_Error` | Utility cannot display LOB or `GEOMETRY` data in console; use an appropriate client/export method. |
+| `ERR-91041` / `0x91041 (593985)` | `utERR_ABORT_LOB_Opt_Str_Error` | Missing or invalid LOB option string; check utility LOB option syntax. |
+| `ERR-91045` / `0x91045 (593989)` | `utERR_ABORT_LOB_File_IO_Error` | LOB file I/O error; check path, existence, space, and permissions. |
+| `ERR-91101` / `0x91101 (594177)` | `utERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR` | Utility LOB operation cannot run with autocommit on; turn off autocommit. |
 
-Applies To: SQL LOB operations, CLI/ODBC LOB APIs, and utility LOB processing.
+Applies To: ordinary `BLOB`/`CLOB` table columns, SQL LOB locators/cursors, `RETURNING INTO`, `CHECK`, function-based index expressions, CLI/ODBC LOB APIs, Precompiler `FREE LOB`, iSQL/iLoader/utility LOB file handling, and LOB display limitations.
 
-Symptom: LOB read/write fails while autocommit is enabled.
+Symptom: LOB read/write, locator use, DDL, DML, index/check expression, client API, or utility file processing fails.
 
-Primary Causes: LOB locators require transaction scope. Autocommit ends the transaction too early for the LOB operation.
+Primary Causes: autocommit ended the locator transaction scope, LOB cursor was closed/old/read-only, offset or length was invalid, LOB exceeded size limits, LOB was used in an unsupported SQL construct, utility file path/permission/space failed, or client buffer/locator state was invalid.
 
-Immediate Action: Turn off autocommit, perform the LOB operation inside an explicit transaction, then `COMMIT` or `ROLLBACK`.
+Immediate Action: For locator/API errors, turn off autocommit and keep the whole LOB operation inside one explicit transaction. For SQL-shape errors, remove LOB columns from unsupported expressions (`CHECK`, function-based index, `RETURNING INTO`, `PRIOR`, LOB filter). For utility file errors, verify path, permission, file size, and free space.
 
 Check SQL or Command:
 
@@ -1617,11 +1740,35 @@ Check SQL or Command:
 AUTOCOMMIT OFF;
 -- Execute LOB read or write operation here.
 COMMIT;
+
+SELECT c.column_name,
+       c.data_type,
+       c.precision,
+       c.scale,
+       c.store_type
+FROM SYSTEM_.SYS_COLUMNS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE c.user_id = t.user_id
+  AND c.table_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>'
+ORDER BY c.column_order;
 ```
 
-Version Cautions: `0x5112C` and `0x91101` are documented in 7.1, 7.3, and Altibase 8.1 verified source. Treat SQL-level `0x314B4` as 7.3/8.1 unless the target 7.1 build confirms that code. For 8.1 JSON and Temporary LOB, also check `TEMPORARY_LOB_ENABLE`.
+```bash
+ls -l '<LOB_FILE_PATH>'
+df -k '<LOB_FILE_DIRECTORY>'
+```
 
-Related Document: Data Types and Properties; C CLI ODBC Precompiler; Utilities Operation Tools.
+Required Customer Input: exact version and client/tool version, full error line, failed SQL/API/utility command, autocommit state, transaction boundary, LOB column names and types, locator lifecycle, file path, OS error if present, and client or utility trace output.
+
+Version Cautions: The listed non-JSON LOB codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References except `0x314B4`, which is documented in the checked Korean 7.3 and Altibase 8.1 verified source. Treat SQL-level `0x314B4` as 7.3/8.1 unless the target 7.1 runtime shows that exact code. For 8.1 JSON and Temporary LOB, also check `TEMPORARY_LOB_ENABLE`.
+
+Escalation: Escalate CLI fatal locator-state entries such as `0x50137` or `0x50139` after collecting client version, API call sequence, locator open/free sequence, autocommit state, and trace output.
+
+Related Document: Data Types and Properties; C CLI ODBC Precompiler; iSQL iLoader Basic Tools; Utilities Operation Tools.
 
 ### Error Block: JSON Type Cannot Be Used Because Temporary LOB Is Disabled
 
@@ -2101,5 +2248,6 @@ Use this order:
 ## Residual Scope
 
 - J023 expanded storage, backup, recovery, datafile, log, checkpoint, incremental backup, and tablespace exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps are still grouped troubleshooting blocks, not a replacement for the complete source manuals.
+- J024 expanded SQL parser, DDL, table/column/data type, constraint, regular-expression, JSON, LOB, Temporary LOB, and related client/utility LOB exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. JSON and Temporary LOB blocks remain 8.1-scoped.
 - Add future error blocks only after source-backed review, and keep the standardized error format above.
 - The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here.
