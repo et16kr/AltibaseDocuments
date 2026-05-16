@@ -36,6 +36,6 @@ J034	Done	docs	PSM stored and external procedures	Expand PSM, packages, triggers
 J035	Done	docs	Java JDBC Spring Hibernate and adapters	Expand JDBC, Java compatibility, Spring, Hibernate, Adapter for JDBC, and Java-facing examples.
 J036	Done	docs	CLI ODBC C Interface Precompiler and LOB APIs	Expand CLI, ODBC, Altibase C Interface, Precompiler, LOB, JSON LOB, and API diagnostics.
 J037	Done	docs	iSQL iLoader utilities dataCompJ and dump tools	Expand iSQL, iLoader, utilities, dataCompJ, dump tools, and operational tool workflows.
-J038	ToDo	docs	DB Link connectors Kubernetes and AKU	Expand DB Link, Hadoop, third-party connectors, Kubernetes, AKU, and cloud/container workflows.
+J038	Done	docs	DB Link connectors Kubernetes and AKU	Expand DB Link, Hadoop, third-party connectors, Kubernetes, AKU, and cloud/container workflows.
 J039	ToDo	docs	Migration Oracle compatibility Spatial NiFi and Tableau	Expand Migration Center, Adapter for Oracle, Spatial, altiShapeLoader, NiFi, and Tableau coverage.
 J040	ToDo	docs	Retrieval multilingual validation and final readiness	Finalize retrieval structure, multilingual policy, validation reports, final gap review, and upload readiness.

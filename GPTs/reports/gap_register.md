@@ -432,6 +432,14 @@ recording or remediating gaps.
   SQLSTATE rules, and APRE diagnostic syntax. This entry remains
   `Verification-limited` because J036 did not perform live ODBC/CLI, ACI, APRE, TLS,
   or LOB execution tests.
+- J038 update: `16_dblink_external_connectors.md` now expands source-backed DB Link
+  property defaults/ranges, `AltiLinker` configuration, `altiEncrypt` 8.1 dblink
+  password boundaries, Hadoop Connector command blocks, and third-party connector
+  setup/troubleshooting boundaries; `17_kubernetes_aku_cloud.md` now expands source-backed
+  Pod, Deployment, Service, PV/PVC, ConfigMap, StatefulSet, AKU bootstrap, and
+  cloud-provider caveat blocks. This entry remains `Verification-limited` because J038
+  did not perform live DB Link, Hadoop/Sqoop, DBeaver, Hibernate, OpenLDAP, GoldenGate,
+  Kubernetes, AKU, TLS, or cloud platform execution tests.
 
 ### GAP-J002-013: PSM and external procedure examples lack compile/runtime validation
 
@@ -476,6 +484,11 @@ recording or remediating gaps.
   production answers still require exact JDBC driver, Adapter, Java runtime, and target
   connector patch confirmation, and because `16_dblink_external_connectors.md` keeps DB
   Link Java compatibility as a connector-specific cross-reference.
+- J038 update: `16_dblink_external_connectors.md` keeps DB Link Java runtime guidance
+  source-backed by version family and adds the Altibase 8.1 verified source
+  `altiEncrypt` boundary for `dblink.conf` passwords. This entry remains `Guardrail`
+  because production answers still need exact Altibase patch, Java runtime, remote JDBC
+  driver, and connector version confirmation.
 
 ### GAP-J002-015: Compile-ready CLI LOB signatures need exact header/manual source
 
@@ -544,7 +557,7 @@ recording or remediating gaps.
 
 ### GAP-J002-018: High-risk converted visual/procedure coverage needs final source audit
 
-- Status: `Open`
+- Status: `Verification-limited`
 - Source family and version scope: All source families with syntax diagrams, topology
   diagrams, workflow figures, or UI screenshots; 7.1, 7.3, and 8.1.
 - Missing item or behavior: Final source audit for high-risk converted visuals where
@@ -614,8 +627,17 @@ recording or remediating gaps.
   Receiver network evidence collection, ordinary TLS port separation, certificate
   handling, certificate-verification triage, and Altibase 8.1 replication SSL
   guardrails. Source paths and version scope are recorded in
-  `GPTs/reports/source_inventory.md`. This gap remains `Open` for the later
+  `GPTs/reports/source_inventory.md`. This gap remained open for the later
   Kubernetes/AKU high-risk procedure slice.
+- J038 update: the Kubernetes/AKU procedure slice is now represented by searchable
+  English blocks for direct Pod and Deployment examples, NFS-backed volume mounts,
+  fixed and headless Services, AKU ConfigMap/entrypoint behavior, StatefulSet controls,
+  hostname-based license requirements, first-Pod bootstrap, scale-up/scale-down checks,
+  and cloud-provider caveats. Source paths and version scope are recorded in
+  `GPTs/reports/source_inventory.md`. The high-risk visual/procedure conversion queue
+  is no longer an uncovered attachment-work gap for the listed slices, but it remains
+  `Verification-limited` because the converted procedures were not executed against a
+  live Kubernetes or cloud environment.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 
@@ -713,6 +735,12 @@ recording or remediating gaps.
     per-property default, range, dynamic-change, related-view, and caution blocks in
     the customer-facing attachment; later jobs should split or close those details
     only when their source-family scope requires them.
+  - J038 expanded the DB Link property sub-slice in
+    `GPTs/attachments/16_dblink_external_connectors.md`, including DB Link server
+    property defaults, ranges, read-only/dynamic-change cues, `V$PROPERTY` check SQL,
+    `AltiLinker` defaults and ranges, and Altibase 8.1 verified source `altiEncrypt`
+    password boundaries for `dblink.conf`. This gap remains `Open` for unrelated
+    low-retrieval property families outside the J038 connector scope.
 
 ### GAP-J010-001: SQL Reference syntax diagram conversion queue remains open
 

@@ -287,8 +287,16 @@ for 8.1 customer-facing labels.
   and `dataCompJ` output interpretation, and dump-family output evidence maps. Source
   traceability and remaining installed-tool verification limits are recorded in
   `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
-- J038-J039 should use connector, migration, and third-party guide source families to
-  expand remaining API/tool/integration coverage.
+- J038 expanded the DB Link, Hadoop Connector, third-party connector, Kubernetes, AKU,
+  and cloud/container-boundary slice in `16_dblink_external_connectors.md` and
+  `17_kubernetes_aku_cloud.md`. The documentation structure keeps DB Link SQL,
+  property, type, and connector procedures in `16`; keeps Kubernetes object patterns,
+  container entrypoint behavior, AKU lifecycle, and cloud-provider caveats in `17`;
+  and records General Reference property details in `GPTs/reports/source_inventory.md`.
+  Live DB Link, Hadoop, DBeaver, Hibernate, OpenLDAP, GoldenGate, Kubernetes, and AKU
+  execution remains verification-limited without a target environment.
+- J039 should use migration, Spatial, and third-party guide source families to expand
+  remaining migration/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open
   register item is either closed, split into a later accepted work item, or documented
   as a selected-source limitation.

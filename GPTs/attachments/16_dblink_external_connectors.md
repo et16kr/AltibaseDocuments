@@ -5,6 +5,7 @@
 - 7.1: Based on Altibase 7.1 DB Link, Altibase Hadoop Connector guidance, and third-party connector guidance where the guide states an Altibase 7.1 or later baseline.
 - 7.3: Based on Altibase 7.3 DB Link, Altibase Hadoop Connector, and third-party connector guidance.
 - 8.1: Based on Altibase 8.1 verified source DB Link, Altibase Hadoop Connector, and third-party connector guidance.
+- Property details: DB Link server properties use the Korean General Reference for 7.1, 7.3, and Altibase 8.1 verified source; `AltiLinker` properties use the Korean DB Link manuals.
 
 ## Questions This File Can Answer
 
@@ -20,9 +21,9 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 DB Link User's Manual; Hadoop Connector User's Manual; Korean Altibase 3rd Party Connector Guide for 7.1-or-later and GoldenGate baseline statements.
-- 7.3: Altibase 7.3 DB Link User's Manual; Hadoop Connector User's Manual; Altibase 3rd Party Connector Guide, including Korean GoldenGate source.
-- 8.1: Altibase 8.1 verified source DB Link User's Manual; Hadoop Connector User's Manual; Altibase 3rd Party Connector Guide, including Korean GoldenGate source.
+- 7.1: Altibase 7.1 DB Link User's Manual; Hadoop Connector User's Manual; Altibase 7.1 General Reference; Korean Altibase 3rd Party Connector Guide for 7.1-or-later and GoldenGate baseline statements.
+- 7.3: Altibase 7.3 DB Link User's Manual; Hadoop Connector User's Manual; Altibase 7.3 General Reference; Altibase 3rd Party Connector Guide, including Korean GoldenGate source.
+- 8.1: Altibase 8.1 verified source DB Link User's Manual; Hadoop Connector User's Manual; General Reference; Altibase 3rd Party Connector Guide, including Korean GoldenGate source and release-note `altiEncrypt` guidance.
 
 ## Response Rules
 
@@ -35,6 +36,7 @@
 - For SSL/TLS, truststores, certificate verification, and ciphers, use `11_java_jdbc_spring.md` and `18_security_ssl_tls.md` for Altibase JDBC/SSL parameter names. This attachment gives connector workflow context and should not invent connector-specific TLS placement unless the connector accepts the documented Altibase JDBC URL or properties.
 - For generic JDBC URL attributes, Spring Boot, and Hibernate application code, cross-reference the Java/JDBC/Spring attachment.
 - GoldenGate scope is limited to Altibase as the target database through the Oracle GoldenGate for Big Data JDBC Handler. Do not provide Oracle GoldenGate or Oracle GoldenGate for Big Data installation and product-level configuration steps beyond the Altibase JDBC Handler properties shown here; the source says to use the Oracle GoldenGate product manuals for that material.
+- For passwords in `dblink.conf`, use protected file permissions and secret handling. In Altibase 8.1 verified source, release notes say passwords encrypted with `altiEncrypt` can be used in `aku`, `dblink`, and Adapter configuration files; do not claim that behavior for 7.1 or 7.3 without an exact patch source.
 
 ## Fast Decision Map
 
@@ -80,6 +82,7 @@ Version block: 8.1
 - Use the wording `Altibase 8.1 verified source` for 8.1-specific DB Link and connector statements.
 - `CREATE DATABASE LINK` supports `IF NOT EXISTS` in the Altibase 8.1 verified source.
 - `DROP DATABASE LINK` supports `IF EXISTS` in the Altibase 8.1 verified source.
+- The Altibase 8.1 verified source release notes say `altiEncrypt`-encrypted passwords can be used in `dblink` configuration files.
 - The Altibase 8.1 verified source keeps the same DB Link architecture, AltiLinker configuration model, Hadoop Connector command model, and DBeaver/OpenLDAP connector guidance unless otherwise stated.
 - The Altibase 8.1 verified source third-party connector guide includes Hibernate connector guidance for `AltibaseDialect` and Oracle GoldenGate for Big Data JDBC Handler guidance for Altibase as the target database.
 
@@ -476,35 +479,46 @@ Level block: Two-Phase Commit
 
 Property group: `altibase.properties`
 
-- `AUTO_REMOTE_EXEC`: DB Link-related remote execution property.
-- `DBLINK_ENABLE`: must be `1` to use DB Link.
-- `DBLINK_GLOBAL_TRANSACTION_LEVEL`: controls remote statement, simple commit, or two-phase commit behavior.
-- `DBLINK_RECOVERY_MAX_LOGFILE`: DB Link recovery log file control.
-- `DBLINK_REMOTE_STATEMENT_AUTOCOMMIT`: remote statement autocommit behavior.
-- `DBLINK_REMOTE_TABLE_BUFFER_SIZE`: remote table buffer size.
-- `DBLINK_DATA_BUFFER_BLOCK_SIZE`: DB Link data buffer block size.
-- `DBLINK_DATA_BUFFER_BLOCK_COUNT`: DB Link data buffer block count.
-- `DBLINK_DATA_BUFFER_ALLOC_RATIO`: DB Link buffer allocation ratio.
-- `DBLINK_ALTILINKER_CONNECT_TIMEOUT`: local server wait time for connection to `AltiLinker`.
+- `AUTO_REMOTE_EXEC`: DB Link-related remote execution property listed with the DB Link property set. The sampled General Reference files do not provide the same decomposed block shape as the other `DBLINK_*` properties, so ask for the exact target version and source note before changing it in production.
+- `DBLINK_ENABLE`: enables DB Link. Default `0`; range `0` to `1`; read-only, single value. Set `1` before using DB Link.
+- `DBLINK_GLOBAL_TRANSACTION_LEVEL`: controls remote statement execution, simple transaction commit, or two-phase commit. Default `1`; range `0` to `2`; dynamic-change capable, single value. If set to `0`, align `DBLINK_REMOTE_STATEMENT_AUTOCOMMIT` with the remote database autocommit mode. Do not change it after a global transaction starts.
+- `DBLINK_RECOVERY_MAX_LOGFILE`: maximum number of DB Link distributed-transaction recovery log files. Default `0`; positive range `1` to `2^32-1`; dynamic-change capable, single value. `0` keeps recovery logs and preserves consistency; setting a positive maximum can allow checkpoint deletion before an in-doubt distributed transaction completes.
+- `DBLINK_REMOTE_STATEMENT_AUTOCOMMIT`: remote database autocommit mode used when `DBLINK_GLOBAL_TRANSACTION_LEVEL=0`. Default `0`; range `0` to `1`; dynamic-change capable, single value. `0` means autocommit off; `1` means autocommit on.
+- `DBLINK_REMOTE_TABLE_BUFFER_SIZE`: memory buffer in megabytes used for `REMOTE_TABLE` result storage. Default `50`; range `0` to `2^32-1`; dynamic-change capable, single value. Increase it when one remote result record is larger than the current buffer.
+- `DBLINK_DATA_BUFFER_BLOCK_SIZE`: DB Link data-buffer record block size in bytes. Default `2 MBytes`; range recorded by the Korean General Reference as `0` to `29`; read-only, single value. Use with `DBLINK_DATA_BUFFER_BLOCK_COUNT` to size the DB Link data buffer.
+- `DBLINK_DATA_BUFFER_BLOCK_COUNT`: initial number of DB Link data-buffer record blocks. Default `128`; range `0` to `2^12-1`; read-only, single value. Data buffer size is `DBLINK_DATA_BUFFER_BLOCK_COUNT * DBLINK_DATA_BUFFER_BLOCK_SIZE`.
+- `DBLINK_DATA_BUFFER_ALLOC_RATIO`: ratio for allocating record buffers from remaining DB Link dedicated data-buffer space. Default `50`; the Korean General Reference records range `0` to `1`; read-only, single value. Verify the exact target manual before changing this because the documented default/range shape is easy to misread.
+- `DBLINK_ALTILINKER_CONNECT_TIMEOUT`: maximum wait, in seconds, for the Altibase server to connect to `AltiLinker`. Default `100`; range `0` to `2^32-1`; read-only, single value.
+
+Property change and verification pattern:
+
+```sql
+SELECT NAME, VALUE1
+FROM V$PROPERTY
+WHERE NAME LIKE 'DBLINK_%' OR NAME = 'AUTO_REMOTE_EXEC';
+```
+
+- Read-only DB Link properties require configuration-file change and restart planning.
+- Dynamic-change DB Link properties can be changed with the supported property mechanism for the target version, but production changes still need an exact Altibase version, current value, active DB Link transactions, and rollback plan.
 
 Property group: `dblink.conf`
 
-- `ALTILINKER_ENABLE`: `1` starts `AltiLinker`; `0` disables it.
-- `ALTILINKER_PORT_NO`: TCP port where `AltiLinker` listens; valid port range is `1024` through `65535`.
-- `ALTILINKER_RECEIVE_TIMEOUT`: maximum wait when Altibase exchanges data with `AltiLinker`.
-- `ALTILINKER_REMOTE_NODE_RECEIVE_TIMEOUT`: maximum wait for remote prepare, DCL, and autocommit-setting operations.
-- `ALTILINKER_QUERY_TIMEOUT`: maximum remote `SELECT` execution time.
-- `ALTILINKER_NON_QUERY_TIMEOUT`: maximum remote non-`SELECT` execution time.
-- `ALTILINKER_THREAD_COUNT`: number of `AltiLinker` threads for remote SQL execution.
-- `ALTILINKER_THREAD_SLEEP_TIME`: idle wait for `AltiLinker` worker threads.
-- `ALTILINKER_REMOTE_NODE_SESSION_COUNT`: maximum sessions for remote server connections; one is used as the linker control session.
-- `ALTILINKER_TRACE_LOG_DIR`: trace log directory; default is `$ALTIBASE_HOME/trc`.
-- `ALTILINKER_TRACE_LOG_FILE_SIZE`: maximum trace log file size.
-- `ALTILINKER_TRACE_LOG_FILE_COUNT`: maximum trace log file count.
-- `ALTILINKER_TRACE_LOGGING_LEVEL`: `0` none, `1` FATAL, `2` ERROR, `3` WARNING, `4` INFO, `5` DEBUG, `6` TRACE.
-- `ALTILINKER_JVM_BIT_DATA_MODEL_VALUE`: `0` for 32-bit JVM, `1` for 64-bit JVM.
-- `ALTILINKER_JVM_MEMORY_POOL_INIT_SIZE`: initial JVM memory pool for `AltiLinker`.
-- `ALTILINKER_JVM_MEMORY_POOL_MAX_SIZE`: maximum JVM memory pool for `AltiLinker`.
+- `ALTILINKER_ENABLE`: enables `AltiLinker`. Default `0`; range `0` to `1`; set `1` for DB Link.
+- `ALTILINKER_PORT_NO`: TCP listen port for `AltiLinker`. Default `0`; range `1024` to `65535`; choose a port reachable from the local Altibase server and not exposed more broadly than needed.
+- `ALTILINKER_RECEIVE_TIMEOUT`: maximum wait, in seconds, after the Altibase server requests work from `AltiLinker`. Default `5`; range `0` to `2^32-1`.
+- `ALTILINKER_REMOTE_NODE_RECEIVE_TIMEOUT`: maximum wait, in seconds, for remote prepare, DCL, and autocommit-setting operations other than remote `SELECT`, DML, and DDL execution. Default `30`; range `0` to `2^32-1`.
+- `ALTILINKER_QUERY_TIMEOUT`: maximum remote `SELECT` execution time in seconds. Default `60`; range `0` to `2^32-1`.
+- `ALTILINKER_NON_QUERY_TIMEOUT`: maximum remote DML or DDL execution time in seconds. Default `60`; range `0` to `2^32-1`.
+- `ALTILINKER_THREAD_COUNT`: number of `AltiLinker` threads that execute remote SQL. Default `16`; range `2` to `2^31-1`.
+- `ALTILINKER_THREAD_SLEEP_TIME`: idle wait for `AltiLinker` worker threads in microseconds. Default `200`; range `1` to `2^32-1`.
+- `ALTILINKER_REMOTE_NODE_SESSION_COUNT`: maximum sessions opened to a remote server. Default `64`; range `1` to `128`; usable data sessions are this value minus one control session.
+- `ALTILINKER_TRACE_LOG_DIR`: trace log directory. Default `$ALTIBASE_HOME/trc`; use a writable filesystem with log-retention controls.
+- `ALTILINKER_TRACE_LOG_FILE_SIZE`: maximum trace log file size. Default `10 MBytes`; range `1MB` to `2^32-1`.
+- `ALTILINKER_TRACE_LOG_FILE_COUNT`: maximum number of trace log files. Default `10`; range `1` to `100`.
+- `ALTILINKER_TRACE_LOGGING_LEVEL`: trace level. Default `4`; range `0` to `6`: `0` none, `1` FATAL, `2` ERROR, `3` WARNING, `4` INFO, `5` DEBUG, `6` TRACE.
+- `ALTILINKER_JVM_BIT_DATA_MODEL_VALUE`: JVM bit model for `AltiLinker`. Default `1`; range `0` to `1`; `0` means 32-bit JVM, `1` means 64-bit JVM.
+- `ALTILINKER_JVM_MEMORY_POOL_INIT_SIZE`: initial JVM memory pool for `AltiLinker`. Default `128 MBytes`; range `128MB` to `4096MB`.
+- `ALTILINKER_JVM_MEMORY_POOL_MAX_SIZE`: maximum JVM memory pool for `AltiLinker`. Default `4096 MBytes`; range `512MB` to `32768MB`.
 
 Property group: `TARGETS`
 
@@ -513,7 +527,7 @@ Property group: `TARGETS`
 - `TARGETS/JDBC_DRIVER_CLASS_NAME`: JDBC driver class name; optional when the driver implements `java.sql.Driver` and can be loaded automatically.
 - `TARGETS/CONNECTION_URL`: JDBC URL for the remote database.
 - `TARGETS/USER`: remote database user.
-- `TARGETS/PASSWORD`: remote database password.
+- `TARGETS/PASSWORD`: remote database password. In Altibase 8.1 verified source, `altiEncrypt`-encrypted passwords can be used in `dblink` configuration files; for 7.1 and 7.3, do not assume this without a patch-specific source.
 - `TARGETS/XADATASOURCE_CLASS_NAME`: XADataSource class name for two-phase commit support.
 - `TARGETS/XADATASOURCE_URL_SETTER_NAME`: setter method for the XADataSource URL, commonly `setURL`.
 - `TARGETS/NLS_BYTE_PER_CHAR`: remote `CHAR` and `VARCHAR` length-unit conversion setting. Default is `0`; the documented range is `0` to `3`; set `1` when the remote server is Altibase or the remote `CHAR`/`VARCHAR` length unit is `BYTE`.

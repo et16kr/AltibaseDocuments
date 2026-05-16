@@ -1516,7 +1516,7 @@ Source purpose: Migration Center, Adapter for Oracle, Oracle-to-Altibase convers
 
 ### 16_dblink_external_connectors.md
 
-Source purpose: DB Link, DB Link Java compatibility, Hadoop Connector, third-party connector setup and procedures.
+Source purpose: DB Link, DB Link Java compatibility, DB Link property detail, Hadoop Connector, third-party connector setup and procedures.
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/DB Link User's Manual.md`
@@ -1534,10 +1534,13 @@ Source purpose: DB Link, DB Link Java compatibility, Hadoop Connector, third-par
   - `Manuals/Tools/Altibase_trunk/kor/Altibase 3rd Party Connector Guide.md`
 - Korean source authority/check:
   - `Manuals/Altibase_7.1/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_7.1/kor/Hadoop Connector User's Manual.md`
   - `Manuals/Altibase_7.3/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_7.3/kor/Hadoop Connector User's Manual.md`
   - `Manuals/Altibase_trunk/kor/DB Link User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_trunk/kor/Hadoop Connector User's Manual.md`
   - `3rd Party Guide for Altibase/kor/Spring Data JPA with Hibernate 6.4 User's Guide for Altibase.md`
   - `Technical Documents/kor/JavaCompatibility.md`
@@ -1545,7 +1548,7 @@ Source purpose: DB Link, DB Link Java compatibility, Hadoop Connector, third-par
 
 ### 17_kubernetes_aku_cloud.md
 
-Source purpose: Kubernetes deployment, AKU samples, container operations, release-note context.
+Source purpose: Kubernetes deployment, AKU samples, container object patterns, cloud/container boundaries, release-note context.
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/Installation Guide.md`

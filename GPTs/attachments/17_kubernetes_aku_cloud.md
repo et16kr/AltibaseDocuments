@@ -9,9 +9,11 @@
 ## Questions This File Can Answer
 
 - How should Altibase be deployed on Kubernetes?
+- Which source-backed container image, `MODE`, environment, volume, ConfigMap, and Service patterns appear in the Altibase Kubernetes guides?
 - When should I use a simple `Pod` or `Deployment`, and when should I use a `StatefulSet`?
 - What does AKU do during Pod startup, shutdown, scale-up, and scale-down?
 - Which Kubernetes objects, ports, persistent storage, probes, and services are needed for AKU?
+- What bootstrap steps are needed before the first AKU-managed Pod becomes ready?
 - How should Altibase replication be configured when Pod IP addresses are dynamic?
 - How can I verify that AKU synchronization and replication reset completed?
 - What cautions apply to abnormal Pod termination, master Pod failure, and accumulated replication logs?
@@ -21,6 +23,7 @@
 - 7.1: Altibase 7.1 Installation Guide, Administrator's Manual, Replication Manual, Utilities Manual, and Altibase AKU Sample Guide for Kubernetes.
 - 7.3: Kubernetes User's Guide for Altibase; Altibase AKU Sample Guide for Kubernetes; Altibase 7.3 Utilities Manual; Altibase 7.3 Release Notes.
 - 8.1: Altibase 8.1 verified source Kubernetes User's Guide for Altibase; Altibase AKU Sample Guide for Kubernetes; Utilities Manual; Altibase 8.1 Release Notes.
+- Container guide baselines: the Kubernetes User's Guide examples use Kubernetes `v1.20.4` and the Docker Hub image `altibase/altibase`; the AKU sample guide uses Kubernetes `v1.24.2` with an `ubuntu:18.04` sample image and in-container Altibase installation. Treat those as source examples, not a universal support matrix.
 
 ## Response Rules
 
@@ -32,6 +35,7 @@
 - Before giving production-ready commands, ask for Altibase version, Kubernetes version, container image, storage class, PV/PVC design, license basis, replica count, replication target tables, backup status, downtime window, and recovery plan.
 - For destructive operations such as `TRUNCATE`, `ALTER REPLICATION ... RESET`, `aku -p clean`, or manual master-pod recovery, require a backup and an explicit operator decision.
 - Do not depend on installer or console images for this topic. Express Kubernetes and AKU guidance as YAML, commands, Mermaid lifecycle flows, field/value descriptions, and expected results.
+- The selected sources do not prescribe a cloud-provider-specific runbook for EKS, GKE, AKS, or managed storage classes. For cloud/container production answers, state the Altibase and AKU requirements from this file, ask for the provider/storage/network details, and route provider-specific provisioning to the platform documentation.
 
 ## Fast Decision Map
 
@@ -39,10 +43,11 @@
 flowchart TD
   A[Altibase on Kubernetes question] --> B{Goal}
   B -- Quick single server test --> C[Pod or Deployment]
-  B -- Stable network endpoint --> D[Service]
-  B -- Persistent database files --> E[PV and PVC]
+  B -- Stable network endpoint --> D[Service or headless Service]
+  B -- Persistent database files --> E[PV and PVC or volume mount]
   B -- Replicated stateful cluster lifecycle --> F[StatefulSet plus AKU]
   B -- Manual two-node replication demo --> G[Deployment plus Service DNS names]
+  B -- First AKU startup blocked --> M[Bootstrap first Pod then aku -p start]
   F --> H{Lifecycle action}
   H -- First pod starts --> I[aku -p start as master pod]
   H -- Scale up or restart slave --> J[aku -p start as slave pod]
@@ -57,6 +62,8 @@ Version block: 7.1
 - The 7.1 Utilities Manual includes `aku` for StatefulSet-based Pod lifecycle assistance.
 - `AKU_SERVER_COUNT` can be set from 1 to 4 in the 7.1 Utilities Manual.
 - The AKU sample guide uses an Altibase 7.1 test environment and shows a 4-Pod StatefulSet.
+- The Kubernetes User's Guide example uses Kubernetes `v1.20.4`, Docker Hub image `altibase/altibase`, and `MODE=daemon` for simple Pod or Deployment tests; the manual replication example uses `MODE=replication` and `SLAVE_REP_PORT=20301`.
+- The AKU sample guide uses Kubernetes `v1.24.2`, `ubuntu:18.04`, a ConfigMap-driven entry script, and per-Pod Altibase homes named from `${HOSTNAME}`.
 - The 7.1 Utilities Manual documents comma-separated multiple `REPLICATIONS` blocks for splitting replication targets into separate groups.
 - Use `StatefulSet` with `podManagementPolicy: OrderedReady`, a headless `Service`, persistent storage, `startupProbe`, and `terminationGracePeriodSeconds` for AKU-based deployments.
 - For simple container tests, a `Pod` or `Deployment` can run the Altibase image with `MODE=daemon`, but that pattern does not provide the AKU lifecycle model by itself.
@@ -68,6 +75,7 @@ Version block: 7.3
 - The 7.3 utilities guidance keeps the same AKU lifecycle model: master pod, slave pod, `aku -p start`, `aku -p end`, `aku -p clean`, and `aku.conf`.
 - The 7.3 Utilities Manual documents comma-separated multiple `REPLICATIONS` blocks for splitting replication targets into separate groups.
 - The Kubernetes guide shows Pod, Deployment, Service, persistent volume, and manual replication examples. For production-style lifecycle management, prefer the AKU StatefulSet pattern.
+- The Kubernetes and AKU sample YAML fields remain example patterns; verify the target Kubernetes version and storage class before using them in production.
 
 Version block: 8.1
 
@@ -76,6 +84,7 @@ Version block: 8.1
 - The Altibase 8.1 verified source release notes call out multiple replication configuration support in `REPLICATIONS`, and the Utilities Manual keeps the same comma-separated block shape documented for 7.1 and 7.3.
 - The Altibase 8.1 verified source release notes mention multi-thread based parallel processing improvements and longer user, table, and partition names for replication targets.
 - Encrypted passwords generated by `altiEncrypt` can be used in AKU configuration files in the Altibase 8.1 verified source.
+- The selected Altibase 8.1 verified source keeps Kubernetes object examples generic and does not add a managed-cloud provider-specific deployment contract.
 
 ## Kubernetes Building Blocks
 
@@ -114,7 +123,38 @@ Building block: `StatefulSet`
 - Key settings: `serviceName`, `replicas`, `podManagementPolicy: OrderedReady`, `startupProbe`, `terminationGracePeriodSeconds`, volume mounts, and `volumeClaimTemplates`.
 - Stable host names: Pods are named like `altibase-sts-0`, `altibase-sts-1`; service DNS can be used as `<pod-name>.<service-name>`.
 
+Building block: container image and startup mode
+
+- Simple source examples use the Docker Hub image `altibase/altibase` and set environment variable `MODE=daemon` for an Altibase server test.
+- Manual replication source examples expose ports `20300` and `20301`, set `MODE=replication`, and set `SLAVE_REP_PORT=20301`.
+- AKU sample examples use a general Linux image, install Altibase into a persistent mount, and run an entry script that sources `set_linux.env` and `set_altibase.env`.
+- `ALTIBASE_HOME` can be derived from `${HOSTNAME}`, for example `/ALTIBASE/altibase_home_${MY_POD_NAME}`, so each StatefulSet Pod gets a stable per-host Altibase home.
+- For Kubernetes, the AKU sample guide says a hostname-based Altibase license is required; sample hostnames are `altibase-sts-0`, `altibase-sts-1`, `altibase-sts-2`, and `altibase-sts-3`.
+
 ## Minimal Kubernetes Patterns
+
+Pattern block: direct Altibase `Pod`
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: altibase
+  name: altibase-pod
+spec:
+  containers:
+  - image: altibase/altibase
+    name: altibase
+    ports:
+    - containerPort: 20300
+      protocol: TCP
+    env:
+    - name: MODE
+      value: daemon
+```
+
+Use this only for a simple test. A directly created Pod has no Deployment controller, no stable StatefulSet identity, and no AKU lifecycle management.
 
 Pattern block: simple Altibase `Deployment`
 
@@ -153,6 +193,64 @@ kubectl exec -it <pod-name> -- /bin/bash
 . set_altibase.env
 is
 ```
+
+Pattern block: NFS-backed volume mounts for simple Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: altibase-deploy-vol-node1
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: altibase
+        image: altibase/altibase
+        volumeMounts:
+        - name: altibase-nfs-dbs
+          mountPath: /home/altibase/altibase_home/dbs
+        - name: altibase-nfs-logs
+          mountPath: /home/altibase/altibase_home/logs
+        ports:
+        - containerPort: 20300
+          protocol: TCP
+        env:
+        - name: MODE
+          value: daemon
+      volumes:
+      - name: altibase-nfs-dbs
+        nfs:
+          server: <nfs-server>
+          path: /path/to/node1/dbs
+      - name: altibase-nfs-logs
+        nfs:
+          server: <nfs-server>
+          path: /path/to/node1/logs
+```
+
+- Purpose: preserve database files and online logs outside the Pod lifecycle.
+- Source shape: the Kubernetes User's Guide uses separate NFS paths for `dbs` and `logs`.
+- Caution: configure and validate the NFS server, durability, latency, permissions, and backup behavior before treating this as production storage.
+
+Pattern block: fixed Service for a simple Altibase Pod
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: altibase-service
+spec:
+  ports:
+  - port: 20300
+    targetPort: 20300
+  selector:
+    app: altibase-deploy-pod1
+```
+
+- Use a `Service` because Pod IPs are dynamic and can change when a Deployment recreates a Pod.
+- Verify from another Pod with `is -s <service-ip-or-dns> -port 20300 -u <user> -p <password>`.
 
 Pattern block: headless Service for AKU StatefulSet
 
@@ -212,6 +310,29 @@ Why these controls matter:
 - `startupProbe` waits until `aku -p start` creates `/tmp/aku_start_completed`.
 - `publishNotReadyAddresses: true` allows Pod DNS records to be published before all Pods are ready.
 - `terminationGracePeriodSeconds` must be long enough for `aku -p end` to flush and reset replication before the Pod exits.
+
+## AKU Sample Object Set
+
+Object block: `PersistentVolume`
+
+- Purpose: provide persistent storage for AKU-managed Pods.
+- Source sample: four `PersistentVolume` objects, `100Gi` each, `ReadWriteMany`, `persistentVolumeReclaimPolicy: Retain`, backed by NFS.
+- Important source note: the sample uses four different NFS paths, but says the same path can also be used because each Pod creates a unique subdirectory using its hostname.
+- Production caution: choose the storage backend for durability, latency, fencing, backup, and failure semantics; the selected sources do not validate a specific cloud storage class.
+
+Object block: `ConfigMap`
+
+- Purpose: hold `set_linux.env`, `set_altibase.env`, and `entry_point.sh` in the AKU sample.
+- `set_linux.env`: sample Linux tuning commands for limits and kernel parameters; adapt it to the actual Linux image and host policy.
+- `set_altibase.env`: sets `MY_POD_NAME=${HOSTNAME}`, `ALTIBASE_HOME=/ALTIBASE/altibase_home_${MY_POD_NAME}`, `ALTIBASE_NLS_USE=UTF8`, `ALTIBASE_PORT_NO=20300`, `ALTIBASE_REPLICATION_PORT_NO=20301`, `ALTIBASE_ADMIN_MODE=1`, `ALTIBASE_REMOTE_SYSDBA_ENABLE=1`, `PATH`, and `LD_LIBRARY_PATH`.
+- `entry_point.sh`: sources the environment files, traps `SIGTERM` and `TERM`, runs `aku -p end` before `server stop`, starts Altibase and `aku -p start` when the Pod's `ALTIBASE_HOME` already exists, and otherwise creates the home directory and waits for manual Altibase installation and AKU setup.
+- Secret caution: the sample keeps environment scripts in a ConfigMap, but passwords and license material should use `Secret` objects or an equivalent protected secret mechanism.
+
+Object block: AKU `StatefulSet`
+
+- Source sample uses `serviceName: altibase-svc`, `replicas: 4`, `updateStrategy: RollingUpdate`, `podManagementPolicy: OrderedReady`, `terminationGracePeriodSeconds: 60`, an executable `/CONFIGMAP/entry_point.sh`, ports `20300` and `20301`, `startupProbe` on `/tmp/aku_start_completed`, a persistent mount at `/ALTIBASE`, and a read-only ConfigMap mount at `/CONFIGMAP`.
+- `volumeClaimTemplates` request persistent storage for each Pod; match `accessModes` and storage size to the chosen storage class.
+- The first Pod can remain `0/1 READY` until Altibase is installed, the database is created, `aku.conf` is configured, and `aku -p start` creates `/tmp/aku_start_completed`.
 
 ## AKU Overview
 
@@ -483,6 +604,15 @@ Caution: do not manually create, drop, or modify replication objects created by 
 
 Use Service DNS names instead of Pod IP addresses because Pod IPs are dynamic.
 
+Deployment pattern:
+
+- Create one Deployment per Altibase replication node.
+- Mount persistent storage for `dbs` and `logs` on each node.
+- Expose container ports `20300` and `20301`.
+- Set `MODE=replication` and `SLAVE_REP_PORT=20301` in the Altibase container environment.
+- Create one Service per node, selecting the matching Pod label and exposing both `service-port` `20300` and `replication-port` `20301`.
+- In `CREATE REPLICATION`, use the other node's Service DNS name instead of a Pod IP address.
+
 Example on node 1:
 
 ```sql
@@ -519,15 +649,36 @@ For AKU-managed StatefulSets, configure replication targets in `aku.conf` and le
 ## AKU StatefulSet Procedure
 
 1. Prepare persistent storage for each Pod. The sample guide uses multiple NFS-backed `PersistentVolume` objects, but any storage type that meets persistence and performance requirements can be used.
-2. Prepare a ConfigMap or image content for environment setup and an entry script. The entry script must run `aku -p end` on `SIGTERM` before `server stop`.
-3. Set the Altibase environment. At minimum, configure `ALTIBASE_HOME`, `ALTIBASE_NLS_USE`, `ALTIBASE_PORT_NO`, `ALTIBASE_REPLICATION_PORT_NO`, `ALTIBASE_ADMIN_MODE=1`, `ALTIBASE_REMOTE_SYSDBA_ENABLE=1`, `PATH`, and `LD_LIBRARY_PATH` as appropriate for the image.
-4. Create a headless Service with `clusterIP: None`, `publishNotReadyAddresses: true`, and ports `20300` and `20301`.
-5. Create a StatefulSet with `podManagementPolicy: OrderedReady`, persistent volume claim templates, a `startupProbe` that checks `/tmp/aku_start_completed`, and sufficient `terminationGracePeriodSeconds`.
-6. Install Altibase and create the database on the first Pod if the persistent Altibase home is not already initialized.
-7. Create application tables that will be listed in the AKU replication targets.
-8. Copy `aku.conf.sample` to `aku.conf` and configure StatefulSet name, Service name, replica count, ports, password handling, startup/shutdown behavior, and `REPLICATIONS`.
-9. Start Altibase server, then run `aku -p start` on each Pod as it becomes eligible under ordered startup.
-10. Confirm that every Pod reaches `READY` and that `aku -i` reports the expected server and replication information.
+2. Obtain hostname-based Altibase licensing for the StatefulSet Pod names, for example `altibase-sts-0` through `altibase-sts-3` in the 4-Pod sample.
+3. Prepare a ConfigMap or image content for environment setup and an entry script. The entry script must run `aku -p end` on `SIGTERM` before `server stop`.
+4. Set the Altibase environment. At minimum, configure `ALTIBASE_HOME`, `ALTIBASE_NLS_USE`, `ALTIBASE_PORT_NO`, `ALTIBASE_REPLICATION_PORT_NO`, `ALTIBASE_ADMIN_MODE=1`, `ALTIBASE_REMOTE_SYSDBA_ENABLE=1`, `PATH`, and `LD_LIBRARY_PATH` as appropriate for the image.
+5. Create a headless Service with `clusterIP: None`, `publishNotReadyAddresses: true`, and ports `20300` and `20301`.
+6. Create a StatefulSet with `podManagementPolicy: OrderedReady`, persistent volume claim templates, a `startupProbe` that checks `/tmp/aku_start_completed`, and sufficient `terminationGracePeriodSeconds`.
+7. Install Altibase and create the database on the first Pod if the persistent Altibase home is not already initialized.
+8. Create application tables that will be listed in the AKU replication targets.
+9. Copy `aku.conf.sample` to `aku.conf` and configure StatefulSet name, Service name, replica count, ports, password handling, startup/shutdown behavior, and `REPLICATIONS`.
+10. Start Altibase server, then run `aku -p start` on each Pod as it becomes eligible under ordered startup.
+11. Confirm that every Pod reaches `READY` and that `aku -i` reports the expected server and replication information.
+
+First-Pod bootstrap shape from the sample guide:
+
+```bash
+kubectl exec -it altibase-sts-0 -- bash
+. /CONFIGMAP/set_altibase.env
+server create utf8 utf8
+server start
+is -sysdba
+```
+
+Inside `iSQL`, create the target tables that will be listed in `REPLICATIONS`, then exit. Copy and edit `aku.conf`, then start AKU:
+
+```bash
+cd $ALTIBASE_HOME/conf
+cp aku.conf.sample aku.conf
+aku -p start
+```
+
+Expected result: `aku -p start` reports master Pod startup and creates `/tmp/aku_start_completed`, allowing the StatefulSet startup probe to make `altibase-sts-0` ready and continue ordered Pod creation. Repeat the Altibase installation, database creation, table creation, `aku.conf`, and `aku -p start` setup for later Pods unless the image and persistent home already contain that work.
 
 ## Verification Cookbook
 
@@ -591,6 +742,12 @@ Issue block: Pod remains unready during first StatefulSet creation
 - Check: connect to the first Pod, source the Altibase environment, create or start the Altibase server, configure `aku.conf`, and run `aku -p start`.
 - Expected result: AKU creates `/tmp/aku_start_completed`, the Pod becomes ready, and the next ordered Pod can start.
 
+Issue block: First Pod is running but waiting for manual Altibase setup
+
+- Likely cause: the AKU sample `entry_point.sh` found that `${ALTIBASE_HOME}` did not exist, created the directory, and printed the required manual steps instead of starting Altibase.
+- Check: run `. /CONFIGMAP/set_altibase.env`, verify `ALTIBASE_HOME`, install Altibase if needed, create the database, create target tables, configure `aku.conf`, and run `aku -p start`.
+- Expected result: the persistent Altibase home exists, `server start` succeeds, `aku -p start` creates `/tmp/aku_start_completed`, and the startup probe marks the Pod ready.
+
 Issue block: `aku -p start` reports duplicate execution
 
 - Likely cause: `/tmp/aku_start_completed` already exists.
@@ -631,6 +788,12 @@ Issue block: Master Pod storage corruption
 - AKU does not recover data corruption caused by storage corruption in the master Pod.
 - Use storage-level recovery, Altibase backup/recovery procedures, or a validated replica-based recovery plan.
 
+Issue block: cloud or container platform uncertainty
+
+- The selected sources show generic Kubernetes objects, Docker Hub image examples, NFS examples, and an AKU sample with `ubuntu:18.04`; they do not validate a specific managed Kubernetes service, storage class, ingress/load balancer, or secret backend.
+- Ask for the Kubernetes provider, version, node OS, image build, storage class, network policy, Service exposure model, backup plan, and hostname-license basis.
+- Keep the Altibase requirements fixed: ports `20300` and `20301`, persistent database/log storage, stable Service DNS for replication, protected secrets, `OrderedReady` for AKU, and `aku -p end` before server shutdown.
+
 ## Customer Answer Templates
 
 Template: explain AKU
@@ -642,13 +805,19 @@ AKU is the Altibase Kubernetes Utility. It is used with Kubernetes StatefulSets 
 Template: production readiness checklist
 
 ```text
-Before deploying Altibase with AKU, confirm the Altibase version, Kubernetes version, storage backend, StatefulSet replica count, hostname-based license, Service DNS design, ports 20300 and 20301, replication target tables, backup and recovery plan, and secret handling for SYS credentials.
+Before deploying Altibase with AKU, confirm the Altibase version, Kubernetes provider and version, container image, storage backend, StatefulSet replica count, hostname-based license, Service DNS design, ports 20300 and 20301, replication target tables, backup and recovery plan, and secret handling for SYS credentials.
 ```
 
 Template: lifecycle order
 
 ```text
 The container should start Altibase first, then run aku -p start. Kubernetes startupProbe should wait for /tmp/aku_start_completed. On termination, the container should run aku -p end before server stop, and terminationGracePeriodSeconds must be long enough for AKU to finish.
+```
+
+Template: first AKU Pod bootstrap
+
+```text
+If the first StatefulSet Pod is Running but not Ready, check whether /tmp/aku_start_completed is missing because Altibase has not yet been installed or initialized in the persistent home. Source the Altibase environment, create or start the server, create the replication target tables, configure aku.conf, then run aku -p start so the startupProbe can succeed.
 ```
 
 ## Attachment Cross-References
@@ -661,3 +830,4 @@ The container should start Altibase first, then run aku -p start. Kubernetes sta
 ## Residual Scope
 
 - Kubernetes examples are limited to Altibase and AKU behavior from the selected source set. Production platform design still needs environment-specific review for storage, fencing, backup, secrets, licensing, observability, and Kubernetes version support.
+- The selected sources do not provide provider-specific EKS, GKE, AKS, cloud load balancer, managed storage, or secret-manager procedures. Use this attachment for Altibase/AKU requirements and request the platform-specific design details before giving production commands.
