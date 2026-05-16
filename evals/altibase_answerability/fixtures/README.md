@@ -7,3 +7,17 @@ calls.
 Fixture question records must still be source-backed if they are real benchmark
 questions. Synthetic fixtures used only for schema error handling should be clearly
 named and kept out of production manifests.
+
+## Current Fixtures
+
+- `seed_questions.jsonl`: seven source-backed seed records, one per required benchmark
+  domain. They are real benchmark examples but are intended for offline calibration, not
+  for satisfying production count gates.
+
+Run the seed fixture with:
+
+```bash
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --profile fixture
+```

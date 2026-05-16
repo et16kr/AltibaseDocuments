@@ -18,3 +18,8 @@ Suggested future files:
 - `replication_cdc_security_network.jsonl`
 - `errors_troubleshooting.jsonl`
 - `tools_apis_connectors_migration.jsonl`
+
+Production manifests should select the domain files above, not the fixture seed file.
+The validator's default `full` profile enforces the 200-question total and per-domain
+minimums from `../policy.json`. Use `--profile fixture` only for small offline
+calibration manifests such as `../manifests/fixture_seed.json`.

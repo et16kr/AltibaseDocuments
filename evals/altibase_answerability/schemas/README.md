@@ -13,3 +13,9 @@ These schemas define the durable benchmark exchange formats.
 
 Later script jobs should validate JSON and JSONL files against these schemas before
 running answer generation or judging.
+
+`../scripts/validate_benchmark.py` currently checks that every schema is itself valid,
+then validates policy, taxonomy, manifest, and question JSONL records. It also applies
+cross-record rules that JSON Schema cannot express, including unique question IDs,
+source-reference integrity, canonical-English expected facts, repository-local
+`source_path` existence, and answer-projection leakage boundaries.

@@ -169,3 +169,17 @@ Initial upload readiness thresholds are defined in `policy.json` and explained i
 - Do not let original manuals, source inventory files, source references, expected facts,
   required tokens, prohibited claims, canonical reference answers, source-language basis,
   difficulty, or retrieval-risk metadata enter answer-generation prompts.
+
+## Validation
+
+Use the validator before committing benchmark artifact changes:
+
+```bash
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --profile fixture
+```
+
+For production manifests, omit `--profile fixture`. The default full profile fails when
+the selected question set has fewer than 200 total records or any domain is below its
+required minimum in `policy.json`.
