@@ -23,6 +23,9 @@ Statuses:
 
 Every later job that touches a listed area should either close the entry, narrow it,
 split it into more specific entries, or record why the source limitation remains.
+Use `GPTs/reports/catalog_schema_extraction_rules.md` for the required item block,
+BNF-like syntax, runbook, example, cross-reference, and validation-note shapes when
+recording or remediating gaps.
 
 ## Gaps
 

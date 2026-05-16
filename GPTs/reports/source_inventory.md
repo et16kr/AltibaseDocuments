@@ -62,6 +62,22 @@ boundary still maps all selected source families to an upload unit, while the ne
 created matrix/register provide the missing concrete work queue for item-level coverage
 expansion.
 
+## J003 Catalog Schema And Extraction Rules Addendum
+
+J003 adds `GPTs/reports/catalog_schema_extraction_rules.md` as the reusable schema and
+Korean-first extraction contract for later rebuild jobs. Use it with the source
+inventory, coverage matrix, and gap register when converting source-backed material into
+customer-facing item blocks, BNF-like syntax, runbook steps, examples, cross-references,
+and validation notes.
+
+J003 does not change the 20 customer-facing attachment filenames and does not require
+direct attachment edits. The source-backed reason is that the existing attachment
+boundary still maps every selected source family to an upload unit; the missing piece
+for this job is a shared extraction and item-block structure for later item-level work.
+
+No new manual/source-backed coverage gap was discovered during J003. Existing post-J002
+gaps remain tracked in `GPTs/reports/gap_register.md`.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

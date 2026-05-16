@@ -22,6 +22,8 @@ Use this report together with:
   inventory.
 - `GPTs/reports/gap_register.md`: item-level gaps, residual source limits, and later
   remediation queue.
+- `GPTs/reports/catalog_schema_extraction_rules.md`: reusable item block schemas and
+  Korean-first extraction rules for later jobs.
 - `.codex-jobs/altibase-gpt-encyclopedia-rebuild/requirements.md`: rebuild contract,
   source policy, and success criteria.
 
@@ -33,6 +35,9 @@ Use this report together with:
   shapes.
 - `gap_register.md`: primary post-J002 register for manual/source-backed gaps and
   accepted source limitations.
+- `catalog_schema_extraction_rules.md`: reusable post-J003 schema for item blocks,
+  BNF-like syntax, runbooks, examples, cross-references, validation notes, and
+  Korean-first extraction.
 
 Later jobs should update `gap_register.md` when they discover, split, close, or accept a
 gap. Keep concrete source paths and internal labels in support reports only. Customer
@@ -109,8 +114,9 @@ for 8.1 customer-facing labels.
 
 ## Later-Job Handoff
 
-- J003 should define reusable item block schemas and extraction rules that match the
-  source families and coverage shapes in this matrix.
+- J003 defines reusable item block schemas and extraction rules in
+  `GPTs/reports/catalog_schema_extraction_rules.md`; later jobs should apply those
+  rules to the source families and coverage shapes in this matrix.
 - J004-J009 should use `general_reference_1_datatypes_properties` and close or split
   property/data type gaps from `GAP-J002-001`, `GAP-J002-004`, and `GAP-J002-005`.
 - J010-J016 should use `sql_reference`, `administrator_operations`, `migration_oracle`,
