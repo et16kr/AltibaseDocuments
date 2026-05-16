@@ -254,6 +254,23 @@ Notation rules:
 - Do not infer omitted defaults from a diagram if manuals disagree; record the source
   drift and choose the safer generated form.
 
+J010 SQL-specific rules:
+
+- Use `GPTs/reports/sql_syntax_inventory.md` to choose the statement family, target
+  attachment, and later-job ownership before converting a SQL Reference syntax diagram.
+- Convert a complex diagram into a root statement production plus named clause
+  productions; do not collapse backup/recovery, replication, partition, hint, or JSON
+  option trees into one opaque line.
+- Keep privileges, server state, archive-log mode, replication topology, file-system
+  preparation, destructive-operation cautions, and implicit-commit behavior outside the
+  BNF block as searchable notes.
+- Treat 8.1-only syntax such as `IF EXISTS`, `IF NOT EXISTS`, and Korean-source JSON
+  function options as 8.1-only unless the corresponding 7.1 or 7.3 Korean source proves
+  the same clause.
+- For generation-oriented statements, pair BNF with a minimal example, verification SQL,
+  and a missing-input prompt for exact patch level, object definition, environment, log,
+  or unsupported compatibility claims.
+
 ## Dictionary And Performance View Block Schema
 
 Use for meta tables, dictionary views, performance views, monitoring views, replication

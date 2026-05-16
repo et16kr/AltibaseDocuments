@@ -406,3 +406,41 @@ recording or remediating gaps.
     per-property default, range, dynamic-change, related-view, and caution blocks in
     the customer-facing attachment; later jobs should split or close those details
     only when their source-family scope requires them.
+
+### GAP-J010-001: SQL Reference syntax diagram conversion queue remains open
+
+- Status: `Open`
+- Source family and version scope: `sql_reference` with supporting
+  `administrator_operations`, `replication_manual`, `log_analyzer`,
+  `performance_tuning`, `migration_oracle`, `dblink_hadoop_external_connectors`,
+  `spatial_nifi_tableau`, and `stored_external_procedures`; Altibase 7.1, Altibase 7.3,
+  and Altibase 8.1 verified source.
+- Missing item or behavior: J010 inventories the SQL statement families and BNF-like
+  conversion rules, but customer-facing attachments still need source-audited item
+  blocks for the full SQL Reference syntax diagram queue. Existing compact BNF in the
+  attachments is partial and must be verified or expanded by statement family.
+- Affected attachments: `02_administration_operations.md`,
+  `03_sql_ddl_generation.md`,
+  `04_sql_dml_oracle_compatibility.md`, `05_data_types_properties.md`,
+  `08_performance_tuning_monitoring.md`, `09_replication_ha_cdc.md`,
+  `10_psm_stored_external_procedures.md`, `15_migration_oracle_compatibility.md`,
+  `16_dblink_external_connectors.md`, `18_security_ssl_tls.md`, and
+  `19_spatial_nifi_tableau_misc.md`.
+- Evidence: `GPTs/reports/sql_syntax_inventory.md`;
+  `GPTs/reports/image_inventory.md`; `GPTs/reports/coverage_matrix.md`;
+  `Manuals/Altibase_7.1/kor/SQL Reference.md`;
+  `Manuals/Altibase_7.3/kor/SQL Reference.md`;
+  `Manuals/Altibase_trunk/kor/SQL Reference.md`;
+  `Manuals/Altibase_7.1/kor/Replication Manual.md`;
+  `Manuals/Altibase_7.3/kor/Replication Manual.md`;
+  `Manuals/Altibase_trunk/kor/Replication Manual.md`;
+  `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`;
+  `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`;
+  `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`.
+- Required remediation shape: J011-J016 should follow the statement-family queue in
+  `GPTs/reports/sql_syntax_inventory.md`, adding or verifying compact BNF roots and
+  named clause productions, version scope, prerequisites, examples, validation SQL,
+  destructive-operation and implicit-commit cautions, and cross-references. J034 and
+  J039 should apply the same notation rules to PSM, external procedure, Spatial, and
+  tool-adjacent SQL. Keep Korean source precedence and customer-facing English
+  normalization throughout.

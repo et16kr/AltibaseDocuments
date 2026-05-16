@@ -93,6 +93,22 @@ ranges, units, dynamic-change support, or restart behavior. Those details remain
 work for J005-J009 and are tracked in `GPTs/reports/gap_register.md` as
 `GAP-J004-001`.
 
+## J010 SQL Syntax Inventory Addendum
+
+J010 creates `GPTs/reports/sql_syntax_inventory.md` as the SQL statement-family and
+BNF-like syntax conversion baseline for the `sql_reference` source family and adjacent
+administrator, replication, Log Analyzer, DB Link, migration, Spatial, and PSM syntax
+families. The inventory is generated from the Korean SQL Reference statement
+classification and statement chapters for Altibase 7.1, Altibase 7.3, and the Altibase
+8.1 verified source, with matching English manuals used only as extraction aids when
+consistent.
+
+J010 does not change the 20 customer-facing attachment filenames and does not directly
+rewrite the SQL attachments. The source-backed reason is that this job defines the
+shared SQL conversion queue and BNF rules, while item-level SQL expansion remains split
+across J011-J016 and later specialized jobs. The remaining SQL syntax conversion queue
+is tracked in `GPTs/reports/gap_register.md` as `GAP-J010-001`.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

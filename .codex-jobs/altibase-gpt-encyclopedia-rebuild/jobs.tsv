@@ -8,7 +8,7 @@ J006	Done	docs	LOB JSON and temporary object properties	Expand LOB, JSON, Tempor
 J007	Done	docs	Performance and optimizer properties	Expand buffer, checkpoint, optimizer, plan cache, sort, hash, and execution memory properties.
 J008	Done	docs	Session network security and replication properties	Expand timeout, NLS, client, network, SSL/TLS, and replication property blocks.
 J009	Done	docs	Property catalog QA and cross references	Validate property coverage, dynamic-change wording, cross-references, and remaining gaps.
-J010	ToDo	docs	SQL syntax inventory and BNF rules	Inventory SQL statement families and define BNF conversion rules for SQL syntax diagrams.
+J010	Done	docs	SQL syntax inventory and BNF rules	Inventory SQL statement families and define BNF conversion rules for SQL syntax diagrams.
 J011	ToDo	docs	Database tablespace and datafile SQL	Expand database, tablespace, datafile, archive, backup, restore, and recovery SQL coverage.
 J012	ToDo	docs	Table column constraint partition and queue DDL	Expand table, column, constraint, partition, LOB storage, and queue DDL coverage.
 J013	ToDo	docs	Index statistics hint and plan SQL	Expand index, statistics, hint, execution plan, and tuning-related SQL coverage.

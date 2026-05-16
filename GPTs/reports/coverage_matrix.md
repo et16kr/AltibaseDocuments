@@ -26,6 +26,8 @@ Use this report together with:
   Korean-first extraction rules for later jobs.
 - `GPTs/reports/property_inventory.md`: post-J004 General Reference 1 property-name
   and version-availability baseline for J005-J009 property expansion.
+- `GPTs/reports/sql_syntax_inventory.md`: post-J010 SQL statement-family inventory,
+  BNF-like conversion rules, and J011-J016 SQL expansion queue.
 - `.codex-jobs/altibase-gpt-encyclopedia-rebuild/requirements.md`: rebuild contract,
   source policy, and success criteria.
 
@@ -124,8 +126,10 @@ for 8.1 customer-facing labels.
   baseline with `general_reference_1_datatypes_properties` and close or split
   property/data type gaps from `GAP-J002-001`, `GAP-J002-004`, `GAP-J002-005`, and
   `GAP-J004-001`.
-- J010-J016 should use `sql_reference`, `administrator_operations`, `migration_oracle`,
-  and `spatial_nifi_tableau` to convert syntax diagrams and SQL families into compact
+- J010 created `GPTs/reports/sql_syntax_inventory.md` as the SQL statement-family
+  inventory, BNF conversion contract, and J011-J016 queue. J011-J016 should use that
+  report with `sql_reference`, `administrator_operations`, `migration_oracle`, and
+  `spatial_nifi_tableau` to convert syntax diagrams and SQL families into compact
   BNF-like item blocks.
 - J017-J021 should use `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
