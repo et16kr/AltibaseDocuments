@@ -369,3 +369,10 @@ recording or remediating gaps.
     log compression thresholds, recycle-bin sizing, system/user datafile defaults,
     tablespace extent defaults, and temporary page storage defaults. This gap remains
     `Open` for J006-J009 non-J005 property families and final catalog QA.
+  - J006 expanded LOB, JSON, Temporary LOB, PSM, VARRAY, and object-size property
+    blocks in `GPTs/attachments/05_data_types_properties.md`, including
+    `LOB_CACHE_THRESHOLD`, `ST_OBJECT_BUFFER_SIZE`, 8.1-only Temporary LOB properties,
+    PSM cursor/file/default-precision behavior, `PSM_MAX_DDL_REFERENCE_DEPTH`,
+    `LISTAGG_PRECISION`, and `VARRAY_MEMORY_MAXIMUM`. This gap remains `Open` for
+    J007-J009 performance/optimizer, network/security/replication, and final property
+    catalog QA.

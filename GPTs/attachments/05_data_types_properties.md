@@ -12,6 +12,7 @@
 - What are the practical differences between Altibase data types and familiar Oracle data types?
 - How do `FIXED`, `VARIABLE`, and `IN ROW` affect column storage?
 - What are the 8.1 `JSON` data type and Temporary LOB features?
+- Which LOB, JSON, Temporary LOB, PSM default-precision, VARRAY, and object-size properties should be checked?
 - Where are Altibase server properties checked, and how are static and dynamic property changes applied?
 - Which SQL should be used to inspect a property, change a dynamic property, and verify the related system view?
 - What do properties such as `LOG_FILE_SIZE`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, and `REPLICATION_SSL_PORT_NO` mean?
@@ -479,6 +480,14 @@ Restrictions:
 - Indexes cannot be created on LOB columns.
 - Avoid `NOT NULL` on LOB columns unless the application and driver behavior are tested.
 
+Related properties and checks:
+
+- `DISK_LOB_COLUMN_IN_ROW_SIZE`: default disk-table LOB `IN ROW` threshold.
+- `MEMORY_LOB_COLUMN_IN_ROW_SIZE`: default memory-table LOB `IN ROW` threshold.
+- `LOB_OBJECT_BUFFER_SIZE`: maximum LOB object buffer used for LOB parameters, variables, or return values in PSM and triggers.
+- `LOB_CACHE_THRESHOLD`: maximum client LOB cache size for small LOB values.
+- Check `SYSTEM_.SYS_COLUMNS_` for column storage metadata and `V$PROPERTY` for property values before changing DDL or LOB client behavior.
+
 ### Type Item: `CLOB`
 
 Purpose: large character object.
@@ -495,7 +504,7 @@ Use when: text can exceed ordinary `VARCHAR` or `NVARCHAR` limits.
 
 ### Type Item: Temporary LOB
 
-Version: 8.1 baseline feature.
+Version: Altibase 8.1 verified source feature. It is not part of the selected 7.1 or 7.3 baselines.
 
 Purpose: transient LOB created in memory at execution time for large text or binary processing.
 
@@ -518,9 +527,25 @@ Common creation cases:
 - LOB-type PSM variables.
 - PSM `ASSOCIATIVE ARRAY`, `VARRAY`, and package variables that use LOB types can be session Temporary LOB cases.
 
+Memory controls:
+
+- `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`: total memory allocation limit for Temporary LOB.
+- `MEMORY_TEMPLOB_PIECE_SIZE`: memory piece size used to split and store Temporary LOB data.
+- Temporary LOB memory is separate from `MEM_MAX_DB_SIZE`.
+- JSON processing uses Temporary LOB, so JSON failures or memory reviews should include these properties.
+
 Check SQL:
 
 ```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'TEMPORARY_LOB_ENABLE',
+  'MEMORY_TEMPLOB_MAX_ALLOC_SIZE',
+  'MEMORY_TEMPLOB_PIECE_SIZE'
+)
+ORDER BY name;
+
 SELECT type, id, alloced_size, open_count
 FROM V$TEMPORARY_LOBS;
 ```
@@ -554,7 +579,7 @@ Use the spatial attachment for spatial functions, indexes, and geometry operator
 
 ### Type Item: `JSON`
 
-Version: 8.1 baseline feature.
+Version: Altibase 8.1 verified source feature. It is not part of the selected 7.1 or 7.3 baselines.
 
 Purpose: store and retrieve JSON documents natively.
 
@@ -606,6 +631,24 @@ SELECT JSON_VALUE(payload, '$.customer.id') AS customer_id
 FROM app_event
 WHERE JSON_EXISTS(payload, '$.customer');
 ```
+
+Property and view checks:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'TEMPORARY_LOB_ENABLE',
+  'MEMORY_TEMPLOB_MAX_ALLOC_SIZE',
+  'MEMORY_TEMPLOB_PIECE_SIZE'
+)
+ORDER BY name;
+
+SELECT type, id, alloced_size, open_count
+FROM V$TEMPORARY_LOBS;
+```
+
+Version caution: do not use native `JSON`, JSON functions, `IS JSON`, or `V$TEMPORARY_LOBS` in generated 7.1 or 7.3 answers unless the customer provides a target-version source proving equivalent support.
 
 ## Oracle Data Type Conversion Guidance
 
@@ -1515,80 +1558,173 @@ WHERE name = 'VOLATILE_MAX_DB_SIZE';
 
 ### Property Item: `DISK_LOB_COLUMN_IN_ROW_SIZE`
 
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
 Meaning: default `IN ROW` threshold, in bytes, for LOB data stored directly in disk table segments.
 
 Default: `4000`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: treat as a database-initialization property. Verify the target database value before relying on default LOB placement.
 
 Range: `[0, 4000]`.
 
-Behavior: if the LOB data length is less than or equal to this value, it is saved in the table segment; otherwise it is saved in a LOB segment.
+Behavior: if the LOB data length is less than or equal to this value, the disk-table LOB value is saved in the table segment; otherwise it is saved in a LOB segment.
+
+Related items: `BLOB`, `CLOB`, `LOB (...) STORE AS`, `MEMORY_LOB_COLUMN_IN_ROW_SIZE`, and `03_sql_ddl_generation.md` for disk LOB tablespace clauses.
+
+Caution: this property applies to disk-table LOB storage. Memory tables use `MEMORY_LOB_COLUMN_IN_ROW_SIZE` instead.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'DISK_LOB_COLUMN_IN_ROW_SIZE';
 ```
 
 ### Property Item: `MEMORY_LOB_COLUMN_IN_ROW_SIZE`
 
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
 Meaning: default `IN ROW` threshold, in bytes, for LOB data stored directly in memory table rows.
 
 Default: `64`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: treat as a database-initialization property. Verify the target database value before relying on default memory LOB placement.
 
 Range: `[0, 4000]`.
 
 Behavior: if the LOB data length is less than or equal to this value, it is saved in the fixed area; otherwise it is saved in the variable area.
 
+Related items: `BLOB`, `CLOB`, `DISK_LOB_COLUMN_IN_ROW_SIZE`, and `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE`.
+
+Caution: this property applies to memory-table LOB storage. Disk tables use `DISK_LOB_COLUMN_IN_ROW_SIZE` instead.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'MEMORY_LOB_COLUMN_IN_ROW_SIZE';
 ```
 
 ### Property Item: `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE`
 
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
 Meaning: default `IN ROW` threshold, in bytes, for non-LOB variable columns in memory tables.
 
 Default: `32`.
 
-Dynamic Change Support: read-only/static; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+Dynamic Change Support: read-only; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: treat as a database-initialization property. Verify the target database value before relying on default variable-column placement.
 
 Range: `[0, 4000]`.
 
 Behavior: variable column data at or below the threshold is stored in the fixed area; larger data is stored in the variable area.
 
+Related items: `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `BYTE`, `VARBYTE`, `NIBBLE`, `BIT`, `VARBIT`, and `MEMORY_LOB_COLUMN_IN_ROW_SIZE`.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE';
 ```
 
 ### Property Item: `LOB_OBJECT_BUFFER_SIZE`
 
-Meaning: maximum internal LOB buffer size used by the server to process LOB values in PSM or triggers.
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum internal LOB data size, in bytes, used by the server while executing stored procedures, stored functions, or triggers whose parameters, internal variables, or return values are declared as LOB types.
 
 Default: `32000`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: configure statically before startup when the target version and workload require it, then verify with `V$PROPERTY`.
 
 Range: `[32000, 104857600]`.
+
+Related items: `BLOB`, `CLOB`, PSM LOB variables, trigger LOB variables, `TEMPORARY_LOB_ENABLE`, and `10_psm_stored_external_procedures.md`.
+
+Caution: this property limits server-side PSM or trigger LOB processing. It does not change ordinary table LOB column maximum size or client LOB API limits.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'LOB_OBJECT_BUFFER_SIZE';
+```
+
+### Property Item: `LOB_CACHE_THRESHOLD`
+
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum LOB data size, in bytes, that can be stored in the client LOB cache.
+
+Default: `8192`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: use `ALTER SESSION` for a session-level bulk-select test, or `ALTER SYSTEM` for a server-level default after testing the memory and fetch impact.
+
+Range: `[0, 524288]`.
+
+Values:
+
+- `0`: do not temporarily store LOB data in the client LOB cache.
+- Positive value: LOB data at or below the threshold can be cached on the client side.
+
+Behavior: raising the threshold can improve bulk-select speed when many fetched LOB values fit under the cache limit.
+
+Related items: client LOB fetch behavior, `V$SESSION.LOB_CACHE_THRESHOLD`, `12_c_cli_odbc_precompiler.md`, and `11_java_jdbc_spring.md`.
+
+Caution: tune from measured LOB fetch workload and client memory behavior; do not raise the value only because table LOB columns are large.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'LOB_CACHE_THRESHOLD';
+
+SELECT id, lob_cache_threshold
+FROM V$SESSION
+WHERE id = SESSION_ID();
+```
+
+### Property Item: `ST_OBJECT_BUFFER_SIZE`
+
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum size, in bytes, of a single spatial `Geometry Object`.
+
+Default: `32000` (`32KByte`).
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Change method: change only after confirming spatial object size requirements and memory impact.
+
+Range: `[32000, 104857600]`.
+
+Related items: `GEOMETRY`, spatial functions, `19_spatial_nifi_tableau_misc.md`.
+
+Caution: this property is an object-size limit for spatial geometry, not a LOB or JSON property. Include it when a customer asks about object-size limits across `LOB_OBJECT_BUFFER_SIZE`, `ST_OBJECT_BUFFER_SIZE`, or spatial data.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'ST_OBJECT_BUFFER_SIZE';
 ```
 
 ### Property Item Group: Free-page and memory-allocation thresholds
@@ -1855,13 +1991,15 @@ ORDER BY name;
 
 ### Property Item: `TEMPORARY_LOB_ENABLE`
 
-Version: 8.1 baseline property.
+Version: Altibase 8.1 verified source property. It is not part of the selected 7.1 or 7.3 baselines.
 
 Meaning: enables or disables Temporary LOB use. Native `JSON` processing requires Temporary LOB support.
 
 Default: `1`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: configure statically before startup if the site has a verified reason to disable Temporary LOB; verify the installed 8.1 server before changing a JSON workload.
 
 Range: `[0, 1]`.
 
@@ -1870,17 +2008,24 @@ Values:
 - `0`: do not use Temporary LOB.
 - `1`: use Temporary LOB.
 
+Related items: `JSON`, `V$TEMPORARY_LOBS`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, and `ALTER SESSION SET FREE TEMPORARY LOB`.
+
+Caution: `JSON` type processing uses Temporary LOB, so disabling this property can make native JSON workflows fail.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'TEMPORARY_LOB_ENABLE';
+
+SELECT type, id, alloced_size, open_count
+FROM V$TEMPORARY_LOBS;
 ```
 
 ### Property Item: `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`
 
-Version: 8.1 baseline property.
+Version: Altibase 8.1 verified source property. It is not part of the selected 7.1 or 7.3 baselines.
 
 Meaning: maximum total memory, in bytes, that Temporary LOB can allocate.
 
@@ -1888,38 +2033,50 @@ Default: `2147483648` (`2G`).
 
 Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
 
+Change method: use `ALTER SYSTEM` only after estimating Temporary LOB and JSON workload memory. Keep a rollback value and verify runtime use with `V$TEMPORARY_LOBS`.
+
 Range: `[16777216, 2^64]`.
 
 Behavior: if a Temporary LOB allocation request exceeds this limit, memory allocation fails and the transaction is treated as an error.
 
 Important note: Temporary LOB uses memory separate from `MEM_MAX_DB_SIZE`; size both limits deliberately.
 
+Related items: `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `V$TEMPORARY_LOBS`, `JSON`, PSM LOB variables, and `10_psm_stored_external_procedures.md`.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'MEMORY_TEMPLOB_MAX_ALLOC_SIZE';
+
+SELECT type, id, alloced_size, open_count
+FROM V$TEMPORARY_LOBS
+ORDER BY type, id;
 ```
 
 ### Property Item: `MEMORY_TEMPLOB_PIECE_SIZE`
 
-Version: 8.1 baseline property.
+Version: Altibase 8.1 verified source property. It is not part of the selected 7.1 or 7.3 baselines.
 
 Meaning: memory piece size, in bytes, used to split and store Temporary LOB data.
 
 Default: `1048576` (`1M`).
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only; do not change with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Change method: configure statically before startup when the Temporary LOB workload requires a different piece size.
 
 Range: `[32768, 1048576]`.
 
 Tuning note: larger values can improve large Temporary LOB processing speed but can waste memory for many small Temporary LOB values. Smaller values can improve memory efficiency for many small Temporary LOB values.
 
+Related items: `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `V$TEMPORARY_LOBS`, `JSON`, and PSM LOB variables.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'MEMORY_TEMPLOB_PIECE_SIZE';
 ```
@@ -2616,7 +2773,7 @@ WHERE name = 'SSL_KEY';
 
 ### Property Item: `PSM_CASE_SENSITIVE_MODE`
 
-Version: 7.1, 7.3, and 8.1 documented property; verify exact behavior against the installed build before treating it as newly introduced.
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
 
 Meaning: controls case sensitivity when PSM refers to `RECORD` and `ROWTYPE` column names or label names.
 
@@ -2634,14 +2791,154 @@ Values:
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'PSM_CASE_SENSITIVE_MODE';
 ```
 
+### Property Item: `PSM_CURSOR_OPEN_LIMIT`
+
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum number of cursors that one session can open by using the `DBMS_SQL` package.
+
+Default: `32`.
+
+Dynamic Change Support: source-sensitive. The detailed Korean property section says read-only, while the property alter-level summary lists `SYSTEM`; verify the installed target version before generating dynamic change SQL.
+
+Range: `[1, 1024]`.
+
+Related items: `DBMS_SQL`, dynamic SQL in PSM, `10_psm_stored_external_procedures.md`.
+
+Caution: if the customer hits cursor-limit errors in PSM, ask for Altibase version, current `V$PROPERTY` output, package code pattern, and open-cursor cleanup before recommending a value change.
+
+Check SQL:
+
+```sql
+SELECT name, attr, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'PSM_CURSOR_OPEN_LIMIT';
+```
+
+### Property Item: `PSM_FILE_OPEN_LIMIT`
+
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum number of stored-procedure file handles that can be open per session.
+
+Default: `16`.
+
+Dynamic Change Support: read-write; selected source summary lists `SYSTEM`.
+
+Change method: use `ALTER SYSTEM` only after verifying the installed version and file-handle workload.
+
+Range: `[0, 128]`.
+
+Related items: PSM file operations and `10_psm_stored_external_procedures.md`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'PSM_FILE_OPEN_LIMIT';
+```
+
+### Property Item: `PSM_IGNORE_NO_DATA_FOUND_ERROR`
+
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: controls whether a stored function suppresses the system-defined `NO_DATA_FOUND` exception when a PSM `SELECT ... INTO` statement returns no row.
+
+Default: `0`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Range: `[0, 1]`.
+
+Values:
+
+- `0`: raise `NO_DATA_FOUND` when the result set has no row.
+- `1`: do not raise `NO_DATA_FOUND` for stored functions in that case.
+
+Related items: PSM exception handlers, `SQLCODE`, `SQLERRM`, `10_psm_stored_external_procedures.md`.
+
+Caution: do not use this property to hide unexpected missing-data bugs. Ask for the stored function body and expected result cardinality before recommending `1`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'PSM_IGNORE_NO_DATA_FOUND_ERROR';
+```
+
+### Property Item: `PSM_MAX_DDL_REFERENCE_DEPTH`
+
+Version: documented in 7.3 and Altibase 8.1 verified source; not found in the selected 7.1 General Reference 1 inventory.
+
+Meaning: limits the recursive call or reference depth used while compiling PSM. If the configured depth is exceeded, compilation fails with an error.
+
+Default: `128`.
+
+Dynamic Change Support: read-write property in the detailed source; verify the installed target version before changing.
+
+Range: `[64, 2^32 - 1]`.
+
+Related items: nested PSM dependencies, recursive PSM calls, package compile order, `10_psm_stored_external_procedures.md`.
+
+Caution: when a compile error depends on object dependency depth, ask for Altibase version, full compile error, object dependency chain, and current property value before recommending a higher limit.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'PSM_MAX_DDL_REFERENCE_DEPTH';
+```
+
+### Property Item Group: PSM character default-precision properties
+
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
+Meaning: controls the precision assigned when PSM procedure parameters, function parameters, or function return values use `CHAR`, `VARCHAR`, `NCHAR`, or `NVARCHAR` without an explicit size.
+
+Properties:
+
+- `PSM_PARAM_AND_RETURN_WITHOUT_PRECISION_ENABLE`: default `1`; range `[0, 1]`; read-only. `1` uses the default-precision properties below; `0` makes the omitted size `1`.
+- `PSM_CHAR_DEFAULT_PRECISION`: read-only; range `[1, 65534]`; default 7.1 `32767`, 7.3 and 8.1 `32000`.
+- `PSM_VARCHAR_DEFAULT_PRECISION`: read-only; range `[1, 65534]`; default 7.1 `32767`, 7.3 and 8.1 `32000`.
+- `PSM_NCHAR_UTF16_DEFAULT_PRECISION`: read-only; range `[1, 32766]`; default 7.1 `16383`, 7.3 and 8.1 `16000`.
+- `PSM_NCHAR_UTF8_DEFAULT_PRECISION`: read-only; range `[1, 21843]`; default 7.1 `10921`, 7.3 and 8.1 `10666`.
+- `PSM_NVARCHAR_UTF16_DEFAULT_PRECISION`: read-only; range `[1, 32766]`; default 7.1 `16383`, 7.3 and 8.1 `16000`.
+- `PSM_NVARCHAR_UTF8_DEFAULT_PRECISION`: read-only; range `[1, 21843]`; default 7.1 `10921`, 7.3 and 8.1 `10666`.
+
+Use when: a PSM procedure or function declares character parameters or return values without precision and the customer asks why inferred size differs by version or character set.
+
+Related items: `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, PSM data type limits, and `10_psm_stored_external_procedures.md`.
+
+Caution: prefer explicit sizes in generated PSM signatures. Do not rely on these defaults when migrating Oracle PL/SQL or when a function return value is consumed by client code.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'PSM_PARAM_AND_RETURN_WITHOUT_PRECISION_ENABLE',
+  'PSM_CHAR_DEFAULT_PRECISION',
+  'PSM_VARCHAR_DEFAULT_PRECISION',
+  'PSM_NCHAR_UTF16_DEFAULT_PRECISION',
+  'PSM_NCHAR_UTF8_DEFAULT_PRECISION',
+  'PSM_NVARCHAR_UTF16_DEFAULT_PRECISION',
+  'PSM_NVARCHAR_UTF8_DEFAULT_PRECISION'
+)
+ORDER BY name;
+```
+
 ### Property Item: `LISTAGG_PRECISION`
 
-Version: documented in Altibase 7.1, 7.3, and 8.1.
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
 
 Meaning: size of the `VARCHAR` returned by `LISTAGG`.
 
@@ -2651,10 +2948,14 @@ Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
 
 Range: 7.1 `[0, 32000]`; 7.3 and 8.1 `[1, 32000]`.
 
+Related items: `LISTAGG`, aggregate SQL, `04_sql_dml_oracle_compatibility.md`.
+
+Caution: for 7.1, verify the installed version when `0` is proposed because 7.3 and 8.1 sources use `[1, 32000]`.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'LISTAGG_PRECISION';
 ```
@@ -2686,7 +2987,7 @@ WHERE name = 'REGEXP_MODE';
 
 ### Property Item: `VARRAY_MEMORY_MAXIMUM`
 
-Version: documented in Altibase 7.3 supplemental source and Altibase 8.1 verified source; verify exact availability against the installed build for 7.1 or patch-specific 7.3 environments.
+Version: documented in 7.3 and Altibase 8.1 verified source. It is not part of the selected 7.1 General Reference 1 inventory.
 
 Meaning: maximum memory, in bytes, allowed for one `VARRAY` variable.
 
@@ -2698,10 +2999,14 @@ Range: `[1048576, 2^64 - 1]`.
 
 Behavior: if a `VARRAY` expansion exceeds this limit, an error occurs.
 
+Related items: PSM `VARRAY`, `BULK COLLECT`, `10_psm_stored_external_procedures.md`, and `MEMORY_TEMPLOB_MAX_ALLOC_SIZE` when the `VARRAY` stores LOB values in 8.1 Temporary LOB workflows.
+
+Caution: for 7.1 answers, do not suggest PSM `VARRAY` or this property unless the customer provides a target build source proving support.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 ```
@@ -2712,8 +3017,10 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 - Use `04_sql_dml_oracle_compatibility.md` for DML, condition, function, and Oracle-conversion behavior affected by data type semantics.
 - Use `06_data_dictionary_performance_views.md` for `V$PROPERTY`, object-column, Temporary LOB, and version-availability verification SQL.
 - Use `08_performance_tuning_monitoring.md` when a property affects optimizer behavior, memory use, plan cache, result cache, statistics, or server tuning.
+- Use `10_psm_stored_external_procedures.md` when PSM default precision, `DBMS_SQL`, `NO_DATA_FOUND`, `VARRAY`, or Temporary LOB behavior appears inside stored code.
 - Use `12_c_cli_odbc_precompiler.md` for CLI, ODBC, Altibase C Interface, and APRE type conversion and LOB handling questions.
 - Use `18_security_ssl_tls.md` for SSL/TLS property names, ports, certificate paths, and security-facing property checks.
+- Use `19_spatial_nifi_tableau_misc.md` for `ST_OBJECT_BUFFER_SIZE`, `GEOMETRY`, and spatial object-size questions.
 
 ## Property Answer Checklist
 
@@ -2723,6 +3030,8 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 - State whether the change can use `ALTER SYSTEM`, `ALTER SESSION`, restart, or database recreation.
 - Include `V$PROPERTY` check SQL.
 - For 8.1 JSON or Temporary LOB issues, also include `V$TEMPORARY_LOBS`.
+- For PSM signature-size questions, prefer explicit `CHAR`, `VARCHAR`, `NCHAR`, or `NVARCHAR` precision over relying on default-precision properties.
+- For VARRAY questions, include the target version because `VARRAY_MEMORY_MAXIMUM` is documented in 7.3 and Altibase 8.1 verified source, not in the selected 7.1 inventory.
 - For SSL replication, distinguish `REPLICATION_SSL_PORT_NO` from ordinary `REPLICATION_PORT_NO` and ordinary client `SSL_PORT_NO`.
 - If the verified source does not define values, say to verify with `V$PROPERTY` instead of inventing defaults or ranges.
 

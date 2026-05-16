@@ -18,6 +18,24 @@ Duplicate detailed headings are preserved in the evidence columns. `PARALLEL_QUE
 
 J005 expands the customer-facing initialization and storage property blocks in `GPTs/attachments/05_data_types_properties.md`. It keeps the J004 property-name inventory as the version-availability baseline, then adds source-backed defaults, ranges, dynamic-change methods, `V$PROPERTY` checks, and cautions for path, memory, disk, volatile, log, recycle-bin, datafile, tablespace extent, and temporary-page storage properties. Korean source precedence was applied for extraction drift found in the matching English 8.1 manual, including temporary tablespace extent defaults such as `SYS_TEMP_TBS_EXTENT_SIZE` and `USER_TEMP_TBS_EXTENT_SIZE`.
 
+J006 expands the same customer-facing property catalog for LOB, JSON, Temporary LOB,
+PSM, VARRAY, and object-size properties. It keeps the attachment boundary unchanged
+and adds searchable blocks for `DISK_LOB_COLUMN_IN_ROW_SIZE`,
+`MEMORY_LOB_COLUMN_IN_ROW_SIZE`, `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE`,
+`LOB_OBJECT_BUFFER_SIZE`, `LOB_CACHE_THRESHOLD`, `ST_OBJECT_BUFFER_SIZE`,
+`TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`,
+`MEMORY_TEMPLOB_PIECE_SIZE`, `PSM_CURSOR_OPEN_LIMIT`, `PSM_FILE_OPEN_LIMIT`,
+`PSM_CASE_SENSITIVE_MODE`, `PSM_IGNORE_NO_DATA_FOUND_ERROR`,
+`PSM_MAX_DDL_REFERENCE_DEPTH`, PSM character default-precision properties,
+`LISTAGG_PRECISION`, and `VARRAY_MEMORY_MAXIMUM`. Korean source precedence was
+applied for version-sensitive defaults such as 7.1 versus 7.3/8.1 PSM default
+precision and for 8.1-only Temporary LOB property scope.
+
+J006 also records a customer-facing caution for `PSM_CURSOR_OPEN_LIMIT` because the
+detailed Korean property section says read-only while the property alter-level summary
+lists `SYSTEM`; answers should verify the installed target version before generating a
+dynamic change for that property.
+
 ## Scoped Sources
 
 - Altibase 7.1 Korean authority: `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
