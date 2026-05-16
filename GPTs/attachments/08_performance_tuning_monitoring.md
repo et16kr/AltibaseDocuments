@@ -2,15 +2,16 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
-- 7.3: Based on Altibase 7.3 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
-- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, SNMP Agent Guide, and release notes.
+- 7.1: Based on Altibase 7.1 Performance Tuning Guide, SQL Reference, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
+- 7.3: Based on Altibase 7.3 Performance Tuning Guide, SQL Reference, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
+- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide, SQL Reference, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, SNMP Agent Guide, and release notes.
 
 ## Questions This File Can Answer
 
 - How should a GPT diagnose slow SQL, high CPU, disk I/O, waits, lock waits, checkpoint stalls, plan-cache misses, or MVCC garbage-collection pressure?
 - How do I enable and read Altibase execution plan trees?
 - Which plan nodes, scan methods, join methods, statistics, hints, and properties matter for tuning?
+- Which exact statistics procedures, hint spellings, hint arguments, and plan-control SQL should be used?
 - Which performance views and SQL checks should be used before recommending an index, hint, SQL rewrite, or property change?
 - How should primary keys, unique keys, foreign keys, local unique constraints, and partitioned indexes be evaluated for performance and integrity?
 - How should Monitoring API functions be mapped to performance views?
@@ -19,9 +20,9 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.
-- 7.3: Altibase 7.3 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.
-- 8.1: Altibase 8.1 verified source Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide; Altibase 8.1 release notes.
+- 7.1: Altibase 7.1 Performance Tuning Guide; SQL Reference; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 7.3: Altibase 7.3 Performance Tuning Guide; SQL Reference; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 8.1: Altibase 8.1 verified source Performance Tuning Guide; SQL Reference; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide; Altibase 8.1 release notes.
 
 ## Response Rules
 
@@ -1534,6 +1535,8 @@ Plan node block: `PARALLEL-SCAN-COORDINATOR`
 
 ## Statistics
 
+Use this section before recommending `CREATE INDEX`, `ALTER INDEX`, hint hard-coding, SQL rewrites, or plan-cache changes.
+
 Statistics types used by the optimizer:
 
 Item block: `Table statistics`
@@ -1559,8 +1562,10 @@ Item block: `Database system statistics`
 
 - Average time to read one page.
 - Average time to read multiple pages.
+- Number of pages read at one time.
 - Average time spent hashing.
 - Average time spent comparing.
+- Average time spent storing rows in a memory temporary table.
 
 Statistics management procedures:
 
@@ -1575,12 +1580,291 @@ Statistics management procedures:
 - `LOCK_TABLE_STATS`
 - `UNLOCK_TABLE_STATS`
 
+Procedure block: `GATHER_DATABASE_STATS`
+
+```text
+GATHER_DATABASE_STATS (
+  estimate_percent    FLOAT   DEFAULT 0,
+  degree              INTEGER DEFAULT 0,
+  gather_system_stats BOOLEAN DEFAULT FALSE,
+  no_invalidate       BOOLEAN DEFAULT FALSE );
+```
+
+- Collects statistics for all tables in the database.
+- `estimate_percent` is a sampling ratio from `0` through `1.0`; omitted or `NULL` lets Altibase choose by object size.
+- `degree` is the number of parallel collection threads; default `0` lets Altibase choose.
+- `gather_system_stats = TRUE` also gathers system statistics. If it is `FALSE`, use `GATHER_SYSTEM_STATS` or `SET_SYSTEM_STATS` separately.
+- `no_invalidate = TRUE` avoids rebuilding related query plans. The default `FALSE` rebuilds related plans after statistics are collected.
+
+Procedure block: `GATHER_TABLE_STATS`
+
+```text
+GATHER_TABLE_STATS (
+  ownname          VARCHAR(128),
+  tabname          VARCHAR(128),
+  partname         VARCHAR(128) DEFAULT NULL,
+  estimate_percent FLOAT   DEFAULT 0,
+  degree           INTEGER DEFAULT 0,
+  no_invalidate    BOOLEAN DEFAULT FALSE );
+```
+
+- Collects statistics for one table and the indexes defined on that table.
+- `partname` limits collection to one table partition. `NULL` collects all partitions for the table.
+- Use this after bulk load, heavy delete/update, partition maintenance, or index design changes before comparing execution plans.
+
+Procedure block: `GATHER_INDEX_STATS`
+
+```text
+GATHER_INDEX_STATS (
+  ownname          VARCHAR(128),
+  idxname          VARCHAR(128),
+  estimate_percent FLOAT   DEFAULT 0,
+  degree           INTEGER DEFAULT 0,
+  no_invalidate    BOOLEAN DEFAULT FALSE );
+```
+
+- Collects statistics for one index.
+- Use this when the table statistics are acceptable but an index was rebuilt, recreated, or materially changed.
+
+Procedure block: `GATHER_SYSTEM_STATS`
+
+```text
+GATHER_SYSTEM_STATS ( );
+```
+
+- Collects database system statistics.
+- The source recommends collecting system statistics only once after server startup with representative load, such as repeated `FULL SCAN` and `INDEX SCAN`; otherwise some values may not be measured correctly.
+- This procedure requires `SYS`.
+
+Procedure block: `SET_TABLE_STATS`
+
+```text
+SET_TABLE_STATS (
+  ownname         VARCHAR(128),
+  tabname         VARCHAR(128),
+  partname        VARCHAR(128) DEFAULT NULL,
+  numrow          BIGINT  DEFAULT NULL,
+  numblk          BIGINT  DEFAULT NULL,
+  avgrlen         BIGINT  DEFAULT NULL,
+  onerowreadtime  DOUBLE  DEFAULT NULL,
+  no_invalidate   BOOLEAN DEFAULT FALSE );
+```
+
+- Manually changes table statistics.
+- Use only when measured or source-backed values are available; otherwise prefer `GATHER_TABLE_STATS`.
+
+Procedure block: `SET_INDEX_STATS`
+
+```text
+SET_INDEX_STATS (
+  ownname       VARCHAR(128),
+  index         VARCHAR(128),
+  keycnt        BIGINT DEFAULT NULL,
+  numpage       BIGINT DEFAULT NULL,
+  numdist       BIGINT DEFAULT NULL,
+  clusfct       BIGINT DEFAULT NULL,
+  idxheight     BIGINT DEFAULT NULL,
+  avgslotcnt    BIGINT DEFAULT NULL,
+  no_invalidate BOOLEAN DEFAULT FALSE );
+```
+
+- Manually changes index statistics.
+- `keycnt` is the number of index records, `numpage` is index page count, `numdist` is distinct key count, `clusfct` is clustering factor, `idxheight` is root-to-leaf depth, and `avgslotcnt` is average leaf-node slot count.
+
+Procedure block: `SET_COLUMN_STATS`
+
+```text
+SET_COLUMN_STATS (
+  ownname       VARCHAR(128),
+  tabname       VARCHAR(128),
+  colname       VARCHAR(128),
+  partname      VARCHAR(128) DEFAULT NULL,
+  numdist       BIGINT  DEFAULT NULL,
+  numnull       BIGINT  DEFAULT NULL,
+  avgclen       BIGINT  DEFAULT NULL,
+  minvalue      VARCHAR(48) DEFAULT NULL,
+  maxvalue      VARCHAR(48) DEFAULT NULL,
+  no_invalidate BOOLEAN DEFAULT FALSE );
+```
+
+- Manually changes column statistics.
+- For `DATE` values in `minvalue` or `maxvalue`, use the source format `YYYY-MM-DD HH:MI:SS`.
+
+Procedure block: `SET_SYSTEM_STATS`
+
+```text
+SET_SYSTEM_STATS (
+  statname  VARCHAR(100),
+  statvalue DOUBLE );
+```
+
+- Manually changes database system statistics.
+- Valid `statname` values are `SREAD_TIME`, `MREAD_TIME`, `MREAD_PAGE_COUNT`, `HASH_TIME`, `COMPARE_TIME`, and `STORE_TIME`.
+- This procedure requires `SYS`.
+
+Procedure block: `LOCK_TABLE_STATS` and `UNLOCK_TABLE_STATS`
+
+```text
+LOCK_TABLE_STATS (
+  ownname VARCHAR(128),
+  tabname VARCHAR(128) );
+
+UNLOCK_TABLE_STATS (
+  ownname VARCHAR(128),
+  tabname VARCHAR(128) );
+```
+
+- Locks or unlocks statistics for a table.
+- Package-qualified forms are source-shown for `DBMS_STATS.LOCK_TABLE_STATS` and `DBMS_STATS.UNLOCK_TABLE_STATS`; use package qualification when the customer specifically asks for the `DBMS_STATS` package form.
+
+Procedure block: `DBMS_STATS` package-specific index-stat helpers
+
+```text
+DBMS_STATS.SET_PRIMARY_KEY_STATS (
+  ownname          VARCHAR(128),
+  tabname          VARCHAR(128),
+  keycount         BIGINT DEFAULT NULL,
+  numpage          BIGINT DEFAULT NULL,
+  numdist          BIGINT DEFAULT NULL,
+  clusteringfactor BIGINT DEFAULT NULL,
+  indexheight      BIGINT DEFAULT NULL,
+  avgslotcnt       BIGINT DEFAULT NULL,
+  no_invalidate    BOOLEAN DEFAULT FALSE );
+
+DBMS_STATS.SET_UNIQUE_KEY_STATS (
+  ownname          VARCHAR(128),
+  tabname          VARCHAR(128),
+  colnamelist      VARCHAR(32000),
+  keycount         BIGINT DEFAULT NULL,
+  numpage          BIGINT DEFAULT NULL,
+  numdist          BIGINT DEFAULT NULL,
+  clusteringfactor BIGINT DEFAULT NULL,
+  indexheight      BIGINT DEFAULT NULL,
+  avgslotcnt       BIGINT DEFAULT NULL,
+  no_invalidate    BOOLEAN DEFAULT FALSE );
+```
+
+- Use `SET_PRIMARY_KEY_STATS` for a table's primary-key index statistics.
+- Use `SET_UNIQUE_KEY_STATS` for a unique-key index selected by `colnamelist`.
+- When a unique-key column was defined with `DESC`, specify that column name in uppercase in `colnamelist`.
+
 Statistics guidance:
 
 - Gather object statistics after large data changes.
 - The Performance Tuning Guide recommends collecting table statistics periodically, such as monthly, when data changes heavily.
 - Gather system statistics only after the server has started and has a representative load; otherwise some values may not be measured correctly.
 - `V$DBMS_STATS` stores collected statistics.
+- `V$LOCK_TABLE_STATS` shows whether table statistics are locked.
+- Treat manual `SET_*_STATS` calls as controlled overrides. Ask for measured values, target table or index names, partition names, and whether related plans may be invalidated.
+
+Collect statistics examples:
+
+```sql
+EXEC GATHER_SYSTEM_STATS();
+EXEC GATHER_TABLE_STATS('APP', 'ORDER_HISTORY');
+EXEC GATHER_TABLE_STATS('APP', 'ORDER_HISTORY', 'P_2026_01', 0.10, 4, FALSE);
+EXEC GATHER_INDEX_STATS('APP', 'IDX_ORDER_HISTORY_USER_DATE');
+```
+
+Manual statistics examples:
+
+```sql
+EXEC SET_SYSTEM_STATS('SREAD_TIME', 100);
+EXEC SET_TABLE_STATS('APP', 'ORDER_HISTORY', NULL, 1000000, 50000, 128);
+EXEC SET_INDEX_STATS('APP', 'IDX_ORDER_HISTORY_USER_DATE', 1000000, 20000, 250000);
+EXEC SET_COLUMN_STATS('APP', 'ORDER_HISTORY', 'USER_ID', NULL, 250000, 0, 8);
+EXEC DBMS_STATS.SET_PRIMARY_KEY_STATS('APP', 'ORDER_HISTORY', 1000000, 20000, 1000000, 900000, 3, 80, TRUE);
+EXEC DBMS_STATS.SET_UNIQUE_KEY_STATS('APP', 'ORDER_HISTORY', 'ORDER_ID', 1000000, 20000, 1000000, 900000, 3, 80, TRUE);
+```
+
+Statistics lock examples:
+
+```sql
+EXEC LOCK_TABLE_STATS('APP', 'ORDER_HISTORY');
+EXEC UNLOCK_TABLE_STATS('APP', 'ORDER_HISTORY');
+
+EXEC DBMS_STATS.LOCK_TABLE_STATS('APP', 'ORDER_HISTORY');
+EXEC DBMS_STATS.UNLOCK_TABLE_STATS('APP', 'ORDER_HISTORY');
+```
+
+Statistics verification:
+
+```sql
+SELECT type,
+       target_id,
+       column_id,
+       date,
+       sample_size,
+       num_row_change,
+       num_row,
+       num_page,
+       num_dist,
+       num_null,
+       avg_len,
+       avg_slot_count,
+       index_height,
+       clustering_factor,
+       sread_time,
+       mread_time,
+       mread_page_count,
+       hash_time,
+       compare_time,
+       store_time
+FROM V$DBMS_STATS
+ORDER BY type, target_id, column_id;
+
+SELECT u.user_name,
+       t.table_name,
+       s.date,
+       s.sample_size,
+       s.num_row_change,
+       s.num_row,
+       s.num_page,
+       s.avg_len
+FROM V$DBMS_STATS s,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE s.type = 'T'
+  AND s.target_id = t.table_oid
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY';
+
+SELECT u.user_name,
+       i.index_name,
+       s.date,
+       s.sample_size,
+       s.num_row AS key_count,
+       s.num_page,
+       s.num_dist,
+       s.avg_slot_count,
+       s.index_height,
+       s.clustering_factor
+FROM V$DBMS_STATS s,
+     SYSTEM_.SYS_INDICES_ i,
+     SYSTEM_.SYS_USERS_ u
+WHERE s.type = 'I'
+  AND s.target_id = i.index_id
+  AND i.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND i.index_name = 'IDX_ORDER_HISTORY_USER_DATE';
+
+SELECT u.user_name,
+       t.table_name,
+       l.stat_locked
+FROM V$LOCK_TABLE_STATS l,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE l.table_oid = t.table_oid
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'ORDER_HISTORY';
+```
+
+Statistics and plan invalidation answer pattern:
+
+- If the customer asks whether `GATHER_TABLE_STATS` or `SET_INDEX_STATS` can change an execution plan, answer yes: the statistics procedures have `no_invalidate`; the default `FALSE` rebuilds related plans, and `TRUE` avoids that rebuild.
+- If the customer wants a stable plan, ask whether the plan should stay stable because of a production incident, then consider `KEEP_PLAN`, `PLAN_CACHE_KEEP`, or statistics lock only after confirming the SQL, plan, statistics age, and operational risk.
 
 ```sql
 SELECT *
@@ -1598,6 +1882,55 @@ DELETE /*+ hint [hint ...] */ ...
 INSERT /*+ hint [hint ...] */ ...
 ```
 
+Hint argument patterns:
+
+```text
+optimization_hint ::= RULE | COST | FIRST_ROWS(n)
+
+access_hint ::=
+  FULL SCAN(table)
+| INDEX(table, index_name [, index_name ...])
+| INDEX ASC(table, index_name [, index_name ...])
+| INDEX_ASC(table, index_name [, index_name ...])
+| INDEX DESC(table, index_name [, index_name ...])
+| INDEX_DESC(table, index_name [, index_name ...])
+| NO INDEX(table, index_name [, index_name ...])
+| NO_INDEX(table, index_name [, index_name ...])
+
+join_order_hint ::= LEADING(table [, table ...]) | ORDERED
+
+join_method_hint ::=
+  USE_NL(table [, table ...])
+| USE_FULL_NL(table [, table ...])
+| USE_FULL_STORE_NL(table [, table ...])
+| USE_INDEX_NL(table [, table ...])
+| USE_SORT(table [, table ...])
+| USE_ONE_PASS_SORT(table [, table ...])
+| USE_TWO_PASS_SORT(table [, table ...])
+| USE_HASH(table [, table ...])
+| USE_ONE_PASS_HASH(table [, table ...])
+| USE_TWO_PASS_HASH(table [, table ...])
+| USE_INVERSE_HASH(table [, table ...])
+| USE_MERGE(table [, table ...])
+| USE_ANTI(table [, table ...])
+| NO_USE_HASH(table [, table ...])
+| NO_USE_MERGE(table [, table ...])
+| NO_USE_NL(table [, table ...])
+| NO_USE_SORT(table [, table ...])
+
+semi_anti_unnest_hint ::=
+  NL_SJ | HASH_SJ | SORT_SJ | MERGE_SJ
+| NL_AJ | HASH_AJ | SORT_AJ | MERGE_AJ
+| INVERSE_JOIN | NO_INVERSE_JOIN
+
+bucket_hint ::=
+  HASH BUCKET COUNT(n)
+| GROUP BUCKET COUNT(n)
+| SET BUCKET COUNT(n)
+
+parallel_hint ::= NOPARALLEL | NO_PARALLEL | PARALLEL integer
+```
+
 Hint processing rules:
 
 - If hint syntax is valid and Altibase can obey it, the hint is followed.
@@ -1605,12 +1938,20 @@ Hint processing rules:
 - The plus sign must immediately follow `/*` with no intervening space: `/*+`.
 - Hints can be specified in simple `SELECT`, `UPDATE`, `DELETE`, and `INSERT` statements.
 - In compound statements, use hints in the main query, subquery, or first query combined by set operators as appropriate.
+- Altibase also accepts an `ALTI_`-prefixed form for hints. For a multi-keyword hint, replace spaces with underscores after the prefix, for example `ALTI_FULL_SCAN`, `ALTI_INDEX_ASC`, `ALTI_NO_INDEX`, and `ALTI_HASH_BUCKET_COUNT`.
+- Table arguments should use the query block's table name or alias as it appears in the SQL.
+- Index arguments should use existing index names from `SYSTEM_.SYS_INDICES_`; verify the leading columns with `SYSTEM_.SYS_INDEX_COLUMNS_` before forcing `INDEX` or `INDEX ASC`.
+- If `ORDERED` conflicts with table order in a join-method hint, `ORDERED` takes priority.
+- For same-table join-method hints, Altibase evaluates the listed methods by cost and chooses the most efficient applicable method.
+- For `NO_USE_*` join-method hints, the optimizer chooses from methods other than the excluded method.
+- Semi-join and anti-join unnest hints such as `HASH_SJ` and `HASH_AJ` must be written inside the subquery and must match the unnesting join kind.
 
 Hint family block: `Optimization strategy`
 
 - `RULE`
 - `COST`
 - `FIRST_ROWS(n)`
+- `FIRST_ROWS(n)` is cost-based and affects join method selection for fastest first-row response.
 
 Hint family block: `Normalization`
 
@@ -1618,31 +1959,57 @@ Hint family block: `Normalization`
 - `DNF`
 - `NO_EXPAND`
 - `USE_CONCAT`
+- Use `DNF` or `USE_CONCAT` for OR-heavy predicates only after checking whether the expanded predicates can use separate indexes without excessive resource use.
+- Use `CNF` or `NO_EXPAND` when DNF expansion would make the predicate tree too large.
 
 Hint family block: `Join order`
 
 - `LEADING`
 - `ORDERED`
+- `LEADING` makes the hinted tables join earlier.
+- `ORDERED` follows the `FROM` clause table order.
 
 Hint family block: `Join method`
 
 - `USE_NL`, `USE_FULL_NL`, `USE_FULL_STORE_NL`, `USE_INDEX_NL`
 - `USE_SORT`, `USE_ONE_PASS_SORT`, `USE_TWO_PASS_SORT`
-- `USE_HASH`, `USE_ONE_PASS_HASH`, `USE_TWO_PASS_HASH`
+- `USE_HASH`, `USE_ONE_PASS_HASH`, `USE_TWO_PASS_HASH`, `USE_INVERSE_HASH`
 - `USE_MERGE`
 - `USE_ANTI`
 - `NO_USE_HASH`, `NO_USE_MERGE`, `NO_USE_NL`, `NO_USE_SORT`
+
+Hint family block: `Subquery unnest semi/anti join method`
+
+- `NL_SJ`, `HASH_SJ`, `SORT_SJ`, `MERGE_SJ`
+- `NL_AJ`, `HASH_AJ`, `SORT_AJ`, `MERGE_AJ`
+- `INVERSE_JOIN`
+- `NO_INVERSE_JOIN`
+- Put these hints inside the nested subquery, not only in the main query.
+- Use `_SJ` forms for inner/semi-join unnesting and `_AJ` forms for anti-join unnesting.
+
+Hint family block: `Query conversion`
+
+- `NO_MERGE`
+- `NO_TRANSITIVE_PRED`
+- `PUSH_PRED`
+- `UNNEST`
+- `NO_UNNEST`
 
 Hint family block: `Temporary result storage`
 
 - `TEMP_TBS_MEMORY`
 - `TEMP_TBS_DISK`
+- Prefer `TEMP_TBS_MEMORY` only when intermediate results are small enough to justify memory use.
+- Prefer `TEMP_TBS_DISK` when intermediate results are very large and resource containment is more important than raw speed.
 
 Hint family block: `Hash bucket count`
 
 - `HASH BUCKET COUNT(n)`
 - `GROUP BUCKET COUNT(n)`
 - `SET BUCKET COUNT(n)`
+- `HASH BUCKET COUNT(n)` applies to `HASH` and `HSDS` nodes.
+- `GROUP BUCKET COUNT(n)` applies to `GRAG` and `AGGR` nodes.
+- `SET BUCKET COUNT(n)` applies to `SITS` and `SDIF` nodes.
 
 Hint family block: `Group and duplicate processing`
 
@@ -1660,6 +2027,7 @@ Hint family block: `View and subquery conversion`
 - `NO_UNNEST`
 - `NL_SJ`, `HASH_SJ`, `SORT_SJ`, `MERGE_SJ`
 - `NL_AJ`, `HASH_AJ`, `SORT_AJ`, `MERGE_AJ`
+- `INVERSE_JOIN`, `NO_INVERSE_JOIN`
 
 Hint family block: `Access method`
 
@@ -1679,18 +2047,36 @@ Hint family block: `Plan cache and result cache`
 - `PLAN_CACHE_KEEP`
 - `RESULT_CACHE`
 - `TOP_RESULT_CACHE`
+- `NO_PLAN_CACHE` keeps newly created plans out of the SQL plan cache.
+- `KEEP_PLAN` prevents a plan from being regenerated even if referenced table statistics change.
+- `PLAN_CACHE_KEEP` keeps the plan out of victim selection in the plan cache; it is applied during hard prepare.
+- `RESULT_CACHE` caches intermediate results.
+- `TOP_RESULT_CACHE` caches final results.
+
+Hint family block: `Parallel processing`
+
+- `NOPARALLEL`
+- `NO_PARALLEL`
+- `PARALLEL integer`
+- Use these for partitioned-table scan parallelism only after checking partition count, query shape, and CPU capacity.
+
+Hint family block: `Simple query and simple filter`
+
+- `EXEC_FAST`
+- `NO_EXEC_FAST`
+- `SERIAL_FILTER`
+- `NO_SERIAL_FILTER`
 
 Hint family block: `Other execution controls`
 
 - `APPEND`
-- `EXEC_FAST`
-- `NO_EXEC_FAST`
-- `NOPARALLEL`
-- `PARALLEL integer`
-- `NO_PARALLEL`
 - `HIGH_PRECISION`
+- `NO_DELAY`
 - `NO DELAY`
 - `DELAY`
+- `APPEND` is for `INSERT` and requests Direct-Path INSERT.
+- `DELAY` enables delayed execute behavior for hierarchy, sorting, windowing, grouping, set, and distinct operations so execution is done during fetch.
+- `NO_DELAY` or `NO DELAY` disables that delayed execute behavior.
 
 Access-method hint conflict rules:
 

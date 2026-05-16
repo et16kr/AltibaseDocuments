@@ -180,6 +180,16 @@ Korean source.
   `04_sql_dml_oracle_compatibility.md`, `08_performance_tuning_monitoring.md`.
 - Required conversion shape: Hint family blocks with exact token spelling, argument
   BNF, risk/when-to-use notes, example SQL, and plan/check SQL cross-references.
+- J013 completion note: `GPTs/attachments/08_performance_tuning_monitoring.md` now
+  contains source-audited statistics procedure signatures, statistics verification SQL,
+  full hint-family token coverage from the SQL Reference hint table, argument patterns,
+  `ALTI_` hint alias rules, and plan/statistics invalidation guidance. J013 also adds
+  `V$DBMS_STATS` and `V$LOCK_TABLE_STATS` object blocks in
+  `GPTs/attachments/06_data_dictionary_performance_views.md` and sharpens index notes
+  in `GPTs/attachments/03_sql_ddl_generation.md`. No direct J013 change was needed in
+  `GPTs/attachments/04_sql_dml_oracle_compatibility.md`; DML hint placement is covered
+  through the tuning attachment's `SELECT`/`INSERT`/`UPDATE`/`DELETE` hint syntax and
+  cross-references.
 
 ### J014 Baseline: Privilege And Schema Object SQL
 

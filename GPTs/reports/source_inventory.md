@@ -150,6 +150,45 @@ movement, table maintenance, `LOCK TABLE`, `CREATE QUEUE`, `ALTER QUEUE`, `DROP 
 `GPTs/attachments/04_sql_dml_oracle_compatibility.md` for queue DML wait semantics and
 `GPTs/attachments/05_data_types_properties.md` for LOB DDL cross-reference coverage.
 
+## J013 Index, Statistics, Hint, And Plan SQL Addendum
+
+J013 uses the `sql_reference`, `performance_tuning`,
+`stored_external_procedures`, and `general_reference_2_dictionary_views` source
+families for Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source. Korean
+manuals remain authoritative for index syntax, optimizer statistics, hints, execution
+plans, and dictionary/performance view columns; matching English manuals were used only
+for English extraction when consistent.
+
+J013 updates `GPTs/attachments/08_performance_tuning_monitoring.md` with exact
+statistics procedure signatures, `DBMS_STATS` package-specific index-stat helpers,
+statistics verification SQL, full hint-family token coverage, hint argument patterns,
+the `ALTI_` hint alias rule, and plan/statistics invalidation guidance. It updates
+`GPTs/attachments/06_data_dictionary_performance_views.md` with object blocks for
+`V$DBMS_STATS` and `V$LOCK_TABLE_STATS`, and
+`GPTs/attachments/03_sql_ddl_generation.md` with sharper index-generation notes for
+function-based index restrictions, `ALTER INDEX` storage caveats, and prefixed versus
+non-prefixed partitioned indexes. No direct change was required in
+`GPTs/attachments/04_sql_dml_oracle_compatibility.md`; J013 DML hint placement is
+covered by the tuning attachment's `SELECT`/`INSERT`/`UPDATE`/`DELETE` hint syntax.
+
+Scoped source paths checked for J013:
+
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/kor/Performance Tuning Guide.md`
+- `Manuals/Altibase_7.3/kor/Performance Tuning Guide.md`
+- `Manuals/Altibase_trunk/kor/Performance Tuning Guide.md`
+- `Manuals/Altibase_7.1/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_7.3/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_trunk/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+
+No new source family was added. The shared SQL syntax conversion queue remains open for
+J014-J016 and later specialized SQL families.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

@@ -570,6 +570,8 @@ Generation notes:
 - `LOCALUNIQUE` enforces uniqueness within each local index partition. Use ordinary `UNIQUE` only when the requested uniqueness must be global and the target table/storage type supports the required non-partitioned index.
 - A function-based index can use built-in functions or user-defined functions. User-defined functions used in the expression must be `DETERMINISTIC`.
 - A function-based index can be chosen by the optimizer only when `QUERY_REWRITE_ENABLE = 1`.
+- A function-based index expression can include target-table columns, constants, deterministic built-in SQL functions, and deterministic user-defined functions. Do not qualify expression columns with schema or table names.
+- Do not generate function-based index expressions that contain aggregate functions such as `SUM`, non-deterministic functions such as `SYSDATE`, subqueries, sequences, pseudo columns, `PRIOR`, or LOB data. Always write parentheses for functions, even when the function has no arguments.
 - An index cannot be created on a LOB column.
 - A direct key index stores the direct key with the index entry. It can reduce index scan cost, but cannot be created on disk-resident indexes, compressed columns, or encrypted columns. For composite direct key indexes, the first column is the direct key.
 - Direct key `MAXSIZE` defaults to `8` when omitted. Use direct key indexes only for source-supported scalar type families; unsupported full-key direct key definitions fail, while partial-key type families store only the configured prefix.
@@ -577,7 +579,9 @@ Generation notes:
 - For disk-table indexes, `NOLOGGING` can improve build speed but may require dropping and rebuilding the index after a system or media fault if the index becomes inconsistent.
 - `PARALLEL integer` is an index-build hint. Valid generation range is `0` through `512`; omitted or `0` lets Altibase derive the thread count from `INDEX_BUILD_THREAD_COUNT` or the host CPU count.
 - Use `ALTER INDEX ... REBUILD` for inconsistent disk B-tree indexes or after changing direct-key attributes. `AGING` is for disk indexes; `REORGANIZATION` is for memory B-tree index space cleanup.
+- `ALTER INDEX ... STORAGE (INITEXTENTS ...)` ignores `INITEXTENTS`; do not present it as an effective change. Use `NEXTEXTENTS`, `MINEXTENTS`, or `MAXEXTENTS` only when disk index segment management is the real target.
 - `IF NOT EXISTS` for `CREATE INDEX` and `IF EXISTS` for `DROP INDEX` are Altibase 8.1 verified source syntax. Omit both for 7.1 and 7.3.
+- For a partitioned index, describe whether the design is prefixed or non-prefixed. A prefixed index has the same leftmost partition-key column and leftmost index column; otherwise it is non-prefixed.
 
 Index type selection flow:
 

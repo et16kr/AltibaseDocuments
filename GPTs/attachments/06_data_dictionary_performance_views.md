@@ -2091,6 +2091,53 @@ SELECT current_cache_size, current_cache_obj_count, cache_hit_count, cache_miss_
 FROM V$SQL_PLAN_CACHE;
 ```
 
+### Object Block: `V$DBMS_STATS`
+
+Purpose: shows collected database statistics for system, table, index, and column targets.
+
+Key columns: `TYPE`, `TARGET_ID`, `COLUMN_ID`, `DATE`, `SAMPLE_SIZE`, `NUM_ROW_CHANGE`, `NUM_ROW`, `NUM_PAGE`, `NUM_DIST`, `NUM_NULL`, `AVG_LEN`, `ONE_ROW_READ_TIME`, `AVG_SLOT_COUNT`, `INDEX_HEIGHT`, `CLUSTERING_FACTOR`, `SREAD_TIME`, `MREAD_TIME`, `MREAD_PAGE_COUNT`, `HASH_TIME`, `COMPARE_TIME`, `STORE_TIME`, `MIN`, `MAX`, `META_SPACE`, `USED_SPACE`, `AGEABLE_SPACE`, `FREE_SPACE`.
+
+Type values: `S` = system, `T` = table, `I` = index, `C` = column.
+
+Representative SQL:
+
+```sql
+SELECT type,
+       target_id,
+       column_id,
+       date,
+       sample_size,
+       num_row_change,
+       num_row,
+       num_page,
+       num_dist,
+       avg_slot_count,
+       index_height,
+       clustering_factor
+FROM V$DBMS_STATS
+ORDER BY type, target_id, column_id;
+```
+
+### Object Block: `V$LOCK_TABLE_STATS`
+
+Purpose: shows whether table statistics are locked.
+
+Key columns: `TABLE_OID`, `STAT_LOCKED`.
+
+Value notes: `STAT_LOCKED` is `NONE` when table statistics are unlocked and `LOCKED` when they are locked.
+
+Representative SQL:
+
+```sql
+SELECT u.user_name, t.table_name, l.stat_locked
+FROM V$LOCK_TABLE_STATS l,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE l.table_oid = t.table_oid
+  AND t.user_id = u.user_id
+ORDER BY u.user_name, t.table_name;
+```
+
 ### Object Block: `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, and `SYSTEM_.SYS_REPL_ITEMS_`
 
 Purpose: store replication definitions, hosts, and replicated items.

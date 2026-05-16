@@ -459,3 +459,12 @@ recording or remediating gaps.
   `GPTs/attachments/04_sql_dml_oracle_compatibility.md` and LOB storage cross-reference
   guidance in `GPTs/attachments/05_data_types_properties.md`. The shared syntax queue
   remains open for J013-J016 and later specialized SQL families.
+- J013 update: The index, optimizer statistics, hint, execution-plan, and
+  tuning-related SQL family is source-audited and expanded in
+  `GPTs/attachments/08_performance_tuning_monitoring.md`, with supporting
+  `V$DBMS_STATS` and `V$LOCK_TABLE_STATS` object blocks in
+  `GPTs/attachments/06_data_dictionary_performance_views.md` and additional
+  index-generation cautions in `GPTs/attachments/03_sql_ddl_generation.md`. No direct
+  J013 change was required in `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
+  because DML hint placement is covered in the tuning attachment. The shared syntax
+  queue remains open for J014-J016 and later specialized SQL families.
