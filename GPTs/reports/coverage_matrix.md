@@ -237,7 +237,15 @@ for 8.1 customer-facing labels.
   `02_administration_operations.md` and recorded source-family traceability in
   `GPTs/reports/source_inventory.md` plus the `GAP-J002-018` update in
   `GPTs/reports/gap_register.md`.
-- J030-J033 should use operations, replication, networking, and TLS source families to
+- J030 expanded administration, account, privilege, storage, and tablespace lifecycle
+  runbooks in `02_administration_operations.md`, including schema-owner/runtime-user
+  provisioning, account password-policy and TCP-access changes, least-privilege
+  grant/revoke review, user/role retirement, storage model selection, planned
+  tablespace state changes, undo tablespace capacity expansion, post-tablespace-DDL
+  backup follow-up, and tablespace access mismatch triage. Source-family traceability
+  is recorded in `GPTs/reports/source_inventory.md` plus the `GAP-J002-018` update in
+  `GPTs/reports/gap_register.md`.
+- J031-J033 should use replication, operations, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.

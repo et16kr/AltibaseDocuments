@@ -21,7 +21,7 @@
 - 8.1: Altibase 8.1 verified source Administrator's Manual.
 - SQL Reference: datafile rename phase wording for 7.1, 7.3, and Altibase 8.1 verified source.
 - iLoader manuals: table-level logical backup and restore command behavior.
-- General Reference: backup, archive, log-anchor, snapshot, and incremental-backup properties and views.
+- General Reference: backup, archive, log-anchor, snapshot, incremental-backup, user, privilege, password-policy, and tablespace-access properties and views.
 
 ## Altibase Hybrid Architecture
 - Altibase supports memory, disk, and volatile tablespaces in one database engine. Treat this as an operational storage choice, not a blanket performance guarantee.
@@ -479,6 +479,259 @@ WHERE g.grantee_id = 0
 ORDER BY owner.user_name, t.table_name, p.priv_name;
 ```
 
+## Administration Account and Privilege Runbooks
+
+Use these runbooks when the user asks for a copy-ready DBA workflow rather than only SQL syntax. Use `03_sql_ddl_generation.md` for full grammar and `06_data_dictionary_performance_views.md` for expanded metadata view blocks.
+
+Runbook: provision an application schema owner and runtime account
+
+Inputs to confirm:
+
+1. Altibase version and whether 8.1-only `IF NOT EXISTS` syntax is allowed.
+2. Schema owner name, runtime user name, default data tablespace, temporary tablespace, and every additional data tablespace that must be accessible.
+3. Whether password case sensitivity is enabled through `CASE_SENSITIVE_PASSWORD`.
+4. Required object privileges for the runtime account.
+
+Preflight:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('CASE_SENSITIVE_PASSWORD', 'MEM_MAX_DB_SIZE', 'VOLATILE_MAX_DB_SIZE')
+ORDER BY name;
+
+SELECT id, name, type, state
+FROM V$TABLESPACES
+WHERE name IN ('APP_MEM_TBS', 'APP_DISK_TBS', 'APP_TEMP_TBS')
+ORDER BY id;
+```
+
+Provisioning example:
+
+```sql
+CREATE USER app_owner IDENTIFIED BY app_owner_password
+DEFAULT TABLESPACE app_mem_tbs
+TEMPORARY TABLESPACE app_temp_tbs
+ACCESS app_disk_tbs ON
+LIMIT (
+    FAILED_LOGIN_ATTEMPTS 5,
+    PASSWORD_LOCK_TIME 1,
+    PASSWORD_LIFE_TIME 90,
+    PASSWORD_GRACE_TIME 7,
+    PASSWORD_REUSE_MAX 5,
+    PASSWORD_REUSE_TIME 30
+);
+
+CREATE USER app_runtime IDENTIFIED BY app_runtime_password
+DEFAULT TABLESPACE app_mem_tbs
+TEMPORARY TABLESPACE app_temp_tbs
+ACCESS app_disk_tbs ON;
+
+CREATE ROLE app_runtime_dml_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON app_owner.app_table TO app_runtime_dml_role;
+GRANT app_runtime_dml_role TO app_runtime;
+```
+
+Hardening after creation:
+
+```sql
+REVOKE CREATE TABLE, CREATE SEQUENCE, CREATE PROCEDURE, CREATE VIEW,
+       CREATE TRIGGER, CREATE SYNONYM, CREATE MATERIALIZED VIEW,
+       CREATE DATABASE LINK, CREATE LIBRARY
+FROM app_runtime;
+```
+
+Verification:
+
+```sql
+SELECT u.user_name,
+       u.user_type,
+       u.account_lock,
+       u.password_limit_flag,
+       u.failed_login_count,
+       u.password_expiry_date,
+       u.disable_tcp,
+       dt.name AS default_tablespace,
+       tt.name AS temporary_tablespace
+FROM SYSTEM_.SYS_USERS_ u,
+     V$TABLESPACES dt,
+     V$TABLESPACES tt
+WHERE u.default_tbs_id = dt.id
+  AND u.temp_tbs_id = tt.id
+  AND u.user_name IN ('APP_OWNER', 'APP_RUNTIME', 'APP_RUNTIME_DML_ROLE')
+ORDER BY u.user_type, u.user_name;
+
+SELECT u.user_name,
+       t.name AS tablespace_name,
+       tu.is_access
+FROM SYSTEM_.SYS_TBS_USERS_ tu,
+     SYSTEM_.SYS_USERS_ u,
+     V$TABLESPACES t
+WHERE tu.user_id = u.user_id
+  AND tu.tbs_id = t.id
+  AND u.user_name IN ('APP_OWNER', 'APP_RUNTIME')
+ORDER BY u.user_name, t.name;
+```
+
+Notes:
+
+- `ACCESS tablespace_name ON|OFF` controls whether the user can access a user-defined data tablespace. It is not an Oracle-style per-user quota clause.
+- If `DEFAULT TABLESPACE` is omitted, the user's default is the system memory default tablespace. If `TEMPORARY TABLESPACE` is omitted, the user's default temporary tablespace is the system temporary tablespace.
+- A user can use multiple data tablespaces but only one default temporary tablespace.
+- A user with `ALTER TABLESPACE` can access tablespaces even when ordinary user access would otherwise be restricted.
+- Role grants are effective after the user reconnects.
+
+Runbook: change account password policy, lock state, or TCP access
+
+Use this for password rotation, account lockout response, or a requirement to force a user away from ordinary TCP connections.
+
+```sql
+SELECT user_name,
+       account_lock,
+       account_lock_date,
+       password_limit_flag,
+       failed_login_attempts,
+       failed_login_count,
+       password_lock_time,
+       password_expiry_date,
+       password_life_time,
+       password_grace_time,
+       password_reuse_date,
+       password_reuse_max,
+       password_verify_function,
+       disable_tcp
+FROM SYSTEM_.SYS_USERS_
+WHERE user_name = 'APP_RUNTIME';
+```
+
+Change examples:
+
+```sql
+ALTER USER app_runtime IDENTIFIED BY new_runtime_password;
+
+ALTER USER app_runtime LIMIT (
+    FAILED_LOGIN_ATTEMPTS 5,
+    PASSWORD_LOCK_TIME 1,
+    PASSWORD_LIFE_TIME 90,
+    PASSWORD_GRACE_TIME 7,
+    PASSWORD_REUSE_MAX 5,
+    PASSWORD_REUSE_TIME 30
+);
+
+ALTER USER app_runtime ACCOUNT LOCK;
+ALTER USER app_runtime ACCOUNT UNLOCK;
+ALTER USER app_runtime DISABLE TCP;
+ALTER USER app_runtime ENABLE TCP;
+```
+
+Safety notes:
+
+- `ALTER USER ... LIMIT (...)` is `SYS`-only. Policy items omitted from the new `LIMIT` clause are initialized, so include the complete intended policy.
+- If only one of `PASSWORD_REUSE_MAX` or `PASSWORD_REUSE_TIME` is specified, the same password cannot be reused under the documented password policy behavior.
+- `DISABLE TCP` blocks ordinary TCP access for that user; SSL or IPC can still be used where configured. Confirm the intended login path before applying it.
+- When changing `SYS`, run `altipasswd` after `ALTER USER SYS IDENTIFIED BY ...` and update any site scripts that embed the old password.
+
+Runbook: grant, verify, and revoke runtime privileges
+
+Use this pattern for least-privilege grants on named objects. Avoid `ANY`, `ALL PRIVILEGES`, and `TO PUBLIC` unless the request is explicitly administrative.
+
+```sql
+CREATE ROLE app_read_role;
+GRANT SELECT ON app_owner.app_table TO app_read_role;
+GRANT app_read_role TO app_report_user;
+
+SELECT grantee.user_name AS grantee_name,
+       role_user.user_name AS role_name
+FROM SYSTEM_.SYS_USER_ROLES_ r,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_USERS_ role_user
+WHERE r.grantee_id = grantee.user_id
+  AND r.role_id = role_user.user_id
+  AND grantee.user_name = 'APP_REPORT_USER'
+ORDER BY role_user.user_name;
+
+SELECT grantee.user_name AS grantee_name,
+       p.priv_name,
+       owner.user_name AS object_owner,
+       t.table_name AS object_name,
+       g.with_grant_option
+FROM SYSTEM_.SYS_GRANT_OBJECT_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_USERS_ owner,
+     SYSTEM_.SYS_PRIVILEGES_ p,
+     SYSTEM_.SYS_TABLES_ t
+WHERE g.grantee_id = grantee.user_id
+  AND g.user_id = owner.user_id
+  AND g.priv_id = p.priv_id
+  AND g.user_id = t.user_id
+  AND g.obj_id = t.table_id
+  AND grantee.user_name = 'APP_READ_ROLE'
+ORDER BY owner.user_name, t.table_name, p.priv_name;
+```
+
+Revocation example:
+
+```sql
+REVOKE SELECT ON app_owner.app_table FROM app_read_role;
+REVOKE app_read_role FROM app_report_user;
+DROP ROLE app_read_role;
+```
+
+Revocation notes:
+
+- `SYS` or the original grantor can revoke privileges.
+- Object privileges can be granted by the object owner or by a user that already has the object privilege `WITH GRANT OPTION`.
+- Do not use `WITH GRANT OPTION` for ordinary runtime accounts, and do not use it when granting object privileges to a role.
+- Use `CASCADE CONSTRAINTS` only when revoking `REFERENCES` or `ALL` must also remove dependent referential constraints.
+- After changing role grants, ask connected users to reconnect before testing privilege behavior.
+
+Runbook: retire a user or role
+
+Preflight:
+
+```sql
+SELECT user_name, user_type, account_lock, disable_tcp
+FROM SYSTEM_.SYS_USERS_
+WHERE user_name IN ('OLD_APP_USER', 'OLD_APP_ROLE');
+
+SELECT grantee.user_name AS grantee_name,
+       role_user.user_name AS role_name
+FROM SYSTEM_.SYS_USER_ROLES_ r,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_USERS_ role_user
+WHERE r.grantee_id = grantee.user_id
+  AND r.role_id = role_user.user_id
+  AND (grantee.user_name = 'OLD_APP_USER' OR role_user.user_name = 'OLD_APP_ROLE');
+
+SELECT owner.user_name AS owner_name,
+       t.table_name,
+       t.table_type,
+       t.tbs_name
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ owner
+WHERE t.user_id = owner.user_id
+  AND owner.user_name = 'OLD_APP_USER';
+```
+
+Execution:
+
+```sql
+ALTER USER old_app_user ACCOUNT LOCK;
+ALTER USER old_app_user DISABLE TCP;
+
+DROP USER old_app_user;
+-- If the owned schema objects must also be removed:
+DROP USER old_app_user CASCADE;
+
+DROP ROLE old_app_role;
+```
+
+Safety notes:
+
+- `DROP USER` without `CASCADE` fails when the user's schema still owns objects.
+- Use `CASCADE` only when object removal is intended and backed by a recovery plan.
+- Review role dependencies before `DROP ROLE`; dropping a role changes access for users that depend on it.
+
 ## Tablespace Concepts
 
 Tablespaces store tables, indexes, and related database objects. System tablespaces are created during `CREATE DATABASE`; DBAs create user-defined tablespaces as needed.
@@ -749,6 +1002,210 @@ DDL rules:
 - Memory growth is bounded by `MEM_MAX_DB_SIZE`; volatile growth is bounded by `VOLATILE_MAX_DB_SIZE`.
 - `CHECKPOINT PATH` operations apply only to memory tablespaces and require the DBA to create, move, or remove the underlying OS directories and checkpoint image files.
 - Temporary tablespaces are disk work space. `GLOBAL TEMPORARY TABLE` storage is specified with a volatile tablespace in the table `TABLESPACE` clause.
+
+## Storage and Tablespace Lifecycle Runbooks
+
+Use these before the detailed DDL runbooks when the user asks how to plan, schedule, or safely operate storage changes.
+
+Runbook: choose a tablespace and access model
+
+Decision points:
+
+1. Use disk data tablespaces for large persistent objects and disk-backed administration.
+2. Use memory data tablespaces for persistent memory-resident objects that fit within `MEM_MAX_DB_SIZE` and checkpoint storage.
+3. Use volatile data tablespaces only for data that can be lost at server shutdown.
+4. Use temporary tablespaces for disk work space used by query execution, not for permanent application data.
+5. Keep undo tablespace operations limited to datafile add, drop, resize, and backup; do not try to create user objects in `SYS_TBS_DISK_UNDO`.
+6. Grant users tablespace access with `CREATE USER ... ACCESS tablespace_name ON` or `ALTER USER ... ACCESS tablespace_name ON`. Do not generate Oracle `QUOTA` syntax for Altibase.
+
+Sizing and access checks:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'EXPAND_CHUNK_PAGE_COUNT',
+  'MEM_MAX_DB_SIZE',
+  'VOLATILE_MAX_DB_SIZE',
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_NEXT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE',
+  'USER_TEMP_FILE_INIT_SIZE',
+  'USER_TEMP_FILE_NEXT_SIZE',
+  'USER_TEMP_FILE_MAX_SIZE'
+)
+ORDER BY name;
+
+SELECT id,
+       name,
+       type,
+       state,
+       datafile_count,
+       total_page_count * page_size AS total_bytes,
+       allocated_page_count * page_size AS allocated_bytes
+FROM V$TABLESPACES
+ORDER BY id;
+```
+
+Follow-up:
+
+- Assign each schema owner and runtime user an explicit `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, and `ACCESS` list.
+- Record filesystem paths, autoextend limits, and backup responsibility with the change ticket.
+- If the tablespace boundary changes recovery priority, update the backup plan before putting business data there.
+
+Runbook: planned tablespace state change for maintenance
+
+Use only for user-defined disk or memory tablespaces. Do not use for volatile tablespaces, temporary tablespaces, undo tablespace, system tablespaces, or tablespaces containing replicated tables.
+
+Preflight:
+
+```sql
+SELECT id, name, type, state
+FROM V$TABLESPACES
+WHERE name = 'APP_DISK_TBS';
+
+SELECT s.id AS session_id,
+       s.comm_name,
+       s.client_pid,
+       s.db_username
+FROM V$SESSION s
+WHERE s.db_username = 'APP_OWNER';
+```
+
+Change and verify:
+
+```sql
+ALTER TABLESPACE app_disk_tbs OFFLINE;
+
+SELECT id, name, type, state
+FROM V$TABLESPACES
+WHERE name = 'APP_DISK_TBS';
+
+ALTER TABLESPACE app_disk_tbs ONLINE;
+
+SELECT id, name, type, state
+FROM V$TABLESPACES
+WHERE name = 'APP_DISK_TBS';
+```
+
+Safety notes:
+
+- Online/offline state changes are documented for `META` and `SERVICE` phases.
+- Objects in an offline tablespace are unavailable except for limited tablespace DDL such as `DROP TABLESPACE` and `ALTER TABLESPACE ... ONLINE`.
+- If the purpose is media recovery or a strict location change, prefer the `CONTROL` runbook for datafile rename and recovery.
+
+Runbook: expand undo tablespace capacity
+
+Use this when disk-object updates, long transactions, or recovery work pressure `SYS_TBS_DISK_UNDO`. The undo tablespace is system-managed and cannot be taken offline, discarded, dropped, or used for ordinary user objects.
+
+```sql
+SELECT t.id,
+       t.name,
+       t.type,
+       t.state,
+       d.name AS datafile_name,
+       d.currsize * t.page_size AS currsize_bytes,
+       d.maxsize * t.page_size AS maxsize_bytes,
+       d.autoextend,
+       d.state AS datafile_state
+FROM V$TABLESPACES t,
+     V$DATAFILES d
+WHERE t.id = d.spaceid
+  AND t.name = 'SYS_TBS_DISK_UNDO'
+ORDER BY d.id;
+
+ALTER TABLESPACE SYS_TBS_DISK_UNDO
+ADD DATAFILE '/data/altibase/dbs/undo002.dbf' SIZE 1G
+AUTOEXTEND ON NEXT 256M MAXSIZE 20G;
+
+ALTER TABLESPACE SYS_TBS_DISK_UNDO
+ALTER DATAFILE '/data/altibase/dbs/undo001.dbf'
+AUTOEXTEND ON NEXT 256M MAXSIZE 20G;
+```
+
+Rules:
+
+- Add or resize undo data files when capacity is the problem.
+- Drop an undo data file only when it is not used by allocated extents.
+- Back up undo tablespace data files as part of the physical backup plan.
+- If `TRANSACTION_SEGMENT_COUNT` is greater than `900`, include the undo segment-header file `txSegEntry.hdr` in undo tablespace backup handling when present.
+
+Runbook: post-tablespace-DDL backup follow-up
+
+Use after creating, dropping, renaming, discarding, or structurally changing a tablespace.
+
+```sql
+SELECT id, name, type, state
+FROM V$TABLESPACES
+ORDER BY id;
+
+SELECT lfg_id,
+       archive_mode,
+       archive_dest,
+       current_logfile,
+       nextlogfile_to_arch
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+```
+
+Follow-up actions:
+
+1. If a tablespace was added, dropped, renamed, discarded, or had checkpoint paths changed, back up `SYS_TBS_MEM_DIC`, the affected tablespace where applicable, and log anchors, or take a full database backup.
+2. For memory tablespace checkpoint path changes, verify checkpoint image files were copied or moved to the final directories by the DBA.
+3. For disk and temporary file changes, verify file ownership, permissions, and filesystem free space after DDL.
+4. For online backup environments, switch and archive logs after manual `BEGIN BACKUP` or `END BACKUP` workflows where the backup runbook requires it.
+5. Update restore documentation with the new file paths before the next incident.
+
+Runbook: tablespace access mismatch
+
+Use this when a user can connect but cannot create or access objects in the expected tablespace.
+
+```sql
+SELECT u.user_name,
+       dt.name AS default_tablespace,
+       tt.name AS temporary_tablespace
+FROM SYSTEM_.SYS_USERS_ u,
+     V$TABLESPACES dt,
+     V$TABLESPACES tt
+WHERE u.default_tbs_id = dt.id
+  AND u.temp_tbs_id = tt.id
+  AND u.user_name = 'APP_RUNTIME';
+
+SELECT u.user_name,
+       t.name AS tablespace_name,
+       tu.is_access
+FROM SYSTEM_.SYS_TBS_USERS_ tu,
+     SYSTEM_.SYS_USERS_ u,
+     V$TABLESPACES t
+WHERE tu.user_id = u.user_id
+  AND tu.tbs_id = t.id
+  AND u.user_name = 'APP_RUNTIME'
+ORDER BY t.name;
+
+SELECT grantee.user_name AS grantee_name,
+       p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+  AND grantee.user_name = 'APP_RUNTIME'
+ORDER BY p.priv_name;
+```
+
+Fix pattern:
+
+```sql
+ALTER USER app_runtime DEFAULT TABLESPACE app_mem_tbs;
+ALTER USER app_runtime TEMPORARY TABLESPACE app_temp_tbs;
+ALTER USER app_runtime ACCESS app_disk_tbs ON;
+```
+
+Notes:
+
+- If the account lacks object privileges, fix grants on the target objects separately from tablespace access.
+- If the account depends on a role, reconnect before retesting.
+- If a user has broad `ALTER TABLESPACE`, `ANY`, or DBA-like privileges, review whether the failure is actually object-level privilege, object ownership, object state, or tablespace state.
 
 ## Tablespace Operation Runbooks
 

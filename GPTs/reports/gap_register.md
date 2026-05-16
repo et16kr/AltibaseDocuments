@@ -523,6 +523,17 @@ recording or remediating gaps.
   version scope are recorded in `GPTs/reports/source_inventory.md`. This gap remains
   `Open` for later replication, Kubernetes/AKU, and security/replication SSL
   high-risk procedure slices.
+- J030 update: the administration, account, privilege, storage, and tablespace
+  lifecycle workflow slice for `02_administration_operations.md` is now represented by
+  procedural runbooks for schema-owner and runtime-user provisioning, account password
+  policy, lock, and TCP-access changes, least-privilege grant/revoke review, user and
+  role retirement, storage model selection, planned tablespace state changes, undo
+  tablespace capacity expansion, post-tablespace-DDL backup follow-up, and tablespace
+  access mismatch triage. `03_sql_ddl_generation.md` already contains the
+  source-audited user, role, grant, revoke, and tablespace grammar, so no syntax
+  attachment change was needed. Source paths and version scope are recorded in
+  `GPTs/reports/source_inventory.md`. This gap remains `Open` for later replication,
+  Kubernetes/AKU, and security/replication SSL high-risk procedure slices.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 

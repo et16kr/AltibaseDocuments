@@ -788,6 +788,55 @@ and dictionary-view validation. No new manual/source-backed gap was discovered d
 the scoped restore, media recovery, incremental restore, tablespace, datafile, or
 temporary-file review.
 
+## J030 Administration Tablespace User And Privilege Runbook Addendum
+
+J030 uses the `administrator_operations`, `sql_reference`,
+`general_reference_2_dictionary_views`, and `general_reference_1_datatypes_properties`
+source families for Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source.
+Korean Administrator, SQL Reference, and General Reference manuals remain authoritative
+for built-in DBA accounts, user creation and alteration, password policy clauses,
+tablespace `ACCESS`, role and privilege behavior, tablespace state transitions, undo
+tablespace limits, and tablespace metadata backup follow-up; matching English manuals
+remain extraction aids only when consistent.
+
+Design note: J030 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/02_administration_operations.md` rather than moving account or
+tablespace runbooks into the SQL generation attachment. The administration section now
+distinguishes operational workflows from syntax: application schema/runtime account
+provisioning, account lock/password/TCP changes, least-privilege grant and revoke
+review, user and role retirement, storage model selection, planned tablespace state
+changes, undo tablespace capacity expansion, post-tablespace-DDL backup follow-up, and
+tablespace access mismatch triage. `GPTs/attachments/03_sql_ddl_generation.md` already
+contains the source-audited compact BNF for users, roles, grants, revoke, and
+tablespace SQL, so J030 did not change it.
+
+Scoped source paths checked for J030:
+
+- `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
+- `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
+- `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `GPTs/attachments/02_administration_operations.md`
+- `GPTs/attachments/03_sql_ddl_generation.md`
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J030 adds no new attachment filename, source family, or Korean/English source-drift
+case. It narrows `GAP-J002-018` for the administration/tablespace lifecycle slice by
+representing account, privilege, storage, and tablespace operational workflows as
+searchable English runbooks with copy-ready SQL, source-backed safety notes, and
+view-backed validation hooks. No new manual/source-backed gap was discovered during the
+scoped administration, user, privilege, storage, or tablespace lifecycle review.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
