@@ -15,6 +15,11 @@ as the shared contract for the benchmark purpose, durable artifact layout, sourc
 question policy, attachments-only answer runner, judge/report behavior, and readiness
 thresholds.
 
+Korean Altibase manuals are the authoritative source when paired Korean and English
+manuals differ. Benchmark records, expected facts, optional canonical reference answers,
+answer-runner outputs, judge comparisons, and reports should be written in canonical
+English unless a manifest explicitly defines a multilingual test.
+
 ## Persistent Output
 
 This workflow must create and maintain the long-term benchmark under:

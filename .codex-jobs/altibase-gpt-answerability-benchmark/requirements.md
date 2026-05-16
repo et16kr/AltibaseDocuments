@@ -12,6 +12,27 @@ already present in this repository. It should intentionally include questions th
 hard for the current attachment set, as long as the expected answer is present in the
 selected source corpus.
 
+## Source Authority And Answer Language
+
+Korean Altibase manuals are the authoritative source when paired Korean and English
+manuals differ. Benchmark questions and expected answers must therefore be derived from
+Korean manuals first where Korean manuals exist for the same product area and version.
+
+The benchmark's comparison language is canonical English:
+
+- Write question records in English unless a specific multilingual test explicitly
+  requires otherwise.
+- Write `expected_facts`, any canonical reference answer, scoring notes, and report
+  summaries in English.
+- Translate and normalize Korean-source facts into concise English; do not store Korean
+  prose as the expected answer. Korean section titles may appear in `source_refs` only
+  when needed to locate the source.
+- Keep SQL object names, SQL keywords, function names, property names, error codes,
+  commands, paths, package/class/method/API names, connector names, and version labels
+  literal in every language.
+- The default attachments-only answer language is English. Optional multilingual tests
+  must still judge semantic equivalence against the canonical-English expected facts.
+
 ## Persistent Artifact Location
 
 Long-term benchmark artifacts belong under:
@@ -77,9 +98,15 @@ Each question record must include at least:
 - `user_level`.
 - `version_scope` such as `7.1`, `7.3`, `8.1`, or `cross-version`.
 - `question`.
+- `answer_language`, defaulting to `en`.
+- `source_language_basis`, such as `ko`, `en`, or `ko+en`, with `ko` or `ko+en` expected
+  when Korean manuals are the authoritative basis.
 - `source_refs` with manual/source name, version, section or heading, and enough locator
   detail for review.
 - `expected_facts`: source-backed facts the answer must contain.
+- Optional `canonical_reference_answer`: an English source-backed model answer for
+  calibration and human review. This field is judge-only and must not be sent to the
+  answering model.
 - `required_tokens`: SQL keywords, property names, error codes, command options, view
   names, API names, or literal values that must remain unchanged.
 - `prohibited_claims`: unsupported claims or common wrong assumptions the answer must not
@@ -108,22 +135,30 @@ The answering model input allowlist is:
 - `version_scope`
 - `user_level`
 - `answer_type`
+- `answer_language`, defaulting to `en`
 - optional `requested_language` when a manifest explicitly asks for multilingual testing
 
 All other question fields are judge-only unless a later reviewed schema change explicitly
 moves them into the allowlist. The answer runner must not provide original manuals,
 source inventory files, source references, expected facts, required tokens, prohibited
-claims, retrieval risk, difficulty labels, or any source excerpts to the answering model.
-It must record the exact projected answering input for audit and include a leakage check
-that fails if judge-only keys appear in answer-generation prompts or request payloads.
+claims, canonical reference answers, source-language basis, retrieval risk, difficulty
+labels, or any source excerpts to the answering model. It must record the exact projected
+answering input for audit and include a leakage check that fails if judge-only keys
+appear in answer-generation prompts or request payloads.
+
+The answer runner must request English answers by default. If `requested_language` is
+absent, it must set `answer_language` to `en` and instruct the answering model to answer
+in English while preserving technical tokens literally.
 
 The scripts must keep model/provider settings configurable and must support dry-run or
 offline validation paths that do not require live model calls.
 
 ## Judge And Report Requirements
 
-The judge may use the question record, expected facts, required tokens, prohibited
-claims, and source references. It should score at least:
+The judge may use the question record, expected facts, optional canonical reference
+answer, required tokens, prohibited claims, source-language basis, and source references.
+It must compare attachments-only answers against canonical-English expected facts derived
+from Korean-first sources. It should score at least:
 
 - Required fact coverage.
 - Required token preservation.
