@@ -345,6 +345,43 @@ No new manual/source-backed gap was discovered during J018. `GAP-J002-006` remai
 open for later J019-J021 slices and for exhaustive per-view, patch-sensitive column
 coverage outside the J018 storage/log/archive/backup/checkpoint scope.
 
+## J019 Session Statement Wait Lock Transaction View Addendum
+
+J019 uses the `general_reference_2_dictionary_views` source family for Altibase 7.1,
+Altibase 7.3, and the Altibase 8.1 verified source. Korean General Reference 2 manuals
+remain authoritative for session, statement, SQL text, wait, lock, transaction,
+latch/mutex, and service-thread performance-view behavior; matching English manuals
+were used only for customer-facing terminology when consistent.
+
+Design note: J019 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/06_data_dictionary_performance_views.md` in place. The documentation
+structure now treats `06_data_dictionary_performance_views.md` as the evidence
+collection and view-reference surface for active sessions, SQL text, waits, lock
+chains, transactions, and service threads. Operational tuning actions and root-cause
+interpretation remain cross-referenced to `08_performance_tuning_monitoring.md`.
+
+J019 updates `GPTs/attachments/06_data_dictionary_performance_views.md` with richer
+cookbook checks and searchable object blocks for `V$SESSION`, `V$SESSIONMGR`,
+`V$SERVICE_THREAD`, `V$SERVICE_THREAD_MGR`, `V$STATEMENT`, `V$SQLTEXT`,
+`V$EVENT_NAME`, `V$WAIT_CLASS_NAME`, `V$SESSION_WAIT`, `V$SESSION_EVENT`,
+`V$SESSION_WAIT_CLASS`, `V$SYSTEM_EVENT`, `V$SYSTEM_WAIT_CLASS`, `V$LATCH`,
+`V$MUTEX`, `V$TRANSACTION`, `V$TRANSACTION_MGR`, `V$LOCK_WAIT`, `V$LOCK`, and
+`V$LOCK_STATEMENT`.
+
+Scoped source paths checked for J019:
+
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+
+No new manual/source-backed gap was discovered during J019. `GAP-J002-006` remains
+open for later J020-J021 slices and for exhaustive per-view, patch-sensitive column
+coverage outside the J019 session/statement/wait/lock/transaction/service-thread
+scope.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

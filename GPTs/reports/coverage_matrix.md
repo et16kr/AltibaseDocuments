@@ -169,6 +169,12 @@ for 8.1 customer-facing labels.
   `02_administration_operations.md` and generated SQL routed to
   `03_sql_ddl_generation.md`; the broader per-view column gap remains open for J019-J021
   and non-scoped patch-sensitive details.
+- J019 expanded the session, statement, SQL text, wait, lock, transaction, latch/mutex,
+  and service-thread performance-view slice in
+  `06_data_dictionary_performance_views.md`. It keeps operational tuning and
+  root-cause interpretation routed to `08_performance_tuning_monitoring.md`; the
+  broader per-view column gap remains open for J020-J021 and non-scoped
+  patch-sensitive details.
 - J022-J026 should use `error_message_reference` and related operational sources to
   expand exact-code troubleshooting and close error-block gaps.
 - J027-J033 should use operations, replication, networking, and TLS source families to

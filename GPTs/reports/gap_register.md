@@ -145,6 +145,16 @@ recording or remediating gaps.
   `V$OBSOLETE_BACKUP_INFO`, `V$FILESTAT`, `V$SNAPSHOT`, `V$TRACELOG`, and
   `V$TEMPORARY_LOBS`. The gap remains open for J019-J021 view families and exhaustive
   per-view, patch-sensitive column proof beyond the J018 scope.
+- J019 update: the session/statement/wait/lock/transaction/service-thread slice now has
+  richer customer-facing cookbook checks and object blocks for `V$SESSION`,
+  `V$SESSIONMGR`, `V$SERVICE_THREAD`, `V$SERVICE_THREAD_MGR`, `V$STATEMENT`,
+  `V$SQLTEXT`, `V$EVENT_NAME`, `V$WAIT_CLASS_NAME`, `V$SESSION_WAIT`,
+  `V$SESSION_EVENT`, `V$SESSION_WAIT_CLASS`, `V$SYSTEM_EVENT`,
+  `V$SYSTEM_WAIT_CLASS`, `V$LATCH`, `V$MUTEX`, `V$TRANSACTION`,
+  `V$TRANSACTION_MGR`, `V$LOCK_WAIT`, `V$LOCK`, and `V$LOCK_STATEMENT` in
+  `GPTs/attachments/06_data_dictionary_performance_views.md`. The gap remains open
+  for J020-J021 view families and exhaustive per-view, patch-sensitive column proof
+  beyond the J019 scope.
 
 ### GAP-J017-001: Dictionary and performance view inventory source drift
 

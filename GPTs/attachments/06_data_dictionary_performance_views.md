@@ -1363,6 +1363,32 @@ ORDER BY id;
 
 `TASK_STATE` values include `WAITING`, `READY`, `EXECUTING`, `QUEUE WAIT`, `QUEUE READY`, and `UNKNOWN`. `SESSION_STATE` values include `INIT`, `AUTH`, `SERVICE READY`, `SERVICE`, `END`, `ROLLBACK`, and `UNKNOWN`.
 
+Use this triage join when a user asks "which session is running which SQL now":
+
+```sql
+SELECT s.id AS session_id,
+       s.db_username,
+       s.task_state,
+       s.session_state,
+       s.active_flag,
+       s.trans_id,
+       s.current_stmt_id,
+       st.id AS stmt_id,
+       st.execute_flag,
+       st.execute_state,
+       st.event,
+       st.wait_time,
+       st.total_time,
+       st.query
+FROM V$SESSION s,
+     V$STATEMENT st
+WHERE s.id = st.session_id
+  AND s.current_stmt_id = st.id
+ORDER BY s.active_flag DESC, st.total_time DESC, s.id;
+```
+
+If `V$SESSION.TRANS_ID = -1`, no transaction is currently underway for that session. If `ACTIVE_FLAG = 1`, the session is executing a statement; if it is `0`, the session is connected or has completed commit/rollback work.
+
 ### Find Active Statements and SQL Text
 
 ```sql
@@ -1400,6 +1426,23 @@ WHERE sid = <SESSION_ID>
 ORDER BY piece;
 ```
 
+`V$SQLTEXT.TEXT` is stored in 64-byte fragments. Preserve `PIECE` order when presenting the full SQL text, and use `V$STATEMENT.QUERY` as the faster first check when the 16 KB statement text is sufficient.
+
+To retrieve the current statement's fragments for one session:
+
+```sql
+SELECT x.sid,
+       x.stmt_id,
+       x.piece,
+       x.text
+FROM V$SESSION s,
+     V$SQLTEXT x
+WHERE s.id = x.sid
+  AND s.current_stmt_id = x.stmt_id
+  AND s.id = <SESSION_ID>
+ORDER BY x.piece;
+```
+
 ### Check Session Waits
 
 ```sql
@@ -1415,6 +1458,52 @@ SELECT sid,
 FROM V$SESSION_WAIT
 ORDER BY second_in_wait DESC, wait_time DESC;
 ```
+
+Join current waits to session and statement context:
+
+```sql
+SELECT sw.sid AS session_id,
+       s.db_username,
+       s.task_state,
+       s.current_stmt_id,
+       sw.event,
+       sw.wait_class,
+       sw.wait_time,
+       sw.second_in_wait,
+       st.query
+FROM V$SESSION_WAIT sw,
+     V$SESSION s,
+     V$STATEMENT st
+WHERE sw.sid = s.id
+  AND s.id = st.session_id
+  AND s.current_stmt_id = st.id
+ORDER BY sw.second_in_wait DESC, sw.wait_time DESC;
+```
+
+Use cumulative wait views to avoid overreacting to one instant:
+
+```sql
+SELECT sid,
+       event,
+       wait_class,
+       total_waits,
+       total_timeouts,
+       time_waited,
+       average_wait,
+       max_wait
+FROM V$SESSION_EVENT
+WHERE sid = <SESSION_ID>
+ORDER BY time_waited DESC, total_waits DESC;
+
+SELECT wait_class,
+       total_waits,
+       time_waited
+FROM V$SYSTEM_WAIT_CLASS
+WHERE wait_class <> 'Idle'
+ORDER BY time_waited DESC, total_waits DESC;
+```
+
+`V$WAIT_CLASS_NAME` maps wait class IDs to class names. Documented classes are `Other`, `Administrative`, `Configuration`, `Concurrency`, `Commit`, `Idle`, `User I/O`, `System I/O`, and `Replication`.
 
 ### Check Lock Wait Chains
 
@@ -1463,6 +1552,29 @@ ORDER BY l.is_grant, u.user_name, t.table_name;
 
 `IS_GRANT` indicates whether the lock is granted or waiting.
 
+Map waiting and holder transactions back to sessions:
+
+```sql
+SELECT lw.trans_id AS waiting_trans_id,
+       tw.session_id AS waiting_session_id,
+       sw.db_username AS waiting_user,
+       lw.wait_for_trans_id AS holder_trans_id,
+       th.session_id AS holder_session_id,
+       sh.db_username AS holder_user
+FROM V$LOCK_WAIT lw,
+     V$TRANSACTION tw,
+     V$TRANSACTION th,
+     V$SESSION sw,
+     V$SESSION sh
+WHERE lw.trans_id = tw.id
+  AND lw.wait_for_trans_id = th.id
+  AND tw.session_id = sw.id
+  AND th.session_id = sh.id
+ORDER BY holder_session_id, waiting_session_id;
+```
+
+Use `V$LOCK_STATEMENT` when the question is "which SQL is holding or waiting for a lock"; use `V$LOCK` when the question is "which object is locked." `V$LOCK.LOCK_ITEM_TYPE` values include `TBS`, `TBL`, `DBF`, and `UNKNOWN`.
+
 ### Check Transactions
 
 ```sql
@@ -1481,6 +1593,56 @@ ORDER BY id;
 ```
 
 `STATUS` values include `0` begin, `1` precommit, `2` commit in memory, `3` commit, `4` abort, `5` blocked, and `6` end. `UPDATE_STATUS` values are `0` read-only and `1` updating. `DDL_FLAG` values are `0` non-DDL and `1` DDL.
+
+Use the transaction-manager view for capacity and admission state:
+
+```sql
+SELECT total_count,
+       free_list_count,
+       begin_enable,
+       active_count,
+       sys_min_disk_viewscn
+FROM V$TRANSACTION_MGR;
+```
+
+`BEGIN_ENABLE = 1` means new transactions can begin; `0` means transaction begin is disabled.
+
+### Check Service Threads
+
+```sql
+SELECT id,
+       type,
+       state,
+       run_mode,
+       session_id,
+       statement_id,
+       execute_time,
+       task_count,
+       ready_task_count,
+       thread_id
+FROM V$SERVICE_THREAD
+ORDER BY ready_task_count DESC, execute_time DESC, id;
+```
+
+Summarize service-thread pressure:
+
+```sql
+SELECT type,
+       run_mode,
+       state,
+       COUNT(*) AS thread_count,
+       SUM(task_count) AS task_count,
+       SUM(ready_task_count) AS ready_task_count
+FROM V$SERVICE_THREAD
+GROUP BY type, run_mode, state
+ORDER BY ready_task_count DESC, thread_count DESC;
+
+SELECT add_thr_count,
+       remove_thr_count
+FROM V$SERVICE_THREAD_MGR;
+```
+
+`V$SERVICE_THREAD.READY_TASK_COUNT` is the number of sessions waiting for that service thread to process their requests. `V$SERVICE_THREAD_MGR` counts service-thread additions and removals since startup.
 
 ## Cookbook: Plan Cache and Optimizer Statistics
 
@@ -2302,30 +2464,135 @@ ORDER BY job_name;
 
 ### Object Block: `V$SESSION`
 
-Purpose: shows current client sessions.
+Purpose: shows current client sessions. This view is the first stop for session ownership, current transaction ID, current statement ID, timeout settings, client identity, session state, autocommit mode, replication mode, transaction mode, failover source, TLS client certificate fields, and application/module/action text.
 
-Key columns: `ID`, `TRANS_ID`, `TASK_STATE`, `SESSION_STATE`, `ACTIVE_FLAG`, `OPENED_STMT_COUNT`, `CURRENT_STMT_ID`, `DB_USERNAME`, `COMM_NAME`, `CLIENT_APP_INFO`, `MODULE`, `ACTION`.
+Key columns: `ID`, `TRANS_ID`, `TASK_STATE`, `SESSION_STATE`, `ACTIVE_FLAG`, `OPENED_STMT_COUNT`, `CURRENT_STMT_ID`, `DB_USERNAME`, `DB_USERID`, `COMM_NAME`, `CLIENT_PACKAGE_VERSION`, `CLIENT_PROTOCOL_VERSION`, `CLIENT_PID`, `CLIENT_TYPE`, `CLIENT_APP_INFO`, `CLIENT_INFO`, `MODULE`, `ACTION`, `AUTOCOMMIT_FLAG`, `ISOLATION_LEVEL`, `REPLICATION_MODE`, `TRANSACTION_MODE`, `COMMIT_WRITE_WAIT_MODE`, `QUERY_TIME_LIMIT`, `DDL_TIME_LIMIT`, `FETCH_TIME_LIMIT`, `UTRANS_TIME_LIMIT`, `IDLE_TIME_LIMIT`, `IDLE_START_TIME`, `LOGIN_TIME`, `FAILOVER_SOURCE`, `TIME_ZONE`, `LOB_CACHE_THRESHOLD`, `QUERY_REWRITE_ENABLE`, `SSL_CIPHER`, `SSL_CERTIFICATE_SUBJECT`, `SSL_CERTIFICATE_ISSUER`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_TIMELIMIT`, `MESSAGE_CALLBACK`.
+
+Value notes: `TRANS_ID = -1` means no transaction is currently underway. `ACTIVE_FLAG = 1` means the session is executing a statement. `AUTOCOMMIT_FLAG` values are `0` non-autocommit and `1` autocommit. `TRANSACTION_MODE` values include `0` read/write and `4` read only. `COMMIT_WRITE_WAIT_MODE` values are `0` do not wait for commit logs to be written to disk and `1` wait for commit logs to be written. `REPLICATION_MODE` values include `0` default and `16` none. `QUERY_REWRITE_ENABLE` values include `FALSE` and `TRUE`. `MESSAGE_CALLBACK` values include `REG`, `UNREG`, and `UNKNOWN`.
+
+When to query: use `V$SESSION` before `V$STATEMENT`, `V$SQLTEXT`, `V$SESSION_WAIT`, `V$LOCK_WAIT`, or `V$TRANSACTION` when the user gives a session ID, user name, client process, application name, failover symptom, TLS client-authentication symptom, timeout symptom, or "who is running this" question.
 
 Representative SQL:
 
 ```sql
-SELECT id, db_username, task_state, session_state, active_flag, current_stmt_id
+SELECT id,
+       db_username,
+       task_state,
+       session_state,
+       active_flag,
+       trans_id,
+       current_stmt_id,
+       opened_stmt_count,
+       autocommit_flag,
+       transaction_mode,
+       client_app_info,
+       client_info,
+       module,
+       action
 FROM V$SESSION
 ORDER BY id;
 ```
 
-### Object Block: `V$STATEMENT`
+### Object Block: `V$SESSIONMGR`
 
-Purpose: shows the most recently executed query information for connected sessions.
+Purpose: shows cumulative session-manager counters since Altibase startup.
 
-Key columns: `ID`, `SESSION_ID`, `TX_ID`, `QUERY`, `EXECUTE_STATE`, `FETCH_STATE`, `TOTAL_TIME`, `PARSE_TIME`, `OPTIMIZE_TIME`, `EXECUTE_TIME`, `FETCH_TIME`, `PROCESS_ROW`, `EVENT`, `WAIT_TIME`.
+Key columns: `TASK_COUNT`, `BASE_TIME`, `LOGIN_TIMEOUT_COUNT`, `IDLE_TIMEOUT_COUNT`, `QUERY_TIMEOUT_COUNT`, `DDL_TIMEOUT_COUNT`, `FETCH_TIMEOUT_COUNT`, `UTRANS_TIMEOUT_COUNT`, `SESSION_TERMINATE_COUNT`.
+
+When to query: use `V$SESSIONMGR` when the user asks whether timeout or forced-termination events are accumulating across the server, or wants the current connected-session count without per-session details.
 
 Representative SQL:
 
 ```sql
-SELECT session_id, id, execute_state, total_time, process_row, query
+SELECT task_count,
+       login_timeout_count,
+       idle_timeout_count,
+       query_timeout_count,
+       ddl_timeout_count,
+       fetch_timeout_count,
+       utrans_timeout_count,
+       session_terminate_count
+FROM V$SESSIONMGR;
+```
+
+### Object Block: `V$SERVICE_THREAD` and `V$SERVICE_THREAD_MGR`
+
+Purpose: `V$SERVICE_THREAD` shows service threads that receive and execute client requests; `V$SERVICE_THREAD_MGR` shows cumulative counts of dynamically added and removed service threads.
+
+Key columns: service-thread identity and state use `ID`, `TYPE`, `STATE`, `RUN_MODE`, `THREAD_ID`; active work uses `SESSION_ID`, `STATEMENT_ID`, `EXECUTE_TIME`; queue and fan-in use `TASK_COUNT`, `READY_TASK_COUNT`; manager counters use `ADD_THR_COUNT`, `REMOVE_THR_COUNT`.
+
+Value notes: `TYPE` values include `SOCKET(MULTIPLEXING)`, `SOCKET(DEDICATED)`, `IPC`, and `IPCDA`. `STATE` values include `NONE`, `POLL`, `QUEUE-WAIT`, `EXECUTE`, and `UNKNOWN`. `RUN_MODE` values are `SHARED` and `DEDICATED`. `START_TIME` is in seconds. `EXECUTE_TIME` is in microseconds. `READY_TASK_COUNT` is the number of sessions waiting for their requests to be processed by the service thread.
+
+When to query: use this pair for service-thread overload, multiplexing/dedicated mode checks, queueing evidence, OS-thread correlation through `THREAD_ID`, or service-thread churn since startup. Use `SESSION_ID` and `STATEMENT_ID` to join back to `V$SESSION` and `V$STATEMENT`.
+
+Representative SQL:
+
+```sql
+SELECT t.id,
+       t.type,
+       t.state,
+       t.run_mode,
+       t.session_id,
+       t.statement_id,
+       t.execute_time,
+       t.task_count,
+       t.ready_task_count,
+       t.thread_id,
+       s.db_username,
+       st.query
+FROM V$SERVICE_THREAD t,
+     V$SESSION s,
+     V$STATEMENT st
+WHERE t.session_id = s.id
+  AND t.session_id = st.session_id
+  AND t.statement_id = st.id
+ORDER BY t.ready_task_count DESC, t.execute_time DESC;
+```
+
+For a grouped snapshot:
+
+```sql
+SELECT type,
+       run_mode,
+       state,
+       COUNT(*) AS thread_count,
+       SUM(task_count) AS task_count,
+       SUM(ready_task_count) AS ready_task_count
+FROM V$SERVICE_THREAD
+GROUP BY type, run_mode, state
+ORDER BY ready_task_count DESC, thread_count DESC;
+
+SELECT add_thr_count, remove_thr_count
+FROM V$SERVICE_THREAD_MGR;
+```
+
+### Object Block: `V$STATEMENT`
+
+Purpose: shows the most recently executed query information for connected sessions, including current statement state, statement text, elapsed-time breakdown, plan-cache linkage, page and scan counters, execution/fetch result counters, processed rows, and the current wait event.
+
+Key columns: `ID`, `PARENT_ID`, `CURSOR_TYPE`, `SESSION_ID`, `TX_ID`, `QUERY`, `LAST_QUERY_START_TIME`, `QUERY_START_TIME`, `FETCH_START_TIME`, `EXECUTE_STATE`, `FETCH_STATE`, `ARRAY_FLAG`, `ROW_NUMBER`, `EXECUTE_FLAG`, `BEGIN_FLAG`, `TOTAL_TIME`, `PARSE_TIME`, `VALIDATE_TIME`, `OPTIMIZE_TIME`, `EXECUTE_TIME`, `FETCH_TIME`, `SOFT_PREPARE_TIME`, `SQL_CACHE_TEXT_ID`, `SQL_CACHE_PCO_ID`, `OPTIMIZER`, `COST`, `READ_PAGE`, `WRITE_PAGE`, `GET_PAGE`, `CREATE_PAGE`, `UNDO_READ_PAGE`, `UNDO_WRITE_PAGE`, `UNDO_GET_PAGE`, `UNDO_CREATE_PAGE`, `MEM_CURSOR_FULL_SCAN`, `MEM_CURSOR_INDEX_SCAN`, `DISK_CURSOR_FULL_SCAN`, `DISK_CURSOR_INDEX_SCAN`, `EXECUTE_SUCCESS`, `EXECUTE_FAILURE`, `FETCH_SUCCESS`, `FETCH_FAILURE`, `PROCESS_ROW`, `MEMORY_TABLE_ACCESS_COUNT`, `SEQNUM`, `EVENT`, `P1`, `P2`, `P3`, `WAIT_TIME`, `SECOND_IN_TIME`.
+
+Value notes: `EXECUTE_FLAG = 1` means currently executing and `0` means not currently executing. `BEGIN_FLAG` uses the same `0`/`1` current-execution meaning. `EXECUTE_STATE` values include `ALLOC`, `PREPARED`, `EXECUTED`, and `UNKNOWN`. `FETCH_STATE` values include `PROCEED`, `CLOSE`, `NO_RESULTSET`, `INVALIDATED`, and `UNKNOWN`. `CURSOR_TYPE` hex value `0x02` indicates a memory cursor and `0x04` indicates a disk cursor. `SQL_CACHE_TEXT_ID = 'NO_SQL_CACHE_STMT'` indicates a statement not registered in SQL Plan Cache, such as DDL, DCL, or SQL using the `NO_PLAN_CACHE` hint.
+
+Representative SQL:
+
+```sql
+SELECT session_id,
+       id,
+       execute_flag,
+       execute_state,
+       fetch_state,
+       total_time,
+       execute_time,
+       fetch_time,
+       read_page,
+       get_page,
+       process_row,
+       event,
+       wait_time,
+       query
 FROM V$STATEMENT
-ORDER BY total_time DESC;
+ORDER BY execute_flag DESC, total_time DESC;
 ```
 
 ### Column Block: `V$STATEMENT` Large-View Columns
@@ -2354,6 +2621,44 @@ SELECT session_id,
        query
 FROM V$STATEMENT
 ORDER BY total_time DESC;
+```
+
+### Object Block: `V$SQLTEXT`
+
+Purpose: shows SQL text currently being executed in the server as ordered 64-byte fragments.
+
+Key columns: `SID`, `STMT_ID`, `PIECE`, `TEXT`.
+
+Value notes: `SID` is the session identifier. `STMT_ID` is the statement identifier. `PIECE` starts at `0` and preserves fragment order. `TEXT` is one 64-byte SQL text fragment.
+
+When to query: use `V$SQLTEXT` when `V$STATEMENT.QUERY` is truncated, when the user asks for exact SQL text fragments, or when reconstructing the current SQL for a session and statement ID. Always order by `PIECE`.
+
+Representative SQL:
+
+```sql
+SELECT sid,
+       stmt_id,
+       piece,
+       text
+FROM V$SQLTEXT
+WHERE sid = <SESSION_ID>
+  AND stmt_id = <STMT_ID>
+ORDER BY piece;
+```
+
+To discover the current statement ID first:
+
+```sql
+SELECT s.id AS session_id,
+       s.current_stmt_id,
+       x.piece,
+       x.text
+FROM V$SESSION s,
+     V$SQLTEXT x
+WHERE s.id = x.sid
+  AND s.current_stmt_id = x.stmt_id
+  AND s.id = <SESSION_ID>
+ORDER BY x.piece;
 ```
 
 ### Object Block: `V$STATNAME`, `V$SYSSTAT`, and `V$SESSTAT`
@@ -2594,11 +2899,154 @@ WHERE s.id = st.session_id
 ORDER BY s.id, st.id;
 ```
 
+### Object Block: `V$EVENT_NAME` and `V$WAIT_CLASS_NAME`
+
+Purpose: `V$EVENT_NAME` maps Altibase wait-event IDs to event names and wait classes; `V$WAIT_CLASS_NAME` maps wait-class IDs to class names.
+
+Key columns: `V$EVENT_NAME.EVENT_ID`, `V$EVENT_NAME.NAME`, `V$EVENT_NAME.WAIT_CLASS_ID`, `V$EVENT_NAME.WAIT_CLASS`, `V$WAIT_CLASS_NAME.WAIT_CLASS_ID`, `V$WAIT_CLASS_NAME.WAIT_CLASS`.
+
+Value notes: wait classes include `Other`, `Administrative`, `Configuration`, `Concurrency`, `Commit`, `Idle`, `User I/O`, `System I/O`, and `Replication`. Event names include lock waits, disk I/O waits, buffer/latch waits, plan-cache latch waits, replication waits, and `no wait event`.
+
+When to query: use these views when the user gives `SEQNUM`, `EVENT_ID`, or `WAIT_CLASS_ID`, or when a wait event from `V$SESSION_WAIT`, `V$SESSION_EVENT`, `V$SYSTEM_EVENT`, or `V$STATEMENT.EVENT` needs explanation.
+
+Representative SQL:
+
+```sql
+SELECT event_id,
+       name,
+       wait_class_id,
+       wait_class
+FROM V$EVENT_NAME
+ORDER BY wait_class_id, event_id;
+
+SELECT wait_class_id,
+       wait_class
+FROM V$WAIT_CLASS_NAME
+ORDER BY wait_class_id;
+```
+
+### Object Block: `V$SESSION_WAIT`, `V$SESSION_EVENT`, and `V$SESSION_WAIT_CLASS`
+
+Purpose: show current and cumulative session wait information. `V$SESSION_WAIT` shows current waits for currently connected sessions. `V$SESSION_EVENT` shows cumulative wait statistics per session and event. `V$SESSION_WAIT_CLASS` shows cumulative wait statistics per session and wait class.
+
+Key columns: current wait identity uses `SID`, `SEQNUM`, `EVENT`, `P1`, `P2`, `P3`; wait class uses `WAIT_CLASS_ID`, `WAIT_CLASS`; current wait duration uses `WAIT_TIME`, `SECOND_IN_WAIT`; cumulative session-event columns use `TOTAL_WAITS`, `TOTAL_TIMEOUTS`, `TIME_WAITED`, `AVERAGE_WAIT`, `MAX_WAIT`, `TIME_WAITED_MICRO`, `EVENT_ID`; session-wait-class columns use `SID`, `SERIAL`, `WAIT_CLASS_ID`, `WAIT_CLASS`, `TOTAL_WAITS`, `TIME_WAITED`.
+
+When to query: use `V$SESSION_WAIT` for an instant "what is this session waiting on now" answer, then use `V$SESSION_EVENT` or `V$SESSION_WAIT_CLASS` to confirm whether the wait is recurring. These views do not provide wait information for sessions that are no longer connected.
+
+Representative SQL:
+
+```sql
+SELECT sw.sid,
+       s.db_username,
+       sw.seqnum,
+       sw.event,
+       sw.wait_class,
+       sw.wait_time,
+       sw.second_in_wait,
+       sw.p1,
+       sw.p2,
+       sw.p3
+FROM V$SESSION_WAIT sw,
+     V$SESSION s
+WHERE sw.sid = s.id
+ORDER BY sw.second_in_wait DESC, sw.wait_time DESC;
+```
+
+Cumulative session wait evidence:
+
+```sql
+SELECT sid,
+       event,
+       wait_class,
+       total_waits,
+       total_timeouts,
+       time_waited,
+       average_wait,
+       max_wait,
+       time_waited_micro
+FROM V$SESSION_EVENT
+WHERE sid = <SESSION_ID>
+ORDER BY time_waited DESC, total_waits DESC;
+
+SELECT sid,
+       wait_class_id,
+       wait_class,
+       total_waits,
+       time_waited
+FROM V$SESSION_WAIT_CLASS
+WHERE sid = <SESSION_ID>
+ORDER BY time_waited DESC, total_waits DESC;
+```
+
+### Object Block: `V$SYSTEM_EVENT` and `V$SYSTEM_WAIT_CLASS`
+
+Purpose: show cumulative wait statistics from server startup to the present at system level.
+
+Key columns: `V$SYSTEM_EVENT` uses `EVENT`, `TOTAL_WAITS`, `TOTAL_TIMEOUTS`, `TIME_WAITED`, `AVERAGE_WAIT`, `TIME_WAITED_MICRO`, `EVENT_ID`, `WAIT_CLASS_ID`, `WAIT_CLASS`. `V$SYSTEM_WAIT_CLASS` uses `WAIT_CLASS_ID`, `WAIT_CLASS`, `TOTAL_WAITS`, and `TIME_WAITED`.
+
+When to query: use these views for server-level wait-profile questions, especially when the user does not know which session is affected. Exclude `Idle` from bottleneck summaries unless the user explicitly asks about idle/request-wait behavior.
+
+Representative SQL:
+
+```sql
+SELECT event,
+       wait_class,
+       total_waits,
+       total_timeouts,
+       time_waited,
+       average_wait,
+       time_waited_micro
+FROM V$SYSTEM_EVENT
+WHERE wait_class <> 'Idle'
+ORDER BY time_waited DESC, total_waits DESC;
+
+SELECT wait_class,
+       total_waits,
+       time_waited
+FROM V$SYSTEM_WAIT_CLASS
+WHERE wait_class <> 'Idle'
+ORDER BY time_waited DESC, total_waits DESC;
+```
+
+### Object Block: `V$LATCH` and `V$MUTEX`
+
+Purpose: provide lower-level contention evidence. `V$LATCH` shows Buffer Control Block latch attempts and misses for buffer-pool pages. `V$MUTEX` shows mutex statistics used by Altibase process concurrency control.
+
+Key columns: `V$LATCH` uses `SPACE_ID`, `PAGE_ID`, `TRY_READ_LATCH`, `READ_SUCCESS_IMME`, `READ_MISS`, `TRY_WRITE_LATCH`, `WRITE_SUCCESS_IMME`, `WRITE_MISS`, `SLEEPS_CNT`. `V$MUTEX` uses `NAME`, `TRY_COUNT`, `LOCK_COUNT`, `MISS_COUNT`, `SPIN_VALUE`, `TOTAL_LOCK_TIME_US`, `MAX_LOCK_TIME_US`, `THREAD_ID`.
+
+When to query: use these views after higher-level waits point to latch, buffer, page, or mutex contention. Prefer delta snapshots under a comparable workload; do not infer a specific SQL cause from these views alone without `V$SESSION`, `V$STATEMENT`, wait views, and plan evidence.
+
+Representative SQL:
+
+```sql
+SELECT space_id,
+       page_id,
+       try_read_latch,
+       read_miss,
+       try_write_latch,
+       write_miss,
+       sleeps_cnt
+FROM V$LATCH
+ORDER BY sleeps_cnt DESC, read_miss + write_miss DESC;
+
+SELECT name,
+       try_count,
+       lock_count,
+       miss_count,
+       total_lock_time_us,
+       max_lock_time_us,
+       thread_id
+FROM V$MUTEX
+ORDER BY miss_count DESC, total_lock_time_us DESC;
+```
+
 ### Column Block: `V$TRANSACTION` Large-View Columns
 
 Purpose: use this searchable column block when a question asks which transaction view column explains transaction identity, session ownership, MVCC view SCNs, status, update size, XA state, undo-log position, DDL flag, disk update slot, or isolation level.
 
 Key columns: identity columns are `ID`, `SESSION_ID`, `SLOT_NO`; MVCC view columns are `MEMORY_VIEW_SCN`, `MIN_MEMORY_LOB_VIEW_SCN`, `DISK_VIEW_SCN`, `MIN_DISK_LOB_VIEW_SCN`, `COMMIT_SCN`; status columns are `STATUS`, `UPDATE_STATUS`, `LOG_TYPE`, `DDL_FLAG`, `ISOLATION_LEVEL`; XA columns are `XA_COMMIT_STATUS`, `XA_PREPARED_TIME`; undo log columns are `FIRST_UNDO_NEXT_LSN_FILENO`, `FIRST_UNDO_NEXT_LSN_OFFSET`, `CURRENT_UNDO_NEXT_SN`, `CURRENT_UNDO_NEXT_LSN_FILENO`, `CURRENT_UNDO_NEXT_LSN_OFFSET`, `LAST_UNDO_NEXT_LSN_FILENO`, `LAST_UNDO_NEXT_LSN_OFFSET`, `LAST_UNDO_NEXT_SN`; update and storage columns are `UPDATE_SIZE`, `FIRST_UPDATE_TIME`, `TSS_RID`, `RESOURCE_GROUP_ID`.
+
+Value notes: `STATUS` values are `0` begin, `1` precommit, `2` commit in memory, `3` commit, `4` abort, `5` blocked, and `6` end. `UPDATE_STATUS` values are `0` read-only and `1` updating. `LOG_TYPE` values are `0` general and `1` replication-related. `XA_COMMIT_STATUS` values are `0` begin, `1` prepared, and `2` complete. `DDL_FLAG` values are `0` non-DDL and `1` DDL. `ISOLATION_LEVEL` values are `0` read committed, `1` repeatable read, and `2` serializable. A `SESSION_ID` of `-1` indicates a prepared transaction branch with no associated session in an XA environment.
 
 When to query: query this view after identifying a session or transaction ID when the user asks whether a transaction is active, blocked, read-only, updating, DDL-related, XA-prepared, holding old MVCC views, or creating a large update footprint.
 
@@ -2622,11 +3070,36 @@ WHERE session_id = <SESSION_ID>
 ORDER BY id;
 ```
 
+### Object Block: `V$TRANSACTION_MGR`
+
+Purpose: shows transaction-manager capacity and state.
+
+Key columns: `TOTAL_COUNT`, `FREE_LIST_COUNT`, `BEGIN_ENABLE`, `ACTIVE_COUNT`, `SYS_MIN_DISK_VIEWSCN`.
+
+Value notes: `TOTAL_COUNT` is the number of transaction objects created in the transaction pool at startup. `BEGIN_ENABLE` values are `0` disabled and `1` enabled. `ACTIVE_COUNT` is the number of transaction objects assigned to tasks and currently executing.
+
+When to query: use this view when a question asks whether the server can start new transactions, how many transaction objects are active, or which system-level minimum disk view SCN is constraining disk undo or MVCC cleanup analysis.
+
+Representative SQL:
+
+```sql
+SELECT total_count,
+       free_list_count,
+       begin_enable,
+       active_count,
+       sys_min_disk_viewscn
+FROM V$TRANSACTION_MGR;
+```
+
 ### Object Block: `V$LOCK_WAIT`, `V$LOCK`, and `V$LOCK_STATEMENT`
 
 Purpose: show transaction wait chains, lock objects, and statements holding or waiting for locks.
 
-Key columns: `TRANS_ID`, `WAIT_FOR_TRANS_ID`, `LOCK_ITEM_TYPE`, `TABLE_OID`, `LOCK_DESC`, `IS_GRANT`, `SESSION_ID`, `QUERY`.
+Key columns: wait chains use `V$LOCK_WAIT.TRANS_ID` and `WAIT_FOR_TRANS_ID`; lock objects use `V$LOCK.LOCK_ITEM_TYPE`, `TBS_ID`, `TABLE_OID`, `DBF_ID`, `TRANS_ID`, `LOCK_DESC`, `LOCK_CNT`, `IS_GRANT`; lock statements use `SESSION_ID`, `ID`, `TX_ID`, `QUERY`, `STATE`, `BEGIN_FLAG`, `LOCK_ITEM_TYPE`, `TBS_ID`, `TABLE_OID`, `DBF_ID`, `LOCK_DESC`, `LOCK_CNT`, `IS_GRANT`.
+
+Value notes: `LOCK_ITEM_TYPE` values include `TBS`, `TBL`, `DBF`, `UNKNOWN`, and the documented non-value `NONE`. `LOCK_DESC` is a lock-mode string such as `IX`, `IS`, or `X`. `IS_GRANT` indicates whether the lock is granted or waiting. `V$LOCK_WAIT.TRANS_ID` is the waiting transaction and `WAIT_FOR_TRANS_ID` is the transaction being waited for.
+
+When to query: use `V$LOCK_WAIT` to build the transaction wait chain, `V$LOCK` to identify locked objects, and `V$LOCK_STATEMENT` to identify the SQL text associated with lock holders or waiters. Join to `V$TRANSACTION` and `V$SESSION` when users ask for session IDs, users, or client details.
 
 Representative SQL:
 
@@ -2634,6 +3107,43 @@ Representative SQL:
 SELECT trans_id, wait_for_trans_id
 FROM V$LOCK_WAIT
 ORDER BY wait_for_trans_id, trans_id;
+```
+
+Expanded blocker mapping:
+
+```sql
+SELECT lw.trans_id AS waiting_trans_id,
+       tw.session_id AS waiting_session_id,
+       sw.db_username AS waiting_user,
+       lw.wait_for_trans_id AS holder_trans_id,
+       th.session_id AS holder_session_id,
+       sh.db_username AS holder_user
+FROM V$LOCK_WAIT lw,
+     V$TRANSACTION tw,
+     V$TRANSACTION th,
+     V$SESSION sw,
+     V$SESSION sh
+WHERE lw.trans_id = tw.id
+  AND lw.wait_for_trans_id = th.id
+  AND tw.session_id = sw.id
+  AND th.session_id = sh.id
+ORDER BY holder_session_id, waiting_session_id;
+```
+
+Object and SQL detail:
+
+```sql
+SELECT ls.session_id,
+       ls.id AS stmt_id,
+       ls.tx_id,
+       ls.lock_item_type,
+       ls.table_oid,
+       ls.lock_desc,
+       ls.lock_cnt,
+       ls.is_grant,
+       ls.query
+FROM V$LOCK_STATEMENT ls
+ORDER BY ls.is_grant, ls.session_id, ls.id;
 ```
 
 ### Object Block: `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, and `V$SQL_PLAN_CACHE_SQLTEXT`
