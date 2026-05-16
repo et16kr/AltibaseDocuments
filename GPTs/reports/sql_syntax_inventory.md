@@ -12,8 +12,9 @@ attachment text.
 
 This is a documentation-scope baseline. It does not attempt to complete every SQL
 statement, clause, function, hint, or operator block in the customer-facing attachments.
-Those item-level expansions remain split across J011-J016, with PSM, Spatial, tool, and
-connector-specific syntax handled by their later source-family jobs. No attachment
+Those item-level expansions are split across J011-J016, with J011 now source-audited
+and the remaining SQL families continuing in J012-J016. PSM, Spatial, tool, and
+connector-specific syntax are handled by their later source-family jobs. No attachment
 filename, upload boundary, or customer-facing 8.1 source label change was found.
 
 The target customer attachments affected by this baseline are:
@@ -128,6 +129,18 @@ Korean source.
 - Required conversion shape: Per-version BNF root plus clause blocks,
   operation mode/prerequisite notes, example SQL or command sequence, and validation
   SQL.
+- J011 completion note: `GPTs/attachments/03_sql_ddl_generation.md` now contains
+  source-audited BNF-like blocks for `CREATE DATABASE`, `DROP DATABASE`,
+  `ALTER DATABASE`, database/datafile/checkpoint-image lifecycle clauses,
+  archive-log mode, online backup, incremental backup, restore, recovery, backup-file
+  management, change tracking, snapshot, 8.1 checkpoint scale, `CREATE`/`ALTER`/`DROP`
+  tablespace, file and checkpoint-path clauses, and tablespace backup state clauses.
+  `GPTs/attachments/02_administration_operations.md` now records the guarded
+  `ALTER DATABASE RESTORE TABLESPACE tablespace_name [, ...]` operational note. The
+  7.1, 7.3, and 8.1 SQL Reference restore/datafile/backup/recovery clause diagrams were
+  checked against the original image files; the shared `restore_tablespace_clause`
+  converts only to `TABLESPACE tablespace_name [, tablespace_name ...]`, and no
+  `RECOVER TABLESPACE` syntax was introduced.
 
 ### J012 Baseline: Table And Queue SQL
 
@@ -283,8 +296,9 @@ named_clause ::=
 
 ## Gap And Handoff Notes
 
-- `GAP-J002-003` remains the anchor for tablespace restore/recovery grammar until J011
-  source-audits the original diagrams and adds version-scoped BNF.
+- `GAP-J002-003` was closed by J011 for the source-audited tablespace restore/recovery
+  grammar. Keep the guarded wording: generate `RESTORE TABLESPACE` only from the
+  audited restore clause and do not invent `RECOVER TABLESPACE`.
 - `GAP-J002-004` remains the anchor for direct-key supported data type and partial-key
   behavior until J012/J013 expand table and index direct-key blocks.
 - `GAP-J002-005` remains the anchor for JSON SQL and function option grammar until J015

@@ -64,20 +64,23 @@ recording or remediating gaps.
   available. Until then, answers must request exact versions/builds, topology, transport,
   and vendor/source confirmation.
 
-### GAP-J002-003: Tablespace restore/recovery syntax diagrams still need source audit
+### GAP-J002-003: Tablespace restore/recovery syntax diagrams source-audited by J011
 
-- Status: `Open`
+- Status: `Closed-trace`
 - Source family and version scope: `administrator_operations`, `sql_reference`; 7.1,
   7.3, and 8.1.
-- Missing item or behavior: Full source-audited BNF-like conversion for image-only
-  tablespace restore/recovery grammar such as `restore_tablespace_clause` before any
-  future generated `RESTORE TABLESPACE` or `RECOVER TABLESPACE` syntax expansion.
+- Missing item or behavior: Closed by J011. The image-only
+  `restore_tablespace_clause` was source-audited for 7.1, 7.3, and the Altibase 8.1
+  verified source, and customer-facing syntax now converts it only as
+  `TABLESPACE tablespace_name [, tablespace_name ...]`.
 - Affected attachments: `02_administration_operations.md`,
   `03_sql_ddl_generation.md`.
-- Evidence: `review/reports/R12_admin_backup_recovery_tablespace.md`.
-- Required remediation shape: Per-version BNF-like syntax block, prerequisites, example
-  SQL or command sequence, expected recovery mode, and validation/check SQL. Do not add
-  syntax generated from diagrams until the original source diagram is audited.
+- Evidence: `review/reports/R12_admin_backup_recovery_tablespace.md`;
+  `GPTs/reports/sql_syntax_inventory.md`; `GPTs/attachments/03_sql_ddl_generation.md`;
+  `GPTs/attachments/02_administration_operations.md`.
+- Required remediation shape: Completed for the scoped grammar. Keep this trace so later
+  jobs preserve the guardrail: generate `ALTER DATABASE RESTORE TABLESPACE ...` only
+  from the audited restore clause and do not invent `RECOVER TABLESPACE`.
 
 ### GAP-J002-004: Direct key supported-type matrix is summarized
 
@@ -437,10 +440,16 @@ recording or remediating gaps.
   `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`.
-- Required remediation shape: J011-J016 should follow the statement-family queue in
+- Required remediation shape: J012-J016 should continue following the statement-family queue in
   `GPTs/reports/sql_syntax_inventory.md`, adding or verifying compact BNF roots and
   named clause productions, version scope, prerequisites, examples, validation SQL,
   destructive-operation and implicit-commit cautions, and cross-references. J034 and
   J039 should apply the same notation rules to PSM, external procedure, Spatial, and
   tool-adjacent SQL. Keep Korean source precedence and customer-facing English
   normalization throughout.
+- J011 update: The database, tablespace, datafile, archive, backup, restore, and
+  recovery SQL family is source-audited and expanded in
+  `GPTs/attachments/03_sql_ddl_generation.md`, with the operational
+  `RESTORE TABLESPACE` guardrail cross-referenced in
+  `GPTs/attachments/02_administration_operations.md`. This queue remains open for
+  J012-J016 and later specialized SQL families.

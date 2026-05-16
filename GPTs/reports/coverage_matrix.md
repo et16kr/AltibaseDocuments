@@ -97,8 +97,8 @@ for 8.1 customer-facing labels.
 | --- | --- | --- | --- | --- |
 | `00_version_release_platform.md` | `release_notes_platform`, `patch_notes` | `technical_documents_support` | Version and platform matrix, feature introduction notes, upgrade cautions, customer-safe 8.1 label. | `GAP-J002-001`, `GAP-J002-007` |
 | `01_getting_started_installation.md` | `getting_started_installation` | `release_notes_platform`, `technical_documents_support` | Install prerequisites, environment setup, database creation, startup/shutdown, first checks. | `GAP-J002-007`, `GAP-J002-018` |
-| `02_administration_operations.md` | `administrator_operations` | `sql_reference`, `general_reference_1_datatypes_properties`, `general_reference_2_dictionary_views` | Backup/recovery, archive log mode, tablespaces, users, privileges, server modes, destructive-operation guardrails. | `GAP-J002-003`, `GAP-J002-018` |
-| `03_sql_ddl_generation.md` | `sql_reference`, `administrator_operations` | `general_reference_1_datatypes_properties`, `replication_manual`, `log_analyzer` | DDL/DCL/admin SQL, compact BNF, examples, verification SQL, 8.1 idempotent syntax boundaries. | `GAP-J002-003`, `GAP-J002-004`, `GAP-J002-005`, `GAP-J002-018` |
+| `02_administration_operations.md` | `administrator_operations` | `sql_reference`, `general_reference_1_datatypes_properties`, `general_reference_2_dictionary_views` | Backup/recovery, archive log mode, tablespaces, users, privileges, server modes, destructive-operation guardrails. | `GAP-J002-018` |
+| `03_sql_ddl_generation.md` | `sql_reference`, `administrator_operations` | `general_reference_1_datatypes_properties`, `replication_manual`, `log_analyzer` | DDL/DCL/admin SQL, compact BNF, examples, verification SQL, 8.1 idempotent syntax boundaries. | `GAP-J002-004`, `GAP-J002-005`, `GAP-J002-018` |
 | `04_sql_dml_oracle_compatibility.md` | `sql_reference` | `general_reference_1_datatypes_properties`, `migration_oracle` | DML, functions, predicates, expressions, JSON SQL, and Altibase/Oracle difference blocks. | `GAP-J002-005`, `GAP-J002-017` |
 | `05_data_types_properties.md` | `general_reference_1_datatypes_properties` | `release_notes_platform`, `patch_notes`, `sql_reference` | Data type and property item blocks, JSON, LOB, Temporary LOB, property defaults/ranges/check SQL. | `GAP-J002-001`, `GAP-J002-004`, `GAP-J002-005` |
 | `06_data_dictionary_performance_views.md` | `general_reference_2_dictionary_views` | `performance_tuning`, `replication_manual`, `patch_notes` | Dictionary/performance view blocks, key columns, object lookup SQL, version-sensitive view availability. | `GAP-J002-006`, `GAP-J002-010` |
@@ -127,10 +127,15 @@ for 8.1 customer-facing labels.
   property/data type gaps from `GAP-J002-001`, `GAP-J002-004`, `GAP-J002-005`, and
   `GAP-J004-001`.
 - J010 created `GPTs/reports/sql_syntax_inventory.md` as the SQL statement-family
-  inventory, BNF conversion contract, and J011-J016 queue. J011-J016 should use that
-  report with `sql_reference`, `administrator_operations`, `migration_oracle`, and
-  `spatial_nifi_tableau` to convert syntax diagrams and SQL families into compact
-  BNF-like item blocks.
+  inventory, BNF conversion contract, and J011-J016 queue. J012-J016 should continue
+  using that report with `sql_reference`, `administrator_operations`,
+  `migration_oracle`, and `spatial_nifi_tableau` to convert syntax diagrams and SQL
+  families into compact BNF-like item blocks.
+- J011 closed the tablespace restore/recovery syntax audit gap for
+  `administrator_operations` and `sql_reference`: database, tablespace, datafile,
+  archive, backup, restore, and recovery SQL is now expanded in
+  `03_sql_ddl_generation.md`, with operational restore guardrails in
+  `02_administration_operations.md`.
 - J017-J021 should use `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
 - J022-J026 should use `error_message_reference` and related operational sources to

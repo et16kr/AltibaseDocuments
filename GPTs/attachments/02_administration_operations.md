@@ -1236,6 +1236,7 @@ Rules:
 
 - Media recovery is offline and runs in `CONTROL`.
 - Restore the affected data files or checkpoint image files from backup before recovery.
+- The SQL Reference restore grammar also supports `ALTER DATABASE RESTORE TABLESPACE tablespace_name [, tablespace_name ...]` for source-audited complete tablespace restoration. Use it only when the backup type and recovery plan call for SQL-driven tablespace restore; do not invent `RECOVER TABLESPACE`.
 - Do not restore log anchor files from backup unless the recovery scenario requires historical metadata, such as accidental tablespace drop or incomplete recovery.
 - After tablespace add, drop, or rename, back up `SYS_TBS_MEM_DIC`, the changed tablespace, and log anchors, or perform a full database backup.
 

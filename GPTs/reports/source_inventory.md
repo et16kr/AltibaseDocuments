@@ -105,9 +105,28 @@ consistent.
 
 J010 does not change the 20 customer-facing attachment filenames and does not directly
 rewrite the SQL attachments. The source-backed reason is that this job defines the
-shared SQL conversion queue and BNF rules, while item-level SQL expansion remains split
-across J011-J016 and later specialized jobs. The remaining SQL syntax conversion queue
-is tracked in `GPTs/reports/gap_register.md` as `GAP-J010-001`.
+shared SQL conversion queue and BNF rules. J011 has since completed the database,
+tablespace, datafile, archive, backup, restore, and recovery SQL family; remaining
+item-level SQL expansion continues across J012-J016 and later specialized jobs. The
+remaining SQL syntax conversion queue is tracked in `GPTs/reports/gap_register.md` as
+`GAP-J010-001`.
+
+## J011 Database, Tablespace, Datafile, Backup, Restore, And Recovery SQL Addendum
+
+J011 uses the `sql_reference` and `administrator_operations` source families for
+Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source. Korean SQL Reference
+and Administrator manuals remain authoritative; matching English manuals were used only
+for English extraction when consistent. The Altibase 8.1 `CHECKPOINT SCALE` syntax was
+checked against the Altibase 8.1 verified SQL Reference, Korean Administrator manual
+checkpoint-scale section, and Korean 8.1 release note support statement.
+
+J011 updates `GPTs/attachments/03_sql_ddl_generation.md` with source-audited compact
+BNF and examples for database creation/drop, `ALTER DATABASE`, tablespace creation,
+alter/drop, datafile/tempfile clauses, archive-log mode, online backup, incremental
+backup, restore, recovery, backup-file management, change tracking, snapshot, and 8.1
+checkpoint scale. J011 also updates `GPTs/attachments/02_administration_operations.md`
+with the guarded `RESTORE TABLESPACE` operational note and closes
+`GAP-J002-003` as a trace entry in `GPTs/reports/gap_register.md`.
 
 ## Source Roots
 

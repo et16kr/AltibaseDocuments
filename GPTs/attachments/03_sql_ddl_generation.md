@@ -29,6 +29,7 @@
 - Always identify the storage target before generating DDL: memory data, disk data, volatile data, or temporary disk space.
 - Prefer complete runnable examples with follow-up verification SQL. Do not provide DDL without owner, tablespace, and privilege assumptions when those affect execution.
 - For broad compatibility with 7.1 and 7.3, omit `IF NOT EXISTS` and `IF EXISTS`. If a 7.1 or 7.3 customer requests idempotent DDL, use metadata pre-check SQL plus script-side conditional execution instead of SQL-level `IF EXISTS` or `IF NOT EXISTS`. Use those clauses only when the customer targets Altibase 8.1 verified source syntax.
+- DDL and administrative SQL run as their own transactions and can commit prior uncommitted DML in the session. State that rollback expectations change before generating destructive database, tablespace, file, `DROP`, `PURGE`, `TRUNCATE`, backup, restore, or recovery SQL.
 - For property changes, show `V$PROPERTY` before and after the change, use `ALTER SYSTEM` or `ALTER SESSION` only for documented dynamic properties, and add the related performance-view check when one exists.
 - Do not claim Oracle DDL can run unchanged. Convert Oracle storage, tablespace, LOB, sequence, and replication assumptions into Altibase syntax.
 
@@ -73,13 +74,12 @@ disk_tablespace ::=
   [SEGMENT MANAGEMENT {AUTO | MANUAL}]
 
 file_spec ::=
-  'absolute_file_path' [SIZE size] [REUSE]
-  [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
+  'absolute_file_path' [SIZE size] [REUSE] [autoextend_clause]
 
 memory_tablespace ::=
   CREATE MEMORY [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   SIZE size
-  [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
+  [autoextend_clause]
   [CHECKPOINT PATH 'directory' [, 'directory' ...]]
   [SPLIT EACH size]
   [ONLINE | OFFLINE]
@@ -87,7 +87,7 @@ memory_tablespace ::=
 volatile_tablespace ::=
   CREATE VOLATILE [DATA] TABLESPACE [create_if_not_exists] tablespace_name
   SIZE size
-  [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
+  [autoextend_clause]
 
 temporary_tablespace ::=
   CREATE TEMPORARY TABLESPACE [create_if_not_exists] tablespace_name
@@ -95,17 +95,57 @@ temporary_tablespace ::=
   [EXTENTSIZE size]
 
 tempfile_spec ::=
-  'absolute_file_path' [SIZE size] [REUSE]
-  [AUTOEXTEND {ON [NEXT size] [MAXSIZE {size | UNLIMITED}] | OFF}]
+  'absolute_file_path' [SIZE size] [REUSE] [autoextend_clause]
+
+drop_if_exists ::=
+  IF EXISTS           -- 8.1 verified source only; omit for 7.1 and 7.3
+
+drop_tablespace ::=
+  DROP TABLESPACE [drop_if_exists] tablespace_name
+  [INCLUDING CONTENTS [AND DATAFILES] [CASCADE CONSTRAINTS]]
+
+alter_tablespace ::=
+  ALTER TABLESPACE tablespace_name
+  { datafile_tempfile_clause
+  | checkpoint_path_clause
+  | status_clause
+  | tablespace_backup_clause }
+
+datafile_tempfile_clause ::=
+  ADD {DATAFILE | TEMPFILE} file_spec [, file_spec ...]
+| DROP {DATAFILE | TEMPFILE} 'absolute_file_path' [, 'absolute_file_path' ...]
+| RENAME {DATAFILE | TEMPFILE}
+    'old_absolute_file_path' [, 'old_absolute_file_path' ...]
+    TO 'new_absolute_file_path' [, 'new_absolute_file_path' ...]
+| ALTER {DATAFILE | TEMPFILE} 'absolute_file_path' {SIZE size | autoextend_clause}
+
+checkpoint_path_clause ::=
+  ADD CHECKPOINT PATH 'directory'
+| DROP CHECKPOINT PATH 'directory'
+| RENAME CHECKPOINT PATH 'old_directory' TO 'new_directory'
+
+status_clause ::=
+  ONLINE | OFFLINE | DISCARD
+
+tablespace_backup_clause ::=
+  {BEGIN | END} BACKUP
+
+autoextend_clause ::=
+  AUTOEXTEND {OFF | ON [NEXT size] [MAXSIZE {size | UNLIMITED}]}
+
+size ::=
+  integer [K | M | G]
 ```
 
 Generation notes:
 
 - `IF NOT EXISTS` is available for tablespace creation in the Altibase 8.1 verified source. Do not generate it for 7.1 or 7.3.
+- `DROP TABLESPACE IF EXISTS` is available only in the Altibase 8.1 verified source. For 7.1 and 7.3, use a metadata pre-check and ordinary `DROP TABLESPACE`.
 - Only `SYS` or a user with `CREATE TABLESPACE` can create these tablespaces. `ALTER TABLESPACE` and `DROP TABLESPACE` require the matching system privilege.
 - Disk tablespaces store permanent disk tables and disk indexes. If `DISK` and `DATA` are omitted, the ordinary permanent form is still a disk data tablespace.
 - Disk `DATAFILE` and temporary `TEMPFILE` paths should be absolute paths. Use `REUSE` only when overwriting the existing file is intentional.
 - Always generate explicit disk datafile `SIZE`, `NEXT`, and `MAXSIZE` values instead of relying on omitted-size defaults. If temporary file values are omitted, check `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
+- `ADD DATAFILE`, `ADD TEMPFILE`, `DROP DATAFILE`, and `DROP TEMPFILE` can take comma-separated file lists. For `RENAME DATAFILE` or `RENAME TEMPFILE`, provide the same number of old and new absolute paths, and match them positionally.
 - Disk `EXTENTSIZE` must align with the disk page size. `SEGMENT MANAGEMENT` defaults from `DEFAULT_SEGMENT_MANAGEMENT_TYPE` when omitted.
 - Memory tablespace `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. `AUTOEXTEND OFF` is the default.
 - Memory `MAXSIZE UNLIMITED` is still bounded by available memory and `MEM_MAX_DB_SIZE`. If `CHECKPOINT PATH` is omitted, Altibase uses `MEM_DB_DIR`.
@@ -113,6 +153,8 @@ Generation notes:
 - Volatile tablespaces exist in memory, have no checkpoint image files, and lose data at shutdown. Their `SIZE` and `AUTOEXTEND NEXT` use the same allocation-unit rule as memory tablespaces, but their total growth is bounded by `VOLATILE_MAX_DB_SIZE`.
 - `CREATE TEMPORARY TABLESPACE` creates disk working space for temporary query results and user `TEMPORARY TABLESPACE` assignment. `GLOBAL TEMPORARY TABLE` objects use a volatile tablespace in the table `TABLESPACE` clause.
 - User-defined disk and memory tablespaces can move between `ONLINE` and `OFFLINE`; volatile and temporary tablespaces cannot use state changes. `DISCARD` is for damaged disk or memory tablespaces during `CONTROL` startup.
+- `AND DATAFILES` in `DROP TABLESPACE` applies to disk data files or memory checkpoint image files. Omit `AND DATAFILES` for volatile tablespaces.
+- `BEGIN BACKUP` and `END BACKUP` are tablespace online-backup state changes; use them only inside a documented backup procedure and end backup state as soon as copied files are complete.
 
 Tablespace generation checklist:
 
@@ -757,6 +799,34 @@ Generation notes:
 
 Use these compact conversions when the SQL Reference syntax diagram is broader than the common generation patterns above. They keep the railroad-diagram content readable without images.
 
+#### CREATE and DROP DATABASE Syntax
+
+```text
+create_database_7x ::=
+  CREATE DATABASE database_name INITSIZE = integer [M | G]
+  {ARCHIVELOG | NOARCHIVELOG}
+  CHARACTER SET charset
+  NATIONAL CHARACTER SET charset
+
+create_database_8_1 ::=
+  CREATE DATABASE database_name INITSIZE = integer [M | G]
+  {ARCHIVELOG | NOARCHIVELOG}
+  CHARACTER SET charset
+  NATIONAL CHARACTER SET charset
+  [CHECKPOINT SCALE {PAIR | SINGLE}]
+
+drop_database ::=
+  DROP DATABASE database_name
+```
+
+Database generation notes:
+
+- `CREATE DATABASE` and `DROP DATABASE` can be executed only by `SYS` in `-sysdba` administrator mode during `PROCESS`.
+- `database_name` must match the `DB_NAME` property. Ask for the target `DB_NAME`, character set, national character set, archive-log mode, and initial memory database size before generating executable `CREATE DATABASE`.
+- `CREATE DATABASE` creates the system dictionary, undo, temporary, and system data tablespaces with defaults read from `altibase.properties`; create user-defined tablespaces after database creation.
+- For 7.1 and 7.3, omit `CHECKPOINT SCALE`. `CHECKPOINT SCALE {PAIR | SINGLE}` is Altibase 8.1 verified source syntax and `PAIR` is the documented default when omitted.
+- `DROP DATABASE` deletes database data files, log files, and log anchor files. Treat it as destructive and require an explicit backup and shutdown plan before providing a runnable command.
+
 #### ALTER DATABASE Lifecycle Syntax
 
 ```text
@@ -767,7 +837,7 @@ alter_database ::=
   | create_datafile_clause
   | create_checkpoint_image_clause
   | database_name session_clause
-  | archivelog_option
+  | {ARCHIVELOG | NOARCHIVELOG}
   | backup_clause
   | incremental_backup_clause
   | recover_clause
@@ -784,19 +854,77 @@ startup_clause ::=
   | SERVICE
   | META [UPGRADE | RESETLOGS | RESETUNDO]
   | SHUTDOWN [NORMAL | IMMEDIATE | EXIT] }
+
+rename_datafile_clause ::=
+  RENAME DATAFILE 'old_absolute_file_path' TO 'new_absolute_file_path'
+
+create_datafile_clause ::=
+  CREATE DATAFILE 'absolute_file_path'
+
+create_checkpoint_image_clause ::=
+  CREATE CHECKPOINT IMAGE 'checkpoint_image_file'
+
+session_clause ::=
+  SESSION CLOSE {session_id | USER user_name | ALL}
+
+snapshot_clause ::=
+  {BEGIN | END} SNAPSHOT
+
+checkpoint_scale_clause ::=
+  CHECKPOINT SCALE {PAIR | SINGLE}    -- Altibase 8.1 verified source only
 ```
 
 #### ALTER DATABASE Backup and Recovery Syntax
 
 ```text
-archive_backup_recovery_clause ::=
-  { ARCHIVELOG | NOARCHIVELOG
-  | BACKUP {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [backup_option ...]
-  | BACKUP INCREMENTAL LEVEL 0 {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [WITH TAG tag_name]
-  | BACKUP INCREMENTAL LEVEL 1 [CUMULATIVE] {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]} [WITH TAG tag_name]
-  | RECOVER DATABASE [FROM TAG tag_name | UNTIL TIME time_literal | UNTIL CANCEL]
-  | RESTORE DATABASE [FROM TAG tag_name | UNTIL TIME time_literal] }
+backup_clause ::=
+  BACKUP {LOGANCHOR | DATABASE | TABLESPACE tablespace_name} TO 'backup_dir'
+
+incremental_backup_clause ::=
+  BACKUP INCREMENTAL LEVEL {0 | 1 [CUMULATIVE]}
+  {DATABASE | TABLESPACE tablespace_name [, tablespace_name ...]}
+  [WITH TAG 'tag_name']
+
+recover_clause ::=
+  RECOVER DATABASE [from_tag_clause | until_option]
+
+restore_clause ::=
+  RESTORE {restore_database_clause | restore_tablespace_clause}
+
+restore_database_clause ::=
+  DATABASE [from_tag_clause | UNTIL TIME 'YYYY-MM-DD:HH:MM:SS']
+
+restore_tablespace_clause ::=
+  TABLESPACE tablespace_name [, tablespace_name ...]
+
+from_tag_clause ::=
+  FROM TAG 'tag_name'
+
+until_option ::=
+  UNTIL {CANCEL | TIME 'YYYY-MM-DD:HH:MM:SS'}
+
+change_backup_directory_clause ::=
+  CHANGE BACKUP DIRECTORY 'directory'
+
+move_backup_clause ::=
+  MOVE BACKUP FILE TO 'directory' [WITH CONTENTS]
+
+delete_backup_clause ::=
+  DELETE OBSOLETE BACKUP FILES
+
+change_tracking_clause ::=
+  {ENABLE | DISABLE} INCREMENTAL CHUNK CHANGE TRACKING
 ```
+
+Backup and recovery generation notes:
+
+- Most `ALTER DATABASE` forms require `SYSDBA` before `SERVICE`; `SESSION CLOSE` is the exception documented by the SQL Reference. Recovery, restore, datafile recreation, and archive-log mode changes are operational procedures, not isolated SQL snippets.
+- `ALTER DATABASE ARCHIVELOG` and `ALTER DATABASE NOARCHIVELOG` change media-recovery capability and require a controlled service outage. Use attachment 02 for the runbook and `V$LOG`/`V$ARCHIVE` checks.
+- `ALTER DATABASE BACKUP TABLESPACE` backs up one tablespace per statement. Use repeated statements for multiple tablespaces unless the exact target manual proves a list form for that version.
+- For level 1 incremental backup, omitting `CUMULATIVE` is the differential form; do not generate a `DIFFERENTIAL` keyword.
+- `RESTORE TABLESPACE tablespace_name [, ...]` is source-audited for 7.1, 7.3, and the Altibase 8.1 verified source. It is the restore grammar only; do not invent `RECOVER TABLESPACE`. After restore or OS-level file copy, use the documented `RECOVER DATABASE` procedure when media recovery is required.
+- `RESTORE DATABASE UNTIL CANCEL` is not supported for incremental backup restoration. Restore with no target, `FROM TAG`, or `UNTIL TIME`, then recover with `UNTIL CANCEL` only when the recovery plan and required logs support that path.
+- If the customer gives a tag-based restore and recovery plan, use the same `FROM TAG` value for `RESTORE DATABASE` and `RECOVER DATABASE` unless they explicitly intend to restore from a tag and recover beyond it with `UNTIL TIME` or `UNTIL CANCEL`.
 
 #### Directory DDL Syntax
 
@@ -974,8 +1102,6 @@ noaudit_object_clause ::=
   ON [owner.]object_name
 ```
 
-For level 1 incremental backup, omitting `CUMULATIVE` is the differential form; do not generate a `DIFFERENTIAL` keyword. Do not generate `RECOVER TABLESPACE` from this compact grammar. `RESTORE DATABASE UNTIL CANCEL` is not supported for incremental backup restoration; restore with no target, `FROM TAG`, or `UNTIL TIME`, then recover with `UNTIL CANCEL` only when the recovery plan requires it.
-
 Generation notes:
 
 - `IF NOT EXISTS` and `IF EXISTS` forms shown in these additional patterns are 8.1 verified source syntax. Omit them for 7.1 and 7.3 unless a later Altibase source for the exact target version and patch explicitly documents support.
@@ -1053,6 +1179,150 @@ ORDER BY name;
 ```
 
 For these static examples, explain the file, restart, or database recreation path instead of emitting a dynamic `ALTER` statement.
+
+### Database, Archive, Backup, and Recovery SQL Examples
+
+Create an initial database in 7.1 or 7.3 syntax:
+
+```sql
+STARTUP PROCESS;
+
+CREATE DATABASE mydb INITSIZE = 1024M
+ARCHIVELOG
+CHARACTER SET UTF8
+NATIONAL CHARACTER SET UTF16;
+```
+
+For an Altibase 8.1 verified source target, `CHECKPOINT SCALE` can be specified during database creation:
+
+```sql
+STARTUP PROCESS;
+
+CREATE DATABASE mydb INITSIZE = 1024M
+ARCHIVELOG
+CHARACTER SET UTF8
+NATIONAL CHARACTER SET UTF16
+CHECKPOINT SCALE SINGLE;
+```
+
+Change archive-log mode during a planned outage:
+
+```sql
+STARTUP CONTROL;
+
+ALTER DATABASE ARCHIVELOG;
+-- or
+ALTER DATABASE NOARCHIVELOG;
+
+SELECT server_status, archivelog_mode
+FROM V$LOG;
+
+SELECT lfg_id,
+       archive_mode,
+       archive_thr_running,
+       archive_dest,
+       current_logfile,
+       oldest_active_logfile
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+```
+
+Run online backup SQL only after confirming `ARCHIVELOG` mode and writable backup storage:
+
+```sql
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/full';
+ALTER DATABASE BACKUP LOGANCHOR TO '/backup/altibase/loganchor';
+ALTER DATABASE BACKUP TABLESPACE app_data TO '/backup/altibase/app_data';
+ALTER SYSTEM SWITCH LOGFILE;
+```
+
+Configure and run incremental backups:
+
+```sql
+ALTER DATABASE ENABLE INCREMENTAL CHUNK CHANGE TRACKING;
+ALTER DATABASE CHANGE BACKUP DIRECTORY '/backup/altibase/incremental';
+
+ALTER DATABASE BACKUP INCREMENTAL LEVEL 0 DATABASE WITH TAG 'MONDAY';
+ALTER DATABASE BACKUP INCREMENTAL LEVEL 1 DATABASE WITH TAG 'TUESDAY';
+ALTER DATABASE BACKUP INCREMENTAL LEVEL 1 CUMULATIVE DATABASE WITH TAG 'SATURDAY';
+ALTER DATABASE BACKUP INCREMENTAL LEVEL 1 TABLESPACE app_data WITH TAG 'APP_DATA_L1';
+
+SELECT begin_backup_time,
+       end_backup_time,
+       backup_level,
+       backup_type,
+       backup_target,
+       tablespace_id,
+       file_id,
+       backup_tag,
+       backup_file
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+Restore and recover from an incremental backup in `CONTROL`:
+
+```sql
+STARTUP CONTROL;
+
+ALTER DATABASE RESTORE DATABASE FROM TAG 'TUESDAY';
+ALTER DATABASE RECOVER DATABASE FROM TAG 'TUESDAY';
+
+STARTUP SERVICE;
+```
+
+Restore selected tablespaces from source-audited restore grammar, then run recovery according to the media-recovery plan:
+
+```sql
+STARTUP CONTROL;
+
+ALTER DATABASE RESTORE TABLESPACE app_data, app_index;
+ALTER DATABASE RECOVER DATABASE;
+
+STARTUP SERVICE;
+```
+
+For incomplete recovery, use one target and reset logs before service:
+
+```sql
+STARTUP CONTROL;
+
+ALTER DATABASE RECOVER DATABASE UNTIL TIME '2026-05-13:17:55:00';
+ALTER DATABASE mydb META RESETLOGS;
+ALTER DATABASE mydb SERVICE;
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/after_resetlogs';
+```
+
+Recreate a missing disk data file or memory checkpoint image from log anchor metadata before complete recovery. Run only the file-type command that matches the failure:
+
+```sql
+STARTUP CONTROL;
+
+-- For a missing disk or temporary data file:
+ALTER DATABASE CREATE DATAFILE '/data/altibase/dbs/app_disk01.dbf';
+
+-- For a missing memory checkpoint image file:
+ALTER DATABASE CREATE CHECKPOINT IMAGE 'APP_MEM_TBS-1-0';
+
+ALTER DATABASE RECOVER DATABASE;
+
+STARTUP SERVICE;
+```
+
+Manage incremental backup files:
+
+```sql
+ALTER DATABASE MOVE BACKUP FILE TO '/backup/altibase/incremental2';
+ALTER DATABASE MOVE BACKUP FILE TO '/backup/altibase/incremental2' WITH CONTENTS;
+ALTER DATABASE DELETE OBSOLETE BACKUP FILES;
+ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING;
+```
+
+Database and recovery example cautions:
+
+- Replace every database name, path, backup tag, tablespace, and file name with values from the target environment.
+- Do not run `DROP DATABASE` or incomplete recovery from a generated answer unless the customer confirms the exact version, target database, backup set, recovery target, log availability, and outage plan.
+- Do not use `RESTORE TABLESPACE` as a replacement for ordinary online tablespace backup restore procedures that require OS file copy plus `RECOVER DATABASE`; choose the procedure based on the backup type and source-backed runbook in attachment 02.
 
 ### Tablespace Examples
 
