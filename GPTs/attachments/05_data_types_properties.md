@@ -2797,7 +2797,7 @@ WHERE name = 'REPLICATION_PORT_NO';
 
 ### Property Item: `REPLICATION_SSL_PORT_NO`
 
-Version: 8.1 baseline property.
+Version: Altibase 8.1 verified source only in the selected General Reference 1 detailed property sections.
 
 Meaning: local SSL replication port used when replication connects with SSL.
 
@@ -2910,6 +2910,330 @@ Check SQL:
 SELECT name, value1
 FROM V$PROPERTY
 WHERE name = 'SSL_KEY';
+```
+
+### Property Item Group: Session client, IPC, and NLS properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
+
+Meaning: control client/server session housekeeping, DBMS concurrent execution defaults, TCP/IP and local IPC connection resources, NLS display/conversion behavior, user lock wait behavior, and XA heuristic completion defaults.
+
+Properties:
+
+- `CM_DISCONN_DETECT_TIME`: client disconnect detector interval in seconds; default `3`; range `[1, 2^32 - 1]`; read-only. Use when a client process dies while the server is doing long internal work and the orphaned session must eventually be detected and rolled back.
+- `CONCURRENT_EXEC_DEGREE_DEFAULT`: default procedure count for `DBMS_CONCURRENT_EXEC` when the package `INITIALIZE` call does not specify a degree; default `4`; range `[2, 1024]`; read-write with `ALTER SYSTEM`. It cannot exceed `CONCURRENT_EXEC_DEGREE_MAX`.
+- `CONCURRENT_EXEC_DEGREE_MAX`: maximum parallel procedure count for `DBMS_CONCURRENT_EXEC`; default is the logical core count; range `[0, 1024]`; read-only. `0` disables `DBMS_CONCURRENT_EXEC` package operation.
+- `CONCURRENT_EXEC_WAIT_INTERVAL`: interval used by `DBMS_CONCURRENT_EXEC` `REQUEST` and `WAIT_REQ` checks; default `100`; range `[10, 1000000]`; read-write with `ALTER SYSTEM`.
+- `DEFAULT_THREAD_STACK_SIZE`: stack size for all threads, in bytes; default `10485760` (`10MB`); range `[1048576, 134217728]`; read-only.
+- `IPC_CHANNEL_COUNT`: maximum IPC communication channels between client and server; default `0`; range `[0, 65535]`; read-only. Shared memory and semaphores are allocated in proportion to this count.
+- `IPC_FILEPATH`: UNIX IPC socket path; default `$ALTIBASE_HOME/trc/cm-ipc`; read-only. Do not delete the socket file created under `$ALTIBASE_HOME/trc`.
+- `IPC_SEM_KEY`: IPC semaphore key base; default `0`; range `[0, 4294967294]`; read-only. `0` derives keys from the server PID; nonzero values allocate a continuous key range based on `IPC_CHANNEL_COUNT + 1`.
+- `IPC_SHM_KEY`: IPC shared-memory key; default `0`; range `[0, 4294967294]`; read-only. Check `altibase_boot.log` and OS `errno` if startup fails while creating shared memory.
+- `IPCDA_CHANNEL_COUNT`: maximum IPCDA communication channels; default `0`; range `[0, 65535]`; read-only. The source recommends about half the CPU core count as an optimized channel count.
+- `IPCDA_DATABLOCK_SIZE`: shared-memory size for one IPCDA communication channel, in KB; default `20480`; range `[32, 102400]`; read-only. Total memory use is approximately `IPCDA_CHANNEL_COUNT * IPCDA_DATABLOCK_SIZE`.
+- `IPCDA_FILEPATH`: UNIX IPCDA socket path; default `$ALTIBASE_HOME/trc/cm-ipcda`; read-only, multiple value. Do not delete the generated socket file.
+- `IPCDA_SEM_KEY`: IPCDA semaphore key base; default `0`; range `[0, 4294967294]`; read-only. Nonzero values allocate continuous semaphore keys using `IPCDA_SEM_KEY`.
+- `IPCDA_SHM_KEY`: IPCDA shared-memory key base; default `0`; range `[0, 4294967294]`; read-only. Nonzero values use consecutive keys, such as `10000` and `10001` when `IPCDA_SHM_KEY=10000`.
+- `MAX_LISTEN`: TCP/IP or UNIX domain socket listen queue size for ordinary client communication; default `128`; range `[0, 16384]`; read-only.
+- `MAX_STATEMENTS_PER_SESSION`: maximum executable statements per session; default `1024`; range `[1, 65535]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`.
+- `NET_CONN_IP_STACK`: server-side socket IP stack; default `0`; values `0` IPv4 only, `1` dual IPv4/IPv6 stack, `2` IPv6 only; read-only.
+- `NLS_COMP`: character comparison mode; default `0`; range `[0, 1]`; read-only. `1` compares in dictionary order for supported Korean character sets; `0` compares by binary character value.
+- `NLS_CURRENCY`: local currency symbol used by the `L` number format; default follows `NLS_TERRITORY`; maximum `10` bytes; read-write with `ALTER SESSION`. Values must not start with `+`, `-`, `<`, or `>`.
+- `NLS_ISO_CURRENCY`: ISO currency territory used by the `C` number format; default follows `NLS_TERRITORY`; value must exist in `V$NLS_TERRITORY`; read-write with `ALTER SESSION`.
+- `NLS_NCHAR_CONV_EXCP`: server-side NCHAR conversion loss handling; default `0`; range `[0, 1]`; read-write with `ALTER SESSION`. `0` continues conversion, `1` raises an error when server-side NCHAR conversion can lose data.
+- `NLS_NCHAR_LITERAL_REPLACE`: client query-string conversion exception for literals prefixed with `N`; default `0`; range `[0, 1]`; read-write with `ALTER SESSION`. `1` can cost client resources because every string literal is checked for the `N` prefix.
+- `NLS_TERRITORY`: territory name; default `KOREA`; value must exist in `V$NLS_TERRITORY`; read-write with `ALTER SESSION`. It changes dependent defaults such as `NLS_NUMERIC_CHARACTERS`, `NLS_CURRENCY`, and `NLS_ISO_CURRENCY`.
+- `UNIXDOMAIN_FILEPATH`: UNIX domain socket path; default `$ALTIBASE_HOME/trc/cm-unix`; read-only. Do not delete the socket file created under `$ALTIBASE_HOME/trc`.
+- `USE_MEMORY_POOL`: preallocated server memory pool use; default `1`; range `[0, 1]`; read-only. `1` uses memory pooling and can increase preallocated memory use.
+- `USER_LOCK_POOL_INIT_SIZE`: initial user-lock pool size; default `128`; range `[128, 10000]`; read-only. Exceeding it is possible but can degrade performance, and released user locks are reused rather than removed.
+- `USER_LOCK_REQUEST_CHECK_INTERVAL`: user-lock availability check interval in microseconds; default `10000`; range `[10, 999999]`; read-write with `ALTER SYSTEM`.
+- `USER_LOCK_REQUEST_LIMIT`: number of user locks one session can request; default `10`; range `[0, 10000]`; read-write with `ALTER SYSTEM`.
+- `USER_LOCK_REQUEST_TIMEOUT`: maximum wait in seconds to obtain a requested user lock; default `10`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `XA_HEURISTIC_COMPLETE`: action for long `PREPARE` or `IN_DOUBT` global transactions after `XA_INDOUBT_TX_TIMEOUT`; default `0`; range `[0, 2]`; read-only. `0` takes no heuristic action, `1` commits, and `2` rolls back.
+
+Related individual blocks: `TIME_ZONE`, `NLS_NUMERIC_CHARACTERS`, `AUTO_COMMIT`, `ISOLATION_LEVEL`, `PSM_CURSOR_OPEN_LIMIT`, and `PSM_FILE_OPEN_LIMIT`.
+
+Check SQL:
+
+```sql
+SELECT name, attr, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'CM_DISCONN_DETECT_TIME',
+  'CONCURRENT_EXEC_DEGREE_DEFAULT',
+  'CONCURRENT_EXEC_DEGREE_MAX',
+  'CONCURRENT_EXEC_WAIT_INTERVAL',
+  'DEFAULT_THREAD_STACK_SIZE',
+  'IPC_CHANNEL_COUNT',
+  'IPC_FILEPATH',
+  'IPC_SEM_KEY',
+  'IPC_SHM_KEY',
+  'IPCDA_CHANNEL_COUNT',
+  'IPCDA_DATABLOCK_SIZE',
+  'IPCDA_FILEPATH',
+  'IPCDA_SEM_KEY',
+  'IPCDA_SHM_KEY',
+  'MAX_LISTEN',
+  'MAX_STATEMENTS_PER_SESSION',
+  'NET_CONN_IP_STACK',
+  'NLS_COMP',
+  'NLS_CURRENCY',
+  'NLS_ISO_CURRENCY',
+  'NLS_NCHAR_CONV_EXCP',
+  'NLS_NCHAR_LITERAL_REPLACE',
+  'NLS_TERRITORY',
+  'UNIXDOMAIN_FILEPATH',
+  'USE_MEMORY_POOL',
+  'USER_LOCK_POOL_INIT_SIZE',
+  'USER_LOCK_REQUEST_CHECK_INTERVAL',
+  'USER_LOCK_REQUEST_LIMIT',
+  'USER_LOCK_REQUEST_TIMEOUT',
+  'XA_HEURISTIC_COMPLETE'
+)
+ORDER BY name;
+
+SELECT *
+FROM V$NLS_TERRITORY
+ORDER BY 1;
+```
+
+### Property Item Group: Timeout and XA guard properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
+
+Meaning: limit waits for buffer-manager resizing, DDL locks and execution, long fetch/query/write transactions, idle/login sessions, multiplexed service-thread polling, malformed client packets, shutdown rollback, and XA in-doubt transactions.
+
+Properties:
+
+- `BLOCK_ALL_TX_TIME_OUT`: wait in seconds while buffer-manager hash-table resizing blocks transaction access; default `3`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` means error handling without waiting.
+- `DDL_LOCK_TIMEOUT`: DDL lock wait in seconds when the target table is already locked; default `0`; range `[-1, 65535]`; read-write with `ALTER SYSTEM`. `-1` waits indefinitely, `0` returns an immediate error, positive values wait that many seconds.
+- `DDL_TIMEOUT`: maximum DDL execution time in seconds; default `0`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` means wait indefinitely.
+- `FETCH_TIMEOUT`: excessive client `SELECT` fetch duration in seconds; default `60`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. On timeout, the session is disconnected and the current transaction is rolled back.
+- `IDLE_TIMEOUT`: idle session lifetime in seconds; default `0`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. On timeout, the session is disconnected and related transactions roll back.
+- `LOGIN_TIMEOUT`: time allowed after port connection for authorization to complete; default `0`; range `[0, 2^32 - 1]`; read-write property. On timeout, the server disconnects.
+- `MULTIPLEXING_POLL_TIMEOUT`: session-detection interval for multiplexed service threads, in microseconds; default `10000`; range `[1000, 1000000]`; read-write property.
+- `QUERY_TIMEOUT`: query execution time in seconds before partial transaction rollback; default `600`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`.
+- `SERVICE_THREAD_RECV_TIMEOUT`: malformed-packet receive timeout in seconds; documented in 7.3 and Altibase 8.1 verified source, not in the selected 7.1 General Reference 1 inventory; default `60`; range `[0, 3600]`; read-only. `0` means wait indefinitely.
+- `SHUTDOWN_IMMEDIATE_TIMEOUT`: wait in seconds for uncommitted transactions to roll back during `SHUTDOWN IMMEDIATE`; default `60`; range `[0, 2^32 - 1]`; read-write property. `0` waits until every transaction has rolled back.
+- `UTRANS_TIMEOUT`: long write-transaction timeout in seconds for `UPDATE`, `INSERT`, and `DELETE`; default `3600`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. On timeout, the session disconnects and the current transaction rolls back.
+- `XA_INDOUBT_TX_TIMEOUT`: timeout in seconds for long `IN_DOUBT` global transactions under two-phase commit; default `60`; range `[0, 2^32 - 1]`; read-only. Pair with `XA_HEURISTIC_COMPLETE`.
+
+Caution: when a customer reports a timeout, ask for exact property values, session id, SQL text or operation, client driver/tool, and relevant log excerpt. Do not raise timeouts as a first response to lock, network, or SQL-plan problems.
+
+Check SQL:
+
+```sql
+SELECT name, attr, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'BLOCK_ALL_TX_TIME_OUT',
+  'DDL_LOCK_TIMEOUT',
+  'DDL_TIMEOUT',
+  'FETCH_TIMEOUT',
+  'IDLE_TIMEOUT',
+  'LOGIN_TIMEOUT',
+  'MULTIPLEXING_POLL_TIMEOUT',
+  'QUERY_TIMEOUT',
+  'SERVICE_THREAD_RECV_TIMEOUT',
+  'SHUTDOWN_IMMEDIATE_TIMEOUT',
+  'UTRANS_TIMEOUT',
+  'XA_INDOUBT_TX_TIMEOUT'
+)
+ORDER BY name;
+```
+
+### Property Item Group: Replication connection and transport properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted. `REPLICATION_SSL_PORT_NO` is Altibase 8.1 verified source only in the selected detailed property sections.
+
+Meaning: configure local replication ports, peer connection wait behavior, heartbeat failure detection, sender bind addresses, packet compression/encryption, ordinary TCP, InfiniBand, and SSL replication transport boundaries.
+
+Properties:
+
+- `REPLICATION_PORT_NO`: local ordinary replication port; default `0`; range `[0, 65535]`; read-only. `0` disables ordinary replication listener use for this property.
+- `REPLICATION_SSL_PORT_NO`: local SSL replication port; default `0`; range `[0, 65535]`; read-only. `0` means SSL replication cannot connect through this property; configure SSL/TLS on each replication target before using `CREATE REPLICATION ... USING SSL`.
+- `REPLICATION_IB_PORT_NO`: local InfiniBand replication port; default `0`; range `[0, 65535]`; read-only. `0` means InfiniBand replication cannot connect through this property, and `IB_ENABLE=1` is required for InfiniBand use.
+- `REPLICATION_CONNECT_TIMEOUT`: connection attempt timeout for a target host, in seconds; default `10`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_CONNECT_RECEIVE_TIMEOUT`: wait after attempting connection to a replication target host, in seconds; default `60`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_RECEIVE_TIMEOUT`: maximum wait for a sender or receiver thread to receive a message, in seconds; default `7200`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. Sender reconnect behavior also depends on `REPLICATION_SENDER_SLEEP_TIMEOUT`.
+- `REPLICATION_SENDER_SEND_TIMEOUT`: maximum sender wait while sending packets to a remote server, in seconds; default `7200`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. The source recommends using the same value as `REPLICATION_RECEIVE_TIMEOUT`; `0` uses a blocking socket.
+- `REPLICATION_SENDER_SLEEP_TIME`: sender sleep interval in microseconds when no more logs are available; default `10000`; range `[0, 2^32 - 1]`; read-write property. Used with `REPLICATION_KEEP_ALIVE_CNT`.
+- `REPLICATION_SENDER_SLEEP_TIMEOUT`: sender sleep time in error situations, in seconds; default `60`; range `[0, 2592000]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_KEEP_ALIVE_CNT`: keep-alive packet trigger after `REPLICATION_SENDER_SLEEP_TIME * REPLICATION_KEEP_ALIVE_CNT`; default `600`; range `[0, 2^32 - 1]`; read-only.
+- `REPLICATION_HBT_DETECT_TIME`: heartbeat check interval in seconds; default `6`; range `[0, 2592000]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_HBT_DETECT_HIGHWATER_MARK`: heartbeat miss count before failure detection; default `5`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. Failure-detection time is approximately `REPLICATION_HBT_DETECT_TIME * REPLICATION_HBT_DETECT_HIGHWATER_MARK`.
+- `REPLICATION_MAX_LISTEN`: listen queue size for TCP/IP communication between Altibase servers that manage sender and receiver threads; default `32`; range `[0, 512]`; read-only.
+- `REPLICATION_SENDER_IP`: sender IP bind selection; default `ANY`; read-only, multiple value. `ANY` lets all local IP addresses used by the replication object participate; an explicit IP restricts communication to that address.
+- `REPLICATION_SENDER_COMPRESS_XLOG`: compress XLog packets before network transmission; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_SENDER_ENCRYPT_XLOG`: encrypt sender XLog transmission; default `0`; range `[0, 1]`; read-write property. Keep this separate from ordinary client/server TLS and from 8.1 SSL replication.
+- `REPLICATION_IB_LATENCY`: rsocket `RDMA_LATENCY` option for replication InfiniBand; default `0`; range `[0, 1]`; read-only. `1` lowers latency at the cost of more CPU use.
+
+Check SQL:
+
+```sql
+SELECT name, attr, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'REPLICATION_PORT_NO',
+  'REPLICATION_SSL_PORT_NO',
+  'REPLICATION_IB_PORT_NO',
+  'REPLICATION_CONNECT_TIMEOUT',
+  'REPLICATION_CONNECT_RECEIVE_TIMEOUT',
+  'REPLICATION_RECEIVE_TIMEOUT',
+  'REPLICATION_SENDER_SEND_TIMEOUT',
+  'REPLICATION_SENDER_SLEEP_TIME',
+  'REPLICATION_SENDER_SLEEP_TIMEOUT',
+  'REPLICATION_KEEP_ALIVE_CNT',
+  'REPLICATION_HBT_DETECT_TIME',
+  'REPLICATION_HBT_DETECT_HIGHWATER_MARK',
+  'REPLICATION_MAX_LISTEN',
+  'REPLICATION_SENDER_IP',
+  'REPLICATION_SENDER_COMPRESS_XLOG',
+  'REPLICATION_SENDER_ENCRYPT_XLOG',
+  'REPLICATION_IB_LATENCY'
+)
+ORDER BY name;
+```
+
+### Property Item Group: Replication apply, conflict, synchronization, and recovery properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
+
+Meaning: tune replication ACK behavior, DDL replication, gap and gapless behavior, eager-mode failback, receiver applier queues, conflict handling, synchronization locking, recovery log retention, and transaction pools.
+
+Properties:
+
+- `REPLICATION_ACK_XLOG_COUNT`: receiver ACK interval measured in applied XLogs; default `100`; range `[0, 2^32 - 1]`; read-write property. Too small can add ACK overhead; too large can delay sender progress while waiting for ACK.
+- `REPLICATION_ALLOW_DUPLICATE_HOSTS`: permits identical remote server IP address and port settings across replication objects; default `0`; range `[0, 1]`; read-write property.
+- `REPLICATION_BEFORE_IMAGE_LOG_ENABLE`: logs receiver before-image values for conflict diagnosis; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_COMMIT_WRITE_WAIT_MODE`: receiver waits for replicated transaction data to be reflected on disk after executing received XLogs; default `0`; range `[0, 1]`; read-write property.
+- `REPLICATION_DDL_ENABLE`: allows DDL on replication target tables; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. When enabled, set the session replication property to a value other than `NONE` before DDL so the sender can detect it.
+- `REPLICATION_DDL_ENABLE_LEVEL`: controls the scope of DDL statements allowed on replication target tables; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`; requires `REPLICATION_DDL_ENABLE=1`.
+- `REPLICATION_DDL_SYNC`: DDL replication during replication; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` performs DDL only on the local server; `1` replicates DDL to the remote server.
+- `REPLICATION_DDL_SYNC_TIMEOUT`: timeout for replicated DDL in seconds; default `7200`; range `[0, 2^32 - 1]`; read-write property. DDL lock retry behavior interacts with `DDL_LOCK_TIMEOUT`; DDL execution time also depends on `DDL_TIMEOUT`.
+- `REPLICATION_EAGER_PARALLEL_FACTOR`: number of sender threads for EAGER-mode parallel work; default is the smaller of logical core count divided by `2` and `512`; range `[2, 512]`; read-only. Increasing it can improve throughput but does not guarantee transaction order.
+- `REPLICATION_EAGER_RECEIVER_MAX_ERROR_COUNT`: EAGER receiver retry count for XLog replication errors; default `5`; range `[0, 2^32 - 1]`; read-write property. `0` retries until success; exhausting a positive count can force server termination.
+- `REPLICATION_FAILBACK_INCREMENTAL_SYNC`: enables incremental synchronization after one EAGER-mode server fails and restarts; default `1`; range `[0, 1]`; read-only. Both participating servers must use the same setting.
+- `REPLICATION_GAP_UNIT`: divisor used to display `REP_GAP` from `V$REPGAP.REP_GAP_SIZE`; default `1048576` (`1MB`); range `[1, 2^64 - 1]`; read-write property.
+- `REPLICATION_GAPLESS_ALLOW_TIME`: allowed replication gap time in microseconds before gapless sender behavior can delay service transaction commit; default `2000`; range `[0, 2^32 - 1]`; read-write property.
+- `REPLICATION_GAPLESS_MAX_WAIT_TIME`: maximum commit-delay time in microseconds while a gapless sender resolves replication gap; default `10000000`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` delays commit until the gap is resolved.
+- `REPLICATION_GROUPING_AHEAD_READ_NEXT_LOG_FILE`: how far ahead the Ahead Analyzer reads beyond the sender's current log file number; default `2`; range `[1, 2^32 - 1]`. The detailed attribute line is read-only, while the source description mentions `ALTER SYSTEM`; verify the installed server before generating change SQL.
+- `REPLICATION_GROUPING_TRANSACTION_MAX_COUNT`: maximum transactions grouped and sent by the Ahead Analyzer; default `5`; range `[1, 1000]`. The detailed attribute line is read-only, while the source description mentions `ALTER SYSTEM`; verify the installed server before generating change SQL.
+- `REPLICATION_INSERT_REPLACE`: whether to keep an inserted row when an INSERT conflict occurs; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` treats the conflict as an error; `1` ignores the conflict and commits the INSERT.
+- `REPLICATION_LOCK_TIMEOUT`: receiver lock wait for replication deadlock prevention, in seconds; default `5`; range `[0, 3600]`; read-write property.
+- `REPLICATION_LOG_BUFFER_SIZE`: replication-only log buffer size in MB; default `0`; range `[0, 2^12 - 1]`; read-only.
+- `REPLICATION_MAX_COUNT`: maximum replication objects; default `32`; range `[0, 10240]`; read-only.
+- `REPLICATION_MAX_LOGFILE`: maximum log files retained after restart redo point for replication; default `0`; range `[0, 65535]`; read-write property.
+- `REPLICATION_POOL_ELEMENT_COUNT`: preallocated memory element count used by sender log analysis and column-value copy; default `10`; range `[1, 1024]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_POOL_ELEMENT_SIZE`: memory element size in bytes for sender log analysis and column-value copy; default `256`; range `[128, 65536]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_PREFETCH_LOGFILE_COUNT`: number of log files to prefetch for each log file group; default `3`; range `[0, 1024]`; read-write property.
+- `REPLICATION_RECEIVER_APPLIER_ASSIGN_MODE`: mode used by a receiver to assign XLogs to appliers; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` is transaction-count mode; `1` is XLog-count mode.
+- `REPLICATION_RECEIVER_APPLIER_QUEUE_SIZE`: maximum XLogs queued from receiver to applier threads; default `20`; range `[2, 2^32 - 1]`; read-write with `ALTER SYSTEM`. The source recommends about twice the applier count; larger values use more memory.
+- `REPLICATION_RECEIVER_APPLIER_YIELD_COUNT`: yield-call count before an applier uses timed wait while waiting for another applier's transaction; documented in 7.3 and Altibase 8.1 verified source, not in selected 7.1; default `20000`; range `[0, 2^32 - 1]`; read-write property.
+- `REPLICATION_RECOVERY_MAX_LOGFILE`: maximum log files retained after restart redo point for replication-based data recovery; default `0`; range `[0, 2^32 - 1]`; read-write property.
+- `REPLICATION_RECOVERY_MAX_TIME`: maximum time before replication recovery stops and service proceeds with recovered state; default `2^32 - 1`; range `[0, 2^32 - 1]`; read-only. `0` skips replication-based recovery.
+- `REPLICATION_SENDER_AUTO_START`: automatically starts replication objects that were not stopped before server shutdown; default `1`; range `[0, 1]`; read-only.
+- `REPLICATION_SENDER_START_AFTER_GIVING_UP`: behavior after replication pauses because log files before restart redo point exceed `REPLICATION_MAX_LOGFILE`; default `1`; range `[0, 1]`; read-write property. `0` resets restart SN to `-1` and stops replication; `1` restarts from the current last SN.
+- `REPLICATION_SERVER_FAILBACK_MAX_TIME`: maximum failback synchronization time for EAGER mode after an abnormal server restart; default `2^32 - 1`; range `[0, 2^32 - 1]`; read-only.
+- `REPLICATION_SQL_APPLY_ENABLE`: SQL Apply fallback when Lazy Active/Standby replication table metadata differs in documented ways; default `0`; range `[0, 1]`; read-write property. `0` uses XLog and raises handshaking errors on metadata mismatch; `1` can convert XLog to SQL for supported column, constraint, and index mismatch cases.
+- `REPLICATION_SYNC_APPLY_METHOD`: synchronization method for mismatched data between local and remote servers; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` means Normal Insert; `1` means Direct-Path Insert and can leave indexes inconsistent if synchronization fails midstream.
+- `REPLICATION_SYNC_LOCK_TIMEOUT`: sender wait for an `S Lock` on synchronization target tables, in seconds; default `30`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` skips acquiring the target table lock and can allow data conflicts.
+- `REPLICATION_SYNC_LOG`: sender sends only disk-flushed logs during replication; default `0`; range `[0, 1]`; read-only.
+- `REPLICATION_SYNC_TUPLE_COUNT`: maximum records a sender thread reads and processes at once during parallel synchronization; default `500000`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_TIMESTAMP_RESOLUTION`: Active-Active conflict resolution using timestamp columns; default `1`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `1` uses Timestamp-based Scheme when the replication target table has a `TIMESTAMP` column; `0` uses the configured Conflict Resolution Scheme.
+- `REPLICATION_TRANSACTION_POOL_SIZE`: receiver transaction pool size; default `2`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`, but receiver threads initialize transaction pools when created, so restart replication for the changed value to apply. Effective maximum is bounded by `TRANSACTION_TABLE_SIZE`.
+- `REPLICATION_UPDATE_REPLACE`: documented in selected 7.1 and 7.3 detailed property sections, not in the selected Altibase 8.1 verified detailed property inventory. It controls UPDATE conflict handling; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` treats the conflict as an error; `1` ignores the conflict and commits the update.
+- `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`: documented in selected 7.1 and 7.3 detailed property sections, not in the selected Altibase 8.1 verified detailed property inventory. It permits Lazy replication `START` when Active and Standby partition meta item counts differ after `SPLIT PARTITION`, `MERGE PARTITION`, or `DROP PARTITION`; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+
+Caution: replication properties can change data-consistency, failover, log-retention, or conflict-resolution behavior. Before recommending a change, ask for exact Altibase versions and patch levels on both peers, replication mode, object definition, current `V$REPGAP` or sender/receiver state, related log excerpt, and whether the customer can restart replication.
+
+Check SQL:
+
+```sql
+SELECT name, attr, value1, min, max
+FROM V$PROPERTY
+WHERE name LIKE 'REPLICATION%'
+ORDER BY name;
+
+SELECT *
+FROM V$REPGAP;
+```
+
+### Property Item Group: Network, SNMP, SSL/TLS, and listener security properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted. `SSL_CIPHER_SUITES` and `SSL_LOAD_CONFIG` are documented in 7.3 and Altibase 8.1 verified source, not in selected 7.1.
+
+Meaning: configure ordinary TCP/IP listener availability, InfiniBand listener behavior, SNMP alarm and subagent communication, and server-side SSL/TLS certificate, cipher, mutual-authentication, FIPS, listen queue, and port properties.
+
+Properties:
+
+- `TCP_ENABLE`: ordinary TCP/IP protocol availability; default `1`; range `[0, 1]`; read-only. `0` disables TCP/IP; `1` enables TCP/IP.
+- `IB_ENABLE`: InfiniBand use; default `0`; range `[0, 1]`; read-only. InfiniBand is documented as Linux-only; `0` disables IB and `1` enables IB.
+- `IB_PORT_NO`: InfiniBand communication port; default `20300`; range `[1024, 65535]`; read-only.
+- `IB_MAX_LISTEN`: maximum concurrent InfiniBand clients; default `128`; range `[0, 1024]`; read-only.
+- `IB_LISTENER_DISABLE`: whether the InfiniBand listener starts during Altibase startup; default `0`; range `[0, 1]`; read-only. `0` starts the listener; `1` does not start it.
+- `IB_CONCHKSPIN`: rsocket `RDMA_CONCHKSPIN` connection-check option; default `0`; range `[0, 2147483]`; read-only. `0` uses the rsocket default and requires Altibase `rdma-core`.
+- `IB_LATENCY`: rsocket `RDMA_LATENCY` option; default `0`; range `[0, 1]`; read-only. `1` reduces latency at additional CPU cost and requires Altibase `rdma-core`.
+- `SNMP_ENABLE`: SNMP service switch; default `0`; range `[0, 1]`; read-only. The source description says set `1` to enable and default `0` disables SNMP; verify with the SNMP Agent Guide and installed configuration before changing because the selected manuals contain inconsistent value prose.
+- `SNMP_PORT_NO`: UDP port for communication between Altibase and `altisnmpd`; default `20400`; range `[1024, 65535]`; read-only.
+- `SNMP_TRAP_PORT_NO`: UDP port for traps between Altibase and `altisnmpd`; default `20400`; range `[1024, 65535]`; read-only.
+- `SNMP_RECV_TIMEOUT`: receive wait for Altibase to `altisnmpd` communication, in milliseconds; default `1000`; range `[1, 2^32 - 1]`; read-only.
+- `SNMP_SEND_TIMEOUT`: send wait for Altibase to `altisnmpd` communication, in milliseconds; default `100`; range `[1, 2^32 - 1]`; read-only.
+- `SNMP_ALARM_QUERY_TIMEOUT`: send a trap when session `QUERY_TIMEOUT` occurs; default `1`; range `[0, 1]`; read-only.
+- `SNMP_ALARM_FETCH_TIMEOUT`: send a trap when `FETCH_TIMEOUT` occurs; default `1`; range `[0, 1]`; read-only.
+- `SNMP_ALARM_UTRANS_TIMEOUT`: send a trap when `UTRANS_TIMEOUT` occurs; default `1`; range `[0, 1]`; read-only. `0` suppresses the trap; `1` raises the trap.
+- `SNMP_ALARM_SESSION_FAILURE_COUNT`: consecutive session error count before sending a trap; default `3`; range `[0, 2^32 - 1]`; read-only. `0` suppresses the trap.
+- `SNMP_MSGLOG_FLAG`: SNMP log output level bit-sum; default `3` (`1 + 2`); range `[3, 12]`; read-write property.
+- `SSL_ENABLE`: server-side client/server SSL/TLS switch; default `0`; range `[0, 1]`; read-only. `0` disables SSL/TLS; `1` enables SSL/TLS.
+- `SSL_PORT_NO`: SSL/TLS client/server listener port; default `20443`; range `[1024, 65535]`; read-write property.
+- `SSL_MAX_LISTEN`: listen queue size for concurrent SSL/TLS connections; default `128`; range `[0, 16384]`; read-only. Larger values require more memory.
+- `SSL_CA`: CA certificate file path used to verify received certificates; default none; read-only.
+- `SSL_CAPATH`: CA directory path in X.509 directory format; default none; read-only.
+- `SSL_CERT`: Altibase server certificate file path, such as `$ALTIBASE_HOME/cert/server-cert.pem`; default none; read-only.
+- `SSL_KEY`: server private key file path, such as `$ALTIBASE_HOME/cert/server-key.pem`; default none; read-only.
+- `SSL_CIPHER_LIST`: pre-TLS-1.3 cipher candidate list negotiated between client and server; default none; maximum length `255`; read-only. Use colon-separated OpenSSL cipher names and check candidates with `openssl ciphers`.
+- `SSL_CIPHER_SUITES`: TLS 1.3 cipher suite candidate list; default none; read-only. Use colon-separated candidates; if unset, OpenSSL can use all available TLS 1.3 cipher candidates.
+- `SSL_CLIENT_AUTHENTICATION`: whether the server requests a client certificate during SSL handshake; default `0`; range `[0, 1]`; read-only. `0` authenticates the server only; `1` requests mutual server/client authentication.
+- `SSL_LOAD_CONFIG`: OpenSSL `openssl.cnf` loading switch; default `0`; range `[0, 1]`; read-only. Set `1` when the OpenSSL FIPS module must be loaded.
+
+Caution: ordinary client/server SSL/TLS properties are not the same as `REPLICATION_SSL_PORT_NO` and `CREATE REPLICATION ... USING SSL`. For production TLS answers, ask for Altibase version, client interface, OpenSSL or Java runtime, certificate mode, trust model, target port, and whether this is ordinary client/server TLS or replication SSL.
+
+Check SQL:
+
+```sql
+SELECT name, attr, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'TCP_ENABLE',
+  'IB_ENABLE',
+  'IB_PORT_NO',
+  'IB_MAX_LISTEN',
+  'IB_LISTENER_DISABLE',
+  'IB_CONCHKSPIN',
+  'IB_LATENCY',
+  'SNMP_ENABLE',
+  'SNMP_PORT_NO',
+  'SNMP_TRAP_PORT_NO',
+  'SNMP_RECV_TIMEOUT',
+  'SNMP_SEND_TIMEOUT',
+  'SNMP_ALARM_QUERY_TIMEOUT',
+  'SNMP_ALARM_FETCH_TIMEOUT',
+  'SNMP_ALARM_UTRANS_TIMEOUT',
+  'SNMP_ALARM_SESSION_FAILURE_COUNT',
+  'SNMP_MSGLOG_FLAG',
+  'SSL_ENABLE',
+  'SSL_PORT_NO',
+  'SSL_MAX_LISTEN',
+  'SSL_CA',
+  'SSL_CAPATH',
+  'SSL_CERT',
+  'SSL_KEY',
+  'SSL_CIPHER_LIST',
+  'SSL_CIPHER_SUITES',
+  'SSL_CLIENT_AUTHENTICATION',
+  'SSL_LOAD_CONFIG'
+)
+ORDER BY name;
 ```
 
 ### Property Item: `PSM_CASE_SENSITIVE_MODE`

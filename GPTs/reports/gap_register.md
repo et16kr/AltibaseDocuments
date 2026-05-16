@@ -384,3 +384,11 @@ recording or remediating gaps.
     query transformation controls, and parallel query controls. This gap remains
     `Open` for J008-J009 session, network/security/replication, and final property
     catalog QA.
+  - J008 expanded session, timeout, client communication, NLS, network/security,
+    SSL/TLS, SNMP, and replication property blocks in
+    `GPTs/attachments/05_data_types_properties.md`, including IPC/IPCDA properties,
+    user-lock waits, `SERVICE_THREAD_RECV_TIMEOUT`, ordinary/SSL/InfiniBand
+    replication ports, replication connection/heartbeat/DDL/conflict/sync/recovery
+    properties, `IB_*`, `SNMP_*`, `TCP_ENABLE`, and `SSL_*` properties. This gap
+    remains `Open` for J009 final property catalog QA, source-drift cleanup, and
+    remaining low-retrieval property families.

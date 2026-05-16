@@ -37,9 +37,9 @@ one oversized remediation pass. The partitioning is:
 | `J003` | `Done` | Catalog schema and extraction rules | Define reusable item block schemas and Korean-first extraction rules for later jobs. |
 | `J004` | `Done` | Property inventory baseline | Inventory property names and version availability from General Reference 1 sources. |
 | `J005` | `Done` | Initialization and storage properties | Expand initialization, path, memory, disk, volatile, log, and storage property blocks. |
-| `J006` | `ToDo` | LOB JSON and temporary object properties | Expand LOB, JSON, Temporary LOB, PSM, VARRAY, and object-size property blocks. |
-| `J007` | `ToDo` | Performance and optimizer properties | Expand buffer, checkpoint, optimizer, plan cache, sort, hash, and execution memory properties. |
-| `J008` | `ToDo` | Session network security and replication properties | Expand timeout, NLS, client, network, SSL/TLS, and replication property blocks. |
+| `J006` | `Done` | LOB JSON and temporary object properties | Expand LOB, JSON, Temporary LOB, PSM, VARRAY, and object-size property blocks. |
+| `J007` | `Done` | Performance and optimizer properties | Expand buffer, checkpoint, optimizer, plan cache, sort, hash, and execution memory properties. |
+| `J008` | `Done` | Session network security and replication properties | Expand timeout, NLS, client, network, SSL/TLS, and replication property blocks. |
 | `J009` | `ToDo` | Property catalog QA and cross references | Validate property coverage, dynamic-change wording, cross-references, and remaining gaps. |
 | `J010` | `ToDo` | SQL syntax inventory and BNF rules | Inventory SQL statement families and define BNF conversion rules for SQL syntax diagrams. |
 | `J011` | `ToDo` | Database tablespace and datafile SQL | Expand database, tablespace, datafile, archive, backup, restore, and recovery SQL coverage. |

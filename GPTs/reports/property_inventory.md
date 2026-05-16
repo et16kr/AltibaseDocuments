@@ -56,6 +56,29 @@ and the alter-level summary do not align cleanly on dynamic-change support; answ
 should verify the installed target server before generating an online change for either
 property.
 
+J008 expands the customer-facing property catalog for session, timeout, client
+communication, NLS, network/security, SSL/TLS, SNMP, and replication properties. It
+keeps the attachment boundary unchanged and adds grouped searchable blocks for
+`CM_DISCONN_DETECT_TIME`, `CONCURRENT_EXEC_*`, IPC/IPCDA properties,
+`MAX_STATEMENTS_PER_SESSION`, `NLS_*`, user-lock properties, timeout properties,
+`SERVICE_THREAD_RECV_TIMEOUT`, ordinary/SSL/InfiniBand replication ports, replication
+connection, heartbeat, DDL, conflict, sync, gap, recovery, and applier properties,
+`IB_*`, `SNMP_*`, `TCP_ENABLE`, and `SSL_*` properties.
+
+Korean source precedence was applied for J008 source drift and ambiguity:
+
+- The Altibase 8.1 English extraction aid lists `IB_PORT_NO` with default `0`, while
+  the Korean authority lists default `20300`; the attachment uses `20300`.
+- The selected manuals' `SNMP_ENABLE` prose says set `1` to enable SNMP and default
+  `0` disables SNMP, while the value bullets are contradictory; the attachment records
+  the enable/disable caution and requires checking the SNMP Agent Guide and installed
+  configuration before changing it.
+- The Altibase 8.1 verified source summary table references
+  `REPLICATION_UPDATE_REPLACE`, but the detailed property heading is absent in the
+  selected 8.1 manual text; the attachment treats `REPLICATION_UPDATE_REPLACE` and
+  `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE` as selected 7.1/7.3 detailed-property
+  items until J009 property QA resolves or records the 8.1 source drift.
+
 ## Scoped Sources
 
 - Altibase 7.1 Korean authority: `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
