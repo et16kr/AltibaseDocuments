@@ -183,6 +183,13 @@ for 8.1 customer-facing labels.
   `03_sql_ddl_generation.md`, and operational tuning interpretation routed to
   `08_performance_tuning_monitoring.md`; the broader per-view column gap remains open
   for J021 and non-scoped patch-sensitive details.
+- J021 expanded replication, Log Analyzer CDC, audit/security, Monitoring API, and
+  SNMP view/API mapping in `06_data_dictionary_performance_views.md`, with
+  cross-reference updates in `08_performance_tuning_monitoring.md`,
+  `09_replication_ha_cdc.md`, and `18_security_ssl_tls.md`. It keeps API/SNMP setup
+  routed to `08`, replication/CDC operations routed to `09`, and security/TLS policy
+  context routed to `18`; the broader per-view column gap remains open only for
+  exhaustive patch-sensitive proof outside the J018-J021 scoped slices.
 - J022-J026 should use `error_message_reference` and related operational sources to
   expand exact-code troubleshooting and close error-block gaps.
 - J027-J033 should use operations, replication, networking, and TLS source families to

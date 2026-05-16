@@ -193,8 +193,9 @@ ORDER BY t.table_name;
   source-name baseline and expanded the customer-facing plan-cache, statistics, buffer,
   flusher, memory-GC, table/index, segment, undo, disk temporary-table, and direct-path
   insert view blocks.
-- J021 should use the replication, database link, security/audit, Monitoring API, SNMP,
-  and related runtime groups as the source-name baseline.
+- J021 used the replication, security/audit, Monitoring API, SNMP, and related runtime
+  groups as the source-name baseline for the customer-facing mapping expansion in
+  `GPTs/attachments/06_data_dictionary_performance_views.md`.
 - `GAP-J002-006` remains open for exhaustive per-view column blocks. J017 narrows it by
   providing the source-backed name/version/group baseline, and J018-J020 narrow it by
   expanding their assigned view-family slices.

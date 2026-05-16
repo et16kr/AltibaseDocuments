@@ -589,6 +589,7 @@ Troubleshooting block: replication SSL does not connect
 
 - Use `03_sql_ddl_generation.md` for user, role, grant, revoke, audit, and replication DDL that carries security or SSL/TLS implications.
 - Use `05_data_types_properties.md` for exact SSL/TLS, replication port, certificate path, audit, and password-related property names.
+- Use `06_data_dictionary_performance_views.md` for audit runtime state, audit options, encrypted column metadata, security module metadata, SSL/TLS session checks, and replication SSL view evidence.
 - Use `07_error_messages_troubleshooting.md` for SSL/TLS error codes, SQLSTATEs, OpenSSL details, and handshake failure triage.
 - Use `09_replication_ha_cdc.md` for replication mode, topology, failover, and CDC context around Altibase 8.1 replication SSL.
 - Use `12_c_cli_odbc_precompiler.md` for ODBC/CLI SSL connection strings, OpenSSL client requirements, and certificate verification behavior.

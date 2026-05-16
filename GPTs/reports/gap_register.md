@@ -169,6 +169,19 @@ recording or remediating gaps.
   with tuning interpretation updates in `GPTs/attachments/08_performance_tuning_monitoring.md`.
   The gap remains open for J021 view families and exhaustive per-view,
   patch-sensitive column proof beyond the J020 scope.
+- J021 update: the replication/CDC/security/Monitoring API/SNMP slice now has richer
+  customer-facing cookbook checks, object blocks, and mapping blocks for
+  `SYSTEM_.SYS_AUDIT_`, `SYSTEM_.SYS_AUDIT_OPTS_`,
+  `SYSTEM_.SYS_SECURITY_`, `SYSTEM_.SYS_ENCRYPTED_COLUMNS_`,
+  `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`,
+  `SYSTEM_.SYS_REPL_ITEMS_`, replication Sender, Receiver, gap, sync, log-buffer,
+  offline, statistics, transaction, and recovery view families, Monitoring API function-to-view
+  mappings, and SNMP MIB-to-SQL cross-check mappings in
+  `GPTs/attachments/06_data_dictionary_performance_views.md`, with cross-reference
+  updates in `GPTs/attachments/08_performance_tuning_monitoring.md`,
+  `GPTs/attachments/09_replication_ha_cdc.md`, and
+  `GPTs/attachments/18_security_ssl_tls.md`. The gap remains open only for exhaustive
+  per-view, patch-sensitive column proof outside the J018-J021 scoped slices.
 
 ### GAP-J017-001: Dictionary and performance view inventory source drift
 
@@ -235,6 +248,11 @@ recording or remediating gaps.
 - Required remediation shape: Preserve source-backed API/SNMP blocks. If live validation
   becomes available, add tested command/call examples, expected return values, and
   version/environment notes.
+- J021 update: `GPTs/attachments/06_data_dictionary_performance_views.md` now maps
+  Monitoring API functions to performance views/properties and maps SNMP MIB families
+  to SQL-side cross-checks. This gap remains `Verification-limited` because the
+  repository still has no live Altibase host, Monitoring API program output,
+  `snmpwalk`, or `snmptrapd` run output for target environments.
 
 ### GAP-J002-010: 7.1 receive-only replication option is patch/meta-version sensitive
 

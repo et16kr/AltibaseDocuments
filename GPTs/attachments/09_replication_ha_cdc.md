@@ -1762,7 +1762,7 @@ Error level block: `ALA_ERROR_INFO`
 ## Attachment Cross-References
 
 - Use `03_sql_ddl_generation.md` for `CREATE REPLICATION`, `ALTER REPLICATION`, replicated table, sequence, and privilege DDL generation.
-- Use `06_data_dictionary_performance_views.md` for replication metadata and runtime checks against `SYSTEM_.SYS_REPLICATIONS_`, `V$REPGAP`, `V$REPSYNC`, `V$REPSENDER`, and `V$REPRECEIVER`.
+- Use `06_data_dictionary_performance_views.md` for replication and Log Analyzer CDC metadata/runtime checks against `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, `SYSTEM_.SYS_REPL_ITEMS_`, `V$REPGAP`, `V$REPSYNC`, `V$REPSENDER`, `V$REPSENDER_TRANSTBL`, `V$REPLOGBUFFER`, and `V$REPRECEIVER`.
 - Use `07_error_messages_troubleshooting.md` when a replication, Log Analyzer, network, or SSL issue starts from an Altibase error code.
 - Use `08_performance_tuning_monitoring.md` when replication lag or apply delay may be caused by slow SQL, waits, log pressure, or server bottlenecks.
 - Use `12_c_cli_odbc_precompiler.md` for ODBC C conversion, LOB, and client-buffer handling when consuming Log Analyzer XLogs.
@@ -1789,7 +1789,7 @@ In Altibase 8.1 verified source, SSL/TLS replication is configured with `USING S
 Template: answer a CDC question
 
 ```text
-Use Log Analyzer when an external application needs changed-row events. Create `CREATE REPLICATION ... FOR ANALYSIS` for the XLog Sender, start an XLog Collector in the application through the Log Analysis API, perform `ALA_Handshake()`, then receive, inspect, acknowledge, and free XLogs. Do not describe this as direct table-to-table replication.
+Use Log Analyzer when an external application needs changed-row events. Create `CREATE REPLICATION ... FOR ANALYSIS` for the XLog Sender, start an XLog Collector in the application through the Log Analysis API, perform `ALA_Handshake()`, then receive, inspect, acknowledge, and free XLogs. For SQL-side evidence, verify `SYSTEM_.SYS_REPLICATIONS_.ROLE IN (1, 4)`, check `SYSTEM_.SYS_REPL_HOSTS_` and `SYSTEM_.SYS_REPL_ITEMS_`, then use `V$REPSENDER`, `V$REPSENDER_TRANSTBL`, and `V$REPGAP`. Do not describe this as direct table-to-table replication.
 ```
 
 Template: answer a Replication Manager question

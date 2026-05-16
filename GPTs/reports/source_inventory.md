@@ -435,10 +435,21 @@ Scoped source paths checked for J020:
 - `Manuals/Altibase_7.3/kor/SQL Reference.md`
 - `Manuals/Altibase_trunk/kor/SQL Reference.md`
 
-No new manual/source-backed gap was discovered during J020. `GAP-J002-006` remains
-open for J021 and for exhaustive per-view, patch-sensitive column coverage outside the
-J020 optimizer/statistics/plan-cache/buffer/flusher/table, index, segment, undo, temp
-scope.
+J021 design/source note: J021 used `general_reference_2_dictionary_views`,
+`replication_manual`, `log_analyzer`, `monitoring_api_snmp`, and `security_ssl_tls`
+source families for Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source.
+Korean manuals were preferred where paired sources existed; English extraction was used
+for 7.3 and 8.1 General Reference 2 data-dictionary details where the corresponding
+Korean Markdown source was not present in this repository. The main customer-facing
+update is in `GPTs/attachments/06_data_dictionary_performance_views.md`, with
+cross-reference updates in `GPTs/attachments/08_performance_tuning_monitoring.md`,
+`GPTs/attachments/09_replication_ha_cdc.md`, and
+`GPTs/attachments/18_security_ssl_tls.md`. The job expanded audit/security metadata,
+replication and Log Analyzer CDC evidence mapping, Monitoring API-to-view mapping, and
+SNMP MIB-to-SQL cross-check guidance. No new manual/source-backed gap was discovered
+during J021. `GAP-J002-006` remains open only for exhaustive per-view,
+patch-sensitive column proof beyond the J021 slice, and `GAP-J002-009` remains open
+for live Monitoring API/SNMP validation against target environments.
 
 ## Source Roots
 

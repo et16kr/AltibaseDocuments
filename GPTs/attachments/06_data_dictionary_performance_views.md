@@ -13,6 +13,8 @@
 - How do I check running sessions, statements, waits, locks, and replication gap?
 - How do I inspect tablespaces, datafiles, archive log mode, backup metadata, checkpoint image state, and file I/O hotspots?
 - How do I inspect optimizer statistics, SQL plan cache, system/session counters, buffer pool, flushers, memory GC, segments, undo, temporary-table spill, and direct-path insert counters?
+- How do I inspect audit state, audit options, encrypted columns, and security module metadata?
+- How do I map replication, Log Analyzer CDC, Monitoring API, and SNMP questions to source-backed views, meta tables, properties, and API objects?
 - Which dictionary and performance view checks are version-sensitive in 8.1?
 - How should a GPT answer data dictionary questions in the user's language while preserving SQL names and object names literally?
 
@@ -22,6 +24,7 @@
 - 7.3: Altibase 7.3 General Reference 2.
 - 8.1: Altibase 8.1 verified source General Reference 2; Altibase 8.1 Release Notes.
 - Performance interpretation uses the corresponding Performance Tuning Guides where a view is tied to optimizer, plan cache, statistics, buffer, flusher, temporary-table, or memory-GC diagnosis.
+- Replication, Log Analyzer CDC, Monitoring API, SNMP, and security/audit interpretation uses the corresponding Replication Manual, Log Analyzer User's Manual, Monitoring API Developer's Guide, SNMP Agent Guide, SSL/TLS guide, and SQL Reference where a view or meta table is tied to those features.
 
 ## Response Rules
 
@@ -41,6 +44,7 @@
 - 8.1: Temporary LOB support is documented in the Altibase 8.1 release notes. Check Temporary LOB usage with `V$TEMPORARY_LOBS` when that view exists.
 - Version-sensitive view check: the 8.1 release notes list `V$LOCK_TABLE_STATS`, `V$MEM_STABLE`, and `V$TEMPORARY_LOBS`; 7.1 and 7.3 General Reference 2 also document `V$LOCK_TABLE_STATS`. For portable answers, check `V$TABLE` before relying on these views.
 - Version-sensitive meta-table column check: `SYSTEM_.SYS_REPL_ITEMS_.IS_CONDITION_SYNCED` is documented for 7.3 and 8.1, but not for the 7.1 `SYSTEM_.SYS_REPL_ITEMS_` layout. For 7.1-compatible SQL, omit that column unless the target database exposes it.
+- Monitoring API and SNMP are not SQL views. Use this file only to map those interfaces to underlying Altibase evidence such as `V$SESSION`, `V$SYSSTAT`, `V$REPGAP`, `V$REPSENDER_SENT_LOG_COUNT`, `V$PROPERTY`, `V$DATABASE`, and `V$VERSION`; use `08_performance_tuning_monitoring.md` for API/SNMP setup and runtime procedures.
 
 ```sql
 SELECT name, columncount
@@ -1081,6 +1085,85 @@ ORDER BY tu.tbs_id;
 ```
 
 `IS_ACCESS` values are `0` access not permitted and `1` access permitted.
+
+## Cookbook: Audit and Security Metadata
+
+Use these checks when the question is about configured audit conditions, whether audit
+is running, encrypted column metadata, or third-party security module registration.
+Use `03_sql_ddl_generation.md` for `AUDIT`, `NOAUDIT`, `DELAUDIT`, and
+`ALTER SYSTEM ... AUDIT` syntax; this file only gathers evidence.
+
+### Check Audit Runtime State
+
+```sql
+SELECT is_started,
+       start_time,
+       stop_time,
+       reload_time
+FROM SYSTEM_.SYS_AUDIT_;
+```
+
+`IS_STARTED` is `0` when audit is not running and `1` when audit is running.
+`RELOAD_TIME` is updated when changed audit conditions are applied by
+`ALTER SYSTEM START AUDIT` or `ALTER SYSTEM RELOAD AUDIT`.
+
+### Check Configured Audit Options
+
+```sql
+SELECT user_name,
+       object_name,
+       object_type,
+       select_op,
+       insert_op,
+       update_op,
+       delete_op,
+       execute_op,
+       connect_op,
+       disconnect_op,
+       alter_system_op,
+       ddl_op
+FROM SYSTEM_.SYS_AUDIT_OPTS_
+ORDER BY user_name, object_name, object_type;
+```
+
+Operation columns such as `SELECT_OP` and `DDL_OP` encode success and failure logging
+as `success/failure`. The source-defined symbols are `-` for no logging, `S` for
+session-unit logging, `A` for access-unit logging, and `T` when logging applies without
+distinguishing session versus access unit.
+
+### Check Encrypted Columns and Security Module Metadata
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       c.column_name,
+       e.encrypt_precision,
+       e.policy_name,
+       e.policy_code
+FROM SYSTEM_.SYS_ENCRYPTED_COLUMNS_ e,
+     SYSTEM_.SYS_COLUMNS_ c,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE e.user_id = c.user_id
+  AND e.table_id = c.table_id
+  AND e.column_id = c.column_id
+  AND c.user_id = t.user_id
+  AND c.table_id = t.table_id
+  AND t.user_id = u.user_id
+ORDER BY u.user_name, t.table_name, c.column_name;
+```
+
+```sql
+SELECT module_name,
+       module_version,
+       ecc_policy_name,
+       ecc_policy_code
+FROM SYSTEM_.SYS_SECURITY_;
+```
+
+`SYSTEM_.SYS_SECURITY_` contains rows only when a third-party security module is
+integrated. If it is empty, do not infer that no columns are encrypted; also check
+`SYSTEM_.SYS_ENCRYPTED_COLUMNS_`.
 
 ## Cookbook: Views, Procedures, Packages, and Triggers
 
@@ -2123,6 +2206,29 @@ ORDER BY replication_name;
 
 `IS_STARTED` values are `0` suspended and `1` active. `REPL_MODE` values include `0` lazy and `2` eager. `OPTIONS` is a bit-style decimal flag: `1` recovery, `2` offline, `4` gapless, `8` parallel applier, `16` transaction grouping, `256` meta logging, and, on versions that expose it, `512` receive-only. On 7.1 systems, treat receive-only as 7.1.0.8.5 patch-level material and verify the exact patch/meta version plus observed metadata before decoding `512`, because earlier 7.1 dictionary layouts may not list the receive-only flag.
 
+`ROLE` maps replication objects to their source-backed purpose:
+
+- `0`: ordinary replication.
+- `1`: Log Analyzer XLog Sender created with `FOR ANALYSIS`.
+- `2`: `FOR PROPAGABLE LOGGING`.
+- `3`: `FOR PROPAGATION`.
+- `4`: Log Analyzer propagation created with `FOR ANALYSIS PROPAGATION`.
+
+For CDC questions, first identify `ROLE IN (1, 4)` before interpreting the object as a
+Log Analyzer XLog Sender.
+
+```sql
+SELECT replication_name,
+       role,
+       is_started,
+       xsn,
+       remote_xsn,
+       options
+FROM SYSTEM_.SYS_REPLICATIONS_
+WHERE role IN (1, 4)
+ORDER BY replication_name;
+```
+
 ### Check Replication Hosts
 
 ```sql
@@ -2189,6 +2295,37 @@ WHERE replication_name = '<REPLICATION_NAME>'
 ORDER BY local_user_name, local_table_name, local_partition_name;
 ```
 
+### Check Log Analyzer XLog Sender Metadata
+
+Log Analyzer uses the replication metadata tables and replication Sender views. For
+`WITH UNIX_DOMAIN`, `SYSTEM_.SYS_REPL_HOSTS_.HOST_IP` is `UNIX_DOMAIN`, and
+`PORT_NO` is the same value as `HOST_NO`; the generated socket path belongs to Log
+Analyzer procedure guidance in `09_replication_ha_cdc.md`.
+
+```sql
+SELECT r.replication_name,
+       r.role,
+       r.is_started,
+       h.host_no,
+       h.host_ip,
+       h.port_no,
+       h.conn_type,
+       i.local_user_name,
+       i.local_table_name,
+       i.local_partition_name
+FROM SYSTEM_.SYS_REPLICATIONS_ r,
+     SYSTEM_.SYS_REPL_HOSTS_ h,
+     SYSTEM_.SYS_REPL_ITEMS_ i
+WHERE r.replication_name = h.replication_name
+  AND r.replication_name = i.replication_name
+  AND r.role IN (1, 4)
+ORDER BY r.replication_name, h.host_no, i.local_user_name, i.local_table_name;
+```
+
+Use `V$REPSENDER`, `V$REPSENDER_TRANSTBL`, and `V$REPGAP` to monitor the running
+XLog Sender. For UNIX-domain Log Analyzer, `V$REPSENDER.SENDER_IP` and `PEER_IP` are
+`UNIX_DOMAIN`, and `SENDER_PORT` and `PEER_PORT` are `0`.
+
 ### Check Replication Manager
 
 ```sql
@@ -2229,6 +2366,32 @@ FROM V$REPGAP_PARALLEL
 ORDER BY rep_name, parallel_id;
 ```
 
+### Check Replication Log Buffer and Offline Status
+
+```sql
+SELECT rep_name,
+       buffer_min_sn,
+       read_sn,
+       buffer_max_sn
+FROM V$REPLOGBUFFER
+ORDER BY rep_name;
+```
+
+Use `V$REPLOGBUFFER` to decide whether the Sender is reading from the dedicated
+replication log buffer. If `V$REPGAP.READ_FILE_NO` appears stale, compare
+`V$REPLOGBUFFER.READ_SN` with `BUFFER_MIN_SN` and `BUFFER_MAX_SN`.
+
+```sql
+SELECT rep_name,
+       status,
+       success_time
+FROM V$REPOFFLINE_STATUS
+ORDER BY rep_name;
+```
+
+`V$REPOFFLINE_STATUS.STATUS` values are `0` not started, `1` started, `2` ended, and
+`3` failed.
+
 ### Check Replication Sender Status
 
 ```sql
@@ -2251,6 +2414,27 @@ ORDER BY rep_name;
 ```
 
 `STATUS` values include `0` stop, `1` run, `2` retry, `6` sync, and `9` idle. `NET_ERROR_FLAG` value `1` indicates a network error.
+
+For parallel Sender threads:
+
+```sql
+SELECT rep_name,
+       current_type,
+       parallel_id,
+       net_error_flag,
+       xsn,
+       commit_xsn,
+       status,
+       sender_ip,
+       sender_port,
+       peer_ip,
+       peer_port,
+       read_log_count,
+       send_log_count,
+       repl_mode
+FROM V$REPSENDER_PARALLEL
+ORDER BY rep_name, parallel_id;
+```
 
 ### Check Replication Synchronization Progress
 
@@ -2288,6 +2472,42 @@ ORDER BY rep_name;
 
 Failure counts include conflicts and are not reduced when a statement rolls back.
 
+For parallel Receiver threads and appliers:
+
+```sql
+SELECT rep_name,
+       parallel_id,
+       my_ip,
+       my_port,
+       peer_ip,
+       peer_port,
+       apply_xsn,
+       insert_success_count,
+       insert_failure_count,
+       update_success_count,
+       update_failure_count,
+       delete_success_count,
+       delete_failure_count
+FROM V$REPRECEIVER_PARALLEL
+ORDER BY rep_name, parallel_id;
+
+SELECT rep_name,
+       parallel_applier_index,
+       apply_xsn,
+       status,
+       insert_success_count,
+       insert_failure_count,
+       update_success_count,
+       update_failure_count,
+       delete_success_count,
+       delete_failure_count
+FROM V$REPRECEIVER_PARALLEL_APPLY
+ORDER BY rep_name, parallel_applier_index;
+```
+
+`V$REPRECEIVER_PARALLEL_APPLY.STATUS` values include `INITIALIZE`, `WORKING`,
+`DEQUEUEING`, `WAITING`, and `STOP`.
+
 ### Check Replication Target Columns
 
 ```sql
@@ -2303,6 +2523,122 @@ ORDER BY user_name, table_name, partition_name, column_name;
 ```
 
 `APPLY_MODE` values are `0` binary mode and `1` SQL mode.
+
+### Check Sent Log Counts and Replication Task Timing
+
+```sql
+SELECT rep_name,
+       current_type,
+       table_oid,
+       insert_log_count,
+       update_log_count,
+       delete_log_count,
+       lob_log_count
+FROM V$REPSENDER_SENT_LOG_COUNT
+ORDER BY rep_name, table_oid;
+```
+
+For eager parallel replication, per-thread sent-log counts are in
+`V$REPSENDER_SENT_LOG_COUNT_PARALLEL`.
+
+```sql
+SELECT rep_name,
+       parallel_id,
+       wait_new_log,
+       read_log_from_replbuffer,
+       read_log_from_file,
+       check_useful_log,
+       analyze_log,
+       send_xlog,
+       recv_ack,
+       set_ackedvalue
+FROM V$REPSENDER_STATISTICS
+ORDER BY rep_name, parallel_id;
+
+SELECT rep_name,
+       parallel_id,
+       recv_xlog,
+       convert_endian,
+       begin_transaction,
+       commit_transaction,
+       abort_transaction,
+       insert_row,
+       update_row,
+       delete_row,
+       send_ack
+FROM V$REPRECEIVER_STATISTICS
+ORDER BY rep_name, parallel_id;
+```
+
+Sender and Receiver statistics are collected when `TIMED_STATISTICS = 1`; timer
+resolution is controlled by `TIMER_THREAD_RESOLUTION` and `TIMER_RUNNING_LEVEL`.
+
+### Check Replication Transaction Tables and Recovery
+
+```sql
+SELECT rep_name,
+       start_flag,
+       local_tid,
+       remote_tid,
+       begin_flag,
+       begin_sn
+FROM V$REPSENDER_TRANSTBL
+ORDER BY rep_name, local_tid;
+
+SELECT rep_name,
+       local_tid,
+       remote_tid,
+       begin_flag,
+       begin_sn,
+       parallel_id,
+       parallel_applier_index
+FROM V$REPRECEIVER_TRANSTBL
+ORDER BY rep_name, local_tid;
+```
+
+For parallel replication, use `V$REPSENDER_TRANSTBL_PARALLEL` and
+`V$REPRECEIVER_TRANSTBL_PARALLEL` after confirming the target view columns with
+`V$ALLCOLUMN`.
+
+```sql
+SELECT rep_name,
+       status,
+       start_xsn,
+       xsn,
+       end_xsn,
+       recovery_sender_ip,
+       recovery_sender_port,
+       peer_ip,
+       peer_port
+FROM V$REPRECOVERY
+ORDER BY rep_name;
+```
+
+`V$REPRECOVERY.STATUS` values are `1` creating recovery information, `2` waiting for a
+recovery request, and `3` recovering.
+
+### Check 7.1 Remote Replication Metadata Views
+
+Altibase 7.1 Korean General Reference 2 lists remote replication metadata views such
+as `V$REPL_REMOTE_META_REPLICATIONS`, `V$REPL_REMOTE_META_ITEMS`,
+`V$REPL_REMOTE_META_COLUMNS`, `V$REPL_REMOTE_META_INDEX_COLUMNS`,
+`V$REPL_REMOTE_META_INDICES`, and `V$REPL_REMOTE_META_CHECKS`. They are not part of
+the common 7.1/7.3/8.1 inventory baseline in this attachment. Use them only after
+checking the target server.
+
+```sql
+SELECT name, columncount
+FROM V$TABLE
+WHERE name IN (
+  'V$REPL_REMOTE_META_REPLICATIONS',
+  'V$REPL_REMOTE_META_ITEMS',
+  'V$REPL_REMOTE_META_COLUMNS',
+  'V$REPL_REMOTE_META_INDEX_COLUMNS',
+  'V$REPL_REMOTE_META_INDICES',
+  'V$REPL_REMOTE_META_CHECKS'
+)
+ORDER BY name;
+```
 
 ## Cookbook: Database Links
 
@@ -2364,6 +2700,129 @@ SELECT transaction_id,
        query
 FROM V$DBLINK_REMOTE_STATEMENT_INFO
 ORDER BY transaction_id, statement_id;
+```
+
+## Cookbook: Monitoring API and SNMP Mappings
+
+Use this section when a user asks which Altibase view backs a Monitoring API function
+or SNMP MIB object. Use `08_performance_tuning_monitoring.md` for compile commands,
+daemon configuration, AgentX flow, MIB registration, and trap handling.
+
+### Map Monitoring API Functions to Views
+
+Monitoring API applications run on the same host as Altibase through a Unix domain
+socket. Before hard-coding any API-backed query or result structure, verify the target
+view and column layout.
+
+```sql
+SELECT name, columncount
+FROM V$TABLE
+WHERE name IN (
+  'V$SESSION',
+  'V$SYSSTAT',
+  'V$SESSTAT',
+  'V$STATNAME',
+  'V$SYSTEM_EVENT',
+  'V$SESSION_EVENT',
+  'V$SESSION_WAIT',
+  'V$STATEMENT',
+  'V$SQLTEXT',
+  'V$LOCK',
+  'V$LOCK_WAIT',
+  'V$LOCK_STATEMENT',
+  'V$DATABASE',
+  'V$VERSION',
+  'V$REPGAP',
+  'V$REPSENDER_SENT_LOG_COUNT'
+)
+ORDER BY name;
+```
+
+Monitoring API mapping blocks:
+
+- `ABIGetVSession`, `ABIGetVSessionBySID`: maps to `V$SESSION`.
+- `ABIGetSessionCount`: maps to session counts derived from `V$SESSION`; `aExecutingOnly = 1` means active sessions only.
+- `ABIGetMaxClientCount`: maps to the `MAX_CLIENT` property.
+- `ABIGetVSysstat`, `ABIGetVSesstat`, `ABIGetVSesstatBySID`, `ABIGetStatName`: map to `V$SYSSTAT`, `V$SESSTAT`, and statistic names.
+- `ABIGetVSystemEvent`, `ABIGetVSessionEvent`, `ABIGetVSessionEventBySID`, `ABIGetEventName`: map to system/session wait-event views and event-name metadata.
+- `ABIGetVSessionWait`, `ABIGetVSessionWaitBySID`: map to `V$SESSION_WAIT`.
+- `ABIGetSqlText`: maps to SQL text and statement timing evidence; pair it with `V$STATEMENT` and `V$SQLTEXT` when reproducing the same evidence in SQL.
+- `ABIGetLockPairBetweenSessions`, `ABIGetLockWaitSessionCount`: map to lock-holder and lock-wait evidence; pair with `V$LOCK_WAIT`, `V$LOCK`, and `V$LOCK_STATEMENT`.
+- `ABIGetDBInfo`: maps to database name and version evidence; pair with `V$DATABASE` and `V$VERSION`.
+- `ABIGetReadCount`: returns logical and physical data-page read counters. The function description does not name a one-to-one SQL view; pair it with read-counter statistics in `V$SYSSTAT` and `V$STATNAME` only after checking the target statistic names.
+- `ABIGetRepGap`: maps to `V$REPGAP`.
+- `ABIGetRepSentLogCount`: maps to `V$REPSENDER_SENT_LOG_COUNT`.
+
+Check Monitoring API property dependencies:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name = 'MAX_CLIENT';
+```
+
+### Map SNMP MIB Objects to SQL Evidence
+
+SNMP exposes `ALTIBASE-MIB` under enterprise OID `altibase(17180)`, grouped as
+`altiTrap`, `altiPropertyTable`, and `altiStatus`. Not every SNMP object has a
+one-to-one SQL view column. Use SQL to cross-check the Altibase-side evidence, and use
+SNMP output for SNMP-only fields such as `altiStatusProcessID` and trap delivery.
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'PORT_NO',
+  'SNMP_ENABLE',
+  'SNMP_PORT_NO',
+  'SNMP_TRAP_PORT_NO',
+  'SNMP_RECV_TIMEOUT',
+  'SNMP_SEND_TIMEOUT',
+  'SNMP_MSGLOG_FLAG',
+  'SNMP_ALARM_QUERY_TIMEOUT',
+  'SNMP_ALARM_FETCH_TIMEOUT',
+  'SNMP_ALARM_UTRANS_TIMEOUT',
+  'SNMP_ALARM_SESSION_FAILURE_COUNT',
+  'QUERY_TIMEOUT',
+  'FETCH_TIMEOUT',
+  'UTRANS_TIMEOUT'
+)
+ORDER BY name;
+```
+
+SNMP mapping blocks:
+
+- `altiPropertyIndex`: identifies each Altibase server managed by the SNMP subagent.
+- `altiPropertyAlarmQueryTimeout`: maps to `SNMP_ALARM_QUERY_TIMEOUT`; trap condition relates to session query timeout.
+- `altiPropertyAlarmFetchTimeout`: maps to `SNMP_ALARM_FETCH_TIMEOUT`; trap condition relates to session fetch timeout.
+- `altiPropertyAlarmUtransTimeout`: maps to `SNMP_ALARM_UTRANS_TIMEOUT`; trap condition relates to update transaction timeout.
+- `altiPropertyAlarmSessionFailureCount`: maps to `SNMP_ALARM_SESSION_FAILURE_COUNT`; nonzero values trigger traps when query execution fails continuously at the configured count.
+- `altiStatusDBName`: cross-check with `V$DATABASE.DB_NAME`.
+- `altiStatusDBVersion`: cross-check with `V$VERSION.PRODUCT_VERSION`.
+- `altiStatusSessionCount`: cross-check with `V$SESSION` count.
+- `altiTrapAddress`: identifies the Altibase port that raised the trap; cross-check `PORT_NO` and the `altibase` line in `altisnmpd.conf`.
+- `altiTrapCode`, `altiTrapLevel`, `altiTrapMessage`, `altiTrapMoreInfo`: trust the captured `snmptrapd` output for the trap event, then correlate timeout and session-failure traps with `V$SESSION`, `V$STATEMENT`, and timeout properties.
+
+SQL-side SNMP status cross-check:
+
+```sql
+SELECT db_name
+FROM V$DATABASE;
+
+SELECT product_version
+FROM V$VERSION;
+
+SELECT COUNT(*) AS session_count
+FROM V$SESSION;
+
+SELECT id,
+       query_time_limit,
+       fetch_time_limit,
+       utrans_time_limit,
+       session_state,
+       active_flag
+FROM V$SESSION
+ORDER BY id;
 ```
 
 ## Cookbook: Backup, Archive, Log, and File State
@@ -2748,6 +3207,40 @@ ORDER BY grantee.user_name, p.priv_name;
 ```
 
 `SYSTEM_.SYS_GRANT_OBJECT_.OBJ_TYPE` common values are `T` table or view, `S` sequence, `P` stored procedure or function, `A` stored package, `D` directory, and `Y` library.
+
+### Object Block: `SYSTEM_.SYS_AUDIT_` and `SYSTEM_.SYS_AUDIT_OPTS_`
+
+Purpose: store audit runtime state and configured audit conditions.
+
+Key columns: `IS_STARTED`, `START_TIME`, `STOP_TIME`, `RELOAD_TIME`, `USER_NAME`, `OBJECT_NAME`, `OBJECT_TYPE`, operation columns such as `SELECT_OP`, `INSERT_OP`, `UPDATE_OP`, `DELETE_OP`, `EXECUTE_OP`, `CONNECT_OP`, `DISCONNECT_OP`, `ALTER_SYSTEM_OP`, and `DDL_OP`.
+
+Representative SQL:
+
+```sql
+SELECT is_started, start_time, stop_time, reload_time
+FROM SYSTEM_.SYS_AUDIT_;
+
+SELECT user_name, object_name, object_type, select_op, insert_op, update_op, delete_op, ddl_op
+FROM SYSTEM_.SYS_AUDIT_OPTS_
+ORDER BY user_name, object_name, object_type;
+```
+
+### Object Block: `SYSTEM_.SYS_SECURITY_` and `SYSTEM_.SYS_ENCRYPTED_COLUMNS_`
+
+Purpose: store third-party security module metadata and encrypted-column policy metadata.
+
+Key columns: `MODULE_NAME`, `MODULE_VERSION`, `ECC_POLICY_NAME`, `ECC_POLICY_CODE`, `USER_ID`, `TABLE_ID`, `COLUMN_ID`, `ENCRYPT_PRECISION`, `POLICY_NAME`, `POLICY_CODE`.
+
+Representative SQL:
+
+```sql
+SELECT module_name, module_version, ecc_policy_name, ecc_policy_code
+FROM SYSTEM_.SYS_SECURITY_;
+
+SELECT user_id, table_id, column_id, encrypt_precision, policy_name, policy_code
+FROM SYSTEM_.SYS_ENCRYPTED_COLUMNS_
+ORDER BY user_id, table_id, column_id;
+```
 
 ### Object Block: `SYSTEM_.SYS_SYNONYMS_`
 
@@ -3968,23 +4461,33 @@ FROM V$DIRECT_PATH_INSERT;
 
 ### Object Block: `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, and `SYSTEM_.SYS_REPL_ITEMS_`
 
-Purpose: store replication definitions, hosts, and replicated items.
+Purpose: store replication definitions, peer or collector hosts, replicated items, and Log Analyzer XLog Sender metadata.
 
-Key columns: `REPLICATION_NAME`, `IS_STARTED`, `XSN`, `ITEM_COUNT`, `REPL_MODE`, `OPTIONS`, `HOST_IP`, `PORT_NO`, `LOCAL_USER_NAME`, `LOCAL_TABLE_NAME`, `REMOTE_USER_NAME`, `REMOTE_TABLE_NAME`.
+Key columns: `REPLICATION_NAME`, `IS_STARTED`, `XSN`, `ITEM_COUNT`, `CONFLICT_RESOLUTION`, `REPL_MODE`, `ROLE`, `OPTIONS`, `INVALID_RECOVERY`, `REMOTE_XSN`, `HOST_NO`, `HOST_IP`, `PORT_NO`, `CONN_TYPE`, `LOCAL_USER_NAME`, `LOCAL_TABLE_NAME`, `LOCAL_PARTITION_NAME`, `REMOTE_USER_NAME`, `REMOTE_TABLE_NAME`, `REMOTE_PARTITION_NAME`, `REPLICATION_UNIT`, `INVALID_MAX_SN`.
+
+When to query: use these tables before interpreting replication health, CDC/Log Analyzer state, replication DDL, or peer endpoint questions. `ROLE IN (1, 4)` identifies Log Analyzer XLog Sender definitions.
 
 Representative SQL:
 
 ```sql
-SELECT replication_name, is_started, xsn, item_count, repl_mode, options
+SELECT replication_name, is_started, xsn, item_count, repl_mode, role, options
 FROM SYSTEM_.SYS_REPLICATIONS_
 ORDER BY replication_name;
+
+SELECT replication_name, host_no, host_ip, port_no, conn_type
+FROM SYSTEM_.SYS_REPL_HOSTS_
+ORDER BY replication_name, host_no;
 ```
 
-### Object Block: `V$REPGAP`, `V$REPSYNC`, `V$REPSENDER`, and `V$REPRECEIVER`
+### Object Block: Replication Sender, Receiver, Gap, and Sync Views
 
-Purpose: show replication runtime gap, synchronization progress, sender state, receiver state, network error flag, and apply counters.
+Purpose: show replication gap, synchronization progress, Sender state, Receiver state, network error flag, apply counters, target-column apply mode, and parallel Sender/Receiver thread state.
 
-Key columns: `REP_NAME`, `REP_GAP`, `REP_GAP_SIZE`, `SYNC_TABLE`, `SYNC_PARTITION`, `SYNC_RECORD_COUNT`, `STATUS`, `NET_ERROR_FLAG`, `XSN`, `COMMIT_XSN`, `APPLY_XSN`, `INSERT_FAILURE_COUNT`, `UPDATE_FAILURE_COUNT`, `DELETE_FAILURE_COUNT`.
+Views: `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSYNC`, `V$REPSENDER`, `V$REPSENDER_PARALLEL`, `V$REPRECEIVER`, `V$REPRECEIVER_PARALLEL`, `V$REPRECEIVER_PARALLEL_APPLY`, `V$REPRECEIVER_COLUMN`.
+
+Key columns: `REP_NAME`, `REP_GAP`, `REP_GAP_SIZE`, `READ_FILE_NO`, `READ_OFFSET`, `SYNC_TABLE`, `SYNC_PARTITION`, `SYNC_RECORD_COUNT`, `STATUS`, `NET_ERROR_FLAG`, `XSN`, `COMMIT_XSN`, `APPLY_XSN`, `PARALLEL_ID`, `PARALLEL_APPLIER_INDEX`, `INSERT_FAILURE_COUNT`, `UPDATE_FAILURE_COUNT`, `DELETE_FAILURE_COUNT`, `APPLY_MODE`.
+
+When to query: use these views for lag, synchronization progress, Sender network state, Receiver apply failures, parallel replication, and Log Analyzer XLog Sender runtime checks.
 
 Representative SQL:
 
@@ -3996,6 +4499,71 @@ ORDER BY rep_name;
 SELECT rep_name, sync_table, sync_partition, sync_record_count
 FROM V$REPSYNC
 ORDER BY rep_name, sync_table, sync_partition;
+
+SELECT rep_name, status, net_error_flag, xsn, commit_xsn, sender_ip, peer_ip
+FROM V$REPSENDER
+ORDER BY rep_name;
+```
+
+### Object Block: Replication Log Buffer, Sent-Log, Statistics, Transaction, and Recovery Views
+
+Purpose: show dedicated replication log-buffer use, offline replication state, DML sent-log counts, Sender/Receiver task timing, transaction table state, and replication recovery progress.
+
+Views: `V$REPLOGBUFFER`, `V$REPOFFLINE_STATUS`, `V$REPSENDER_SENT_LOG_COUNT`, `V$REPSENDER_SENT_LOG_COUNT_PARALLEL`, `V$REPSENDER_STATISTICS`, `V$REPRECEIVER_STATISTICS`, `V$REPSENDER_TRANSTBL`, `V$REPSENDER_TRANSTBL_PARALLEL`, `V$REPRECEIVER_TRANSTBL`, `V$REPRECEIVER_TRANSTBL_PARALLEL`, `V$REPRECOVERY`.
+
+Key columns: `BUFFER_MIN_SN`, `READ_SN`, `BUFFER_MAX_SN`, `STATUS`, `SUCCESS_TIME`, `CURRENT_TYPE`, `TABLE_OID`, `INSERT_LOG_COUNT`, `UPDATE_LOG_COUNT`, `DELETE_LOG_COUNT`, `LOB_LOG_COUNT`, `WAIT_NEW_LOG`, `READ_LOG_FROM_REPLBUFFER`, `READ_LOG_FROM_FILE`, `ANALYZE_LOG`, `SEND_XLOG`, `RECV_ACK`, `RECV_XLOG`, `CONVERT_ENDIAN`, `BEGIN_TRANSACTION`, `COMMIT_TRANSACTION`, `ABORT_TRANSACTION`, `LOCAL_TID`, `REMOTE_TID`, `BEGIN_SN`, `START_XSN`, `END_XSN`.
+
+When to query: use these views when a simple gap or Sender/Receiver status query is not enough, especially for dedicated log-buffer diagnosis, offline replication, eager parallel replication, task timing, ACK behavior, transaction mapping, and recovery transfer state.
+
+Representative SQL:
+
+```sql
+SELECT rep_name, buffer_min_sn, read_sn, buffer_max_sn
+FROM V$REPLOGBUFFER
+ORDER BY rep_name;
+
+SELECT rep_name, current_type, table_oid, insert_log_count, update_log_count, delete_log_count
+FROM V$REPSENDER_SENT_LOG_COUNT
+ORDER BY rep_name, table_oid;
+
+SELECT rep_name, status, start_xsn, xsn, end_xsn
+FROM V$REPRECOVERY
+ORDER BY rep_name;
+```
+
+### Mapping Block: Monitoring API to Performance Views
+
+Purpose: map C Monitoring API function output to equivalent SQL evidence.
+
+Function mappings: `ABIGetVSession` and `ABIGetVSessionBySID` to `V$SESSION`; `ABIGetVSysstat` to `V$SYSSTAT`; `ABIGetVSesstat` and `ABIGetVSesstatBySID` to `V$SESSTAT`; `ABIGetStatName` to statistic names; wait-event functions to `V$SYSTEM_EVENT`, `V$SESSION_EVENT`, `V$SESSION_WAIT`, and event names; `ABIGetSqlText` to statement SQL text and timing evidence; lock functions to lock wait evidence; `ABIGetDBInfo` to database name and version evidence; `ABIGetReadCount` to logical/physical data-page read counters without a source-named one-to-one SQL view; `ABIGetRepGap` to `V$REPGAP`; `ABIGetRepSentLogCount` to `V$REPSENDER_SENT_LOG_COUNT`.
+
+Representative SQL:
+
+```sql
+SELECT name, columncount
+FROM V$TABLE
+WHERE name IN ('V$SESSION', 'V$SYSSTAT', 'V$SESSTAT', 'V$REPGAP', 'V$REPSENDER_SENT_LOG_COUNT')
+ORDER BY name;
+```
+
+### Mapping Block: SNMP MIB to Altibase Evidence
+
+Purpose: map `ALTIBASE-MIB` objects to SQL checks and SNMP-only evidence.
+
+MIB families: `altiPropertyTable` maps mainly to `SNMP_ALARM_*` properties; `altiStatus` maps to database name, product version, runtime process evidence, and session count; `altiTrap` maps to asynchronous startup, shutdown, timeout, and session-failure trap fields captured by `snmptrapd`.
+
+Representative SQL:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('SNMP_ENABLE', 'SNMP_PORT_NO', 'SNMP_TRAP_PORT_NO',
+               'SNMP_ALARM_QUERY_TIMEOUT', 'SNMP_ALARM_FETCH_TIMEOUT',
+               'SNMP_ALARM_UTRANS_TIMEOUT', 'SNMP_ALARM_SESSION_FAILURE_COUNT')
+ORDER BY name;
+
+SELECT product_version
+FROM V$VERSION;
 ```
 
 ### Object Block: `V$DATABASE`
@@ -4335,9 +4903,10 @@ Caution: `TYPE = 0` is a transaction Temporary LOB and `TYPE = 1` is a session T
 - Use `03_sql_ddl_generation.md` when metadata lookup must turn into corrected DDL for objects, privileges, indexes, partitions, sequences, or replication.
 - Use `05_data_types_properties.md` when a storage, log, backup, checkpoint, or Temporary LOB answer depends on a property value, range, dynamic-change support, or restart rule.
 - Use `07_error_messages_troubleshooting.md` when the view query is part of an error-code response or log-message triage.
-- Use `08_performance_tuning_monitoring.md` for deeper interpretation of sessions, statements, waits, locks, plan cache, statistics, and server bottlenecks.
-- Use `09_replication_ha_cdc.md` for replication topology, mode, failover, gap, Sender, Receiver, and CDC interpretation after view lookup.
+- Use `08_performance_tuning_monitoring.md` for deeper interpretation of sessions, statements, waits, locks, plan cache, statistics, server bottlenecks, Monitoring API usage, and SNMP setup/traps.
+- Use `09_replication_ha_cdc.md` for replication topology, mode, failover, gap, Sender, Receiver, Log Analyzer CDC, and XLog API interpretation after view lookup.
 - Use `16_dblink_external_connectors.md` when metadata or runtime checks involve database links, AltiLinker, remote statements, or global transactions.
+- Use `18_security_ssl_tls.md` when audit/security metadata, encrypted columns, SSL/TLS sessions, or replication SSL questions require security context.
 
 ## Answer Templates
 
@@ -4376,6 +4945,35 @@ Use this when the user asks "is replication delayed or failing":
 6. Treat `NET_ERROR_FLAG = 1`, large `REP_GAP_SIZE`, and receiver failure counts as investigation triggers.
 7. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
 
+### Template: CDC or Log Analyzer Evidence Request
+
+Use this when the user asks "is my CDC XLog Sender running" or "which tables are in Log Analyzer":
+
+1. Query `SYSTEM_.SYS_REPLICATIONS_` and require `ROLE IN (1, 4)` before calling the object a Log Analyzer XLog Sender.
+2. Query `SYSTEM_.SYS_REPL_HOSTS_`; for `WITH UNIX_DOMAIN`, expect `HOST_IP = 'UNIX_DOMAIN'` and route socket-path procedure details to `09_replication_ha_cdc.md`.
+3. Query `SYSTEM_.SYS_REPL_ITEMS_` for analyzed tables or partitions.
+4. Query `V$REPSENDER`, `V$REPSENDER_TRANSTBL`, and `V$REPGAP` for runtime state.
+5. Route API receive, ACK, restart SN, XLog type, and conversion questions to `09_replication_ha_cdc.md` and ODBC conversion details to `12_c_cli_odbc_precompiler.md`.
+
+### Template: Security or Audit Metadata Request
+
+Use this when the user asks "is audit enabled", "what is audited", or "which columns are encrypted":
+
+1. Query `SYSTEM_.SYS_AUDIT_` for runtime audit state.
+2. Query `SYSTEM_.SYS_AUDIT_OPTS_` for configured audit conditions and explain `-`, `S`, `A`, and `T` operation symbols.
+3. Query `SYSTEM_.SYS_ENCRYPTED_COLUMNS_` joined to `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, and `SYSTEM_.SYS_COLUMNS_`.
+4. Query `SYSTEM_.SYS_SECURITY_` for third-party security module metadata, but do not treat an empty result as proof that no column encryption metadata exists.
+5. Route audit DDL changes to `03_sql_ddl_generation.md` and security policy or TLS context to `18_security_ssl_tls.md`.
+
+### Template: Monitoring API or SNMP Mapping Request
+
+Use this when the user asks "which API gets this metric" or "which SQL confirms this SNMP value":
+
+1. Identify whether the interface is Monitoring API or SNMP.
+2. For Monitoring API, map the function to the underlying view, then verify the view and columns with `V$TABLE` and `V$ALLCOLUMN`.
+3. For SNMP, check `SNMP_*` properties in `V$PROPERTY`, cross-check status with `V$DATABASE`, `V$VERSION`, and `V$SESSION`, and treat process ID and trap fields as SNMP output.
+4. Route setup, compile, daemon, MIB registration, and trap-delivery procedure details to `08_performance_tuning_monitoring.md`.
+
 ### Template: Storage, Backup, or Archive Request
 
 Use this when the user asks "is there enough space", "is archive log enabled", "which backup exists", or "which datafile is hot":
@@ -4400,3 +4998,4 @@ Use this when the user asks about 8.1 dictionary or performance view changes:
 ## Residual Scope
 
 - Cookbook queries and searchable object blocks cover common dictionary and performance-view questions. They are not a full column-by-column catalog; for an exact view layout, query `V$ALLCOLUMN` or the target-version dictionary source before generating final SQL.
+- Monitoring API and SNMP mappings are source-backed but not live-tested in this repository. For production monitoring, verify the actual API return values, `snmpwalk`, and `snmptrapd` output on the target version and host.

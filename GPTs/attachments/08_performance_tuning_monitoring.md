@@ -2817,7 +2817,7 @@ ORDER BY tablename, colname;
 
 - Use `03_sql_ddl_generation.md` when a tuning recommendation becomes DDL for indexes, constraints, partitions, tablespaces, statistics objects, or generated SQL.
 - Use `05_data_types_properties.md` for property semantics, data type choices, bind-type effects, JSON or Temporary LOB behavior, and exact property names.
-- Use `06_data_dictionary_performance_views.md` for compact lookup SQL and column checks before relying on a performance view in a customer answer.
+- Use `06_data_dictionary_performance_views.md` for compact lookup SQL, column checks, and Monitoring API/SNMP-to-view mappings before relying on a performance view or MIB-derived value in a customer answer.
 - Use `07_error_messages_troubleshooting.md` when the performance symptom includes a specific Altibase error code, SQLSTATE, or log message.
 - Use `12_c_cli_odbc_precompiler.md` when client fetch, bind, LOB, autocommit, or CLI/ODBC transaction behavior affects performance.
 - Use `14_utilities_operation_tools.md` for diagnostic tools such as `altiMon`, `altiProfile`, `dumptrc`, and other operational evidence collectors.
@@ -2850,7 +2850,7 @@ Monitoring API answer pattern:
 ```text
 1. State that the API runs locally through Unix domain socket.
 2. Initialize with ABISetProperty and ABIInitialize.
-3. Use the API function that maps to the required performance view.
+3. Use `06_data_dictionary_performance_views.md` to map the API function to the required performance view and verify target columns when exact output fields matter.
 4. Handle the API return style correctly: row-set count, success-code result pointer, or scalar count.
 5. Use a mutex if multiple threads call Monitoring API.
 6. Call ABIFinalize.
@@ -2863,7 +2863,7 @@ SNMP answer pattern:
 2. Confirm snmpd, snmptrapd, and altisnmpd ports and AgentX configuration.
 3. Register ALTIBASE-MIB.txt.
 4. Test with snmpwalk against altibase.
-5. Check altiStatus for status and altiPropertyTable for alarm settings.
+5. Check altiStatus for status and altiPropertyTable for alarm settings, then cross-check Altibase-side values through the SQL mappings in `06_data_dictionary_performance_views.md`.
 6. Check altiTrap fields and trap code for asynchronous events.
 ```
 
