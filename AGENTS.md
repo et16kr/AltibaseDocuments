@@ -14,6 +14,34 @@ The active loop is:
 5. Commit the stage when the report reaches `Verdict: Pass` with no actionable
    `Blocker`, `High`, `Medium`, or `Low` findings.
 
+## GPT Attachment Objective
+
+`GPTs/attachments/` is intended to be an encyclopedia-grade consolidated reference
+for overseas customers who may have no prior Altibase knowledge.
+
+The 20 Markdown files are packaging units for GPT upload, not a high-frequency FAQ
+subset. They should preserve answerability for the selected Altibase manuals, release
+notes, technical documents, tool manuals, third-party guides, and approved supporting
+source inventory already present in this repository.
+
+Within supported Altibase 7.1, 7.3, and 8.1 scope, a manual/source-backed question
+should be answerable from the attachment set without replying only that the detail is
+absent from the attachments. If an answer depends on an exact patch level, customer
+environment, log excerpt, object definition, or unsupported/unverified claim, ask for
+that missing input and provide the safest source-backed next check.
+
+Attachment content should be organized as searchable reference material, including:
+
+- product/version/platform differences;
+- Altibase-specific SQL, DDL, DCL, administrative SQL, and command generation patterns;
+- all practical property, data type, dictionary/performance view, error, utility,
+  connector, and tool reference material needed to answer manual-style questions;
+- operational runbooks for installation, startup/shutdown, backup, recovery,
+  tablespaces, replication, performance, security, migration, and troubleshooting.
+
+Treat missing item-level coverage for source-backed Altibase behavior as a review or
+remediation gap, not as an acceptable "not covered in attachments" answer.
+
 ## First Checks
 
 At the start of a review/remediation-cycle request, run or inspect:

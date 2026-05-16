@@ -1,0 +1,13 @@
+id	status	kind	title	goal
+J001	ToDo	mixed	Benchmark requirements and durable layout	Define benchmark purpose, persistent eval directory layout, schemas, scoring policy, and success thresholds.
+J002	ToDo	mixed	Source taxonomy and coverage map	Map selected manual/source families to benchmark domains, user levels, and target question counts.
+J003	ToDo	mixed	Question schema and manifest tooling	Create the machine-readable question schema, manifest format, validation rules, and seed examples.
+J004	ToDo	mixed	Property benchmark questions	Generate hard source-backed property questions covering defaults, ranges, dynamic changes, check SQL, and cautions.
+J005	ToDo	mixed	SQL DDL DML and compatibility questions	Generate hard source-backed SQL, DDL, DML, data type, JSON, LOB, function, and Oracle-difference questions.
+J006	ToDo	mixed	Operations backup recovery questions	Generate hard source-backed installation, startup, shutdown, backup, restore, recovery, tablespace, and admin runbook questions.
+J007	ToDo	mixed	Views performance and monitoring questions	Generate hard source-backed dictionary, performance view, optimizer, plan, monitoring, SNMP, and tuning questions.
+J008	ToDo	mixed	Replication CDC security network questions	Generate hard source-backed replication, CDC, Log Analyzer, RepMgr, security, TLS, and network diagnostic questions.
+J009	ToDo	mixed	Error and troubleshooting questions	Generate hard source-backed error-code, symptom, cause/action, log collection, and troubleshooting questions.
+J010	ToDo	mixed	Tools APIs connectors migration questions	Generate hard source-backed PSM, external procedure, JDBC, CLI, ODBC, Precompiler, iSQL, iLoader, utilities, connectors, Kubernetes, migration, Spatial, NiFi, and Tableau questions.
+J011	ToDo	mixed	Attachments-only answer generation runner	Implement the durable script that projects question records to the allowed answering input, runs answer generation using only GPTs/attachments as retrieval context, checks for judge-only metadata leakage, and records model responses.
+J012	ToDo	mixed	Source-backed judge and readiness reports	Implement source-backed judge/report tooling that compares attachments-only answers against expected facts, required tokens, prohibited claims, and readiness thresholds, with calibration samples and validation commands.

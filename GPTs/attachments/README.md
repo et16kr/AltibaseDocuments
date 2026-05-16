@@ -1,8 +1,14 @@
 # Altibase GPTs Attachments
 
 This directory contains customer-facing Markdown knowledge files for Altibase GPTs.
-The files are the canonical English source used by the GPT to answer customer questions
-about Altibase 7.1, 7.3, and 8.1.
+The files consolidate the selected Altibase manuals, release notes, technical documents,
+tool manuals, third-party guides, and approved supporting sources into the canonical
+English source used by the GPT to answer customer questions about Altibase 7.1, 7.3,
+and 8.1.
+
+The target GPT is an encyclopedia-grade Altibase assistant for overseas customers who
+may have no prior Altibase knowledge. The 20 files are upload packaging units, not a
+high-frequency FAQ subset.
 
 ## Core Rules
 
@@ -11,6 +17,14 @@ about Altibase 7.1, 7.3, and 8.1.
 - Treat canonical English as the source language for the knowledge files. The GPT may
   translate explanations at answer time, but the attachment text itself should stay English.
 - Support Altibase 7.1, 7.3, and 8.1 answers.
+- Treat the 20 attachment files as the consolidated answer source for the selected
+  source documents. Do not answer only that a product/manual detail is absent from the
+  attachments when the question is within the selected source-backed Altibase corpus;
+  answer from the closest relevant consolidated source blocks and ask only for missing
+  version, environment, log, or object details needed for a safe answer.
+- Preserve source-backed answerability for manual-style questions about properties,
+  SQL syntax, data types, dictionary/performance views, error codes, utilities, tools,
+  drivers, connectors, backup/recovery, replication, security, migration, and operations.
 - Label Altibase 8.1 material as based on the `Altibase 8.1 verified source`.
 - Prioritize Altibase-specific DDL, configuration, operation, compatibility, and troubleshooting behavior.
 - Keep common SQL behavior that overlaps with Oracle brief unless Altibase differs.

@@ -5,9 +5,16 @@
 This review process verifies whether the 20 Altibase GPTs attachment files are ready
 to be uploaded as GPTs knowledge files.
 
-The target GPT should answer customer questions about Altibase 7.1, 7.3, and 8.1.
-The review should prioritize material that is specific to Altibase and likely to be
-wrong if the model relies on general Oracle or database knowledge.
+The target GPT should act as an encyclopedia-grade Altibase assistant for overseas
+customers who may have no prior Altibase knowledge. It should answer source-backed
+manual-style questions and generate Altibase-specific SQL, commands, configuration
+steps, operational runbooks, troubleshooting guidance, and compatibility explanations
+for Altibase 7.1, 7.3, and 8.1.
+
+The 20 Markdown files are an upload packaging boundary, not a high-frequency FAQ
+subset. Review should verify that the selected manuals, release notes, technical
+documents, tool manuals, third-party guides, and approved supporting sources remain
+answerable through searchable consolidated Markdown.
 
 ## Review Strategy
 
@@ -22,7 +29,11 @@ The review bias is:
   compatibility boundaries, and migration cautions.
 - Spend more review depth on Altibase-specific DDL, tablespaces, storage behavior,
   properties, data dictionary views, operation, troubleshooting, replication, HA,
-  performance, security, and tool behavior.
+  performance, security, and tool behavior; this depth requirement does not make
+  missing catalog coverage acceptable.
+- Treat missing source-backed property, SQL syntax, data type, view, error, utility,
+  connector, tool, or runbook coverage as an actionable gap when it prevents
+  encyclopedia-style answers.
 - Treat Korean Altibase manuals as the authoritative latest manual source. If an
   English manual and its Korean counterpart differ, review against the Korean manual
   and call out any English-source drift as a source issue.
@@ -158,6 +169,8 @@ Goal: confirm the attachment set follows the intended content strategy.
 Checks:
 
 - The attachment set matches the selection document.
+- The attachment set is a consolidated encyclopedia-grade reference, not merely a
+  high-frequency FAQ or support-summary set.
 - English is the canonical attachment language, but Korean manuals are the authoritative
   source when paired Korean and English manuals differ.
 - Korean-source content must be translated and normalized into English attachment prose
@@ -217,11 +230,13 @@ Checks:
 
 - Each file has useful headings, question-oriented sections, compact item blocks, and
   source-safe wording.
+- The final upload checklist maps source-backed manual-style question areas and
+  reference catalogs to one or more attachments.
 - Literal technical tokens remain unchanged in multilingual answer scenarios.
 - Korean manuals remain the default source authority for the final repeated review; any
   Korean/English manual conflict is recorded and judged from the Korean manual.
-- The final upload checklist maps every expected customer question area to one or more
-  attachments.
+- The final upload checklist maps every source-backed customer question area to one or
+  more attachments.
 - Remaining review reports are resolved or explicitly accepted as residual risk.
 
 ## Review Stages
@@ -253,6 +268,9 @@ The attachment set is ready for upload when:
   customer.
 - Multilingual and retrieval review confirms that answer language can change while SQL
   tokens, property names, commands, paths, error codes, and object names remain literal.
+- Retrieval review confirms that manual-style questions over the selected source corpus
+  can be answered from the consolidated attachment set, or are recorded as remediation
+  gaps.
 - The final repeated review explicitly uses Korean manuals as the default source
   authority when Korean and English manuals differ.
 - The final upload checklist references exactly the 20 attachment Markdown files.

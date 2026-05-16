@@ -2,13 +2,23 @@
 
 ## Objective
 
-Build the attachment knowledge set so an Altibase GPT can answer customer questions
+Build the attachment knowledge set so an Altibase GPT can act as an encyclopedia-grade
+Altibase reference for overseas customers who may have no prior Altibase knowledge,
 according to the customer's Altibase version: 7.1, 7.3, or 8.1.
 
-Customer questions are expected to focus on SQL generation, DDL authoring, server
-configuration, operational check SQL, replication, and error handling. Keep generic
-Oracle-overlapping SQL content brief, and give more depth to Altibase-specific DDL,
-configuration, operation, and troubleshooting behavior.
+The attachment set must consolidate the selected Altibase manuals, release notes,
+technical documents, tool manuals, third-party guides, and approved supporting sources
+into 20 uploadable Markdown files. The 20-file boundary is a packaging constraint, not
+a reason to omit manual/source-backed answerability. The result should support both
+reference questions and executable Altibase-specific SQL, command, configuration,
+operation, and troubleshooting answers.
+
+Customer questions are not limited to high-frequency support scenarios. A user may ask
+manual-style questions about properties, SQL syntax, data types, dictionary and
+performance views, error codes, utilities, drivers, tools, replication, backup/recovery,
+or compatibility. Keep generic Oracle-overlapping SQL content brief only where
+Altibase behavior truly matches; preserve Altibase-specific behavior and version
+differences in searchable form.
 
 ## Version Policy
 
@@ -30,17 +40,24 @@ Rules:
 
 ## Selection Criteria
 
-1. High-frequency customer question areas.
+1. Broad source-corpus answerability for manual-style Altibase questions.
 2. Altibase-specific information that ChatGPT could otherwise infer incorrectly from
    general database knowledge.
-3. Differences across Altibase 7.1, 7.3, and 8.1.
-4. Operational troubleshooting information needed for real support cases.
-5. Content that can be reorganized into Markdown for GPTs knowledge retrieval.
+3. Differences across Altibase 7.1, 7.3, and 8.1, including patch-sensitive cautions
+   when the selected sources provide them.
+4. Executable Altibase SQL, DDL, DCL, administrative SQL, command, configuration,
+   and runbook generation.
+5. Property, data type, system view, error, utility, connector, and tool catalog
+   coverage sufficient for source-backed reference answers.
+6. Content that can be reorganized into searchable Markdown item blocks for GPTs
+   knowledge retrieval.
 
 ## Final Recommendation: 20 Attachment Files
 
 These 20 files are the final upload units for GPTs. Do not upload original manuals
-directly. Combine source material by customer question topic.
+directly. Combine source material by customer question topic while preserving
+manual/source-backed answerability through searchable item blocks, compact syntax, and
+cross-references.
 
 | No. | Attachment file | Customer question scope | Main source family |
 | --- | --- | --- | --- |
