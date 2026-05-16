@@ -346,6 +346,18 @@ receive_only_replication ::=
     FROM user_name.table_name [PARTITION partition_name]
     TO   user_name.table_name [PARTITION partition_name]
     [, FROM ... TO ...];
+
+replication_option_list ::=
+  OPTIONS replication_option [replication_option ...]
+
+replication_option ::=
+    RECOVERY
+  | OFFLINE 'log_dir' [, 'log_dir' ...]
+  | GROUPING
+  | PARALLEL receiver_applier_count [buffer_size]
+  | GAPLESS
+  | RECEIVE_ONLY
+  | META_LOGGING
 ```
 
 Syntax notes:
@@ -365,6 +377,7 @@ Syntax notes:
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `AS MASTER` and `AS SLAVE` affect handshaking. Valid pairings are not-set with not-set, master with slave, and slave with master.
 - `OPTIONS RECEIVE_ONLY` uses a receive-only creation form without a peer host list. When receive-only mode is later turned off, supply the peer host again with `SET RECEIVE_ONLY OFF WITH ...`.
+- `RECOVERY`, `OFFLINE`, `GROUPING`, `PARALLEL`, `GAPLESS`, `RECEIVE_ONLY`, and `META_LOGGING` are replication options with different restrictions. Before generating an option list, confirm replication mode, role, whether DDL replication is needed, and whether the option is mutually exclusive with the chosen recovery or receive-only behavior.
 
 ## CREATE REPLICATION Examples: Non-SSL TCP
 
@@ -523,6 +536,14 @@ ALTER REPLICATION replication_name RESET;
 ALTER REPLICATION replication_name DROP HOST ALL;
 ALTER REPLICATION replication_name SET RECEIVE_ONLY
   { ON | OFF WITH 'remote_host_ip_or_name', remote_host_port_no [USING conn_type [ib_latency]] };
+ALTER REPLICATION replication_name SET
+  { RECOVERY | GAPLESS | GROUPING | PROPAGABLE LOGGING } {ENABLE | DISABLE};
+ALTER REPLICATION replication_name SET PARALLEL receiver_applier_count [buffer_size];
+ALTER REPLICATION replication_name SET OFFLINE ENABLE WITH 'log_dir' [, 'log_dir' ...];
+ALTER REPLICATION replication_name SET OFFLINE DISABLE;
+ALTER REPLICATION replication_name BUILD OFFLINE META [AT SN(sn)];
+ALTER REPLICATION replication_name START WITH OFFLINE;
+ALTER REPLICATION replication_name RESET OFFLINE META;
 
 ALTER REPLICATION replication_name ADD TABLE
   FROM user_name.table_name [PARTITION partition_name]

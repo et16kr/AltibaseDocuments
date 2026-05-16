@@ -12,9 +12,8 @@ attachment text.
 
 This is a documentation-scope baseline. It does not attempt to complete every SQL
 statement, clause, function, hint, or operator block in the customer-facing attachments.
-Those item-level expansions are split across J011-J016, with J011 and J012 now
-source-audited and the remaining SQL families continuing in J013-J016. PSM, Spatial,
-tool, and
+Those item-level expansions are split across J011-J016, with J011-J016 now
+source-audited for their assigned SQL families. PSM, Spatial, tool, and
 connector-specific syntax are handled by their later source-family jobs. No attachment
 filename, upload boundary, or customer-facing 8.1 source label change was found.
 
@@ -263,6 +262,16 @@ Korean source.
 - Required conversion shape: Version-scoped BNF, topology/transport guardrails,
   property/view validation SQL, exact missing-input prompts, and clear separation of
   ordinary replication, replication SSL, and Log Analyzer forms.
+- J016 completion note: `GPTs/attachments/03_sql_ddl_generation.md` now contains
+  source-audited BNF-like blocks for replication option lists, replication host
+  maintenance, receive-only mode, offline replication metadata/start/reset clauses, Log
+  Analyzer `START AT SN`, `ALTER SYSTEM` administrative control statements, session
+  controls, and transaction controls. `GPTs/attachments/09_replication_ha_cdc.md` now
+  carries matching searchable option-list and option-change syntax. The update corrects
+  `ALTER SESSION SET REPLICATION` to the SQL Reference diagram's `{DEFAULT | NONE}`
+  choices, preserving the guardrail that arbitrary `LAZY` or `EAGER` tokens must not be
+  generated in that clause. No attachment boundary, source label, or new source-family
+  gap was introduced.
 
 ### J034/J039 Baseline: Specialized SQL
 
@@ -353,7 +362,9 @@ named_clause ::=
 - `GAP-J002-018` remains the high-risk visual audit anchor. This J010 inventory narrows
   the SQL syntax portion of that audit but does not close it.
 - `GAP-J010-001` in `GPTs/reports/gap_register.md` tracks the remaining SQL syntax
-  conversion queue created by this report.
+  conversion queue created by this report. J011-J016 have closed their assigned
+  SQL-generation families; later specialized SQL extraction remains for PSM, external
+  procedures, Spatial, and tool-adjacent SQL.
 
 ## Validation Notes
 

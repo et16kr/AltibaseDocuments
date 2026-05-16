@@ -739,6 +739,22 @@ replication_table_non_ssl ::=
   [, FROM ... TO ...]
 ```
 
+#### Replication Option Syntax
+
+```text
+option_list ::=
+  replication_option [replication_option ...]
+
+replication_option ::=
+    RECOVERY
+  | OFFLINE 'log_dir' [, 'log_dir' ...]
+  | GROUPING
+  | PARALLEL receiver_applier_count [buffer_size]
+  | GAPLESS
+  | RECEIVE_ONLY
+  | META_LOGGING
+```
+
 #### Log Analyzer CDC Replication Syntax
 
 ```text
@@ -793,6 +809,7 @@ alter_replication ::=
 | ALTER REPLICATION replication_name SYNC ONLY [PARALLEL parallel_factor]
     [TABLE [owner.]table_name [PARTITION partition_name], ...]
 | ALTER REPLICATION replication_name START [RETRY]
+| ALTER REPLICATION replication_name START AT SN (xlog_sender_start_sn)
 | ALTER REPLICATION replication_name QUICKSTART [RETRY]
 | ALTER REPLICATION replication_name STOP
 | ALTER REPLICATION replication_name RESET
@@ -802,7 +819,23 @@ alter_replication ::=
 | ALTER REPLICATION replication_name DROP TABLE
     FROM [owner.]local_table [PARTITION local_partition]
     TO   [owner.]remote_table [PARTITION remote_partition]
+| ALTER REPLICATION replication_name ADD HOST
+    'remote_host_ip_or_name', remote_replication_port [USING conn_type [ib_latency]]
+| ALTER REPLICATION replication_name DROP HOST
+    { 'remote_host_ip_or_name', remote_replication_port [USING conn_type [ib_latency]] | ALL }
+| ALTER REPLICATION replication_name SET HOST
+    'remote_host_ip_or_name', remote_replication_port
+| ALTER REPLICATION replication_name SET
+    { RECOVERY | GAPLESS | GROUPING | PROPAGABLE LOGGING } {ENABLE | DISABLE}
+| ALTER REPLICATION replication_name SET PARALLEL receiver_applier_count [buffer_size]
+| ALTER REPLICATION replication_name SET RECEIVE_ONLY
+    { ON | OFF WITH 'remote_host_ip_or_name', remote_replication_port [USING conn_type [ib_latency]] }
 | ALTER REPLICATION replication_name FLUSH [ALL] [WAIT timeout_sec]
+| ALTER REPLICATION replication_name SET OFFLINE ENABLE WITH 'log_dir' [, 'log_dir' ...]
+| ALTER REPLICATION replication_name SET OFFLINE DISABLE
+| ALTER REPLICATION replication_name BUILD OFFLINE META [AT SN(sn)]
+| ALTER REPLICATION replication_name START WITH OFFLINE
+| ALTER REPLICATION replication_name RESET OFFLINE META
 
 drop_replication ::=
   DROP REPLICATION [IF EXISTS] replication_name
@@ -813,6 +846,7 @@ Generation notes:
 - Only `SYS` can execute replication-related statements.
 - `IF NOT EXISTS` for `CREATE REPLICATION` and `IF EXISTS` for `DROP REPLICATION` are available in Altibase 8.1 verified source. Omit them for 7.1 and 7.3; `CREATE REPLICATION IF NOT EXISTS` also does not verify that an existing replication object has the desired endpoints or target items.
 - The replication object name must be the same on both servers.
+- `option_list` can include source-backed replication options such as `RECOVERY`, `OFFLINE`, `GROUPING`, `PARALLEL`, `GAPLESS`, `RECEIVE_ONLY`, and `META_LOGGING`. Do not combine options blindly; for example, `RECOVERY` and `OFFLINE` are mutually exclusive, `RECEIVE_ONLY` excludes EAGER mode and DDL replication, and `GAPLESS`, `GROUPING`, and `PARALLEL` are LAZY-oriented features.
 - The port in `WITH 'host', port` is the remote server's replication receiver port. For ordinary replication, check `REPLICATION_PORT_NO` on the remote server.
 - Non-SSL replication and SSL replication are separate generation cases. Do not mix ordinary TCP ports and SSL replication ports in the same example.
 - If `USING` is omitted, ordinary TCP replication is used. `USING TCP` can be shown for clarity, but it is not required.
@@ -820,10 +854,14 @@ Generation notes:
 - In Altibase 8.1 verified source, SSL replication uses `USING SSL` and the remote server's `REPLICATION_SSL_PORT_NO`. SSL configuration must already be completed on each replication target server.
 - `FOR ANALYSIS` and `FOR ANALYSIS PROPAGATION` are Log Analyzer CDC XLog Sender syntax. Do not combine those Log Analyzer forms with `EAGER`, `USING SSL`, or `USING IB`.
 - For Log Analyzer TCP, the `WITH` endpoint is the XLog Collector IP address or host name and port. The XLog Collector must already be listening before `ALTER REPLICATION ... START`.
+- `ALTER REPLICATION ... START AT SN (...)` is Log Analyzer XLog Sender syntax, not ordinary table-to-table replication start syntax. It requires Archivelog mode and `REPLICATION_LOG_BUFFER_SIZE = 0`.
 - `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
+- `ADD HOST`, `DROP HOST`, and `SET HOST` are host-list operations. Stop ordinary replication before host-list changes; for Log Analyzer, host changes apply only to TCP/IP XLog Collector endpoints, not `WITH UNIX_DOMAIN`.
+- `SET RECEIVE_ONLY ON` requires first removing all host information with `DROP HOST ALL` and resetting restart information with `RESET`; when turning receive-only off, supply the peer host again with `SET RECEIVE_ONLY OFF WITH ...`.
+- Offline replication clauses are recovery operations for applying unsent Active-server logs from copied log paths. Generate them only after confirming `META_LOGGING`, source log availability, SQL Apply requirements, and the Active/Standby role.
 
 ### Property SQL Syntax
 
@@ -1147,10 +1185,51 @@ Table maintenance generation notes:
 ```text
 session_system_control ::=
   ALTER SESSION SET property_name = property_value
-| ALTER SESSION SET REPLICATION replication_name {DEFAULT | NONE | replication_mode}
-| ALTER SESSION CLOSE DATABASE LINK database_link_name
+| ALTER SESSION SET FREE TEMPORARY LOB
+| ALTER SESSION SET REPLICATION = {DEFAULT | NONE}
+| ALTER SESSION CLOSE DATABASE LINK {ALL | database_link_name}
 | ALTER SYSTEM SET property_name = property_value
+
+alter_system_control ::=
+  ALTER SYSTEM CHECKPOINT
+| ALTER SYSTEM MEMORY COMPACT
+| ALTER SYSTEM {START | STOP} FLUSHER flusher_id
+| ALTER SYSTEM ARCHIVE LOG {START | STOP}
+| ALTER SYSTEM SWITCH LOGFILE
+| ALTER SYSTEM SET property_name = property_value
+| ALTER SYSTEM FLUSH BUFFER_POOL
+| ALTER SYSTEM {COMPACT | RESET} SQL_PLAN_CACHE
+| ALTER SYSTEM {START | STOP | RELOAD} AUDIT
+| ALTER SYSTEM RELOAD ACCESS LIST
 ```
+
+Session and system control generation notes:
+
+- `ALTER SESSION SET REPLICATION = DEFAULT` restores the replication mode chosen when the replication object was created. `ALTER SESSION SET REPLICATION = NONE` excludes DDL, DML, and DCL executed in the session from replication. Do not generate an arbitrary `LAZY` or `EAGER` token in this clause.
+- `ALTER SESSION SET FREE TEMPORARY LOB` is Altibase 8.1 verified source syntax. It frees Temporary LOBs created in the current session. Use it only for sessions using Temporary LOB or 8.1 native JSON workflows, and verify with `V$TEMPORARY_LOBS` when available.
+- `ALTER SESSION CLOSE DATABASE LINK {ALL | database_link_name}` closes database-link sessions associated with the current session; use attachment 16 for DB Link setup and linker operations.
+- `ALTER SYSTEM` requires `SYS` or `ALTER SYSTEM` privilege. `SWITCH LOGFILE`, `FLUSH BUFFER_POOL`, and `RELOAD ACCESS LIST` require administrator-mode caution according to the SQL Reference text.
+- `ALTER SYSTEM MEMORY COMPACT` is documented as useful only on IBM AIX. Do not generate it as a generic memory-tuning step.
+- `ALTER SYSTEM ARCHIVE LOG START` and `STOP` are valid only when the database is running in Archivelog mode. Check `V$LOG` or `V$ARCHIVE` before generating an archive-log thread change.
+- `ALTER SYSTEM START AUDIT`, `STOP AUDIT`, and `RELOAD AUDIT` control runtime audit application. New or removed audit conditions from `AUDIT`, `NOAUDIT`, or `DELAUDIT` are not applied until audit is restarted or reloaded.
+
+#### Transaction Control Syntax
+
+```text
+transaction_control ::=
+  COMMIT [WORK] [FORCE global_tx_id]
+| ROLLBACK [WORK] [TO SAVEPOINT savepoint_name | FORCE global_tx_id]
+| SAVEPOINT savepoint_name
+| SET TRANSACTION {READ ONLY | READ WRITE}
+| SET TRANSACTION ISOLATION LEVEL {READ COMMITTED | REPEATABLE READ | SERIALIZABLE}
+```
+
+Transaction control generation notes:
+
+- `COMMIT`, `ROLLBACK`, `SAVEPOINT`, and `SET TRANSACTION` are for sessions with `AUTOCOMMIT` off. Do not suggest them as useful statements in autocommit mode.
+- `SET TRANSACTION` affects only the current transaction and cannot be used while another transaction is already active in the session.
+- `COMMIT FORCE global_tx_id` and `ROLLBACK FORCE global_tx_id` are XA in-doubt transaction operations. Ask for the exact global transaction ID and recovery context before generating them.
+- `ROLLBACK TO SAVEPOINT savepoint_name` rolls back only to a previously created savepoint; it does not undo DDL that was executed as its own transaction.
 
 #### Audit Control Syntax
 
@@ -1261,6 +1340,72 @@ ORDER BY name;
 ```
 
 For these static examples, explain the file, restart, or database recreation path instead of emitting a dynamic `ALTER` statement.
+
+### Administrative Control SQL Examples
+
+Use these only after confirming privilege, server mode, and service impact.
+
+Checkpoint and log-switch examples:
+
+```sql
+-- Check current logging and archive context first.
+SELECT *
+FROM V$LOG;
+
+SELECT *
+FROM V$ARCHIVE;
+
+ALTER SYSTEM CHECKPOINT;
+
+-- SYSDBA/admin-mode operation: force the current log file to close and continue in the next log file.
+ALTER SYSTEM SWITCH LOGFILE;
+```
+
+Flusher and buffer examples:
+
+```sql
+SELECT *
+FROM V$FLUSHER;
+
+ALTER SYSTEM STOP FLUSHER 1;
+ALTER SYSTEM START FLUSHER 1;
+
+-- High-impact diagnostic operation; do not use as routine tuning.
+ALTER SYSTEM FLUSH BUFFER_POOL;
+```
+
+Plan cache and audit runtime examples:
+
+```sql
+ALTER SYSTEM COMPACT SQL_PLAN_CACHE;
+ALTER SYSTEM RESET SQL_PLAN_CACHE;
+
+AUDIT INSERT, UPDATE, DELETE ON app.orders BY ACCESS WHENEVER NOT SUCCESSFUL;
+ALTER SYSTEM RELOAD AUDIT;
+
+SELECT *
+FROM SYSTEM_.SYS_AUDIT_OPTS_
+WHERE object_name = 'ORDERS';
+
+NOAUDIT INSERT, UPDATE, DELETE ON app.orders WHENEVER NOT SUCCESSFUL;
+ALTER SYSTEM RELOAD AUDIT;
+```
+
+Session control and transaction examples:
+
+```sql
+ALTER SESSION SET REPLICATION = DEFAULT;
+ALTER SESSION SET REPLICATION = NONE;
+
+ALTER SESSION SET FREE TEMPORARY LOB;
+
+ALTER SESSION CLOSE DATABASE LINK ALL;
+
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+SAVEPOINT before_batch_step;
+ROLLBACK TO SAVEPOINT before_batch_step;
+COMMIT;
+```
 
 ### Database, Archive, Backup, and Recovery SQL Examples
 
@@ -2576,6 +2721,48 @@ FROM app.app_document TO app.app_document;
 ALTER REPLICATION rep_app_user_ssl SYNC;
 ```
 
+Log Analyzer XLog Sender example:
+
+```sql
+-- The XLog Collector must already be listening on collector.example.com:35300.
+CREATE REPLICATION log_analysis FOR ANALYSIS
+WITH 'collector.example.com', 35300
+FROM app.app_user TO app.app_user;
+
+ALTER REPLICATION log_analysis START;
+
+-- Alternative Log Analyzer-only start form. Confirm Archivelog mode and REPLICATION_LOG_BUFFER_SIZE = 0 first.
+ALTER REPLICATION log_analysis START AT SN (123456789);
+
+ALTER REPLICATION log_analysis FLUSH WAIT 10;
+```
+
+Replication option and maintenance examples:
+
+```sql
+-- Add a TCP backup host after stopping replication.
+ALTER REPLICATION rep_app_user STOP;
+ALTER REPLICATION rep_app_user ADD HOST '192.168.10.30', 35524 USING TCP;
+ALTER REPLICATION rep_app_user SET HOST '192.168.10.30', 35524;
+ALTER REPLICATION rep_app_user START;
+
+-- Enable receive-only mode only after removing hosts and resetting restart metadata.
+ALTER REPLICATION rep_app_user STOP;
+ALTER REPLICATION rep_app_user DROP HOST ALL;
+ALTER REPLICATION rep_app_user RESET;
+ALTER REPLICATION rep_app_user SET RECEIVE_ONLY ON;
+
+-- Turn receive-only off by supplying the peer endpoint again.
+ALTER REPLICATION rep_app_user SET RECEIVE_ONLY OFF WITH '192.168.10.20', 35524 USING TCP;
+
+-- Offline replication sequence. Confirm META_LOGGING files, source log paths, and SQL Apply requirements first.
+ALTER REPLICATION rep_app_user SET OFFLINE ENABLE WITH '/active_server/altibase_home/logs';
+ALTER REPLICATION rep_app_user BUILD OFFLINE META;
+ALTER REPLICATION rep_app_user START WITH OFFLINE;
+ALTER REPLICATION rep_app_user RESET OFFLINE META;
+ALTER REPLICATION rep_app_user SET OFFLINE DISABLE;
+```
+
 Replication cautions:
 
 - Run corresponding `CREATE REPLICATION` statements on both servers.
@@ -2586,6 +2773,8 @@ Replication cautions:
 - Use `ALTER REPLICATION ... FLUSH [ALL] [WAIT timeout_sec]` before planned DDL, maintenance, or failover validation.
 - To add or drop a replication target, run `ALTER REPLICATION ... STOP`, apply `ADD TABLE` or `DROP TABLE` on both nodes with the intended mapping, then restart or resynchronize.
 - For Altibase 8.1 SSL replication, query `REPLICATION_SSL_PORT_NO` on the peer node and confirm SSL/TLS server configuration first.
+- Do not combine Log Analyzer `FOR ANALYSIS` with `USING SSL` or `USING IB`; use TCP or `WITH UNIX_DOMAIN` according to the Log Analyzer manual.
+- For offline replication, do not proceed from SQL snippets alone. Confirm active-server log access, `META_LOGGING` evidence, replication object state, and whether `REPLICATION_SQL_APPLY_ENABLE` must be enabled for the recovery path.
 
 Verify replication:
 
@@ -2658,6 +2847,7 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 - For users and grants, include least-privilege notes and verification SQL for roles, system privileges, object privileges, and broad grants.
 - For synonyms, views, materialized views, directories, triggers, and jobs, include the required owner/`SYS` prerequisite plus dictionary verification SQL.
 - For Oracle conversion requests, explicitly state table-level differences for storage target, temporary tables, LOB storage, JSON, partitions, and queues.
+- For administrative control SQL, state required privilege, server mode, current transaction/autocommit context, and whether the statement affects only the session, the running server, audit runtime, logging, or replication routing.
 - Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_GRANT_SYSTEM_`, `SYSTEM_.SYS_GRANT_OBJECT_`, `SYSTEM_.SYS_USER_ROLES_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_CONSTRAINT_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `SYSTEM_.SYS_INDEX_COLUMNS_`, `SYSTEM_.SYS_PART_INDICES_`, `SYSTEM_.SYS_INDEX_PARTITIONS_`, `SYSTEM_.SYS_SYNONYMS_`, `SYSTEM_.SYS_VIEWS_`, `SYSTEM_.SYS_VIEW_PARSE_`, `SYSTEM_.SYS_VIEW_RELATED_`, `SYSTEM_.SYS_MATERIALIZED_VIEWS_`, `SYSTEM_.SYS_DIRECTORIES_`, `SYSTEM_.SYS_TRIGGERS_`, `SYSTEM_.SYS_TRIGGER_STRINGS_`, `SYSTEM_.SYS_TRIGGER_DML_TABLES_`, `SYSTEM_.SYS_TRIGGER_UPDATE_COLUMNS_`, `SYSTEM_.SYS_JOBS_`, `V$DISK_BTREE_HEADER`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
 - Keep examples free of internal source labels and local repository paths.
 

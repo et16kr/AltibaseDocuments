@@ -444,13 +444,12 @@ recording or remediating gaps.
   `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`.
-- Required remediation shape: J013-J016 should continue following the statement-family queue in
-  `GPTs/reports/sql_syntax_inventory.md`, adding or verifying compact BNF roots and
-  named clause productions, version scope, prerequisites, examples, validation SQL,
-  destructive-operation and implicit-commit cautions, and cross-references. J034 and
-  J039 should apply the same notation rules to PSM, external procedure, Spatial, and
-  tool-adjacent SQL. Keep Korean source precedence and customer-facing English
-  normalization throughout.
+- Required remediation shape: J011-J016 have completed their assigned SQL-generation
+  families. J034 and J039 should apply the same notation rules to PSM, external
+  procedure, Spatial, and tool-adjacent SQL, adding compact BNF roots and named clause
+  productions, version scope, prerequisites, examples, validation SQL,
+  destructive-operation and implicit-commit cautions, and cross-references. Keep Korean
+  source precedence and customer-facing English normalization throughout.
 - J011 update: The database, tablespace, datafile, archive, backup, restore, and
   recovery SQL family is source-audited and expanded in
   `GPTs/attachments/03_sql_ddl_generation.md`, with the operational
@@ -483,4 +482,12 @@ recording or remediating gaps.
   cross-reference support in `GPTs/attachments/05_data_types_properties.md` and
   migration rewrite cautions in
   `GPTs/attachments/15_migration_oracle_compatibility.md`. The shared syntax queue
-  remains open for J016 and later specialized SQL families.
+  remains open for later specialized SQL families.
+- J016 update: The replication, Log Analyzer, property/session, transaction, and
+  administrative control SQL family is source-audited and expanded in
+  `GPTs/attachments/03_sql_ddl_generation.md`, with matching replication option syntax
+  in `GPTs/attachments/09_replication_ha_cdc.md` and a completion note in
+  `GPTs/reports/sql_syntax_inventory.md`. The update keeps 8.1 `IF EXISTS` and
+  `IF NOT EXISTS` boundaries, separates ordinary replication, SSL replication, and Log
+  Analyzer forms, adds receive-only and offline replication SQL generation guardrails,
+  and corrects `ALTER SESSION SET REPLICATION` to `{DEFAULT | NONE}` only.
