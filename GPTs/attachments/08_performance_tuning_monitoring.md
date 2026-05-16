@@ -2,9 +2,9 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
-- 7.3: Based on Altibase 7.3 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
-- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, Monitoring API Developer's Guide, SNMP Agent Guide, and release notes.
+- 7.1: Based on Altibase 7.1 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
+- 7.3: Based on Altibase 7.3 Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, and SNMP Agent Guide.
+- 8.1: Based on Altibase 8.1 verified source Performance Tuning Guide, Stored Procedures Manual, General Reference data dictionary manual, General Reference property manual, Monitoring API Developer's Guide, SNMP Agent Guide, and release notes.
 
 ## Questions This File Can Answer
 
@@ -19,9 +19,9 @@
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; Monitoring API Developer's Guide; SNMP Agent Guide.
-- 7.3: Altibase 7.3 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; Monitoring API Developer's Guide; SNMP Agent Guide.
-- 8.1: Altibase 8.1 verified source Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; Monitoring API Developer's Guide; SNMP Agent Guide; Altibase 8.1 release notes.
+- 7.1: Altibase 7.1 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 7.3: Altibase 7.3 Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.
+- 8.1: Altibase 8.1 verified source Performance Tuning Guide; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide; Altibase 8.1 release notes.
 
 ## Response Rules
 
@@ -159,6 +159,11 @@ WHERE name IN (
   'OPTIMIZER_FEATURE_ENABLE',
   'QUERY_REWRITE_ENABLE',
   'NORMALFORM_MAXIMUM',
+  'OPTIMIZER_AUTO_STATS',
+  'OPTIMIZER_DELAYED_EXECUTION',
+  'OPTIMIZER_UNNEST_SUBQUERY',
+  'OPTIMIZER_UNNEST_COMPLEX_SUBQUERY',
+  'OPTIMIZER_UNNEST_AGGREGATION_SUBQUERY',
   'TRCLOG_DETAIL_PREDICATE',
   'TRCLOG_DETAIL_INFORMATION',
   'SQL_PLAN_CACHE_SIZE',
@@ -167,9 +172,37 @@ WHERE name IN (
   'SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT',
   'HASH_AREA_SIZE',
   'SORT_AREA_SIZE',
+  'TOTAL_WA_SIZE',
+  'INIT_TOTAL_WA_SIZE',
+  'EXECUTE_STMT_MEMORY_MAXIMUM',
+  'PREPARE_STMT_MEMORY_MAXIMUM',
+  'MATHEMATICS_TEMP_MEMORY_MAXIMUM',
+  'HASH_JOIN_MEM_TEMP_AUTO_BUCKET_COUNT_DISABLE',
+  'HASH_JOIN_MEM_TEMP_PARTITIONING_DISABLE',
   'PARALLEL_QUERY_THREAD_MAX',
   'PARALLEL_QUERY_QUEUE_SIZE',
   'BUFFER_AREA_SIZE',
+  'BUFFER_VICTIM_SEARCH_INTERVAL',
+  'BUFFER_VICTIM_SEARCH_PCT',
+  'DEFAULT_FLUSHER_WAIT_SEC',
+  'MAX_FLUSHER_WAIT_SEC',
+  'HIGH_FLUSH_PCT',
+  'LOW_FLUSH_PCT',
+  'LOW_PREPARE_PCT',
+  'HOT_LIST_PCT',
+  'HOT_TOUCH_CNT',
+  'TOUCH_TIME_INTERVAL',
+  'CHECKPOINT_INTERVAL_IN_LOG',
+  'CHECKPOINT_INTERVAL_IN_SEC',
+  'FAST_START_IO_TARGET',
+  'FAST_START_LOGFILE_TARGET',
+  'CHECKPOINT_BULK_SYNC_PAGE_COUNT',
+  'CHECKPOINT_BULK_WRITE_PAGE_COUNT',
+  'CHECKPOINT_BULK_WRITE_SLEEP_SEC',
+  'CHECKPOINT_BULK_WRITE_SLEEP_USEC',
+  'CHECKPOINT_FLUSH_COUNT',
+  'CHECKPOINT_FLUSH_MAX_GAP',
+  'CHECKPOINT_FLUSH_MAX_WAIT_SEC',
   'PREPARE_LOG_FILE_COUNT',
   'AGER_WAIT_MINIMUM',
   'AGER_WAIT_MAXIMUM',
@@ -1711,10 +1744,12 @@ flowchart TB
 
 Key properties:
 
-- `SQL_PLAN_CACHE_BUCKET_CNT`: number of buckets in the SQL plan cache hash table.
-- `SQL_PLAN_CACHE_HOT_REGION_LRU_RATIO`: percentage of hot area in the LRU list for frequently referenced plans.
-- `SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT`: initial execution contexts created when plans are generated.
-- `SQL_PLAN_CACHE_SIZE`: maximum SQL plan cache size. The source default is 64 MB.
+- `SQL_PLAN_CACHE_BUCKET_CNT`: number of buckets in the SQL plan cache hash table. Default `127`; range `[5, 4096]`; read-only.
+- `SQL_PLAN_CACHE_HOT_REGION_LRU_RATIO`: percentage of hot area in the LRU list for frequently referenced plans. Default `50`; range `[10, 100]`; change with `ALTER SYSTEM`.
+- `SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT`: initial execution contexts created when plans are generated. Default `1`; range `[0, 1024]`; change with `ALTER SYSTEM`. Raising it can help only when one plan is executed concurrently.
+- `SQL_PLAN_CACHE_SIZE`: maximum SQL plan cache size. Default `64M`; range `[0, 2^64 - 1]`; change with `ALTER SYSTEM`. `0` disables SQL plan cache.
+
+Cross-reference: `05_data_types_properties.md` contains the full SQL plan cache property block with check SQL and change cautions.
 
 Management statements:
 

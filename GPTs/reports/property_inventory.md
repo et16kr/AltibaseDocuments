@@ -36,6 +36,26 @@ detailed Korean property section says read-only while the property alter-level s
 lists `SYSTEM`; answers should verify the installed target version before generating a
 dynamic change for that property.
 
+J007 expands the customer-facing property catalog for buffer-pool, checkpoint,
+optimizer, SQL plan cache, sort, hash, work-area, execution-memory, and parallel-query
+properties. It keeps the attachment boundary unchanged and adds grouped searchable
+blocks for `BUFFER_AREA_*`, buffer replacement/flusher thresholds, `CHECKPOINT_*`,
+`FAST_START_*`, `HASH_AREA_SIZE`, `SORT_AREA_SIZE`, `TOTAL_WA_SIZE`,
+`INIT_TOTAL_WA_SIZE`, `EXECUTE_STMT_MEMORY_MAXIMUM`,
+`PREPARE_STMT_MEMORY_MAXIMUM`, `MATHEMATICS_TEMP_MEMORY_MAXIMUM`,
+`HASH_JOIN_MEM_TEMP_*`, `SQL_PLAN_CACHE_*`, optimizer transformation controls, and
+`PARALLEL_QUERY_*`. Korean source precedence was applied for version-sensitive defaults
+such as 7.1 versus 7.3/8.1 `CHECKPOINT_INTERVAL_IN_LOG`,
+`FAST_START_LOGFILE_TARGET`, and `EXECUTE_STMT_MEMORY_MAXIMUM`; Korean release notes
+were used for the 8.1 `OPTIMIZER_FEATURE_ENABLE` default and
+`CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE` introduction.
+
+J007 also records customer-facing cautions for `EXECUTOR_FAST_SIMPLE_QUERY` and
+`OUTER_JOIN_OPERATOR_TRANSFORM_ENABLE` because the detailed Korean property sections
+and the alter-level summary do not align cleanly on dynamic-change support; answers
+should verify the installed target server before generating an online change for either
+property.
+
 ## Scoped Sources
 
 - Altibase 7.1 Korean authority: `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`

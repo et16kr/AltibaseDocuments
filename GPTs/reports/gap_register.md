@@ -376,3 +376,11 @@ recording or remediating gaps.
     `LISTAGG_PRECISION`, and `VARRAY_MEMORY_MAXIMUM`. This gap remains `Open` for
     J007-J009 performance/optimizer, network/security/replication, and final property
     catalog QA.
+  - J007 expanded performance and optimizer property blocks in
+    `GPTs/attachments/05_data_types_properties.md`, including buffer-pool sizing,
+    buffer replacement and flusher thresholds, checkpoint intervals and bulk flush,
+    `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`, sort/hash/work-area memory,
+    execution/prepare statement memory, SQL plan cache sizing, optimizer behavior and
+    query transformation controls, and parallel query controls. This gap remains
+    `Open` for J008-J009 session, network/security/replication, and final property
+    catalog QA.

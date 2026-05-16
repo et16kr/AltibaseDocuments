@@ -958,11 +958,19 @@ Representative properties:
 
 - `HASH_AREA_SIZE`
 - `SORT_AREA_SIZE`
+- `TOTAL_WA_SIZE`
+- `INIT_TOTAL_WA_SIZE`
 - `EXECUTE_STMT_MEMORY_MAXIMUM`
 - `PREPARE_STMT_MEMORY_MAXIMUM`
+- `BUFFER_AREA_SIZE`
+- `BUFFER_VICTIM_SEARCH_INTERVAL`
+- `CHECKPOINT_BULK_WRITE_PAGE_COUNT`
 - `SQL_PLAN_CACHE_SIZE`
+- `SQL_PLAN_CACHE_BUCKET_CNT`
 - `OPTIMIZER_FEATURE_ENABLE`
 - `OPTIMIZER_MODE`
+- `OPTIMIZER_AUTO_STATS`
+- `NORMALFORM_MAXIMUM`
 - `RESULT_CACHE_ENABLE`
 - `CHECKPOINT_INTERVAL_IN_LOG`
 - `FAST_START_LOGFILE_TARGET`
@@ -2117,154 +2125,138 @@ FROM V$PROPERTY
 WHERE name = 'PCTUSED';
 ```
 
-### Property Item: `HASH_AREA_SIZE`
+### Property Item Group: Buffer pool sizing and static buffer lists
 
-Meaning: memory size, in bytes, of each temporary table used for hash operations.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
 
-Default: `4MB`.
+Meaning: configure disk-buffer memory and internal buffer-pool lists used for disk table pages.
 
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+Properties:
 
-Range: `[3M, 2^64 - 1]`.
+- `BUFFER_AREA_CHUNK_SIZE`: buffer-area growth unit; default `33554432` (`32M`); range `[8192, 2^64 - 1]`; read-only. `BUFFER_AREA_SIZE` is rounded to the nearest multiple of this value.
+- `BUFFER_AREA_SIZE`: total memory used by the Altibase buffer pool; default `134217728` (`128M`); range `[8 * 1024 * 10, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `BUFFER_CHECKPOINT_LIST_CNT`: checkpoint-list count; default `4`; range `[1, 64]`; read-only. More lists reduce transaction contention on checkpoint lists.
+- `BUFFER_FLUSH_LIST_CNT`: flush-list count; default `1`; range `[1, 64]`; read-only. More lists reduce transaction contention on flush lists.
+- `BUFFER_FLUSHER_CNT`: buffer flusher count; default `2`; range `[1, 16]`; read-only after startup.
+- `BUFFER_HASH_BUCKET_DENSITY`: BCBs per hash bucket density; default `1`; range `[1, 100]`; read-only. Larger values use fewer buckets and less memory, but increase per-bucket work.
+- `BUFFER_HASH_CHAIN_LATCH_DENSITY`: hash-chain latch density; default `1`; range `[1, 100]`; read-only. More latches reduce hash-chain latch contention.
+- `BUFFER_LRU_LIST_CNT`: LRU-list count; default `7`; range `[1, 64]`; read-only. More lists reduce transaction contention on LRU lists.
+- `BUFFER_PREPARE_LIST_CNT`: prepare-list count; default `7`; range `[1, 64]`; read-only. More lists reduce transaction contention on prepare lists.
 
-Check SQL:
-
-```sql
-SELECT name, value1
-FROM V$PROPERTY
-WHERE name = 'HASH_AREA_SIZE';
-```
-
-### Property Item: `SORT_AREA_SIZE`
-
-Meaning: memory size, in bytes, of each temporary table used for sort operations.
-
-Default: `1048576`.
-
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
-
-Range: `[512, 2^64 - 1]`.
+Caution: when changing page-count properties such as `DISK_INDEX_BUILD_MERGE_PAGE_COUNT`, verify that `BUFFER_AREA_SIZE` is still large enough for the page size and concurrent transaction load.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
-WHERE name = 'SORT_AREA_SIZE';
+WHERE name IN (
+  'BUFFER_AREA_CHUNK_SIZE',
+  'BUFFER_AREA_SIZE',
+  'BUFFER_CHECKPOINT_LIST_CNT',
+  'BUFFER_FLUSH_LIST_CNT',
+  'BUFFER_FLUSHER_CNT',
+  'BUFFER_HASH_BUCKET_DENSITY',
+  'BUFFER_HASH_CHAIN_LATCH_DENSITY',
+  'BUFFER_LRU_LIST_CNT',
+  'BUFFER_PREPARE_LIST_CNT'
+)
+ORDER BY name;
 ```
 
-### Property Item: `EXECUTE_STMT_MEMORY_MAXIMUM`
+Related diagnostic view: `V$BUFFPOOL_STAT`.
 
-Meaning: maximum memory, in bytes, available to execute a single query statement.
+### Property Item Group: Buffer replacement and flusher thresholds
 
-Default: 7.1 `1073741824` (`1G`); 7.3 and 8.1 `2147483648` (`2G`).
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
 
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+Meaning: tune when flusher activity, replacement searches, hot-buffer promotion, or prepare-list pressure dominates disk-buffer behavior.
 
-Range: `[1024 * 1024, 2^64 - 1]`.
+Properties:
+
+- `BUFFER_VICTIM_SEARCH_INTERVAL`: flusher wait after failing to find a replacement victim; default `3000` milliseconds; range `[0, 86400000]`; read-write with `ALTER SYSTEM`. If no victim is found after waiting, `V$BUFFPOOL_STAT.VICTIM_SEARCH_WARP` increases.
+- `BUFFER_VICTIM_SEARCH_PCT`: percentage of an LRU list searched from LRU Cold last when looking for a replacement victim; default `5`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+- `DEFAULT_FLUSHER_WAIT_SEC`: minimum flusher wait time; default `1` second; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `MAX_FLUSHER_WAIT_SEC`: maximum flusher wait time; default `10` seconds; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `DELAYED_FLUSH_LIST_PCT`: maximum delayed-flush-list percentage; default `30`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+- `DELAYED_FLUSH_PROTECTION_TIME_MSEC`: time window for treating a page as recently used; default `100` milliseconds; range `[0, 100000]`; read-write with `ALTER SYSTEM`.
+- `HIGH_FLUSH_PCT`: if the flush-list length reaches this percentage of the whole buffer when the flusher wakes, replacement flush runs continuously; default `5`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+- `LOW_FLUSH_PCT`: flush-list threshold for replacement flush; default `1`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+- `LOW_PREPARE_PCT`: prepare-list threshold below which replacement flush runs; default `1`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+- `HOT_LIST_PCT`: hot-region percentage inside the LRU list; default `0`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+- `HOT_TOUCH_CNT`: access-count threshold for treating a buffer as hot; default `2`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `TOUCH_TIME_INTERVAL`: minimum seconds between counted buffer accesses; default `3`; range `[0, 100]`; read-write with `ALTER SYSTEM`.
+
+Safe tuning pattern: compare `V$BUFFPOOL_STAT` deltas first, change only one property at a time, keep the previous value, and recheck `READ_PAGES`, `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, and `VICTIM_SEARCH_WARP`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
-WHERE name = 'EXECUTE_STMT_MEMORY_MAXIMUM';
+WHERE name IN (
+  'BUFFER_VICTIM_SEARCH_INTERVAL',
+  'BUFFER_VICTIM_SEARCH_PCT',
+  'DEFAULT_FLUSHER_WAIT_SEC',
+  'MAX_FLUSHER_WAIT_SEC',
+  'DELAYED_FLUSH_LIST_PCT',
+  'DELAYED_FLUSH_PROTECTION_TIME_MSEC',
+  'HIGH_FLUSH_PCT',
+  'LOW_FLUSH_PCT',
+  'LOW_PREPARE_PCT',
+  'HOT_LIST_PCT',
+  'HOT_TOUCH_CNT',
+  'TOUCH_TIME_INTERVAL'
+)
+ORDER BY name;
 ```
 
-### Property Item: `PREPARE_STMT_MEMORY_MAXIMUM`
+### Property Item Group: Checkpoint request, recovery target, and bulk flush
 
-Meaning: maximum memory, in bytes, available to prepare a query statement.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
 
-Default: `200M`.
+Meaning: control checkpoint scheduling, dirty-page flushing, restart recovery targets, and 8.1 single-checkpoint double-write buffer sizing.
 
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+Properties:
 
-Range: `[1024 * 1024, 2^64 - 1]`.
+- `CHECKPOINT_ENABLED`: checkpoint thread enable flag; default `1`; range `[0, 1]`; read-only. `0` stops interval-driven checkpoint thread operation, but explicit checkpoints can still run.
+- `CHECKPOINT_INTERVAL_IN_LOG`: checkpoint request interval by generated log files; default 7.1 `100`, 7.3 and 8.1 `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`. If a checkpoint is already running when the interval requests one, the new request can be canceled.
+- `CHECKPOINT_INTERVAL_IN_SEC`: checkpoint request interval in seconds; default `6000`; range `[3, 2592000]`; read-write with `ALTER SYSTEM`.
+- `FAST_START_IO_TARGET`: target redo page count for restart recovery; default `10000`; range `[1, 2^64 - 1]`; read-write with `ALTER SYSTEM`. Lower values can reduce restart recovery time by flushing more dirty pages during runtime.
+- `FAST_START_LOGFILE_TARGET`: target log-file count for restart recovery; default 7.1 `100`, 7.3 and 8.1 `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `CHECKPOINT_BULK_SYNC_PAGE_COUNT`: page count synced at once when aligning memory and disk during checkpoint; default `3200`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `CHECKPOINT_BULK_WRITE_PAGE_COUNT`: dirty pages written per batch during checkpoint; default `0`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` writes all dirty pages at once.
+- `CHECKPOINT_BULK_WRITE_SLEEP_SEC`: seconds to sleep after each checkpoint bulk write when `CHECKPOINT_BULK_WRITE_PAGE_COUNT` is not `0`; default `0`; range `[0, 2592000]`; read-write with `ALTER SYSTEM`.
+- `CHECKPOINT_BULK_WRITE_SLEEP_USEC`: microseconds to sleep after each checkpoint bulk write when `CHECKPOINT_BULK_WRITE_PAGE_COUNT` is not `0`; default `0`; range `[0, 60000000]`; read-write with `ALTER SYSTEM`.
+- `CHECKPOINT_FLUSH_COUNT`: buffer pages flushed by a flusher in one checkpoint-flush cycle; default `64`; range `[1, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `CHECKPOINT_FLUSH_MAX_GAP`: log-file gap that can trigger checkpoint flush; default `10`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. Larger values can reduce checkpoint flush frequency but increase restart recovery time.
+- `CHECKPOINT_FLUSH_MAX_WAIT_SEC`: seconds since the last flush that can trigger checkpoint flush; default `10`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`: Altibase 8.1 verified source property for double-write buffer and image file size when checkpoint scale is `SINGLE`; default `524288000` (`500M`); range `[1M, 2G]`; read-write with `ALTER SYSTEM`. The manual says to set it to half the largest checkpoint image file size.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
-WHERE name = 'PREPARE_STMT_MEMORY_MAXIMUM';
+WHERE name IN (
+  'CHECKPOINT_ENABLED',
+  'CHECKPOINT_INTERVAL_IN_LOG',
+  'CHECKPOINT_INTERVAL_IN_SEC',
+  'FAST_START_IO_TARGET',
+  'FAST_START_LOGFILE_TARGET',
+  'CHECKPOINT_BULK_SYNC_PAGE_COUNT',
+  'CHECKPOINT_BULK_WRITE_PAGE_COUNT',
+  'CHECKPOINT_BULK_WRITE_SLEEP_SEC',
+  'CHECKPOINT_BULK_WRITE_SLEEP_USEC',
+  'CHECKPOINT_FLUSH_COUNT',
+  'CHECKPOINT_FLUSH_MAX_GAP',
+  'CHECKPOINT_FLUSH_MAX_WAIT_SEC',
+  'CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE'
+)
+ORDER BY name;
 ```
 
-### Property Item: `SQL_PLAN_CACHE_SIZE`
-
-Meaning: maximum SQL plan cache size in bytes.
-
-Default: `64M`.
-
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
-
-Range: `[0, 2^64 - 1]`.
-
-Behavior: `0` disables SQL plan cache.
-
-Check SQL:
-
-```sql
-SELECT name, value1
-FROM V$PROPERTY
-WHERE name = 'SQL_PLAN_CACHE_SIZE';
-
-SELECT max_cache_size
-FROM V$SQL_PLAN_CACHE;
-```
-
-### Property Item: `OPTIMIZER_FEATURE_ENABLE`
-
-Meaning: controls a set of optimizer-related behavior using a version-like compatibility value.
-
-Default: Altibase server version. In 8.1, release notes record the default as changed to `8.1.0.0.1`.
-
-Dynamic Change Support: read-write for supported values with `ALTER SYSTEM`.
-
-Range: supported optimizer compatibility values vary by version; check the installed `V$PROPERTY` value and the version-specific manual.
-
-Check SQL:
-
-```sql
-SELECT name, value1
-FROM V$PROPERTY
-WHERE name = 'OPTIMIZER_FEATURE_ENABLE';
-```
-
-### Property Item: `CHECKPOINT_INTERVAL_IN_LOG`
-
-Meaning: checkpoint request interval based on the number of log file replacements.
-
-Default: `10` in the 8.1 baseline. The 8.1 release notes record this default as changed from `100` to `10`.
-
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
-
-Range: `[1, 2^32 - 1]`.
-
-Check SQL:
-
-```sql
-SELECT name, value1
-FROM V$PROPERTY
-WHERE name = 'CHECKPOINT_INTERVAL_IN_LOG';
-```
-
-### Property Item: `FAST_START_LOGFILE_TARGET`
-
-Meaning: target number of log files read during recovery after restart; lower values can reduce recovery time at the cost of more page flushing during runtime.
-
-Default: `10` in the 8.1 baseline. The 8.1 release notes record this default as changed from `100` to `10`.
-
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
-
-Range: `[1, 2^32 - 1]`.
-
-Check SQL:
-
-```sql
-SELECT name, value1
-FROM V$PROPERTY
-WHERE name = 'FAST_START_LOGFILE_TARGET';
-```
+Operational caution: tune checkpoint properties from checkpoint trace timing, OS I/O latency, and buffer-flush evidence. Do not lower recovery targets in production without checking runtime flush pressure and rollback values.
 
 ### Property Item: `LOG_CREATE_METHOD`
 
@@ -2289,26 +2281,175 @@ FROM V$PROPERTY
 WHERE name = 'LOG_CREATE_METHOD';
 ```
 
-### Property Item: `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`
+### Property Item Group: Work-area, hash, sort, and statement memory
 
-Version: 8.1 baseline property.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
 
-Meaning: size of the double write buffer and image file used when checkpoint scale is `SINGLE`.
+Meaning: limit memory for statement prepare/execute, sort and hash temporary work, analytic-function temporary work, and disk-index build sort work.
 
-Default: `524288000` (`500M`).
+Properties:
 
-Dynamic Change Support: read-write.
+- `HASH_AREA_SIZE`: memory size of each temporary table used for hash operations; default `4MB`; range `[3M, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `SORT_AREA_SIZE`: memory size of each temporary table used for sort operations; default `1048576`; range `[512, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `TOTAL_WA_SIZE`: maximum memory available for sort or hash work areas; default `128MB`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `INIT_TOTAL_WA_SIZE`: memory preallocated for sort or hash work areas; default `2^64 - 1`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`. If greater than `TOTAL_WA_SIZE`, only `TOTAL_WA_SIZE` is created.
+- `EXECUTE_STMT_MEMORY_MAXIMUM`: maximum memory for executing one statement; default 7.1 `1073741824` (`1G`), 7.3 and 8.1 `2147483648` (`2G`); range `[1024 * 1024, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `PREPARE_STMT_MEMORY_MAXIMUM`: maximum memory for preparing one statement; default `200M`; range `[1024 * 1024, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
+- `MATHEMATICS_TEMP_MEMORY_MAXIMUM`: system-wide memory limit for `MATHEMATICS TEMP` used by analytic functions such as `LISTAGG`, `PERCENTILE_CONT`, and `PERCENTILE_DISC`; default `0`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`. `0` means memory use is not checked.
+- `DISK_INDEX_BUILD_SORT_AREA_SIZE`: Altibase 7.3 and Altibase 8.1 verified source property for maximum memory used to sort disk-index keys during `CREATE INDEX` or `ALTER INDEX ... REBUILD`; default 7.3 `10MB`, 8.1 `physical core count * 20MB`; range `[512K, 2^64 - 1]`; read-write with `ALTER SYSTEM`. The manual recommends `INDEX_BUILD_THREAD_COUNT * 20MB`.
+- `DISK_INDEX_BUILD_MERGE_PAGE_COUNT`: page count used for external sorting when disk-index keys cannot be sorted in memory; default `128`; range `[2, 2^32 - 1]`; read-write with `ALTER SYSTEM`. Keep it at or below `10%` of `BUFFER_AREA_SIZE`.
 
-Range: `[1M, 2G]`.
-
-Tuning note: set to half the largest checkpoint image file size.
+Related views and properties: use `V$MEMSTAT` category `Storage_Disk_Index` while disk indexes are being built, and check `INDEX_BUILD_THREAD_COUNT` before increasing disk-index sort memory.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
-WHERE name = 'CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE';
+WHERE name IN (
+  'HASH_AREA_SIZE',
+  'SORT_AREA_SIZE',
+  'TOTAL_WA_SIZE',
+  'INIT_TOTAL_WA_SIZE',
+  'EXECUTE_STMT_MEMORY_MAXIMUM',
+  'PREPARE_STMT_MEMORY_MAXIMUM',
+  'MATHEMATICS_TEMP_MEMORY_MAXIMUM',
+  'DISK_INDEX_BUILD_SORT_AREA_SIZE',
+  'DISK_INDEX_BUILD_MERGE_PAGE_COUNT',
+  'INDEX_BUILD_THREAD_COUNT'
+)
+ORDER BY name;
+```
+
+Caution: larger work areas can improve sort, hash, or index-build elapsed time only when memory is the bottleneck. They can also increase process memory pressure, so compare the plan, elapsed time, and memory views before and after the change.
+
+### Property Item Group: Hash join memory temporary behavior
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
+
+Meaning: control memory hash temporary table bucket and record-placement behavior used by hash joins.
+
+Properties:
+
+- `HASH_JOIN_MEM_TEMP_AUTO_BUCKET_COUNT_DISABLE`: default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` uses the actual inserted-record count, with the `/*+ HASH BUCKET COUNT () */` hint available for HSDS nodes processed by distinct hashing. `1` uses the optimizer-estimated bucket count or the hint-specified bucket count.
+- `HASH_JOIN_MEM_TEMP_PARTITIONING_DISABLE`: default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` uses partitioning by actual record count; `1` uses bucket-list storage. Partitioning can require more memory but can be more effective for large databases.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'HASH_JOIN_MEM_TEMP_AUTO_BUCKET_COUNT_DISABLE',
+  'HASH_JOIN_MEM_TEMP_PARTITIONING_DISABLE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: SQL plan cache properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
+
+Meaning: size and shape the shared SQL plan cache used to reuse execution plans.
+
+Properties:
+
+- `SQL_PLAN_CACHE_BUCKET_CNT`: number of buckets in the SQL plan cache hash table; default `127`; range `[5, 4096]`; read-only.
+- `SQL_PLAN_CACHE_HOT_REGION_LRU_RATIO`: percentage of the LRU list reserved as hot area for frequently referenced plans; default `50`; range `[10, 100]`; read-write with `ALTER SYSTEM`.
+- `SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT`: initial execution contexts created when a plan is generated; default `1`; range `[0, 1024]`; read-write with `ALTER SYSTEM`. Raising it can help when one plan is executed concurrently, but otherwise mostly increases plan size.
+- `SQL_PLAN_CACHE_SIZE`: maximum SQL plan cache size; default `64M`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`. `0` disables SQL plan cache.
+
+Related views and statements: `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT`, `ALTER SYSTEM COMPACT SQL_PLAN_CACHE`, and `ALTER SYSTEM RESET SQL_PLAN_CACHE`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'SQL_PLAN_CACHE_BUCKET_CNT',
+  'SQL_PLAN_CACHE_HOT_REGION_LRU_RATIO',
+  'SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT',
+  'SQL_PLAN_CACHE_SIZE'
+)
+ORDER BY name;
+
+SELECT max_cache_size,
+       current_cache_size,
+       current_cache_obj_count,
+       cache_hit_count,
+       cache_miss_count
+FROM V$SQL_PLAN_CACHE;
+```
+
+### Property Item Group: Optimizer behavior and query transformation
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
+
+Meaning: control optimizer mode, query rewrite, predicate normalization, subquery unnesting, auto statistics, delayed execution, and simple filter/query optimizations.
+
+Properties:
+
+- `OPTIMIZER_FEATURE_ENABLE`: controls a bundle of optimizer-related behavior using version-like compatibility values; default is the Altibase server version, with 8.1 release notes recording default `8.1.0.0.1`; read-write with `ALTER SYSTEM` for supported values. Supported values vary by version, so check the target manual and `V$PROPERTY` before setting it.
+- `OPTIMIZER_MODE`: optimizer mode; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` means cost-based optimization; `1` means rule-based optimization.
+- `OPTIMIZER_AUTO_STATS`: automatic statistics collection when usable optimizer statistics do not exist; default `0`; range `[0, 10]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` is off; `1` through `10` sample from `32` pages up to `ALL`.
+- `OPTIMIZER_DELAYED_EXECUTION`: delays hierarchy, sorting, windowing, grouping, set, and distinct execution from execute time to the first fetch; default `0`; range `[0, 1]`; read-write with `ALTER SESSION`.
+- `OPTIMIZER_PERFORMANCE_VIEW`: memory-bound performance-view optimization; default `1`; range `[0, 1]`; read-only. If enabled, a performance-view query can fail when it exceeds `EXECUTE_STMT_MEMORY_MAXIMUM`.
+- `OPTIMIZER_UNNEST_SUBQUERY`: subquery unnesting control; default `1`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+- `OPTIMIZER_UNNEST_COMPLEX_SUBQUERY`: complex subquery unnesting control; default `1`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+- `OPTIMIZER_UNNEST_AGGREGATION_SUBQUERY`: aggregate nested subquery unnesting control; default `1`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+- `QUERY_REWRITE_ENABLE`: query rewrite for applying function-based indexes; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`.
+- `NORMALFORM_MAXIMUM`: maximum normal-form nodes used when normalizing complex `WHERE` or `ON` predicates; default `2048`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`.
+- `OUTER_JOIN_OPERATOR_TRANSFORM_ENABLE`: Oracle outer join operator handling; default `1`; range `[0, 1]`. The source description and alter-level summary support `ALTER SYSTEM`, but the detailed attribute line says read-only; verify on the target server before generating an online change. `0` uses ANSI/ISO outer join processing and raises an error for Oracle `(+)` syntax; `1` enables the Oracle outer join operator.
+- `EXECUTOR_FAST_SIMPLE_QUERY`: simple DML or nested-loop execution-plan optimization; default 7.1 and 7.3 `0`, 8.1 `2`; range `[0, 2]`. The detailed source says changeable, but the alter-level summary does not list a dynamic level; verify on the target server before generating an online change.
+- `SERIAL_EXECUTE_MODE`: simple `FILTER` optimization inside `SCAN PLAN`; default `1`; range `[0, 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`.
+
+Caution: do not change optimizer properties as a first response to a slow SQL case. First compare SQL text, bind values, table type, statistics age, indexes, and `EXPLAIN PLAN`; then test the smallest scoped property or hint change and keep a rollback value.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'OPTIMIZER_FEATURE_ENABLE',
+  'OPTIMIZER_MODE',
+  'OPTIMIZER_AUTO_STATS',
+  'OPTIMIZER_DELAYED_EXECUTION',
+  'OPTIMIZER_PERFORMANCE_VIEW',
+  'OPTIMIZER_UNNEST_SUBQUERY',
+  'OPTIMIZER_UNNEST_COMPLEX_SUBQUERY',
+  'OPTIMIZER_UNNEST_AGGREGATION_SUBQUERY',
+  'QUERY_REWRITE_ENABLE',
+  'NORMALFORM_MAXIMUM',
+  'OUTER_JOIN_OPERATOR_TRANSFORM_ENABLE',
+  'EXECUTOR_FAST_SIMPLE_QUERY',
+  'SERIAL_EXECUTE_MODE'
+)
+ORDER BY name;
+```
+
+### Property Item Group: Parallel query execution controls
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
+
+Meaning: control parallel query worker capacity and `PARALLEL-QUEUE` temporary queue size.
+
+Properties:
+
+- `PARALLEL_QUERY_THREAD_MAX`: maximum worker threads for parallel query; default is the logical core count; range `[1, 1024]`; read-write with `ALTER SYSTEM`.
+- `PARALLEL_QUERY_QUEUE_SIZE`: queue size used by the `PARALLEL-QUEUE` (`PRLQ`) node; default `1024`; range `[4, 1048576]`; read-write with `ALTER SYSTEM`.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'PARALLEL_QUERY_THREAD_MAX',
+  'PARALLEL_QUERY_QUEUE_SIZE'
+)
+ORDER BY name;
 ```
 
 ### Property Item: `TRCLOG_EXPLAIN_TYPE`
