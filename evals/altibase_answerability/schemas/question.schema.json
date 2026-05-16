@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altibase.local/evals/altibase_answerability/schemas/question.schema.json",
+  "title": "Altibase Answerability Question Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "domain",
+    "subdomain",
+    "user_level",
+    "version_scope",
+    "question",
+    "answer_language",
+    "source_language_basis",
+    "source_refs",
+    "expected_facts",
+    "required_tokens",
+    "prohibited_claims",
+    "answer_type",
+    "difficulty",
+    "retrieval_risk"
+  ],
+  "properties": {
+    "id": {
+      "description": "Stable question id, such as PROP-001 or REPL-021.",
+      "pattern": "^[A-Z][A-Z0-9_]*-[0-9]{3}$",
+      "type": "string"
+    },
+    "domain": {
+      "$ref": "#/$defs/domain_id"
+    },
+    "subdomain": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_level": {
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced_operator",
+        "developer",
+        "expert"
+      ],
+      "type": "string"
+    },
+    "version_scope": {
+      "enum": [
+        "7.1",
+        "7.3",
+        "8.1",
+        "cross-version",
+        "patch-specific"
+      ],
+      "type": "string"
+    },
+    "question": {
+      "type": "string",
+      "minLength": 12
+    },
+    "answer_language": {
+      "default": "en",
+      "type": "string",
+      "minLength": 2
+    },
+    "source_language_basis": {
+      "enum": [
+        "ko",
+        "en",
+        "ko+en"
+      ],
+      "type": "string"
+    },
+    "source_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source_ref"
+      }
+    },
+    "expected_facts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/expected_fact"
+      }
+    },
+    "canonical_reference_answer": {
+      "description": "Judge-only English calibration answer. Never send to the answering model.",
+      "type": "string",
+      "minLength": 1
+    },
+    "required_tokens": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "prohibited_claims": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "answer_type": {
+      "enum": [
+        "reference",
+        "sql_generation",
+        "runbook",
+        "troubleshooting",
+        "compatibility",
+        "tool_api",
+        "mixed"
+      ],
+      "type": "string"
+    },
+    "difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard",
+        "expert"
+      ],
+      "type": "string"
+    },
+    "retrieval_risk": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    },
+    "scoring_notes": {
+      "description": "Judge-only notes for calibration and edge cases.",
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "domain_id": {
+      "enum": [
+        "properties",
+        "sql_ddl_dml_datatypes",
+        "operations_admin",
+        "views_performance_monitoring",
+        "replication_cdc_security_network",
+        "errors_troubleshooting",
+        "tools_apis_connectors_migration"
+      ],
+      "type": "string"
+    },
+    "expected_fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fact",
+        "importance"
+      ],
+      "properties": {
+        "id": {
+          "pattern": "^F[0-9]{2,3}$",
+          "type": "string"
+        },
+        "fact": {
+          "type": "string",
+          "minLength": 1
+        },
+        "importance": {
+          "enum": [
+            "critical",
+            "supporting"
+          ],
+          "type": "string"
+        },
+        "source_ref_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source_name",
+        "source_type",
+        "version",
+        "language",
+        "section",
+        "locator"
+      ],
+      "properties": {
+        "id": {
+          "pattern": "^S[0-9]{2,3}$",
+          "type": "string"
+        },
+        "source_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_type": {
+          "enum": [
+            "manual",
+            "release_note",
+            "patch_note",
+            "tool_manual",
+            "technical_document",
+            "third_party_guide",
+            "supporting_report"
+          ],
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": {
+          "enum": [
+            "ko",
+            "en",
+            "ko+en"
+          ],
+          "type": "string"
+        },
+        "section": {
+          "type": "string",
+          "minLength": 1
+        },
+        "locator": {
+          "description": "Heading, table name, line range, figure title, or other review locator.",
+          "type": "string",
+          "minLength": 1
+        },
+        "source_path": {
+          "description": "Repository-relative path, when useful for reviewer lookup.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,344 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altibase.local/evals/altibase_answerability/schemas/aggregate_report.schema.json",
+  "title": "Altibase Answerability Aggregate Report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_id",
+    "manifest_id",
+    "run_id",
+    "generated_at",
+    "readiness_decision",
+    "thresholds",
+    "totals",
+    "overall_metrics",
+    "aggregates",
+    "protected_topic_blockers",
+    "summary"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "report_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "generated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "readiness_decision": {
+      "enum": [
+        "ready_for_upload",
+        "targeted_remediation",
+        "blocking_gaps",
+        "invalid_run"
+      ],
+      "type": "string"
+    },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall_pass_rate_minimum",
+        "domain_pass_rate_minimum",
+        "critical_fact_coverage_minimum",
+        "required_token_preservation_minimum",
+        "unsupported_claim_rate_maximum",
+        "protected_topic_blockers_allowed"
+      ],
+      "properties": {
+        "overall_pass_rate_minimum": {
+          "$ref": "#/$defs/rate"
+        },
+        "domain_pass_rate_minimum": {
+          "$ref": "#/$defs/rate"
+        },
+        "critical_fact_coverage_minimum": {
+          "$ref": "#/$defs/rate"
+        },
+        "required_token_preservation_minimum": {
+          "$ref": "#/$defs/rate"
+        },
+        "unsupported_claim_rate_maximum": {
+          "$ref": "#/$defs/rate"
+        },
+        "protected_topic_blockers_allowed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "questions",
+        "answers",
+        "judgments",
+        "passed",
+        "failed"
+      ],
+      "properties": {
+        "questions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "answers": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "judgments": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "overall_metrics": {
+      "$ref": "#/$defs/metrics"
+    },
+    "aggregates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "subdomain",
+        "user_level",
+        "version_scope",
+        "answer_type",
+        "retrieval_risk"
+      ],
+      "properties": {
+        "domain": {
+          "$ref": "#/$defs/group_summaries"
+        },
+        "subdomain": {
+          "$ref": "#/$defs/group_summaries"
+        },
+        "user_level": {
+          "$ref": "#/$defs/group_summaries"
+        },
+        "version_scope": {
+          "$ref": "#/$defs/group_summaries"
+        },
+        "answer_type": {
+          "$ref": "#/$defs/group_summaries"
+        },
+        "retrieval_risk": {
+          "$ref": "#/$defs/group_summaries"
+        }
+      }
+    },
+    "protected_topic_blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "topic",
+          "count"
+        ],
+        "properties": {
+          "topic": {
+            "$ref": "#/$defs/protected_topic"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "pattern": "^[A-Z][A-Z0-9_]*-[0-9]{3}$",
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "top_remediation_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "domain",
+          "issue",
+          "recommendation"
+        ],
+        "properties": {
+          "domain": {
+            "type": "string",
+            "minLength": 1
+          },
+          "issue": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recommendation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "question_ids": {
+            "type": "array",
+            "items": {
+              "pattern": "^[A-Z][A-Z0-9_]*-[0-9]{3}$",
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manifest_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "answers_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "judgments_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "markdown_report_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "group_summaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/group_summary"
+      }
+    },
+    "group_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "questions",
+        "passed",
+        "failed",
+        "metrics",
+        "max_severity"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "questions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        },
+        "max_severity": {
+          "$ref": "#/$defs/severity"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pass_rate",
+        "fact_coverage",
+        "critical_fact_coverage",
+        "required_token_preservation",
+        "unsupported_claim_rate",
+        "version_handling",
+        "altibase_specific_correctness"
+      ],
+      "properties": {
+        "pass_rate": {
+          "$ref": "#/$defs/rate"
+        },
+        "fact_coverage": {
+          "$ref": "#/$defs/rate"
+        },
+        "critical_fact_coverage": {
+          "$ref": "#/$defs/rate"
+        },
+        "required_token_preservation": {
+          "$ref": "#/$defs/rate"
+        },
+        "unsupported_claim_rate": {
+          "$ref": "#/$defs/rate"
+        },
+        "version_handling": {
+          "$ref": "#/$defs/rate"
+        },
+        "altibase_specific_correctness": {
+          "$ref": "#/$defs/rate"
+        }
+      }
+    },
+    "protected_topic": {
+      "enum": [
+        "backup_recovery",
+        "destructive_sql",
+        "security_tls",
+        "replication_state_changes",
+        "version_sensitive_property_changes"
+      ],
+      "type": "string"
+    },
+    "rate": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "blocker"
+      ],
+      "type": "string"
+    }
+  }
+}

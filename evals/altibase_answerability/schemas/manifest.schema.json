@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altibase.local/evals/altibase_answerability/schemas/manifest.schema.json",
+  "title": "Altibase Answerability Benchmark Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest_id",
+    "description",
+    "question_files",
+    "answer_generation",
+    "judge",
+    "reporting"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "manifest_id": {
+      "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+      "type": "string"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question_files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "run_metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "answer_generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attachment_glob",
+        "allowlisted_question_fields",
+        "default_answer_language",
+        "include_gpt_instruction_draft"
+      ],
+      "properties": {
+        "attachment_glob": {
+          "const": "GPTs/attachments/*.md"
+        },
+        "allowlisted_question_fields": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "enum": [
+              "id",
+              "question",
+              "version_scope",
+              "user_level",
+              "answer_type",
+              "answer_language",
+              "requested_language"
+            ]
+          },
+          "uniqueItems": true,
+          "allOf": [
+            {
+              "contains": {
+                "const": "id"
+              }
+            },
+            {
+              "contains": {
+                "const": "question"
+              }
+            },
+            {
+              "contains": {
+                "const": "version_scope"
+              }
+            },
+            {
+              "contains": {
+                "const": "user_level"
+              }
+            },
+            {
+              "contains": {
+                "const": "answer_type"
+              }
+            },
+            {
+              "contains": {
+                "const": "answer_language"
+              }
+            },
+            {
+              "contains": {
+                "const": "requested_language"
+              }
+            }
+          ]
+        },
+        "default_answer_language": {
+          "const": "en"
+        },
+        "requested_language": {
+          "type": "string",
+          "minLength": 2
+        },
+        "include_gpt_instruction_draft": {
+          "type": "boolean"
+        },
+        "gpt_instruction_draft_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mode": {
+          "enum": [
+            "dry_run",
+            "offline_fixture",
+            "live"
+          ],
+          "type": "string"
+        }
+      }
+    },
+    "judge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "threshold_policy"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "rule",
+            "model",
+            "human",
+            "hybrid"
+          ],
+          "type": "string"
+        },
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "threshold_policy": {
+          "description": "Usually evals/altibase_answerability/policy.json.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_dir",
+        "aggregate_dimensions"
+      ],
+      "properties": {
+        "output_dir": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregate_dimensions": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "domain",
+              "subdomain",
+              "user_level",
+              "version_scope",
+              "answer_type",
+              "retrieval_risk"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

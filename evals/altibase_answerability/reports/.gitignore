@@ -1,0 +1,4 @@
+# Keep durable report summaries reviewable, but exclude large transient run payloads.
+runs/
+*.tmp
+*.log

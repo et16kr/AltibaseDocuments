@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altibase.local/evals/altibase_answerability/schemas/judgment.schema.json",
+  "title": "Altibase Answerability Judgment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "judgment_id",
+    "run_id",
+    "manifest_id",
+    "question_id",
+    "answer_record_id",
+    "judged_at",
+    "judge_mode",
+    "scores",
+    "passed",
+    "max_severity",
+    "fact_results",
+    "token_results",
+    "prohibited_claim_results",
+    "findings"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "judgment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "question_id": {
+      "pattern": "^[A-Z][A-Z0-9_]*-[0-9]{3}$",
+      "type": "string"
+    },
+    "answer_record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "judged_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "judge_mode": {
+      "enum": [
+        "rule",
+        "model",
+        "human",
+        "hybrid"
+      ],
+      "type": "string"
+    },
+    "judge_model": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fact_coverage",
+        "critical_fact_coverage",
+        "required_token_preservation",
+        "version_handling",
+        "altibase_specific_correctness",
+        "unsupported_claim_control",
+        "missing_input_handling",
+        "overall"
+      ],
+      "properties": {
+        "fact_coverage": {
+          "$ref": "#/$defs/rate"
+        },
+        "critical_fact_coverage": {
+          "$ref": "#/$defs/rate"
+        },
+        "required_token_preservation": {
+          "$ref": "#/$defs/rate"
+        },
+        "version_handling": {
+          "$ref": "#/$defs/rate"
+        },
+        "altibase_specific_correctness": {
+          "$ref": "#/$defs/rate"
+        },
+        "unsupported_claim_control": {
+          "$ref": "#/$defs/rate"
+        },
+        "missing_input_handling": {
+          "$ref": "#/$defs/rate"
+        },
+        "overall": {
+          "$ref": "#/$defs/rate"
+        }
+      }
+    },
+    "passed": {
+      "type": "boolean"
+    },
+    "max_severity": {
+      "$ref": "#/$defs/severity"
+    },
+    "fact_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fact_id",
+          "covered",
+          "importance"
+        ],
+        "properties": {
+          "fact_id": {
+            "pattern": "^F[0-9]{2,3}$",
+            "type": "string"
+          },
+          "covered": {
+            "type": "boolean"
+          },
+          "importance": {
+            "enum": [
+              "critical",
+              "supporting"
+            ],
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "token_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "token",
+          "preserved"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "preserved": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "prohibited_claim_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim",
+          "present"
+        ],
+        "properties": {
+          "claim": {
+            "type": "string",
+            "minLength": 1
+          },
+          "present": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "protected_topic_blockers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/protected_topic"
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "category",
+        "message",
+        "recommendation"
+      ],
+      "properties": {
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recommendation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ref_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "protected_topic": {
+          "$ref": "#/$defs/protected_topic"
+        }
+      }
+    },
+    "protected_topic": {
+      "enum": [
+        "backup_recovery",
+        "destructive_sql",
+        "security_tls",
+        "replication_state_changes",
+        "version_sensitive_property_changes"
+      ],
+      "type": "string"
+    },
+    "rate": {
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number"
+    },
+    "severity": {
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "blocker"
+      ],
+      "type": "string"
+    }
+  }
+}

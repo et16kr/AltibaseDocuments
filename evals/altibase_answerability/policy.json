@@ -1,0 +1,105 @@
+{
+  "$schema": "schemas/policy.schema.json",
+  "benchmark_id": "altibase_answerability",
+  "durable_root": "evals/altibase_answerability",
+  "question_total_minimum": 200,
+  "question_total_target": 270,
+  "source_boundary": {
+    "selected_sources_only": true,
+    "source_inventory": "GPTs/reports/source_inventory.md",
+    "korean_manuals_authoritative": true,
+    "answer_generation_sources": [
+      "GPTs/attachments/*.md",
+      "allowlisted_question_projection",
+      "optional_manifest_selected_gpt_instruction_draft"
+    ]
+  },
+  "answer_input_allowlist": [
+    "id",
+    "question",
+    "version_scope",
+    "user_level",
+    "answer_type",
+    "answer_language",
+    "requested_language"
+  ],
+  "judge_only_question_fields": [
+    "domain",
+    "subdomain",
+    "source_language_basis",
+    "source_refs",
+    "expected_facts",
+    "canonical_reference_answer",
+    "required_tokens",
+    "prohibited_claims",
+    "difficulty",
+    "retrieval_risk",
+    "scoring_notes"
+  ],
+  "domains": [
+    {
+      "id": "properties",
+      "label": "Properties",
+      "required_minimum": 40,
+      "target": 50,
+      "owner_job": "J004"
+    },
+    {
+      "id": "sql_ddl_dml_datatypes",
+      "label": "SQL, DDL, DML, data types, JSON, LOB, functions, and Oracle differences",
+      "required_minimum": 35,
+      "target": 45,
+      "owner_job": "J005"
+    },
+    {
+      "id": "operations_admin",
+      "label": "Installation, startup, shutdown, backup, restore, recovery, tablespace, and admin runbooks",
+      "required_minimum": 25,
+      "target": 35,
+      "owner_job": "J006"
+    },
+    {
+      "id": "views_performance_monitoring",
+      "label": "Dictionary views, performance views, optimizer, plan, monitoring, SNMP, and tuning",
+      "required_minimum": 20,
+      "target": 30,
+      "owner_job": "J007"
+    },
+    {
+      "id": "replication_cdc_security_network",
+      "label": "Replication, CDC, Log Analyzer, RepMgr, security, TLS, and network diagnostics",
+      "required_minimum": 20,
+      "target": 30,
+      "owner_job": "J008"
+    },
+    {
+      "id": "errors_troubleshooting",
+      "label": "Error codes, symptoms, cause/action, log collection, and troubleshooting",
+      "required_minimum": 20,
+      "target": 30,
+      "owner_job": "J009"
+    },
+    {
+      "id": "tools_apis_connectors_migration",
+      "label": "PSM, external procedures, JDBC, CLI, ODBC, Precompiler, iSQL, iLoader, utilities, connectors, Kubernetes, migration, Spatial, NiFi, and Tableau",
+      "required_minimum": 40,
+      "target": 50,
+      "owner_job": "J010"
+    }
+  ],
+  "readiness_thresholds": {
+    "overall_pass_rate_minimum": 0.85,
+    "domain_pass_rate_minimum": 0.8,
+    "critical_fact_coverage_minimum": 0.9,
+    "required_token_preservation_minimum": 0.95,
+    "unsupported_claim_rate_maximum": 0.02,
+    "protected_topic_blockers_allowed": 0
+  },
+  "protected_blocker_topics": [
+    "backup_recovery",
+    "destructive_sql",
+    "security_tls",
+    "replication_state_changes",
+    "version_sensitive_property_changes"
+  ]
+}
