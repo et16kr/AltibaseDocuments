@@ -21,7 +21,7 @@ J019	Done	docs	Session statement wait lock and transaction views	Expand session,
 J020	Done	docs	Optimizer plan cache statistics and buffer views	Expand optimizer, plan cache, statistics, buffer pool, checkpoint, and performance views.
 J021	Done	docs	Replication CDC security monitoring and SNMP views	Expand replication, CDC, security, Monitoring API, and SNMP view/API mappings.
 J022	Done	docs	Error reference inventory and response schema	Inventory error code families and define error block and troubleshooting response schema.
-J023	ToDo	docs	Storage backup recovery and tablespace errors	Expand storage, backup, recovery, datafile, log, and tablespace error coverage.
+J023	Done	docs	Storage backup recovery and tablespace errors	Expand storage, backup, recovery, datafile, log, and tablespace error coverage.
 J024	ToDo	docs	SQL DDL data type JSON and LOB errors	Expand SQL, DDL, data type, constraint, JSON, LOB, and Temporary LOB error coverage.
 J025	ToDo	docs	Client network security replication and tool errors	Expand client, network, SSL/TLS, replication, utility, and tool error coverage.
 J026	ToDo	docs	Troubleshooting QA and unresolved error gaps	Validate troubleshooting structure, exact-code handling, escalation wording, and gaps.

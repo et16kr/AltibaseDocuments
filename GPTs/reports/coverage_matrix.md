@@ -196,6 +196,11 @@ for 8.1 customer-facing labels.
   family inventory and exact-code response schema. J023-J026 should use that report
   with related operational sources to expand exact-code troubleshooting and close or
   split error-block gaps.
+- J023 expanded the storage, datafile, file-system, backup, recovery, log, checkpoint,
+  incremental-backup, and tablespace error slice in `07_error_messages_troubleshooting.md`.
+  It keeps corrective runbooks routed to `02`, generated administrative SQL routed to
+  `03`, property context routed to `05`, and storage/backup check views routed to `06`;
+  `GAP-J002-008` remains open for J024-J026 and non-scoped exact-code coverage.
 - J027-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide

@@ -480,6 +480,42 @@ checked 7.3 and Altibase 8.1 verified Korean Error Message Reference files. Late
 answers must require exact installed-version evidence before making definitive 7.3 or
 8.1 `sdERR_*` claims.
 
+## J023 Storage Backup Recovery And Tablespace Error Addendum
+
+J023 uses the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Error Message Reference manuals remain
+authoritative for exact code, decimal code, symbol, severity heading, message, cause,
+and action; matching English manuals were used only as extraction aids when consistent.
+Supporting source families for checks and response guardrails are
+`administrator_operations`, `sql_reference`,
+`general_reference_1_datatypes_properties`, and
+`general_reference_2_dictionary_views`.
+
+Design note: J023 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/07_error_messages_troubleshooting.md` in place with grouped
+exact-code maps. Corrective runbooks remain in `02_administration_operations.md`,
+copy-ready administrative SQL remains in `03_sql_ddl_generation.md`, property context
+remains in `05_data_types_properties.md`, and storage/backup validation views remain in
+`06_data_dictionary_performance_views.md`.
+
+Scoped source paths checked for J023:
+
+- `Manuals/Altibase_7.1/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.3/kor/Error Message Reference.md`
+- `Manuals/Altibase_trunk/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.1/eng/Error Message Reference.md`
+- `Manuals/Altibase_7.3/eng/Error Message Reference.md`
+- `Manuals/Altibase_trunk/eng/Error Message Reference.md`
+
+J023 updated `GPTs/attachments/07_error_messages_troubleshooting.md` with storage,
+datafile, backup, recovery, log, checkpoint, incremental backup, and tablespace grouped
+blocks. The grouped blocks include exact reference codes and symbols, source-backed
+message/action focus, `V$LOG`, `V$ARCHIVE`, `V$TABLESPACES`, `V$DATAFILES`,
+`V$BACKUP_INFO`, and checkpoint-path check SQL, required customer-input prompts, and
+stop conditions before destructive recovery actions. No new manual/source-backed gap
+was discovered during J023; `GAP-J002-008` remains open for the later J024-J026 error
+slices and for exhaustive exact-code coverage outside the J023 grouped blocks.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

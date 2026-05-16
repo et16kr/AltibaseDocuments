@@ -239,6 +239,12 @@ recording or remediating gaps.
   response schema, and J023-J026 error expansion queue. This gap remains `Open` for
   item-level exact-code expansion, but later jobs should use the J022 inventory rather
   than rediscovering family boundaries.
+- J023 update: `GPTs/attachments/07_error_messages_troubleshooting.md` now contains
+  grouped exact-code maps for storage, datafile, file-system, backup, recovery, log,
+  checkpoint, incremental-backup, and tablespace errors from the selected Korean 7.1,
+  7.3, and Altibase 8.1 verified source Error Message References, with supporting
+  checks and stop conditions. This gap remains `Open` for the J024-J026 error slices
+  and for exhaustive exact-code coverage outside the J023 grouped blocks.
 
 ### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
 

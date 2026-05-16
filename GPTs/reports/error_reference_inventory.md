@@ -230,3 +230,33 @@ or view>.
 `GAP-J002-008` remains open after J022 for item-level exact-code expansion. J022 narrows
 the gap by adding the family inventory and response schema. `GAP-J022-001` records the
 `SD Error Code` source drift discovered during this baseline.
+
+## J023 Completion Addendum
+
+J023 used the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source, with Korean Error Message Reference manuals
+checked first and matching English manuals used for customer-facing extraction. The
+supporting diagnostic sources were `administrator_operations`, `sql_reference`,
+`general_reference_1_datatypes_properties`, and `general_reference_2_dictionary_views`.
+
+Design note: J023 keeps the attachment boundary unchanged and expands
+`GPTs/attachments/07_error_messages_troubleshooting.md` in place. It does not move
+backup/recovery runbooks, generated DDL, or view definitions into the error attachment;
+instead, it adds grouped exact-code maps for the storage/error slice and links each
+block back to `02_administration_operations.md`, `03_sql_ddl_generation.md`,
+`05_data_types_properties.md`, and `06_data_dictionary_performance_views.md` for
+copy-ready corrective SQL, property context, and validation queries.
+
+J023 added customer-facing grouped blocks for:
+
+- datafile and file-system storage errors from relevant `ID` and `SM` entries;
+- backup, recovery, log, log-anchor, archive-mode, and `RESETLOGS` errors from `SM`;
+- checkpoint-path, checkpoint-image, change-tracking, `backupInfo`, incremental-backup,
+  and multiplex-directory errors from `SM`;
+- tablespace state, type, capacity, lock, and DDL errors from `SM` and relevant `QP`
+  entries.
+
+No new source-drift gap was found in the scoped slice: the listed grouped-block codes
+are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error
+Message References. `GAP-J002-008` remains open for the later J024-J026 error slices
+and for exhaustive exact-code coverage outside the J023 grouped blocks.

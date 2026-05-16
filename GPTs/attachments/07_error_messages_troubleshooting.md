@@ -635,6 +635,443 @@ Version Cautions: Confirm disk versus memory or volatile tablespace before gener
 
 Related Document: Administration and Operations; SQL DDL Generation.
 
+### Error Block: Datafile and File-System Storage Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: `ID` or `SM` / mostly `ABORT`; treat `smERR_FATAL_*` rows as high-risk storage failures.
+
+Exact code map:
+
+| Reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `0x01058 (4184)` | `idERR_ABORT_DISK_SPACE_EXHAUSTED` | Failed to create, extend, or sync a file; increase disk space or quota for the log file, memory DB file, or disk tablespace datafile. |
+| `0x01059 (4185)` | `idERR_ABORT_EXCEED_FILE_SIZE_LIMIT` | Failed to increase file size; check the operating-system file size limit. |
+| `0x0105A (4186)` | `idERR_ABORT_EXCEED_OPEN_FILE_LIMIT` | Failed to create a file because open-file limits were exceeded; close unused files or change system limits. |
+| `0x0108B (4235)` | `idERR_ABORT_CannotShrinkFile` | Data file size cannot be shrunk; choose a valid datafile size. |
+| `0x010EB (4331)` | `idERR_ABORT_NOT_SUPPORT_FALLOCATE` | Filesystem or kernel does not support the operation; source action is to set `LOG_CREATE_METHOD` to `0` and restart. |
+| `0x010EC (4332)` | `idERR_ABORT_Sysfallocate` | `fallocate()` failed on the file; source action is to set `LOG_CREATE_METHOD` to `0` and restart. |
+| `0x1101F (69663)` | `smERR_ABORT_InvalidAutoExtFileSize` | Datafile `MAXSIZE` is less than current size; set `MAXSIZE` correctly. |
+| `0x11020 (69664)` | `smERR_ABORT_InitExceedMaxFileSize` | Datafile `INITSIZE` exceeds maximum file size; set `INITSIZE` correctly. |
+| `0x11022 (69666)` | `smERR_ABORT_MaxExceedMaxFileSize` | Datafile `MAXSIZE` exceeds maximum file size; set `MAXSIZE` correctly. |
+| `0x11023 (69667)` | `smERR_ABORT_InvalidFilePathABS` | Datafile path is not absolute; check `ALTIBASE_HOME` and use an absolute path. |
+| `0x11024 (69668)` | `smERR_ABORT_InvalidFilePathKeyWord` | Datafile path contains reserved keywords; choose a supported path. |
+| `0x11025 (69669)` | `smERR_ABORT_AlreadyExistFile` | Datafile already exists; use documented `REUSE` only when safe, or remove/choose another file. |
+| `0x11027 (69671)` | `smERR_ABORT_NotExistFile` | Datafile does not exist; verify the path and file. |
+| `0x11028 (69672)` | `smERR_ABORT_NoReadPermFile` | Path lacks read permission; fix filesystem permissions for the Altibase OS account. |
+| `0x11029 (69673)` | `smERR_ABORT_NoWritePermFile` | Path lacks write permission; fix filesystem permissions for the Altibase OS account. |
+| `0x11030 (69680)` | `smERR_ABORT_InvalidExtendFileSize` | Requested extension is larger than maximum file size; resize within the file maximum. |
+| `0x11034 (69684)` | `smERR_ABORT_NotFoundDataFileNode` | Datafile node was not found; verify the datafile exists in metadata and on disk. |
+| `0x1108E (69774)` | `smERR_ABORT_NotFoundDataFileNodeByID` | Datafile node ID was not found; check the datafile and tablespace metadata. |
+| `0x11099 (69785)` | `smERR_ABORT_UseFileInOtherTBS` | Destination file is already in use by another tablespace; choose another destination. |
+| `0x110AF (69807)` | `smERR_ABORT_OSFileSizeLimit_ERROR` | OS maximum file size is smaller than the requested database file size; increase the OS limit. |
+| `0x11105 (69893)` | `smERR_ABORT_InvalidExtendFileSizeOSLimit` | Requested datafile extension exceeds the OS file limit; choose a smaller size or raise the OS limit. |
+| `0x11121 (69921)` | `smERR_ABORT_CANNOT_ADD_DataFile` | Datafile count limit was reached; do not keep adding files without redesigning the tablespace. |
+| `0x11122 (69922)` | `smERR_ABORT_CANT_SHRINK_BELOW_HWM` | Requested shrink size is below the used file size or HWM; choose a larger target or move/free data first. |
+| `0x11124 (69924)` | `smERR_ABORT_FILE_IS_TOO_SMALL` | Initial file size cannot hold one extent; retry with a larger size. |
+| `0x11128 (69928)` | `smERR_ABORT_SHRINK_SIZE_IS_TOO_SMALL` | Requested datafile size is below the minimum file size; increase the target size. |
+| `0x11129 (69929)` | `smERR_ABORT_TOO_MANY_DATA_FILE` | Tablespace has too many datafiles; reduce the number to the source limit before creation. |
+| `0x11137 (69943)` | `smERR_ABORT_UseFileInTheTBS` | File name is already in use by the named tablespace; choose another destination. |
+| `0x1113B (69947)` | `smERR_ABORT_Datafile_Header_Read_Failure` | Datafile header could not be read; check the DB file, path, permission, and media. |
+| `0x1113C (69948)` | `smERR_ABORT_Datafile_Header_Write_Failure` | Datafile header could not be written; check the DB file, filesystem, and permission. |
+| `0x1113D (69949)` | `smERR_ABORT_NotFoundDataFileByPath` | Datafile was not found by path; check the file location. |
+| `0x11150 (69968)` | `smERR_ABORT_InitSizeExceedMaxSize` | `INITSIZE` exceeds `MAXSIZE`; correct the datafile size clauses. |
+| `0x11151 (69969)` | `smERR_ABORT_InitSizePropExceedMaxSizeProp` | Initial-size property exceeds max-size property; correct the related datafile size properties. |
+| `0x11152 (69970)` | `smERR_ABORT_MaxSizePropExceedOSLimit` | Max-size property exceeds the OS file size limit; lower the property or raise OS limit. |
+| `0x11153 (69971)` | `smERR_ABORT_InitSizeExceedOSLimit` | `INITSIZE` exceeds the OS file size limit; lower initial size or raise OS limit. |
+| `0x11154 (69972)` | `smERR_ABORT_MaxSizeExceedOSLimit` | `MAXSIZE` exceeds the OS file size limit; lower max size or raise OS limit. |
+| `0x11155 (69973)` | `smERR_ABORT_InvalidFileSizeOnLogAnchor` | Log anchor stores invalid datafile size information; collect trace logs before repair. |
+| `0x11156 (69974)` | `smERR_ABORT_InvalidExtendFileSizeMaxSize` | Requested extension exceeds datafile `MAXSIZE`; choose a valid size. |
+| `0x11163 (69987)` | `smERR_ABORT_TooLongFilePath` | Full file path and name are too long; choose a shorter path or file name. |
+| `0x11164 (69988)` | `smERR_ABORT_AlreadyExistDBFiles` | Database files already exist; confirm `destroydb` history before recreating a database. |
+| `0x111AD (70061)` | `smERR_ABORT_InvalidDatafileHeader` | Datafile header metadata does not match control/log-anchor expectations; verify the datafile and backup source. |
+| `0x111AE (70062)` | `smERR_ABORT_InvalidDataFileCreateLSN` | Datafile create LSN is newer than restart redo LSN; verify that the datafile was backed up correctly. |
+
+Applies To: datafile creation, resize, shrink, rename, backup restore, `CREATE DATABASE`, online file extension, and filesystem-backed log/datafile operations.
+
+Symptom: Altibase cannot create, open, extend, shrink, read, write, or validate a datafile or required storage file.
+
+Primary Causes: full filesystem, OS quota or `ulimit`, open-file limit, unsupported `fallocate`, invalid datafile size clause, invalid file path, missing file, permission error, duplicate file, file already mapped to another tablespace, invalid file header, or backup/datafile mismatch.
+
+Immediate Action: Do not overwrite files blindly. Identify the exact file path, tablespace, operation, and startup phase; check OS free space, permissions, file limits, and `V$DATAFILES`; then apply the narrow source action for the exact code.
+
+Check SQL or Command:
+
+```bash
+df -h '<FILESYSTEM>'
+ulimit -a
+ls -l '<DATAFILE_OR_DIRECTORY>'
+tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
+```
+
+```sql
+SELECT d.id,
+       d.name,
+       d.spaceid,
+       t.name AS tablespace_name,
+       d.currsize,
+       d.autoextend,
+       d.opened,
+       d.modified,
+       d.state
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+ORDER BY d.spaceid, d.id;
+```
+
+Required Customer Input: exact Altibase version and patch level, full error line, failed SQL or command, datafile path, tablespace name, OS error number when present, `V$DATAFILES` output, and trace log excerpt.
+
+Version Cautions: The listed reference codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Exact file-size limits still depend on OS, filesystem, direct I/O, and configured properties.
+
+Escalation: Escalate before replacing, deleting, or reusing datafiles when header, LSN, log-anchor, or backup compatibility errors appear, or when the source action says to contact Altibase Support.
+
+Related Document: Administration and Operations; SQL DDL Generation; Data Dictionary and Performance Views.
+
+### Error Block: Backup, Recovery, Log, and Resetlogs Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: `SM` / `FATAL`, `ABORT`, or recovery-stop condition depending on the exact entry. Treat restart-recovery, media-recovery, log-consistency, and page-corruption entries as production-risk events.
+
+Exact code map:
+
+| Reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `0x1001C (65564)` | `smERR_FATAL_PageCorrupted` | Page is corrupt; recover the tablespace that contains the corrupt page using backup and recovery utilities. |
+| `0x10043 (65603)` | `smERR_FATAL_WrongLogFileSize` | Log file size is wrong; check the filesystem. |
+| `0x1008D (65677)` | `smERR_FATAL_NotFoundDataFile` | Datafile containing a page does not exist; collect trace logs and support evidence. |
+| `0x100BA (65722)` | `smERR_FATAL_MISMATCHED_FILENO_IN_LOGFILE` | Log file number does not match its name; check whether the logfile was renamed and restore the original name. |
+| `0x1013A (65850)` | `smERR_FATAL_ErrNeedMoreLog` | Insufficient or invalid logfiles at the specified path; check required logfiles. |
+| `0x11018 (69656)` | `smERR_ABORT_BACKUP_DISK_INVALID` | Backup datafile version is incompatible with the storage manager; use compatible storage manager or import/export. |
+| `0x11033 (69683)` | `smERR_ABORT_forbiddenOpWhileBackup` | Operation cannot run while a tablespace backup is in progress; wait for backup completion. |
+| `0x11039 (69689)` | `smERR_ABORT_InvalidLogAnchorFile` | Log anchor file is missing or invalid; check `LOGANCHOR_DIR`. |
+| `0x1103E (69694)` | `smERR_ABORT_MediaRecoDataFile` | Media-recovery datafile action is allowed only in `CONTROL`; restart to `CONTROL`. |
+| `0x11074 (69748)` | `smERR_ABORT_InvalidBackupFile` | Invalid table backup file; check database version and backup file. |
+| `0x11079 (69753)` | `smERR_ABORT_BackupWrite` | Backup write failed because disk is full; provide additional disk space. |
+| `0x1108F (69775)` | `smERR_ABORT_CanStartARCH` | Archive thread cannot start in `NOARCHIVE` mode; switch to `ARCHIVELOG` in `CONTROL`. |
+| `0x11090 (69776)` | `smERR_ABORT_BackupDatafile` | Failed to back up a memory region or disk tablespace datafile; check disk and backup destination. |
+| `0x11091 (69777)` | `smERR_ABORT_DontNeedBackupTempTBS` | Temporary tablespace backup is not required; do not back up `TEMP` tablespace online. |
+| `0x11094 (69780)` | `smERR_ABORT_ErrArchiveLogMode` | Operation impossible in `NOARCHIVE` mode; media/restart recovery that needs logs requires `ARCHIVELOG`. |
+| `0x11095 (69781)` | `smERR_ABORT_NeedMediaRecovery` | Start in `CONTROL` and execute complete media recovery. |
+| `0x11098 (69784)` | `smERR_ABORT_BackupLogMode` | Operation cannot execute in `NOARCHIVELOG`; switch to `ARCHIVELOG` when source-backed and planned. |
+| `0x110A1 (69793)` | `smERR_ABORT_InvalidFileHdr` | Invalid datafile header; copy a valid datafile to `MEM_DB_DIR`. |
+| `0x110A2 (69794)` | `smERR_ABORT_NeedResetLogs` | Incomplete media recovery requires `RESETLOGS`; start `META RESETLOGS`. |
+| `0x110A4 (69796)` | `smERR_ABORT_BACKUP_GOING` | Backup is in progress; wait for current backup before switching logfiles. |
+| `0x110A5 (69797)` | `smERR_ABORT_NotBeginBackup` | Tablespace backup is not in progress; run `ALTER TABLESPACE tablespace_name BEGIN BACKUP` before manual backup steps. |
+| `0x110A6 (69798)` | `smERR_ABORT_NoActiveBeginBackup` | No active backup process; begin backup before the matching backup operation. |
+| `0x110A9 (69801)` | `smERR_ABORT_AlreadyBeginBackup` | Tablespace is already in `BEGIN BACKUP`; complete or end the previous backup. |
+| `0x110B7 (69815)` | `smERR_ABORT_InvalidUseResetLog` | `RESETLOGS` is not needed; do not run it unnecessarily. |
+| `0x110BC (69820)` | `smERR_ABORT_WaitLogFileOpen` | Unable to open log file; collect trace error number and log path. |
+| `0x110C1 (69825)` | `smERR_ABORT_NotFoundDataFile` | Datafile containing a page does not exist; verify the file and restore/recover if needed. |
+| `0x110D7 (69847)` | `smERR_ABORT_INVALID_STARTUP_PHASE_NOT_CONTROL` | Operation is allowed only in `CONTROL`; restart to `CONTROL` and retry. |
+| `0x110ED (69869)` | `smERR_ABORT_ERROR_MEDIA_RECOVERY_TYPE` | Incomplete media recovery must run in `CONTROL`, or restart recovery is appropriate; restart normally if recovery is complete or unnecessary. |
+| `0x110F9 (69881)` | `smERR_ABORT_MEDIA_RECOVERY_IS_NOT_SUPPORT_SHARED_MEMORY` | Media recovery is not supported for shared memory version; verify `SHM_DB_KEY=0`. |
+| `0x11101 (69889)` | `smERR_ABORT_UNABLE_TO_BACKUP_FOR_VOLATILE_TABLESPACE` | Volatile tablespace cannot be backed up; backup is unnecessary for volatile data. |
+| `0x11108 (69896)` | `smERR_ABORT_LogFileSizeNotAlignedToDirectIOPageSize` | Logfile size is not aligned to `DIRECT_IO_PAGE_SIZE`; correct logfile sizing. |
+| `0x1111A (69914)` | `smERR_ABORT_Invalid_DataFile_Create_LSN` | Datafile create LSN is newer than restart redo LSN; verify the backup was taken correctly. |
+| `0x1111F (69919)` | `smERR_ABORT_PageCorrupted` | Page is corrupt; recover the containing tablespace with backup and recovery utilities. |
+| `0x11135 (69941)` | `smERR_ABORT_AlreadyExistLogFile` | Log file already exists; confirm `destroydb` history before database recreation. |
+| `0x11136 (69942)` | `smERR_ABORT_AlreadyExistLogAnchorFile` | Log anchor file already exists; confirm `destroydb` history before database recreation. |
+| `0x11140 (69952)` | `smERR_ABORT_LogSizeExceedLogFileSize` | Log record exceeds logfile size; change property to a suitable value and recreate the database. |
+| `0x11147 (69959)` | `smERR_ABORT_INVALID_LOGFILE` | Invalid logfile; check the logfile. |
+| `0x1114E (69966)` | `smERR_ABORT_NOT_FOUND_LOGFILE` | No logfiles found in the specified directory; check the directory. |
+| `0x1114F (69967)` | `smERR_ABORT_EXIST_ACTIVE_TRANS_IN_RECOV` | Recovery failed because active transactions exist; end active transactions during `CONTROL`. |
+| `0x11168 (69992)` | `smERR_ABORT_LOG_FILE_MISSING` | Non-continuous log file numbers; collect trace logs before attempting recovery. |
+| `0x11169 (69993)` | `smERR_ABORT_FAILURE_DURABILITY_AT_STARTUP` | Restart recovery aborted to protect durability; collect trace logs and required logfiles. |
+| `0x1116A (69994)` | `smERR_ABORT_FAILURE_DRDB_WAL_AT_STARTUP` | Restart recovery aborted due to WAL failure for disk objects; collect missing-log evidence. |
+| `0x1116B (69995)` | `smERR_ABORT_FAILURE_MRDB_WAL_AT_STARTUP` | Restart recovery aborted due to WAL failure for memory objects; collect missing-log evidence. |
+| `0x1116C (69996)` | `smERR_ABORT_INCONSISTENT_DB` | Access blocked to avoid worsening inconsistency; stop DML and collect trace evidence. |
+| `0x1116D (69997)` | `smERR_ABORT_INCONSISTENT_PAGE` | Page is inconsistent; collect trace evidence and plan recovery/escalation. |
+| `0x1116E (69998)` | `smERR_ABORT_ERR_INCONSISTENT_DB_AND_LOG_BUFFER_TYPE` | Emergency startup blocked by `LOG_BUFFER_TYPE`; source action is `LOG_BUFFER_TYPE=1`. |
+| `0x1116F (69999)` | `smERR_ABORT_LOGFILE_TOO_BIG_WITH_DIRECT_IO` | Logfile exceeds direct I/O limitation; reduce logfile size or set `LOG_IO_TYPE=0`. |
+| `0x11173 (70003)` | `smERR_ABORT_ErrUntilTag` | Cannot recover at the specified backup tag; restore using the correct tag. |
+| `0x11174 (70004)` | `smERR_ABORT_InvalidBackupInfoFile` | `backupInfo` file is invalid; restore it from a recent backup. |
+| `0x11175 (70005)` | `smERR_ABORT_InvalidRestoreTime` | No backup predates the requested restore time; restore to a more recent point. |
+| `0x1119B (70043)` | `smERR_ABORT_TablespaceDoesNotExist` | Tablespace ID in create-datafile redo does not exist; restore with a valid backup file. |
+| `0x111AC (70060)` | `smERR_ABORT_LogFileSizeIsZero` | OS returned log file size zero; check and remove zero-sized log file only under a validated recovery plan. |
+| `0x111B0 (70064)` | `smERR_ABORT_NotFoundLog` | Cannot find the log record needed in the logfile; check required logfiles. |
+| `0x111B1 (70065)` | `smERR_ABORT_InvalidLog` | Invalid log at file/offset; check the logfile. |
+| `0x111B5 (70069)` | `smERR_ABORT_ERR_LOG_CONSISTENCY` | Incomplete media recovery aborted due to log consistency failure; copy valid logs or move unneeded logs out of recovery path. |
+| `0x111C1 (70081)` | `smERR_ABORT_WrongLogFileSize` | Log file size changed abnormally; restore a backed-up logfile if available, otherwise escalate. |
+
+Applies To: online backup, manual `BEGIN BACKUP`/`END BACKUP`, archive-log operation, restart recovery, media recovery, incomplete recovery, `RESETLOGS`, log anchor validation, and recovery after missing or corrupt data/log files.
+
+Symptom: Startup, backup, restore, or recovery stops because required datafiles, logfiles, log anchors, backup files, archive mode, backup state, or recovery target do not match the requested operation.
+
+Primary Causes: `NOARCHIVELOG` mode for an online backup or media-recovery operation, backup already active, missing `BEGIN BACKUP`, invalid backup file, incompatible datafile version, missing or renamed logfile, missing log record, invalid log anchor, corrupt/inconsistent page, active transaction during recovery, invalid `RESETLOGS` timing, or inconsistent recovery target.
+
+Immediate Action: Preserve files before changing anything. Identify complete versus incomplete recovery, confirm `ARCHIVELOG` mode, required logs, backup source, startup phase, and affected tablespace/datafile. Run recovery commands only from the documented startup phase and do not run `RESETLOGS` unless incomplete recovery requires it.
+
+Check SQL or Command:
+
+```bash
+tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
+ls -l "$ALTIBASE_HOME/logs"
+ls -l '<BACKUP_DIRECTORY>'
+```
+
+```sql
+SELECT server_status,
+       archivelog_mode,
+       begin_chkpt_file_no,
+       begin_chkpt_file_offset,
+       end_chkpt_file_no,
+       end_chkpt_file_offset,
+       oldest_logfile_no,
+       oldest_logfile_offset
+FROM V$LOG;
+
+SELECT lfg_id,
+       archive_mode,
+       archive_dest,
+       nextlogfile_to_arch,
+       oldest_active_logfile,
+       current_logfile
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+
+SELECT backup_type,
+       backup_tag,
+       begin_backup_time,
+       end_backup_time,
+       backup_file
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+Required Customer Input: exact version and patch level, startup phase, database mode, recovery target, full error line, backup manifest, affected datafile/logfile/log anchor paths, archive destination contents, and trace log excerpt.
+
+Version Cautions: The listed reference codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Recovery details still depend on exact patch, backup type, log availability, and whether the operation is complete or incomplete recovery.
+
+Escalation: Stop and escalate before deleting logfiles, replacing log anchors, forcing `RESETLOGS`, discarding a tablespace, or continuing after durability/WAL/inconsistent-page errors without a validated recovery plan.
+
+Related Document: Administration and Operations; SQL DDL Generation; Data Dictionary and Performance Views.
+
+### Error Block: Checkpoint Path, Incremental Backup, and Multiplex Directory Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: `SM` / `ABORT`.
+
+Exact code map:
+
+| Reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `0x110D8 (69848)` | `smERR_ABORT_CPATH_NOT_EXIST` | Checkpoint path does not exist; verify path existence. |
+| `0x110D9 (69849)` | `smERR_ABORT_CPATH_NO_READ_PERMISSION` | Checkpoint path lacks read permission; fix path permission. |
+| `0x110DA (69850)` | `smERR_ABORT_CPATH_NO_WRITE_PERMISSION` | Checkpoint path lacks write permission; fix path permission. |
+| `0x110DB (69851)` | `smERR_ABORT_CPATH_NO_EXEC_PERMISSION` | Checkpoint path lacks execute permission; fix path permission. |
+| `0x110DC (69852)` | `smERR_ABORT_CPATH_NOT_A_DIRECTORY` | Checkpoint path is not a directory; choose a directory. |
+| `0x110DD (69853)` | `smERR_ABORT_CPATH_NODE_NOT_EXIST` | Checkpoint path node does not exist; verify path metadata. |
+| `0x110DE (69854)` | `smERR_ABORT_UNABLE_TO_DROP_LAST_CPATH` | A tablespace needs at least one checkpoint path; rename instead of dropping the last path. |
+| `0x110DF (69855)` | `smERR_ABORT_CPATH_ALREADY_EXISTS` | Checkpoint path node already exists; do not add the same path again. |
+| `0x110E5 (69861)` | `smERR_ABORT_INVALID_CIMAGE_HEADER` | Invalid checkpoint image header; copy a valid checkpoint image to `MEM_DB_DIR`. |
+| `0x110E6 (69862)` | `smERR_ABORT_DefaultDBFileSizeNotAlignedToChunkSize` | `DEFAULT_MEM_DB_FILE_SIZE` must align to `EXPAND_CHUNK_PAGE_COUNT * PAGE_SIZE`. |
+| `0x110EA (69866)` | `smERR_ABORT_SplitSizeNotAlignedToChunkSize` | Memory checkpoint image split size must align to expand chunk size. |
+| `0x110EB (69867)` | `smERR_ABORT_INVALID_CIMAGE_FILESPEC_FORMAT` | Invalid checkpoint image filespec; check filespec format. |
+| `0x110EC (69868)` | `smERR_ABORT_INPUT_UNSTABLE_CIMAGE` | Checkpoint image is not stable; check log anchor and use a stable checkpoint image. |
+| `0x1114C (69964)` | `smERR_ABORT_DROP_CPATH_NOT_YET_MOVED_CIMG_IN_CPATH` | Checkpoint image remains in a checkpoint path being dropped; move it first. |
+| `0x1115F (69983)` | `smERR_ABORT_CheckpointPathIsNullString` | Checkpoint path is empty; provide a valid path. |
+| `0x11160 (69984)` | `smERR_ABORT_InvalidCheckpointPathABS` | Checkpoint path is not absolute; check `ALTIBASE_HOME` and use an absolute path. |
+| `0x11161 (69985)` | `smERR_ABORT_InvalidCheckpointPathKeyWord` | Checkpoint path contains reserved keywords; set a supported path. |
+| `0x11162 (69986)` | `smERR_ABORT_TooLongCheckpointPath` | Checkpoint path is too long; choose a path within the source limit. |
+| `0x11171 (70001)` | `smERR_ABORT_InvalidChangeTrackingFile` | Change-tracking file is invalid; disable and re-enable change tracking. |
+| `0x11172 (70002)` | `smERR_ABORT_ChangeTrackingState` | Unexpected change-tracking state; check change-tracking manager state. |
+| `0x11176 (70006)` | `smERR_ABORT_NotDefinedIncrementalBackupPath` | No incremental backup path is defined; specify an incremental backup directory. |
+| `0x11177 (70007)` | `smERR_ABORT_AlreadyExistIncrementalBackupPath` | Incremental backup path already exists; change directory or wait/retry. |
+| `0x11178 (70008)` | `smERR_ABORT_BackupInfoState` | Unexpected Backup Information Manager state; check backup-info manager state. |
+| `0x11179 (70009)` | `smERR_ABORT_AlreadyExistPath` | Directory already exists; delete, rename, or choose another directory. |
+| `0x1117A (70010)` | `smERR_ABORT_ThereIsNoDatabaseIncrementalBackup` | No incremental database backup exists; perform one before restore. |
+| `0x1117B (70011)` | `smERR_ABORT_ThereIsNoIncrementalBackup` | No incremental backup exists; perform one before restore. |
+| `0x1117C (70012)` | `smERR_ABORT_FailToCreateDirectory` | Failed to create directory; check directory path and permission. |
+| `0x11180 (70016)` | `smERR_ABORT_DuplicateMultiplexDirPath` | Duplicate `LOG_MULTIPLEX_DIR` or `ARCHIVE_MULTIPLEX_DIR` path; remove duplicate. |
+| `0x11181 (70017)` | `smERR_ABORT_WrongLogMultiplexDirCount` | `LOG_MULTIPLEX_DIR` count differs from `LOG_MULTIPLEX_COUNT`; align values. |
+| `0x11182 (70018)` | `smERR_ABORT_WrongArchMultiplexDirCount` | `ARCH_MULTIPLEX_DIR` count differs from `ARCH_MULTIPLEX_COUNT`; align values. |
+| `0x11199 (70041)` | `smERR_ABORT_Cannot_Perform_Level1_Backup` | Cannot perform level 1 backup because level 0 backup does not exist; run level 0 first. |
+
+Applies To: memory tablespace checkpoint image paths, checkpoint image files, incremental backup metadata, change tracking, `backupInfo`, and log/archive multiplex directory configuration.
+
+Symptom: A memory checkpoint-path change, incremental backup/restore, or multiplexed log/archive configuration fails before or during backup/recovery.
+
+Primary Causes: missing or inaccessible checkpoint path, attempt to drop the last checkpoint path, checkpoint image still present in the path, unstable checkpoint image, invalid or missing change-tracking/backup-info metadata, missing level 0 backup, duplicate or count-mismatched multiplex directories, or filesystem permission problem.
+
+Immediate Action: Verify path existence and permission as the Altibase OS user. For incremental backup recovery, protect current `changeTracking`, `backupInfo`, log anchors, and logs before replacing metadata. Rebuild the incremental chain with a new level 0 backup after change tracking is disabled or lost.
+
+Check SQL or Command:
+
+```bash
+ls -ld '<CHECKPOINT_OR_BACKUP_DIRECTORY>'
+ls -l "$ALTIBASE_HOME/dbs/changeTracking" "$ALTIBASE_HOME/dbs/backupInfo"
+tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
+```
+
+```sql
+SELECT m.space_id,
+       m.space_name,
+       p.checkpoint_path
+FROM V$MEM_TABLESPACES m,
+     V$MEM_TABLESPACE_CHECKPOINT_PATHS p
+WHERE m.space_id = p.space_id
+ORDER BY m.space_id, p.checkpoint_path;
+
+SELECT backup_type,
+       backup_tag,
+       backup_file,
+       begin_backup_time,
+       end_backup_time
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+Required Customer Input: exact version, failed backup/recovery/checkpoint command, checkpoint path, backup directory, whether incremental level 0 exists, `backupInfo` and `changeTracking` status, log anchor source, and trace log excerpt.
+
+Version Cautions: The listed reference codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. For 8.1 memory backup/recovery answers, also check any available `V$LOG.CHECKPOINT_SCALE` evidence before explaining checkpoint-image selection.
+
+Escalation: Escalate before substituting checkpoint images, log anchors, or `backupInfo` files when file history is uncertain, when the incremental chain is inconsistent, or when trace logs show unexpected manager state after the documented corrective action.
+
+Related Document: Administration and Operations; Data Dictionary and Performance Views; Data Types and Properties.
+
+### Error Block: Tablespace State, Type, and DDL Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: `SM` or `QP` / `ABORT`, plus `SM / RETRY` for retryable tablespace-structure change.
+
+Exact code map:
+
+| Reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `0x1102A (69674)` | `smERR_ABORT_NotFoundTableSpaceNodeByName` | Tablespace node not found by name; verify the tablespace exists. |
+| `0x1102B (69675)` | `smERR_ABORT_NotFoundTableSpaceNode` | Tablespace node not found by ID; verify the tablespace exists. |
+| `0x1102C (69676)` | `smERR_ABORT_MustBeDataFileOnlineMode` | Datafile node must be online; change datafile/tablespace state appropriately. |
+| `0x11031 (69681)` | `smERR_ABORT_NotEnoughTableSpaceID` | Maximum tablespace ID reached; use existing tablespace or rebuild the database. |
+| `0x11032 (69682)` | `smERR_ABORT_AlreadySetAutoExtendMode` | Datafile `AUTOEXTEND` mode is already set; no action is needed. |
+| `0x11035 (69685)` | `smERR_ABORT_NotEnoughFreeSpace` | Tablespace has insufficient free space; add a datafile. |
+| `0x11036 (69686)` | `smERR_ABORT_CannotRemoveDataFileNode` | Datafile is in use; do not remove it while allocated. |
+| `0x11037 (69687)` | `smERR_ABORT_CannotDropTableSpace` | System-related tablespaces cannot be dropped. |
+| `0x110AA (69802)` | `smERR_ABORT_AlreadyExistTableSpaceName` | Duplicate tablespace name; choose/check the name. |
+| `0x110E0 (69856)` | `smERR_ABORT_ALTER_TBS_AUTOEXTEND_ALREADY_SET` | Tablespace `AUTOEXTEND` is already set; no action needed. |
+| `0x110E1 (69857)` | `smERR_ABORT_ALTER_TBS_NEXTSIZE_NOT_ALIGNED_TO_CHUNK_SIZE` | `NEXT` must align to `EXPAND_CHUNK_PAGE_COUNT * PAGE_SIZE`. |
+| `0x110E2 (69858)` | `smERR_ABORT_ALTER_TBS_MAXSIZE_LESSTHAN_CURRENT_SIZE` | `MAXSIZE` must be greater than or equal to current tablespace size. |
+| `0x110E3 (69859)` | `smERR_ABORT_ALTER_TBS_AT_DROPPED_TBS` | Cannot alter a dropped tablespace; verify it exists. |
+| `0x110E4 (69860)` | `smERR_ABORT_ALTER_TBS_AT_OFFLINE_TBS` | Cannot alter an offline tablespace; bring it online if appropriate. |
+| `0x110E7 (69863)` | `smERR_ABORT_CANNOT_ALTER_STATUS_OF_SYSTEM_TABLESPACE` | Cannot change system, undo, or system temp tablespace status. |
+| `0x110E8 (69864)` | `smERR_ABORT_CANNOT_ALTER_AUTOEXTEND_DICTIONARY_TABLESPACE` | Cannot alter dictionary tablespace `AUTOEXTEND`. |
+| `0x110E9 (69865)` | `smERR_ABORT_ALTER_TBS_ONOFF_ALLOWED_ONLY_AT_META_SERVICE_PHASE` | `ALTER TABLESPACE ONLINE/OFFLINE` is allowed only in `META` or `SERVICE`. |
+| `0x110EE (69870)` | `smERR_ABORT_TBSInitSizeNotAlignedToChunkSize` | Initial memory tablespace size must align to expand chunk size. |
+| `0x110EF (69871)` | `smERR_ABORT_UNABLE_TO_EXTEND_CHUNK_WHEN_AUTO_EXTEND_OFF` | Cannot extend when `AUTOEXTEND` is off; use documented `AUTOEXTEND ON`. |
+| `0x110F0 (69872)` | `smERR_ABORT_UNABLE_TO_EXTEND_CHUNK_MORE_THAN_MEM_MAX_DB_SIZE` | Memory tablespace extension would exceed `MEM_MAX_DB_SIZE`; adjust capacity or remove other tablespace. |
+| `0x110F1 (69873)` | `smERR_ABORT_UNABLE_TO_EXTEND_CHUNK_MORE_THAN_TBS_MAXSIZE` | Extension would exceed tablespace `MAXSIZE`; adjust `MAXSIZE` if safe. |
+| `0x110F4 (69876)` | `smERR_ABORT_TABLESPACE_IS_ALREADY_ONLINE` | Tablespace is already `ONLINE`; do not repeat `ONLINE`. |
+| `0x110F5 (69877)` | `smERR_ABORT_TABLESPACE_IS_ALREADY_OFFLINE` | Tablespace is already `OFFLINE`; do not repeat `OFFLINE`. |
+| `0x110F8 (69880)` | `smERR_ABORT_CannotDiscardTableSpace` | Cannot discard system, undo, or system temp tablespace. |
+| `0x110FB (69883)` | `smERR_ABORT_UNABLE_TO_USE_OFFLINE_TBS` | Cannot use offline tablespace; execute `ALTER TABLESPACE ... ONLINE` only after impact review. |
+| `0x110FC (69884)` | `smERR_ABORT_UNABLE_TO_USE_DISCARDED_TBS` | Cannot use discarded tablespace; drop and recreate it. |
+| `0x110FD (69885)` | `smERR_ABORT_TBS_ALREADY_DISCARDED` | Tablespace is already discarded; drop and recreate it. |
+| `0x110FE (69886)` | `smERR_ABORT_AUTOEXT_ON_UNALLOWED_FOR_USED_UP_FILE` | Cannot switch `AUTOEXTEND` on for a used-up datafile; use current or unused file. |
+| `0x11100 (69888)` | `smERR_ABORT_UNABLE_TO_EXTEND_CHUNK_MORE_THAN_VOLATILE_MAX_DB_SIZE` | Volatile extension would exceed `VOLATILE_MAX_DB_SIZE`; increase property or drop another volatile tablespace. |
+| `0x11102 (69890)` | `smERR_ABORT_UNABLE_TO_ALTER_ONLINE_CUZ_MEM_MAX_DB_SIZE` | Bringing tablespace online would exceed `MEM_MAX_DB_SIZE`; increase property or offline another tablespace. |
+| `0x11103 (69891)` | `smERR_ABORT_UNABLE_TO_CREATE_CUZ_MEM_MAX_DB_SIZE` | Creating tablespace would exceed `MEM_MAX_DB_SIZE`; increase property or offline/drop another tablespace. |
+| `0x11115 (69909)` | `smERR_ABORT_TBS_ATTR_FLAG_ALREADY_SET` | Tablespace attribute already has the requested value; no action needed. |
+| `0x11117 (69911)` | `smERR_ABORT_UNABLE_TO_COMPRESS_VOLATILE_TBS_LOG` | Log compression is not supported for volatile tablespaces. |
+| `0x11123 (69923)` | `smERR_ABORT_NOT_ENOUGH_SPACE` | Tablespace does not have enough free space; add a new datafile. |
+| `0x11139 (69945)` | `smERR_ABORT_CannotCreateSegInUndoTBS` | Cannot create segments in undo tablespace; use another tablespace. |
+| `0x1118A (70026)` | `smERR_ABORT_TablespaceLockUse` | Tablespace locks are disabled by `TABLESPACE_LOCK_ENABLE=0`; change property only after impact review. |
+| `0x13111 (78097)` | `smERR_REBUILD_smiTBSModified` | Tablespace structure was modified; rebuild the query and retry. |
+| `0x311D7 (201175)` | `qpERR_ABORT_QDT_DUPLICATE_TBS_NAME` | Duplicate tablespace name; check specified name. |
+| `0x311D8 (201176)` | `qpERR_ABORT_QDT_NOT_EXIST_TBS` | Specified tablespace name was not found; verify spelling and existence. |
+| `0x311DA (201178)` | `qpERR_ABORT_QDT_MISMATCH_TBS_TYPE` | Tablespace type and file type differ; match the file clause to tablespace type. |
+| `0x311DB (201179)` | `qpERR_ABORT_QDT_NO_DROP_SYSTEM_TBS` | `SYSTEM` tablespace cannot be dropped. |
+| `0x311DD (201181)` | `qpERR_ABORT_QDT_OBJECT_EXIST` | Tablespace has objects; drop/move objects or use documented destructive form after impact review. |
+| `0x311DE (201182)` | `qpERR_ABORT_QDT_NO_CREATE_IN_SYSTEM_TBS` | Cannot create objects in dictionary, undo, or temp tablespace. |
+| `0x311DF (201183)` | `qpERR_ABORT_QDT_NO_ACCESS_TBS` | User cannot access the tablespace; grant/access needs review. |
+| `0x311E3 (201187)` | `qpERR_ABORT_QDT_ERR_INVALID_DATA_TBS` | Specified tablespace is not a valid data tablespace. |
+| `0x311E4 (201188)` | `qpERR_ABORT_QDT_ERR_INVALID_TEMP_TBS` | Specified tablespace is not a valid temporary tablespace. |
+| `0x311E7 (201191)` | `qpERR_ABORT_QDT_CANNOT_ONOFFLINE` | Cannot bring specified tablespace online/offline; check tablespace type/state. |
+| `0x3124F (201295)` | `qpERR_ABORT_QDT_DUPLICATE_CHECKPOINT_PATH` | Duplicate checkpoint path; check specified path. |
+| `0x31250 (201296)` | `qpERR_ABORT_QDT_NO_MEM_TBS_SPLIT_FILE_SIZE` | Memory tablespace syntax lacks `SPLIT EACH`; specify it when required. |
+| `0x31251 (201297)` | `qpERR_ABORT_QDT_INVALID_ALTER_ON_DISK_TBS` | `ALTER DISK TABLESPACE` used on non-disk tablespace; match statement and type. |
+| `0x31252 (201298)` | `qpERR_ABORT_QDT_INVALID_ALTER_ON_MEM_TBS` | `ALTER MEMORY TABLESPACE` used on non-memory tablespace; match statement and type. |
+| `0x31253 (201299)` | `qpERR_ABORT_QDT_INVALID_ALTER_ON_VOLATILE_TBS` | `ALTER VOLATILE TABLESPACE` used on non-volatile tablespace; match statement and type. |
+| `0x31254 (201300)` | `qpERR_ABORT_QDT_INVALID_ALTER_ON_MEM_OR_VOL_TBS` | `ALTER TABLESPACE` clause requires memory or volatile tablespace; verify type. |
+| `0x31255 (201301)` | `qpERR_ABORT_QDT_CANNOT_DISCARD` | Cannot discard specified tablespace; check type/state. |
+| `0x31256 (201302)` | `qpERR_ABORT_QDT_CANNOT_ALTER_SYSTEM_TABLESPACE` | Cannot alter system tablespace; check specified tablespace. |
+| `0x3128B (201355)` | `qpERR_ABORT_QDT_PART_TABLE_IN_DIFFERENT_TBS` | Partitioned table has partitions in different tablespaces; drop table before the requested statement when source action applies. |
+| `0x3128C (201356)` | `qpERR_ABORT_QDT_PART_INDEX_IN_DIFFERENT_TBS` | Partitioned index has partitions in different tablespaces; drop index before the requested statement when source action applies. |
+| `0x31295 (201365)` | `qpERR_ABORT_QDT_ERR_INVALID_USER_DEFAULT_TEMP_TBS` | User default temporary tablespace is invalid; check the user's temporary tablespace. |
+| `0x312A0 (201376)` | `qpERR_ABORT_QDT_DUPLICATE_TBS_ATTRIBUTE` | Duplicate tablespace attribute; check attribute list. |
+| `0x312A9 (201385)` | `qpERR_ABORT_QDT_UNABLE_TO_COMPRESS_VOLATILE_TBS_LOG` | Log compression is not supported for volatile tablespaces. |
+| `0x312E1 (201441)` | `qpERR_ABORT_QDT_NON_ASCII_TBS_NAME` | Tablespace name contains invalid character set; use ASCII characters. |
+| `0x312E6 (201446)` | `qpERR_ABORT_QDT_CANNOT_RENAME_SYS_TBS` | System tablespace cannot be renamed. |
+| `0x31365 (201573)` | `qpERR_ABORT_QDT_DROP_TBS_DISABLE_BECAUSE_TEMP_TABLE` | Volatile tablespace cannot be dropped while temporary tables exist; truncate temporary tables and retry. |
+| `0x31458 (201816)` | `qpERR_ABORT_QDB_CANNOT_ALTER_TABLESPACE_TEMPORARY_TABLE` | Temporary table cannot modify tablespace; do not run `ALTER TABLESPACE` syntax on a temporary table. |
+
+Applies To: `CREATE TABLESPACE`, `ALTER TABLESPACE`, `DROP TABLESPACE`, datafile clauses, checkpoint path clauses, user default/temporary tablespace checks, tablespace locks, memory/volatile limits, and object placement.
+
+Symptom: DDL or DML fails because the named tablespace is missing, the type is wrong, the state is offline/discarded/dropped/system, capacity limits block the operation, or the requested DDL is not valid for that tablespace family.
+
+Primary Causes: wrong tablespace name, duplicate name, wrong disk/memory/volatile/temp type, system/dictionary/undo/temp tablespace restriction, user lacks tablespace access, existing objects block drop, replicated or temporary objects block state changes, `AUTOEXTEND`/`MAXSIZE`/`NEXT` mismatch, `MEM_MAX_DB_SIZE` or `VOLATILE_MAX_DB_SIZE` limit, or invalid checkpoint path.
+
+Immediate Action: Query the tablespace, datafile, object, user-access, and property state before generating DDL. State destructive impact before `DROP TABLESPACE`, `INCLUDING CONTENTS`, `AND DATAFILES`, `DISCARD`, or online/offline operations.
+
+Check SQL or Command:
+
+```sql
+SELECT id,
+       name,
+       type,
+       state,
+       datafile_count,
+       total_page_count,
+       allocated_page_count,
+       page_size
+FROM V$TABLESPACES
+ORDER BY id;
+
+SELECT d.id,
+       d.name,
+       d.spaceid,
+       t.name AS tablespace_name,
+       d.currsize,
+       d.autoextend,
+       d.state
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+ORDER BY d.spaceid, d.id;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'MEM_MAX_DB_SIZE',
+  'VOLATILE_MAX_DB_SIZE',
+  'EXPAND_CHUNK_PAGE_COUNT',
+  'TABLESPACE_LOCK_ENABLE',
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE'
+)
+ORDER BY name;
+
+SELECT u.user_name,
+       t.table_name,
+       t.table_type,
+       t.tbs_name
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE t.user_id = u.user_id
+  AND t.tbs_name = '<TABLESPACE_NAME>'
+ORDER BY u.user_name, t.table_name;
+```
+
+Required Customer Input: exact version, full error line, SQL text, tablespace name, intended tablespace family, datafile/checkpoint path clauses, object owner/name, and whether the operation is planned maintenance or recovery.
+
+Version Cautions: The listed reference codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The exact corrective DDL differs for disk, memory, volatile, undo, and temporary tablespaces; ask for type and phase before returning copy-ready SQL.
+
+Escalation: Escalate or require DBA confirmation before dropping objects, dropping/discarding a tablespace, deleting datafiles, or changing memory/volatile maximum properties in production.
+
+Related Document: Administration and Operations; SQL DDL Generation; Data Dictionary and Performance Views; Data Types and Properties.
+
 ### Error Block: Tablespace Not Found
 
 Error Code: `0x311D8 (201176)`.
@@ -1587,6 +2024,17 @@ Related Document: DB Link and External Connectors.
 
 ## Topic Response Patterns
 
+### Storage, Backup, Recovery, Datafile, Log, and Tablespace Errors
+
+Use this order:
+
+1. Identify the exact code, startup phase, database mode, affected file or tablespace, and whether the operation is normal DDL, online backup, restart recovery, complete media recovery, or incomplete media recovery.
+2. Preserve current files before changing them. For recovery cases, do not delete logfiles, replace log anchors, run `RESETLOGS`, or discard a tablespace until the backup source and recovery target are known.
+3. Check `V$LOG`, `V$ARCHIVE`, `V$TABLESPACES`, `V$DATAFILES`, `V$BACKUP_INFO`, checkpoint-path views, filesystem free space, permissions, and trace logs.
+4. For `NOARCHIVELOG`, state that online backup and ordinary media recovery are not available; recovery is normally limited to offline backup restore or documented temporary-file recreation cases.
+5. For incomplete recovery, state that `META RESETLOGS` and an immediate full backup are required after the recovery plan succeeds.
+6. For tablespace DDL, choose the path for disk, memory, volatile, undo, temporary, or system tablespace rules before generating copy-ready SQL.
+
 ### Startup and Shutdown Errors
 
 Use this order:
@@ -1652,5 +2100,6 @@ Use this order:
 
 ## Residual Scope
 
+- J023 expanded storage, backup, recovery, datafile, log, checkpoint, incremental backup, and tablespace exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps are still grouped troubleshooting blocks, not a replacement for the complete source manuals.
 - Add future error blocks only after source-backed review, and keep the standardized error format above.
 - The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here.
