@@ -295,8 +295,14 @@ for 8.1 customer-facing labels.
   and records General Reference property details in `GPTs/reports/source_inventory.md`.
   Live DB Link, Hadoop, DBeaver, Hibernate, OpenLDAP, GoldenGate, Kubernetes, and AKU
   execution remains verification-limited without a target environment.
-- J039 should use migration, Spatial, and third-party guide source families to expand
-  remaining migration/tool/integration coverage.
+- J039 expanded the migration, Spatial, and third-party integration slice in
+  `15_migration_oracle_compatibility.md` and `19_spatial_nifi_tableau_misc.md`.
+  The documentation structure keeps Migration Center and Adapter for Oracle coverage
+  in `15`, keeps Spatial SQL, `altiShapeLoader`, NiFi, Tableau, and spatial
+  migration routing in `19`, and records the Korean-source WKB/EWKB metadata-version
+  rule in `GPTs/reports/source_inventory.md`. `GAP-J002-017` is closed; live
+  tool/integration execution remains environment-specific verification rather than a
+  selected-source coverage gap.
 - J040 should run final retrieval and multilingual checks and verify that every open
   register item is either closed, split into a later accepted work item, or documented
   as a selected-source limitation.

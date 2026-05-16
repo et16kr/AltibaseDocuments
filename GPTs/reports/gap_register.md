@@ -541,7 +541,7 @@ recording or remediating gaps.
 
 ### GAP-J002-017: Spatial, migration, NiFi, and Tableau examples need deeper itemization
 
-- Status: `Open`
+- Status: `Closed`
 - Source family and version scope: `spatial_nifi_tableau`, `migration_oracle`,
   `jdbc_java`, `isql_iloader`, `utilities_datacompj`; 7.1, 7.3, and 8.1.
 - Missing item or behavior: Exhaustive Spatial function examples, Adapter for Oracle
@@ -554,6 +554,18 @@ recording or remediating gaps.
 - Required remediation shape: Function and tool item blocks with source-backed syntax,
   property/option values, example SQL or command, expected result, and cross-reference
   between Spatial, iLoader/aexport, and migration attachments.
+- J039 update: `15_migration_oracle_compatibility.md` now includes compact Migration
+  Center CLI syntax and a source-backed `oraAdapter` property value matrix with
+  defaults, ranges, skip/retry semantics, LOB cautions, and property-file rules.
+  `19_spatial_nifi_tableau_misc.md` now includes compact Spatial function syntax
+  roots, a Korean-manual-backed Altibase-to-Altibase `GEOMETRY` migration block for
+  `SYSTEM_.SYS_DATABASE_` metadata version `8.8.1`, WKB/EWKB directionality,
+  `ILOADER_GEOM = WKB`, and `-geom WKB`, plus an `altiShapeLoader` command syntax
+  root. Existing NiFi/Tableau field/value and validation blocks remain the scoped
+  third-party guide coverage. This closes the missing item-block gap for the selected
+  J039 source families; live NiFi, Tableau, `oraAdapter`, `iLoader`, `aexport`, and
+  `altiShapeLoader` execution remains environment-specific verification, not an
+  uncovered selected-source documentation gap.
 
 ### GAP-J002-018: High-risk converted visual/procedure coverage needs final source audit
 
@@ -826,3 +838,13 @@ recording or remediating gaps.
   external procedure call-spec rules, and external procedure diagnostics. The shared
   syntax queue remains open for J039 Spatial and tool/integration-adjacent SQL plus any
   later exact-version edge cases outside the selected J034 source slice.
+- J039 update: The Spatial, Migration Center, Adapter for Oracle, and
+  altiShapeLoader specialized syntax slice is source-audited and expanded in
+  `GPTs/attachments/15_migration_oracle_compatibility.md` and
+  `GPTs/attachments/19_spatial_nifi_tableau_misc.md`. The update adds compact
+  `migcenter.sh` CLI grammar, exact `oraAdapter` property-value/range blocks,
+  corrected `oaUtility check` behavior from the Korean manual, Spatial function
+  syntax roots, Altibase-to-Altibase WKB/EWKB migration rules with
+  `ILOADER_GEOM = WKB` and `-geom WKB`, and an `altiShapeLoader` command grammar.
+  The shared syntax queue remains open only for J040 final retrieval validation and
+  exact-version edge cases outside the selected source slices.

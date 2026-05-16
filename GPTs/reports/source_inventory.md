@@ -1513,6 +1513,13 @@ Source purpose: Migration Center, Adapter for Oracle, Oracle-to-Altibase convers
   - `Manuals/Tools/Altibase_release/kor/Migration Center User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/kor/Migration Center User's Manual.md`
   - `ReleaseNotes/kor/Altibase_Migration_Center_7_19_Release_Notes.md`
+- J039 design note: `15_migration_oracle_compatibility.md` remains the packaging file
+  for Migration Center, Oracle-to-Altibase conversion, and Adapter for Oracle. No
+  attachment boundary or file-name change was required. J039 expanded source-backed
+  Migration Center CLI grammar, `oraAdapter` property defaults/ranges/skip-retry
+  semantics, property-file rules, and Korean-source-corrected `oaUtility check`
+  behavior. The work used Korean Adapter for Oracle and Migration Center manuals as
+  authority, with English manuals and release notes only as extraction/parity aids.
 
 ### 16_dblink_external_connectors.md
 
@@ -1623,6 +1630,18 @@ Source purpose: Spatial SQL, `GEOMETRY`, altiShapeLoader, NiFi, Tableau.
   - `3rd Party Guide for Altibase/kor/NiFi User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/kor/Tableau User's Guide for Altibase/Tableau User's Guide for Altibase.md`
   - `ReleaseNotes/kor/Altibase_altiShapeLoader_1_0_Release_Notes.md`
+- J039 design note: `19_spatial_nifi_tableau_misc.md` remains the packaging file for
+  Spatial SQL, `GEOMETRY`, `altiShapeLoader`, NiFi, Tableau, and adjacent spatial
+  migration routing. No attachment boundary or file-name change was required. J039
+  expanded compact Spatial function syntax roots, Korean-manual-backed
+  Altibase-to-Altibase spatial WKB/EWKB migration rules keyed to
+  `SYSTEM_.SYS_DATABASE_` metadata version `8.8.1`, `ILOADER_GEOM = WKB` and
+  `-geom WKB` routing, and `altiShapeLoader` command grammar. The Korean Spatial SQL
+  Reference contains the WKB/EWKB migration chapter not present in the checked English
+  trunk manual, so customer-facing attachment text was translated and normalized into
+  English from the Korean source. No new manual/source-backed gap was discovered during
+  J039; `GAP-J002-017` is closed, while live third-party/tool execution remains
+  environment-specific verification.
 
 ## Follow-Up Notes
 

@@ -150,6 +150,21 @@ Step block: `Data Validation`
 
 Use CLI mode when GUI mode is unavailable, or after GUI Reconcile when the expensive Run and validation work should execute near the database server.
 
+Compact CLI syntax:
+
+```text
+migcenter_command ::=
+    ./migcenter.sh register registration_xml
+  | ./migcenter.sh build project_path
+  | ./migcenter.sh reconcile project_path
+  | ./migcenter.sh run project_path
+  | ./migcenter.sh diff project_path
+  | ./migcenter.sh filesync project_path
+
+registration_xml ::= XML file in the Migration Center installation directory
+project_path     ::= registered Migration Center project directory
+```
+
 ```bash
 # 1. Register project and database connections.
 ./migcenter.sh register register.xml
@@ -946,6 +961,46 @@ Other property block:
 - `ADAPTER_ERROR_RESTART_INTERVAL`: interval between adapter restart attempts.
 - `ADAPTER_LOB_TYPE_SUPPORT`: `1` enables LOB support; `0` disables it.
 
+Property value matrix:
+
+| Property | Default | Valid values or range | Operational note |
+| --- | --- | --- | --- |
+| `ALA_SENDER_IP` | `127.0.0.1` | IP address | Altibase server address used by the XLog Sender. |
+| `ALA_SENDER_REPLICATION_PORT` | `0` | `0` to `65535` | `0` makes `oraAdapter` wait for the ALA sender; nonzero makes `oraAdapter` connect directly to that sender port. |
+| `ALA_RECEIVER_PORT` | not source-specified | `1024` to `65535` | Listener port where the XLog Collector receives XLogs. |
+| `ALA_RECEIVE_XLOG_TIMEOUT` | `300` | `1` to `4294967295` seconds | XLog receive wait time. |
+| `ALA_REPLICATION_NAME` | not source-specified | replication object name | Must match the Altibase replication object created for ALA. |
+| `ALA_SOCKET_TYPE` | `TCP` | `TCP`, `UNIX` | `UNIX` requires Altibase and `oraAdapter` on the same server. |
+| `ALA_XLOG_POOL_SIZE` | `100000` | `1` to `2147483647` | Increase when one transaction changes many rows or when it is smaller than `REPLICATION_SYNC_TUPLE_COUNT`. |
+| `ALA_LOGGING_ACTIVE` | `1` | `0`, `1` | `1` writes ALA trace logs; `0` suppresses them. |
+| `ALTIBASE_USER` | not source-specified | user name | Used by `oaUtility` constraint checks. |
+| `ALTIBASE_PASSWORD` | not source-specified | password | Protect the file and avoid spaces or tabs in the value. |
+| `ALTIBASE_IP` | `127.0.0.1` | IP address | Altibase server address used for checks. |
+| `ALTIBASE_PORT` | not source-specified | `1024` to `65535` | Altibase listener port. |
+| `ORACLE_SERVER_ALIAS` | default Oracle host when omitted | alias in `tnsnames.ora` | Set it to the Oracle service alias, for example `orcl10g`. |
+| `ORACLE_USER` | not source-specified | Oracle user | Oracle apply account. |
+| `ORACLE_PASSWORD` | not source-specified | password | Protect the file and quote special characters if needed. |
+| `ORACLE_ASYNCHRONOUS_COMMIT` | `1` | `0`, `1` | `1` improves speed but can require re-synchronization after an Oracle crash. |
+| `ORACLE_GROUP_COMMIT` | `1` | `0`, `1` | `1` batches commit logs for throughput but can increase individual transaction latency. |
+| `ORACLE_ARRAY_DML_MAX_SIZE` | `10` | `1` to `32767` | Affects `INSERT` and `DELETE`; set `1` to disable Array DML. LOB interface updates do not use Array DML. |
+| `ORACLE_UPDATE_STATEMENT_CACHE_SIZE` | `20` | `0` to `4294967295` | Caches prepared `UPDATE` statements; `0` disables this cache. |
+| `ORACLE_ERROR_RETRY_COUNT` | `0` | `0` to `65535` | Record-apply retry count; XLogs containing LOB data are excluded from retry. |
+| `ORACLE_ERROR_RETRY_INTERVAL` | `0` | `0` to `65535` seconds | Retry interval; `0` means no wait between retries. |
+| `ORACLE_SKIP_ERROR` | `1` | `0`, `1` | `0` terminates after an unskipped error; `1` continues after the failed record unless the error is listed in `dbms_skip_error_exclude.list`. LOB XLog errors terminate regardless. |
+| `ORACLE_SKIP_INSERT` | `0` | `0`, `1` | `1` skips applying Altibase `INSERT` to Oracle. |
+| `ORACLE_SKIP_UPDATE` | `0` | `0`, `1` | `1` skips applying Altibase `UPDATE` to Oracle. |
+| `ORACLE_SKIP_DELETE` | `0` | `0`, `1` | `1` skips applying Altibase `DELETE` to Oracle. |
+| `ORACLE_SET_USER_TO_TABLE` | `1` | `0`, `1` | `1` uses the table owner specified by the XLog Sender when applying DML to Oracle. |
+| `ADAPTER_ERROR_RESTART_COUNT` | `0` | `0` to `65535` | Adapter restart retry count after adapter-level apply errors. |
+| `ADAPTER_ERROR_RESTART_INTERVAL` | `0` | `0` to `65535` seconds | Restart retry interval; `0` retries without a wait. |
+| `ADAPTER_LOB_TYPE_SUPPORT` | `0` | `0`, `1` | `1` enables LOB support where the Adapter and OCI version support it. |
+
+Property file rules:
+
+- Do not use spaces or tabs in property values.
+- Use double quotes around values that include special characters.
+- Treat passwords and Oracle aliases as environment-specific inputs; do not reuse sample values in production.
+
 ## Adapter for Oracle Startup and Shutdown
 
 Startup sequence:
@@ -1039,9 +1094,9 @@ oaUtility check alive
 oaUtility check constraints
 ```
 
-- `alive`: checks whether `oraAdapter` is running.
+- `oaUtility check`: continuously watches `oraAdapter` and restarts it if it exits.
+- `alive`: checks once whether `oraAdapter` is running, then exits.
 - `constraints`: checks whether primary keys in tables to be ported from Altibase to Oracle are defined consistently by column name.
-- The check mode can be used once or continuously depending on the selected option.
 
 Command block: version
 

@@ -12,6 +12,7 @@
 - How do I create a `GEOMETRY` column or R-Tree index?
 - Which Spatial SQL functions and relational operators should I use?
 - How do I register spatial reference metadata in `SPATIAL_REF_SYS`?
+- How do I move Altibase `GEOMETRY` data between WKB-only and EWKB-capable Altibase databases?
 - How do I import or export shapefiles with `altiShapeLoader`?
 - What are the key `altiShapeLoader` options, data type mappings, and constraints?
 - How do I connect Apache NiFi to Altibase through JDBC without relying on UI images?
@@ -46,6 +47,7 @@ flowchart TD
   B -- Export shapefile --> H[altiShapeLoader export]
   B -- ETL flow in Apache NiFi --> I[NiFi DBCPConnectionPool]
   B -- BI connection from Tableau --> J[Tableau Other Databases JDBC]
+  B -- Altibase to Altibase spatial migration --> K[Check metadata version and WKB/EWKB]
 ```
 
 ## Version Differences
@@ -199,6 +201,57 @@ Format block: `EWKB`
 - Typical conversion: `ASEWKB(geom)` and `GEOMFROMEWKB(ewkb)`.
 - Note: EWKB is not an OpenGIS standard.
 
+## Altibase-to-Altibase Spatial Migration
+
+Use this section when moving `GEOMETRY` data between Altibase databases with `iLoader` or `aexport`. It is separate from Oracle-to-Altibase Migration Center work in `15_migration_oracle_compatibility.md`.
+
+Compatibility rule:
+
+- The decisive source-backed value is the database metadata version in `SYSTEM_.SYS_DATABASE_`, not only the marketing version string.
+- Metadata version lower than `8.8.1`: spatial data is stored and extracted in `WKB` format.
+- Metadata version `8.8.1` or later: spatial data is stored and extracted in `EWKB` format.
+- An EWKB-capable Altibase database can read `WKB` spatial data and convert it automatically.
+- A WKB-only Altibase database cannot read `EWKB` spatial data. When moving from an EWKB-capable source to a WKB-only target, extract the source data as `WKB`.
+
+Check the metadata version before choosing the export format:
+
+```sql
+SELECT META_MAJOR_VER,
+       META_MINOR_VER,
+       META_PATCH_VER
+FROM SYSTEM_.SYS_DATABASE_;
+```
+
+Migration decision block:
+
+- Source metadata version lower than `8.8.1` to target metadata version `8.8.1` or later: ordinary `iLoader` or `aexport` output is `WKB`, and the target can read it.
+- Source metadata version `8.8.1` or later to target metadata version lower than `8.8.1`: force `WKB` output.
+- One table with `iLoader`: add `-geom WKB` to the `iloader out` command.
+- Whole or scripted migration with `aexport`: set `ILOADER_GEOM = WKB` in `aexport.properties`; generated `run_il_out.sh` adds `-geom WKB`.
+
+Command examples:
+
+```bash
+iloader out -s source_host -port 20300 -u app_user -p source_password \
+  -T SPATIAL_TABLE \
+  -f spatial_table.fmt \
+  -d spatial_table.dat \
+  -geom WKB
+```
+
+```properties
+# aexport.properties
+ILOADER_GEOM = WKB
+```
+
+Validation after load:
+
+- Compare source and target row counts for every spatial table.
+- Compare the count of `NULL` values in each `GEOMETRY` column.
+- Compare SRID distribution with `SRID(geometry_column)` for non-`NULL` values.
+- Run representative `ASTEXT` or `ASEWKT` queries on sample rows to confirm that geometry text, SRID, and application-visible shape semantics survived the move.
+- If validation fails, ask for source and target Altibase versions, both metadata versions, the exact `iLoader` or `aexport` command, the `.fmt` file, and the first failing row or error message before recommending a reload.
+
 ## Spatial DDL
 
 DDL block: create a `GEOMETRY` column
@@ -328,6 +381,68 @@ SYS_SPATIAL.DELETE_SPATIAL_REF_SYS(
 - Caution: confirm no import/export or transform workflow depends on the SRID before deleting it.
 
 ## Spatial Function Reference
+
+Compact function syntax roots:
+
+```text
+geometry_inspection_function ::=
+    DIMENSION(geometry_expr)
+  | GEOMETRYTYPE(geometry_expr)
+  | ENVELOPE(geometry_expr)
+  | ISEMPTY(geometry_expr)
+  | ISSIMPLE(geometry_expr)
+  | ISVALID(geometry_expr)
+  | ISVALIDHEADER(geometry_expr)
+  | BOUNDARY(geometry_expr)
+
+geometry_output_function ::=
+    ASTEXT(geometry_expr [, precision])
+  | ASBINARY(geometry_expr)
+  | ASEWKT(geometry_expr [, precision])
+  | ASEWKB(geometry_expr)
+
+geometry_creation_function ::=
+    GEOMFROMTEXT(text_expr)
+  | POINTFROMTEXT(text_expr)
+  | LINEFROMTEXT(text_expr)
+  | POLYFROMTEXT(text_expr [, srid])
+  | ST_POLYGONFROMTEXT(text_expr [, srid])
+  | MPOINTFROMTEXT(text_expr)
+  | MLINEFROMTEXT(text_expr)
+  | MPOLYFROMTEXT(text_expr)
+  | GEOMCOLLFROMTEXT(text_expr)
+  | GEOMFROMWKB(binary_expr)
+  | POINTFROMWKB(binary_expr)
+  | LINEFROMWKB(binary_expr)
+  | ST_LINESTRINGFROMWKB(binary_expr [, srid])
+  | POLYFROMWKB(binary_expr)
+  | MPOINTFROMWKB(binary_expr)
+  | MLINEFROMWKB(binary_expr)
+  | MPOLYFROMWKB(binary_expr)
+  | GEOMCOLLFROMWKB(binary_expr)
+  | GEOMFROMEWKT(text_expr)
+  | GEOMFROMEWKB(binary_expr)
+  | ST_MAKEPOINT(x, y)
+  | ST_MAKELINE(geometry_expr, geometry_expr)
+  | ST_MAKEPOLYGON(geometry_expr)
+  | ST_COLLECT(geometry_expr, geometry_expr)
+
+spatial_predicate ::=
+    EQUALS(g1, g2)
+  | DISJOINT(g1, g2)
+  | INTERSECTS(g1, g2)
+  | TOUCHES(g1, g2)
+  | CROSSES(g1, g2)
+  | WITHIN(g1, g2)
+  | CONTAINS(g1, g2)
+  | OVERLAPS(g1, g2)
+  | RELATE(g1, g2, pattern)
+  | ISMBRINTERSECTS(g1, g2)
+  | ISMBRWITHIN(g1, g2)
+  | ISMBRCONTAINS(g1, g2)
+```
+
+The item blocks below provide the concrete function names, purpose, input shape, return type, and examples for the selected 7.1, 7.3, and Altibase 8.1 verified source Spatial SQL families.
 
 Function block: `DIMENSION`
 
@@ -1073,6 +1188,24 @@ JDBC_PATH   = ${ALTIBASE_HOME}/lib/Altibase.jar
 ```
 
 ## altiShapeLoader Options
+
+Compact command syntax:
+
+```text
+altiShapeLoader_command ::=
+    altiShapeLoader.{sh|bat}
+      -o {import | export}
+      -f shapefile_or_directory
+      connection_options
+      [table_options]
+      [performance_options]
+      [special_options]
+
+connection_options ::= -s host -port port -d database_name -u user -p password -j jdbc_jar
+table_options      ::= [-t table_name] [-create_table {T|F}] [-create_index {T|F}]
+performance_options ::= [-parallel count] [-commit count] [-atomic_batch {T|F}]
+special_options    ::= [-srid srid] [-geo_col_size bytes]
+```
 
 Option block: `-o` / `OPERATION`
 
