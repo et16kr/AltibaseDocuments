@@ -22,6 +22,14 @@ checks that judge-only metadata keys do not enter the projected input, prompt, o
 request payload, and writes JSONL records that validate against
 `schemas/answer_record.schema.json`.
 
+`judge_report.py` judges answer records against the full source-backed question record
+and writes `judgments.jsonl`, `aggregate_report.json`, and `report.md`. With
+`--validate-output`, it also validates the input answer records before writing judge
+outputs. The rule judge
+scores fact coverage, critical fact coverage, required-token preservation, version
+handling, Altibase-specific correctness, prohibited claims, and missing-input handling,
+then applies readiness thresholds from `policy.json`.
+
 Fixture validation:
 
 ```bash
@@ -68,6 +76,24 @@ python3 evals/altibase_answerability/scripts/answer_runner.py \
   --limit 2 \
   --validate-output \
   --output-dir /tmp/altibase-answer-runner-dry-run
+```
+
+Judge/report self-test:
+
+```bash
+python3 evals/altibase_answerability/scripts/judge_report.py --self-test
+```
+
+Offline fixture judging:
+
+```bash
+python3 evals/altibase_answerability/scripts/judge_report.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --answers evals/altibase_answerability/fixtures/judge_answers.jsonl \
+  --question-id PROP-001 \
+  --question-id OPS-001 \
+  --validate-output \
+  --output-dir /tmp/altibase-judge-report-fixture
 ```
 
 Live answer generation is provider-configurable. `provider=command` reads the rendered

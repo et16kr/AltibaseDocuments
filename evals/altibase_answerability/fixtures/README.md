@@ -13,6 +13,9 @@ named and kept out of production manifests.
 - `seed_questions.jsonl`: seven source-backed seed records, one per required benchmark
   domain. They are real benchmark examples but are intended for offline calibration, not
   for satisfying production count gates.
+- `judge_answers.jsonl`: two deterministic answer records for judge/report calibration.
+  `PROP-001` is expected to pass; `OPS-001` is intentionally unsafe and should fail with
+  a protected backup/recovery blocker.
 
 Run the seed fixture with:
 
@@ -31,4 +34,16 @@ python3 evals/altibase_answerability/scripts/answer_runner.py \
   --limit 2 \
   --validate-output \
   --output-dir /tmp/altibase-answer-runner-fixture
+```
+
+Run the judge/report calibration without live model calls:
+
+```bash
+python3 evals/altibase_answerability/scripts/judge_report.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --answers evals/altibase_answerability/fixtures/judge_answers.jsonl \
+  --question-id PROP-001 \
+  --question-id OPS-001 \
+  --validate-output \
+  --output-dir /tmp/altibase-judge-report-fixture
 ```

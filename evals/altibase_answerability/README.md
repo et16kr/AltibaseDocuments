@@ -145,6 +145,12 @@ prohibited claims, source references, optional canonical reference answer, and s
 notes. It compares attachments-only answers against the canonical-English expected facts
 derived from Korean-first sources.
 
+The durable rule judge and report generator is `scripts/judge_report.py`. It consumes
+answer records produced by the attachments-only runner, uses only judge-side question
+metadata for evaluation, writes per-question judgments, and emits JSON plus Markdown
+aggregate reports. It supports an offline self-test and fixture calibration answers, so
+judge/report validation does not require live model calls.
+
 Judgments must score at least:
 
 - required fact coverage;
@@ -208,4 +214,18 @@ python3 evals/altibase_answerability/scripts/answer_runner.py \
   --limit 2 \
   --validate-output \
   --output-dir /tmp/altibase-answer-runner-fixture
+```
+
+Use the judge/report fixture checks after editing scoring or reporting code:
+
+```bash
+python3 evals/altibase_answerability/scripts/judge_report.py --self-test
+
+python3 evals/altibase_answerability/scripts/judge_report.py \
+  --manifest evals/altibase_answerability/manifests/fixture_seed.json \
+  --answers evals/altibase_answerability/fixtures/judge_answers.jsonl \
+  --question-id PROP-001 \
+  --question-id OPS-001 \
+  --validate-output \
+  --output-dir /tmp/altibase-judge-report-fixture
 ```

@@ -27,3 +27,10 @@ question fields that the answer runner may project:
 `requested_language` is an allowed optional projection field. If a manifest does not
 set `answer_generation.requested_language`, the answer runner should omit it and default
 to English answers.
+
+## Full Benchmark Manifest
+
+`full_benchmark.json` selects all seven durable domain question files and is the
+manifest to use for production answer generation and readiness reporting. It preserves
+the same answer-generation boundary as the fixture manifests: only
+`GPTs/attachments/*.md`, the allowlisted question projection, and no judge-only fields.

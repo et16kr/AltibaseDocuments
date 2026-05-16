@@ -33,6 +33,13 @@ Judgments must include these normalized scores from `0.0` to `1.0`:
 Per-question pass/fail is determined by the judge implementation, but an answer with a
 blocker finding must not pass.
 
+`scripts/judge_report.py` currently provides the offline rule judge. It is intentionally
+strict about literal required-token preservation and protected-topic failures, and it is
+conservative about semantic fact coverage because it does not call a live model. Later
+model or human judges may supplement it, but they must preserve the same source boundary:
+answer generation uses attachments only, while judging may use the complete source-backed
+question record.
+
 ## Severity Model
 
 | Severity | Meaning |

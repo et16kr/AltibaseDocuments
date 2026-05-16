@@ -1,0 +1,51 @@
+{
+  "$schema": "../schemas/manifest.schema.json",
+  "manifest_id": "full_benchmark",
+  "description": "Full Altibase answerability benchmark manifest selecting all durable domain question files for readiness reporting.",
+  "question_files": [
+    "evals/altibase_answerability/questions/properties.jsonl",
+    "evals/altibase_answerability/questions/sql_ddl_dml_datatypes.jsonl",
+    "evals/altibase_answerability/questions/operations_admin.jsonl",
+    "evals/altibase_answerability/questions/views_performance_monitoring.jsonl",
+    "evals/altibase_answerability/questions/replication_cdc_security_network.jsonl",
+    "evals/altibase_answerability/questions/errors_troubleshooting.jsonl",
+    "evals/altibase_answerability/questions/tools_apis_connectors_migration.jsonl"
+  ],
+  "run_metadata": {
+    "profile": "full",
+    "job_id": "J012",
+    "source_boundary": "repository-local selected sources only"
+  },
+  "answer_generation": {
+    "attachment_glob": "GPTs/attachments/*.md",
+    "allowlisted_question_fields": [
+      "id",
+      "question",
+      "version_scope",
+      "user_level",
+      "answer_type",
+      "answer_language",
+      "requested_language"
+    ],
+    "default_answer_language": "en",
+    "include_gpt_instruction_draft": false,
+    "provider": "offline",
+    "model": "fixture",
+    "mode": "offline_fixture"
+  },
+  "judge": {
+    "mode": "rule",
+    "threshold_policy": "evals/altibase_answerability/policy.json"
+  },
+  "reporting": {
+    "output_dir": "evals/altibase_answerability/reports/full_benchmark",
+    "aggregate_dimensions": [
+      "domain",
+      "subdomain",
+      "user_level",
+      "version_scope",
+      "answer_type",
+      "retrieval_risk"
+    ]
+  }
+}

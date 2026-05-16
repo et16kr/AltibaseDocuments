@@ -289,7 +289,8 @@
         "required_token_preservation",
         "unsupported_claim_rate",
         "version_handling",
-        "altibase_specific_correctness"
+        "altibase_specific_correctness",
+        "missing_input_handling"
       ],
       "properties": {
         "pass_rate": {
@@ -311,6 +312,9 @@
           "$ref": "#/$defs/rate"
         },
         "altibase_specific_correctness": {
+          "$ref": "#/$defs/rate"
+        },
+        "missing_input_handling": {
           "$ref": "#/$defs/rate"
         }
       }

@@ -23,3 +23,7 @@ source-reference integrity, canonical-English expected facts, repository-local
 `../scripts/answer_runner.py --validate-output` validates generated answer records
 against `answer_record.schema.json` while running dry-run, offline fixture, or live
 answer-generation modes.
+
+`../scripts/judge_report.py --validate-output` validates generated per-question
+judgments against `judgment.schema.json` and aggregate readiness reports against
+`aggregate_report.schema.json`.
