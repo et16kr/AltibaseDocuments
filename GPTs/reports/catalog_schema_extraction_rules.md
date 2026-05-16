@@ -298,11 +298,19 @@ is not fully proven across versions.
 Use for exact error codes, symbols, grouped error topics, log-message patterns, and
 diagnostic response templates.
 
+J022 adds `GPTs/reports/error_reference_inventory.md` as the detailed error-family
+inventory and response-schema handoff for J023-J026. Use that report with this common
+schema before adding new exact-code or grouped troubleshooting blocks.
+
 Required fields when source-backed:
 
 - Code: literal error code such as `0x...`.
+- Runtime form: literal customer form such as `ERR-31363` when supplied or source
+  mapped.
+- Reference form: literal source form such as `0x31363 (201571)` when known.
 - Symbol: literal error symbol.
 - Message: concise source-normalized message.
+- Module and severity: from the exact source entry, not inferred from prefix alone.
 - Version scope: including 8.1-only, 7.x, patch, or exact-code guardrail.
 - Cause: source-backed cause, not a generic database assumption.
 - Action: safe next action in operational order.
@@ -314,6 +322,11 @@ Required fields when source-backed:
 For grouped errors, keep exact codes searchable inside the block. Do not map a symptom
 to an error code unless the user provides that exact code or the selected source proves
 the mapping.
+
+When a grouped topic contains several codes, include an exact-code map with runtime
+form, reference form, symbol, message, version scope, and first check before the shared
+troubleshooting prose. Use `Unknown from the supplied message` for any missing field
+instead of inventing cause, action, severity, module, or `SQLSTATE`.
 
 ## Runbook Block Schema
 

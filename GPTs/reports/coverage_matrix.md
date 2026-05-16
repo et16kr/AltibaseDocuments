@@ -30,6 +30,8 @@ Use this report together with:
   BNF-like conversion rules, and J011-J016 SQL expansion queue.
 - `.codex-jobs/altibase-gpt-encyclopedia-rebuild/requirements.md`: rebuild contract,
   source policy, and success criteria.
+- `GPTs/reports/error_reference_inventory.md`: post-J022 error-family inventory,
+  exact-code response schema, source-drift notes, and J023-J026 expansion queue.
 
 ## Design Note
 
@@ -190,8 +192,10 @@ for 8.1 customer-facing labels.
   routed to `08`, replication/CDC operations routed to `09`, and security/TLS policy
   context routed to `18`; the broader per-view column gap remains open only for
   exhaustive patch-sensitive proof outside the J018-J021 scoped slices.
-- J022-J026 should use `error_message_reference` and related operational sources to
-  expand exact-code troubleshooting and close error-block gaps.
+- J022 added `GPTs/reports/error_reference_inventory.md` as the `error_message_reference`
+  family inventory and exact-code response schema. J023-J026 should use that report
+  with related operational sources to expand exact-code troubleshooting and close or
+  split error-block gaps.
 - J027-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide

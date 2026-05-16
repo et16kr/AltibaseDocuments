@@ -234,6 +234,38 @@ recording or remediating gaps.
 - Required remediation shape: Error item block with code, symbol, message, cause,
   action, affected versions, related property/view/check SQL, and missing-log or
   missing-object-definition prompt.
+- J022 update: `GPTs/reports/error_reference_inventory.md` now provides the
+  source-backed error-family inventory, severity-count baseline, exact-code/grouped
+  response schema, and J023-J026 error expansion queue. This gap remains `Open` for
+  item-level exact-code expansion, but later jobs should use the J022 inventory rather
+  than rediscovering family boundaries.
+
+### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
+
+- Status: `Open`
+- Source family and version scope: `error_message_reference`; Altibase 7.1, Altibase
+  7.3, and Altibase 8.1 verified source, with English extraction-aid drift.
+- Missing item or behavior: The 7.1 Korean Error Message Reference lists `SD Error
+  Code` / `sdERR_*` entries. The checked 7.3 and Altibase 8.1 verified Korean Error
+  Message Reference files do not list an `SD Error Code` chapter, while the checked
+  8.1 English extraction aid does list `SD Error Code` entries. The attachment must
+  not claim verified 7.3 or 8.1 `sdERR_*` coverage without exact installed-version
+  evidence.
+- Affected attachments: `07_error_messages_troubleshooting.md`; later sharding/tool
+  coverage may also affect `09_replication_ha_cdc.md`, `16_dblink_external_connectors.md`,
+  and `19_spatial_nifi_tableau_misc.md` if a later job accepts sharding-specific
+  source scope.
+- Evidence: `GPTs/reports/error_reference_inventory.md`;
+  `Manuals/Altibase_7.1/kor/Error Message Reference.md`;
+  `Manuals/Altibase_7.3/kor/Error Message Reference.md`;
+  `Manuals/Altibase_trunk/kor/Error Message Reference.md`;
+  `Manuals/Altibase_trunk/eng/Error Message Reference.md`.
+- Required remediation shape: Until a later source-backed sharding job resolves the
+  drift, preserve the customer-supplied exact `sdERR_*` or `0x...` code, ask for the
+  exact product version, patch level, full error line, and installed manual/runtime
+  evidence, and avoid broad 7.3 or 8.1 `sdERR_*` claims. If later accepted sharding
+  sources are added, create exact-code maps with version scope, cause/action, and
+  metadata/topology checks.
 
 ### GAP-J002-009: Monitoring API and SNMP behavior was source-reviewed, not live-tested
 

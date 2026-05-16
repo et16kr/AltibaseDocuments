@@ -451,6 +451,35 @@ during J021. `GAP-J002-006` remains open only for exhaustive per-view,
 patch-sensitive column proof beyond the J021 slice, and `GAP-J002-009` remains open
 for live Monitoring API/SNMP validation against target environments.
 
+## J022 Error Reference Inventory Addendum
+
+J022 uses the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Error Message Reference manuals remain
+authoritative for error-family inventory, exact code, decimal code, symbol, severity
+heading, message, cause, and action; matching English manuals were used only as
+extraction aids when consistent.
+
+J022 adds `GPTs/reports/error_reference_inventory.md` as the source-backed error-family
+inventory and troubleshooting response-schema handoff for J023-J026. It updates
+`GPTs/attachments/07_error_messages_troubleshooting.md` with a compact customer-facing
+inventory baseline and tightens the `sdERR_*` sharding version caution. The attachment
+boundary remains unchanged.
+
+Scoped source paths checked for J022:
+
+- `Manuals/Altibase_7.1/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.3/kor/Error Message Reference.md`
+- `Manuals/Altibase_trunk/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.1/eng/Error Message Reference.md`
+- `Manuals/Altibase_7.3/eng/Error Message Reference.md`
+- `Manuals/Altibase_trunk/eng/Error Message Reference.md`
+
+J022 records `GAP-J022-001` for source drift around `SD Error Code`: it is present in
+the 7.1 Korean source and the checked 8.1 English extraction aid, but absent from the
+checked 7.3 and Altibase 8.1 verified Korean Error Message Reference files. Later
+answers must require exact installed-version evidence before making definitive 7.3 or
+8.1 `sdERR_*` claims.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

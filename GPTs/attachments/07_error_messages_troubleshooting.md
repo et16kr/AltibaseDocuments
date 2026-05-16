@@ -20,6 +20,26 @@
 - 7.3: Altibase 7.3 Error Message Reference.
 - 8.1: Altibase 8.1 verified source Error Message Reference.
 
+## Error Reference Inventory Baseline
+
+The selected Error Message References are organized by module chapters. Use the module
+family to choose a diagnostic lane, but do not infer cause, action, `SQLSTATE`, exact
+version support, or severity from the prefix alone. The exact error entry and the
+customer's runtime context decide the answer.
+
+Inventory summary:
+
+- 7.1 Error Message Reference: `2927` exact `0x...` entries across `ID`, `SM`, `MT`, `RP`, `QP`, `SD`, `ST`, `MM`, `ODBC`, `APRE`, `Utilities`, `CM`, `Database Link`, and `Log Analyzer` chapters. The Regular Expression chapter explains PCRE2 error text and routes exact-code handling back to `MT`.
+- 7.3 Error Message Reference: `2899` exact `0x...` entries across `ID`, `SM`, `MT`, `RP`, `QP`, `ST`, `MM`, `ODBC`, `APRE`, `Utilities`, `CM`, `Database Link`, and `Log Analyzer` chapters. `SD Error Code` is not listed in the checked 7.3 Error Message Reference.
+- Altibase 8.1 verified source: `2916` exact `0x...` entries across `ID`, `SM`, `MT`, `RP`, `QP`, `ST`, `MM`, `ODBC`, `APRE`, `Utilities`, `CM`, `Database Link`, and `Log Analyzer` chapters. `SD Error Code` is not listed in the checked Altibase 8.1 verified source.
+
+Expanded block routing:
+
+- Storage, backup, recovery, datafile, log, lock, and tablespace errors: use storage/recovery error blocks when present.
+- SQL, DDL, data type, constraint, JSON, Temporary LOB, LOB, and regular expression errors: use SQL/data-type error blocks when present.
+- Client, network, SSL/TLS, replication, utility, DB Link, Log Analyzer, APRE, and CLI/ODBC errors: use client/tool/replication error blocks when present.
+- Unresolved exact-code gaps and source-drift cases: preserve the supplied code and ask for exact version and evidence before a definitive answer.
+
 ## Response Rules
 
 - Answer explanations in the user's language.
@@ -96,6 +116,13 @@ Rules:
 | CM Error Code | `cmERR_*` | Communication module, SSL/TLS context, certificates, socket I/O |
 | Database Link Error Code | `dkERR_*` | DB Link, AltiLinker, remote transaction, `dblink.conf` |
 | Log Analyzer Error Code | `ulaERR_*` | Log Analyzer network and CDC-related processing |
+
+Version note: `SD Error Code` / `sdERR_*` is confirmed in the 7.1 Error Message
+Reference, but is not listed in the checked 7.3 or Altibase 8.1 verified source. If a
+customer reports an `sdERR_*` or sharding error on 7.3 or 8.1, ask for the exact
+product version, patch level, full error line, and installed manual/runtime evidence
+before making a definitive version claim. Sharding-related errors can also appear
+under other modules, so use the exact code first.
 
 Severity handling:
 
@@ -1525,7 +1552,7 @@ SELECT product_version, meta_version
 FROM V$VERSION;
 ```
 
-Version Cautions: Confirm the deployed sharding feature set for the exact Altibase version before generating shard DDL.
+Version Cautions: `sdERR_*` coverage is confirmed in the 7.1 Error Message Reference. For 7.3 or 8.1 sharding errors, ask for the exact product version, patch level, full error line, and installed manual/runtime evidence before giving a definitive `sdERR_*` version claim. Sharding-related errors can also appear under other modules, so use the exact code first.
 
 Related Document: SQL DDL Generation; Data Dictionary and Performance Views.
 
@@ -1612,7 +1639,7 @@ Use this order:
 
 - 7.1: Use 7.1 Error Message Reference wording when the customer reports a 7.1 system. Do not assume 8.1 JSON behavior.
 - 7.3: Use 7.3 Error Message Reference wording when the customer reports a 7.3 system. SSL, regular expression, replication, and LOB errors should be checked against 7.3 wording.
-- 8.1: Use Altibase 8.1 verified source for JSON, Temporary LOB, replication SSL, sharding, and current SSL/TLS behavior. JSON-specific error blocks such as `mtERR_ABORT_JSON_WITHOUT_TEMPLOB` and `qpERR_ABORT_JSON_*` are 8.1-sensitive.
+- 8.1: Use Altibase 8.1 verified source for JSON, Temporary LOB, replication SSL, and current SSL/TLS behavior. JSON-specific error blocks such as `mtERR_ABORT_JSON_WITHOUT_TEMPLOB` and `qpERR_ABORT_JSON_*` are 8.1-sensitive. Do not treat `sdERR_*` as verified 8.1 coverage from this attachment alone; ask for exact installed-version evidence.
 
 ## Attachment Cross-References
 
@@ -1626,3 +1653,4 @@ Use this order:
 ## Residual Scope
 
 - Add future error blocks only after source-backed review, and keep the standardized error format above.
+- The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here.
