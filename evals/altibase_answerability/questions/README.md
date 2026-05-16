@@ -9,7 +9,7 @@ Use `../source_taxonomy.json` and `../SOURCE_COVERAGE_MAP.md` for the durable ma
 from domains to selected source families, target counts, user-level mix, version-scope
 mix, answer type mix, retrieval risk, and exclusion notes.
 
-Suggested future files:
+Domain files:
 
 - `properties.jsonl`
 - `sql_ddl_dml_datatypes.jsonl`
