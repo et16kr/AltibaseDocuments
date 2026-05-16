@@ -2,9 +2,9 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 Stored Procedures Manual, External Procedures Manual, and General Reference.
-- 7.3: Based on Altibase 7.3 Stored Procedures Manual, External Procedures Manual, General Reference, and release-note coverage for VARRAY.
-- 8.1: Based on Altibase 8.1 verified source Stored Procedures Manual, External Procedures Manual, General Reference, and release-note coverage for Temporary LOB.
+- 7.1: Based on Altibase 7.1 Stored Procedures Manual, External Procedures Manual, SQL Reference, and General Reference.
+- 7.3: Based on Altibase 7.3 Stored Procedures Manual, External Procedures Manual, SQL Reference, General Reference, and release-note coverage for VARRAY.
+- 8.1: Based on Altibase 8.1 verified source Stored Procedures Manual, External Procedures Manual, SQL Reference, General Reference, and release-note coverage for Temporary LOB.
 
 ## Questions This File Can Answer
 
@@ -12,14 +12,16 @@
 - Which Oracle PL/SQL constructs are similar, and where must code be changed?
 - How are `%TYPE`, `%ROWTYPE`, `RECORD`, `ASSOCIATIVE ARRAY`, `VARRAY`, `REF CURSOR`, and `TYPESET` used?
 - How are cursors, dynamic SQL, exceptions, pragmas, and package initialization handled?
+- How are DML triggers written, enabled, disabled, compiled, and verified?
 - How should C/C++ external procedures and external functions be registered and called?
+- How should external libraries be deployed, validated, and troubleshot?
 - How do 8.1 Temporary LOB rules affect PSM variables and collections?
 
 ## Source Documents
 
-- 7.1: Altibase 7.1 Stored Procedures Manual; External Procedures Manual; General Reference.
-- 7.3: Altibase 7.3 Stored Procedures Manual; External Procedures Manual; General Reference; Altibase 7.3 Release Notes for VARRAY.
-- 8.1: Altibase 8.1 verified source Stored Procedures Manual; External Procedures Manual; General Reference; Altibase 8.1 Release Notes.
+- 7.1: Altibase 7.1 Stored Procedures Manual; External Procedures Manual; SQL Reference; General Reference.
+- 7.3: Altibase 7.3 Stored Procedures Manual; External Procedures Manual; SQL Reference; General Reference; Altibase 7.3 Release Notes for VARRAY.
+- 8.1: Altibase 8.1 verified source Stored Procedures Manual; External Procedures Manual; SQL Reference; General Reference; Altibase 8.1 Release Notes.
 
 ## Core Guidance
 
@@ -27,6 +29,7 @@
 - Treat Altibase PSM as PL/SQL-like, not fully Oracle PL/SQL compatible. Confirm syntax, data types, package availability, and side effects.
 - If no version is specified, use the 8.1 baseline and call out older-version checks for `IF EXISTS`, `IF NOT EXISTS`, VARRAY, Temporary LOB, and PSM case-sensitivity behavior.
 - For broad 7.1 and 7.3 compatibility, avoid `IF EXISTS` and `IF NOT EXISTS` in PSM DDL unless the target version is 8.1 verified source.
+- For trigger DDL generation, use this file for PSM body rules and `03_sql_ddl_generation.md` for surrounding schema-object DDL context.
 - Do not generate external procedures unless the user accepts native code deployment into `$ALTIBASE_HOME/lib` and the operational risk of the selected external procedure mode.
 - Prefer examples that compile in iSQL: end PSM object creation with `END;` and then `/` on the next line.
 
@@ -36,6 +39,7 @@
 | --- | --- | --- | --- |
 | Core PSM | Procedures, functions, anonymous blocks, cursors, exceptions, packages, typesets, dynamic SQL, and external procedures are covered. Anonymous block support is documented from 7.1.0.2.3. | Same core PSM model. | Same core model plus verified 8.1 property and Temporary LOB guidance. |
 | Idempotent DDL | Do not assume `IF EXISTS` or `IF NOT EXISTS` for PSM objects. | Do not assume `IF EXISTS` or `IF NOT EXISTS` for PSM objects. | PSM object DDL includes `IF NOT EXISTS` for `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE TYPESET`, `CREATE PACKAGE`, and `CREATE PACKAGE BODY`; `IF EXISTS` for related `DROP` statements where documented. External library DDL includes `CREATE LIBRARY IF NOT EXISTS` and `DROP LIBRARY IF EXISTS`. |
+| Trigger DDL | DML triggers, `ALTER TRIGGER`, and `DROP TRIGGER` are supported; do not assume trigger `IF EXISTS` or `IF NOT EXISTS`. | Same baseline trigger model as 7.1; do not assume trigger `IF EXISTS` or `IF NOT EXISTS`. | `CREATE TRIGGER IF NOT EXISTS` and `DROP TRIGGER IF EXISTS` are Altibase 8.1 verified source syntax. |
 | VARRAY | Not part of the 7.1 baseline. | Release notes add PSM `VARRAY` as a user-defined type and `VARRAY_MEMORY_MAXIMUM`. | Treat VARRAY as supported in the Altibase 8.1 verified source; use the 7.3+ VARRAY rules below. |
 | External procedure mode | `call_spec` supports `LANGUAGE [EXTERNAL | INTERNAL] C`; `EXTERNAL` or omission uses external mode, and `INTERNAL` uses internal mode. | Same explicit mode guidance as 7.1. | Same explicit mode guidance as 7.1. |
 | Temporary LOB | Not part of the 7.1 baseline. | Not part of the 7.3 baseline. | Temporary LOB is supported. PSM LOB variables and LOB collections can create transaction or session Temporary LOBs. |
@@ -165,6 +169,26 @@ Generation notes:
 - Positional parameters can be mixed with named parameters only when all positional parameters come first.
 - `ALTER ... COMPILE` explicitly recompiles invalid objects after referenced objects change.
 - Dropping a referenced procedure or function can succeed, but later callers fail when they attempt to execute missing code.
+
+Validation SQL:
+
+```sql
+SELECT u.user_name,
+       p.proc_name,
+       p.object_type,
+       p.status,
+       p.authid,
+       p.para_num,
+       p.created,
+       p.last_ddl_time
+FROM SYSTEM_.SYS_PROCEDURES_ p,
+     SYSTEM_.SYS_USERS_ u
+WHERE p.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND p.proc_name = '<PROC_NAME>';
+```
+
+`OBJECT_TYPE` values include `0` procedure, `1` function, and `3` type set. `STATUS` values are `0` valid and `1` invalid. Use `SYS_PROC_PARAS_`, `SYS_PROC_PARSE_`, and `SYS_PROC_RELATED_` when the answer needs parameter, source-text, or dependency detail.
 
 ### Anonymous Block
 
@@ -402,6 +426,9 @@ Usage notes:
 - In `BULK COLLECT`, VARRAY targets can be populated without manual initialization and extension.
 - Middle elements cannot be removed individually. Use `TRIM` from the end or `DELETE()` to remove all elements.
 - Memory per VARRAY variable is limited by `VARRAY_MEMORY_MAXIMUM`.
+- Values of user-defined `RECORD`, `ASSOCIATIVE ARRAY`, and `VARRAY` types can be passed between stored procedures and functions, but source manuals do not present them as ordinary client-returnable values. Use `REF CURSOR` for result sets returned to ODBC or JDBC clients.
+- Assignment compatibility is type-name based for VARRAY values. Two VARRAY types with identical structure are not interchangeable unless they are the same named type.
+- Use `NOCOPY` deliberately for supported associative-array or VARRAY subarray access patterns; do not add it to scalar parameters as a generic performance hint.
 
 Methods:
 
@@ -411,6 +438,14 @@ Methods:
 - `EXTEND()`, `EXTEND(n)`, and `EXTEND(m, n)` extend by one, by `n`, or by copying the `n`th element while extending by `m`.
 - `TRIM()` and `TRIM(n)` remove elements from the end.
 - `EXISTS(n)`, `FIRST()`, `LAST()`, `NEXT(n)`, and `PRIOR(n)` inspect element presence and position.
+
+VARRAY sizing check:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'VARRAY_MEMORY_MAXIMUM';
+```
 
 ### Type Item: `TYPESET`
 
@@ -594,6 +629,102 @@ END;
 /
 ```
 
+## Trigger PSM Bodies
+
+Trigger DDL is schema-object SQL, but the `psm_body` uses Altibase PSM block rules. Use this section with `03_sql_ddl_generation.md` when generating complete trigger statements.
+
+```text
+create_trigger ::=
+  CREATE [OR REPLACE] TRIGGER [IF NOT EXISTS] [user_name.]trigger_name
+  {simple_dml_trigger | instead_of_dml_trigger};
+
+simple_dml_trigger ::=
+  {BEFORE | AFTER} trigger_event ON [user_name.]table_name
+  [referencing_clause]
+  trigger_action;
+
+trigger_action ::=
+  FOR EACH ROW [{ENABLE | DISABLE}] [WHEN (search_condition)] psm_body
+  | [FOR EACH STATEMENT] [{ENABLE | DISABLE}] psm_body;
+
+instead_of_dml_trigger ::=
+  INSTEAD OF {INSERT | DELETE | UPDATE} ON [user_name.]view_name
+  [referencing_clause]
+  FOR EACH ROW
+  [{ENABLE | DISABLE}]
+  psm_body;
+
+trigger_event ::=
+  INSERT | DELETE | UPDATE [OF column_name [, ...]]
+  [OR trigger_event ...];
+
+referencing_clause ::=
+  REFERENCING {OLD [ROW] [AS] alias_name | NEW [ROW] [AS] alias_name}
+              [, {OLD [ROW] [AS] alias_name | NEW [ROW] [AS] alias_name} ...];
+
+alter_trigger ::=
+  ALTER TRIGGER [user_name.]trigger_name {ENABLE | DISABLE | COMPILE};
+
+drop_trigger ::=
+  DROP TRIGGER [IF EXISTS] [user_name.]trigger_name;
+```
+
+Version and DDL notes:
+
+- `IF NOT EXISTS` and `IF EXISTS` in trigger DDL are Altibase 8.1 verified source syntax. Omit them for 7.1 and 7.3 unless exact target-version documentation proves support.
+- Ordinary table triggers can be `BEFORE` or `AFTER`. `INSTEAD OF` triggers are for views.
+- `FOR EACH STATEMENT` is the default trigger granularity when the source statement omits the row/statement choice.
+- `REFERENCING` and `WHEN` require `FOR EACH ROW`.
+- `ENABLE` is the default trigger state; `DISABLE` prevents firing until `ALTER TRIGGER ... ENABLE`.
+
+Trigger body restrictions:
+
+- The trigger `psm_body` follows normal PSM block syntax, including local declarations, control flow, cursors, and exception handlers where allowed.
+- Do not use `COMMIT`, `ROLLBACK`, session-control statements such as `CONNECT`, schema DDL such as `CREATE TABLE`, stored procedure calls, or recursive trigger-event operations inside a trigger body.
+- Replication receiver-applied table changes do not fire triggers. Do not use triggers as a receiver-side replication business-rule mechanism.
+- Multiple triggers on one table have no guaranteed firing order. If order matters, consolidate the logic into one trigger.
+- If a trigger fails, the DML statement that fired it also fails.
+- When the trigger source table is dropped, its triggers are dropped. If a table referenced inside the trigger body changes or disappears, the trigger can remain but the firing DML can fail.
+- The source permits creating `BEFORE INSERT ... FOR EACH ROW` or `BEFORE UPDATE ... FOR EACH ROW` triggers on tables with LOB columns, but the DML that fires those triggers can error. Avoid that design unless the customer has target-version proof and a rollback plan.
+- `OLD` row aliases are `NULL` for `INSERT` events. `NEW` row aliases are `NULL` for `DELETE` events; changing `NEW` values in a delete trigger does not affect the delete. In `BEFORE` row triggers, `NEW` values can be changed by the trigger body.
+
+Trigger validation SQL:
+
+```sql
+SELECT tr.user_name,
+       t.table_name,
+       tr.trigger_name,
+       tr.is_enable,
+       tr.event_time,
+       tr.event_type,
+       tr.granularity,
+       tr.update_column_cnt,
+       tr.created,
+       tr.last_ddl_time
+FROM SYSTEM_.SYS_TRIGGERS_ tr,
+     SYSTEM_.SYS_TABLES_ t
+WHERE tr.table_id = t.table_id
+  AND tr.user_name = '<OWNER_NAME>'
+  AND t.table_name = '<TABLE_NAME>'
+ORDER BY tr.trigger_name;
+```
+
+`IS_ENABLE` values are `0` disabled and `1` enabled. `EVENT_TIME` values include `1` before, `2` after, and `3` instead of. `EVENT_TYPE` values include `1` insert, `2` delete, and `4` update. `GRANULARITY` values include `1` for each row and `2` for each statement. Use `SYS_TRIGGER_STRINGS_`, `SYS_TRIGGER_DML_TABLES_`, and `SYS_TRIGGER_UPDATE_COLUMNS_` when the answer needs source fragments, referenced DML tables, or `UPDATE OF` columns.
+
+Example:
+
+```sql
+CREATE OR REPLACE TRIGGER default_score
+BEFORE INSERT ON scores
+REFERENCING NEW ROW new_row
+FOR EACH ROW
+WHEN (new_row.score IS NULL)
+BEGIN
+  new_row.score := 0;
+END;
+/
+```
+
 ## Packages
 
 ```text
@@ -624,11 +755,12 @@ Generation notes:
 - For 7.1 and 7.3, do not generate package `IF EXISTS`; use `DROP PACKAGE [BODY] [user_name.]package_name`. For 8.1, when dropping a package body idempotently, place `BODY` before `IF EXISTS`, for example `DROP PACKAGE BODY IF EXISTS pkg1`.
 - The specification is the public API: types, variables, constants, cursors, exceptions, procedures, and functions declared there can be referenced from outside.
 - The body defines package cursors and subprograms and can include private declarations.
-- Package body initialization runs once per session on first package use.
+- Package body initialization runs once per session on first package use. Package state is loaded per session and remains until the session ends.
 - Package subprograms can be overloaded by parameter signature.
 - The package body cannot be created before the package specification.
 - Every subprogram declared in the package specification must be defined in the package body.
 - A cursor defined inside a package remains open while subprograms execute and is implicitly closed when subprogram execution completes.
+- When overloaded calls could match more than one subprogram, cast values explicitly with functions such as `CAST` or `TO_DATE` so Altibase chooses the intended parameter signature.
 
 Example:
 
@@ -654,6 +786,65 @@ CREATE OR REPLACE PACKAGE BODY emp_api AS
 END emp_api;
 /
 ```
+
+Package validation SQL:
+
+```sql
+SELECT u.user_name,
+       p.package_name,
+       p.package_type,
+       p.status,
+       p.authid,
+       p.created,
+       p.last_ddl_time
+FROM SYSTEM_.SYS_PACKAGES_ p,
+     SYSTEM_.SYS_USERS_ u
+WHERE p.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND p.package_name = '<PACKAGE_NAME>'
+ORDER BY p.package_type;
+```
+
+`PACKAGE_TYPE` values are `6` package specification and `7` package body. `AUTHID` values are `0` definer rights and `1` current-user rights. `STATUS` values are `0` valid and `1` invalid.
+
+Package parameter and source checks:
+
+```sql
+SELECT pp.object_name,
+       pp.sub_id,
+       pp.sub_tpye,
+       pp.para_name,
+       pp.para_order,
+       pp.inout_type,
+       pp.data_type,
+       pp.size,
+       pp.precision,
+       pp.scale,
+       pp.default_val
+FROM SYSTEM_.SYS_PACKAGE_PARAS_ pp,
+     SYSTEM_.SYS_PACKAGES_ pkg,
+     SYSTEM_.SYS_USERS_ u
+WHERE pp.user_id = pkg.user_id
+  AND pp.package_oid = pkg.package_oid
+  AND pkg.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND pkg.package_name = '<PACKAGE_NAME>'
+ORDER BY pp.object_name, pp.sub_id, pp.para_order;
+
+SELECT ps.seq_no,
+       ps.parse
+FROM SYSTEM_.SYS_PACKAGE_PARSE_ ps,
+     SYSTEM_.SYS_PACKAGES_ pkg,
+     SYSTEM_.SYS_USERS_ u
+WHERE ps.user_id = pkg.user_id
+  AND ps.package_oid = pkg.package_oid
+  AND pkg.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND pkg.package_name = '<PACKAGE_NAME>'
+ORDER BY ps.package_type, ps.seq_no;
+```
+
+The catalog column is spelled `SUB_TPYE` in the selected General Reference. Use that literal name when querying `SYSTEM_.SYS_PACKAGE_PARAS_`. Concatenate `PARSE` values in `SEQ_NO` order when reconstructing package source text.
 
 ## Built-In PSM Facilities
 
@@ -786,6 +977,8 @@ Generation notes:
 - `CREATE LIBRARY` can succeed even if the file does not exist. File existence is checked when the external procedure executes; the object can become `INVALID`.
 - `DROP LIBRARY` drops only the database library object. It does not delete the operating-system file.
 - `ALTER LIBRARY ... COMPILE` is reserved for future language support and has no server-side effect for C/C++.
+- `IF NOT EXISTS` and `IF EXISTS` for external library DDL are Altibase 8.1 verified source syntax. Omit them for 7.1 and 7.3 unless the customer provides exact target-version source proof.
+- A library object can be dropped even when an external procedure contained in that library is running; the operating-system library file remains in place.
 
 ### External Procedure and Function
 
@@ -912,11 +1105,40 @@ Related properties for external mode agent operation:
 
 These properties do not affect internal mode, because internal mode does not create an Agent Process.
 
+External procedure diagnostics:
+
+```sql
+SELECT *
+FROM SYSTEM_.SYS_LIBRARIES_
+WHERE library_name = '<LIBRARY_NAME>';
+
+SELECT *
+FROM V$EXTPROC_AGENT;
+
+SELECT *
+FROM V$LIBRARY;
+
+SELECT *
+FROM V$PROCINFO;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'EXTPROC_AGENT_CONNECT_TIMEOUT',
+  'EXTPROC_AGENT_CALL_RETRY_COUNT',
+  'EXTPROC_AGENT_IDLE_TIMEOUT',
+  'EXTPROC_AGENT_SOCKET_FILEPATH'
+);
+```
+
+Use `SYS_LIBRARIES_` to confirm the database library object, `V$EXTPROC_AGENT` for currently created external-mode Agent Processes, `V$LIBRARY` for dynamic libraries loaded directly by the database, and `V$PROCINFO` to confirm external procedure mode. If exact columns differ by patch, query the installed dictionary layout before writing final diagnostic SQL.
+
 ## Oracle PL/SQL Compatibility Notes
 
 ### Usually Similar
 
 - `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE PACKAGE`, and `CREATE PACKAGE BODY`.
+- DML trigger timing concepts such as `BEFORE`, `AFTER`, `INSTEAD OF`, `REFERENCING`, row triggers, and statement triggers.
 - `IN`, `OUT`, and `IN OUT` parameters.
 - `AUTHID CURRENT_USER` and `AUTHID DEFINER`.
 - `%TYPE` and `%ROWTYPE`.
@@ -933,6 +1155,7 @@ These properties do not affect internal mode, because internal mode does not cre
 - `SQLCODE` and `SQLERRM` are used as PSM status values in handlers; do not assume Oracle function signatures.
 - `BOOLEAN` is PSM-only and cannot be used as a SQL column type or SQL-callable function return in a SQL statement.
 - Altibase stored functions called from SQL have DML and transaction-control restrictions.
+- Altibase trigger bodies have strict transaction, session-control, schema-DDL, stored-procedure-call, recursion, LOB table, and replication-receiver boundaries.
 - Oracle packages are not automatically available. Map to Altibase packages such as `DBMS_SQL`, `DBMS_OUTPUT`, `DBMS_STATS`, `UTL_FILE`, `UTL_RAW`, `UTL_SMTP`, and `UTL_TCP`, and verify signatures.
 - Oracle collection code may need conversion to Altibase `ASSOCIATIVE ARRAY`, `VARRAY` in 7.3+, or `TYPESET`.
 - PSM field and label case sensitivity depends on `PSM_CASE_SENSITIVE_MODE`: default `0` in 7.1, default `1` in 7.3 and 8.1.
@@ -1045,6 +1268,7 @@ END;
 - Runtime cursor error: check open/close state and cursor attributes; avoid fetching from closed cursors.
 - Function called from SQL fails: check for DML or transaction control inside the function.
 - Dynamic SQL fails: check `?` placeholder count and `USING` order.
+- Trigger fails: check `IS_ENABLE`, trigger granularity, `REFERENCING` aliases, `WHEN` restrictions, forbidden transaction/session/DDL/procedure calls, LOB table limitations, and referenced table changes.
 - Package call surprises: remember package initialization runs once per session and package state persists in that session.
 - External procedure fails: verify `.so` location under `$ALTIBASE_HOME/lib`, `CREATE LIBRARY`, `entryfunction`, `PARAMETERS` order, `LENGTH` and `MAXLEN`, external mode agent properties, and `V$EXTPROC_AGENT`.
 - 8.1 Temporary LOB memory issue: check `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, and `V$TEMPORARY_LOBS`.
@@ -1058,4 +1282,5 @@ END;
 
 ## Residual Scope
 
-- This attachment covers core PSM generation and external procedure patterns. It is not a complete built-in package or PL/SQL compatibility catalog; use target-version PSM sources when an answer depends on an unlisted built-in, pragma, or external-procedure edge case.
+- This attachment covers core PSM generation, trigger PSM body rules, package patterns, VARRAY behavior, and external procedure patterns. It is not a complete built-in package or PL/SQL compatibility catalog; use target-version PSM sources when an answer depends on an unlisted built-in, pragma, or external-procedure edge case.
+- PSM and external C/C++ snippets in this attachment are source-audited patterns, not live-compiled artifacts. Ask for the target Altibase version, object DDL, compile error, shared-library build flags, and runtime log excerpt before giving a definitive compile or native-code diagnosis.

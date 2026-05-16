@@ -262,7 +262,13 @@ for 8.1 customer-facing labels.
   `18_security_ssl_tls.md`. Source traceability and remaining verification limits are
   recorded in `GPTs/reports/source_inventory.md` and
   `GPTs/reports/gap_register.md`.
-- J034-J039 should use development, tool, connector, migration, and third-party guide
+- J034 expanded the PSM and external procedure source-family slice in
+  `10_psm_stored_external_procedures.md`, including trigger PSM body rules, package
+  validation, VARRAY compatibility and sizing checks, external library version
+  boundaries, external procedure diagnostics, and source-backed residual compile/runtime
+  limits. Source traceability and remaining verification limits are recorded in
+  `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
+- J035-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open
   register item is either closed, split into a later accepted work item, or documented

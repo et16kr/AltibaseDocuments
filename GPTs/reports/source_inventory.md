@@ -983,6 +983,62 @@ connector integration guardrail also remains because this job expanded source-ba
 certificate and port diagnostics, but did not perform live handshakes against customer
 environments.
 
+## J034 PSM Stored And External Procedures Addendum
+
+J034 uses the `stored_external_procedures`, `sql_reference`,
+`general_reference_1_datatypes_properties`, and
+`general_reference_2_dictionary_views` source families for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Stored Procedures Manuals remain
+authoritative for PSM blocks, packages, VARRAY, user-defined types, pragmas, package
+initialization, and built-in package boundaries. Korean External Procedures Manuals
+remain authoritative for external C/C++ library deployment, `entryfunction`, mode
+selection, `PARAMETERS`, type mapping, and external-agent diagnostics. Korean SQL
+Reference manuals remain authoritative for trigger DDL, trigger PSM body restrictions,
+`IF EXISTS` and `IF NOT EXISTS` version boundaries, and LOB/replication trigger
+cautions. Korean General Reference manuals remain authoritative for PSM, package,
+trigger, external library, property, and performance-view validation SQL.
+
+Design note: J034 keeps the 20-file attachment boundary unchanged. PSM object syntax,
+trigger PSM body rules, package usage, VARRAY behavior, and external procedure
+deployment stay in `GPTs/attachments/10_psm_stored_external_procedures.md`. Broader
+schema-object DDL generation remains owned by `GPTs/attachments/03_sql_ddl_generation.md`;
+property catalog details remain owned by `GPTs/attachments/05_data_types_properties.md`;
+dictionary/performance-view detail remains owned by
+`GPTs/attachments/06_data_dictionary_performance_views.md`.
+
+Scoped source paths checked for J034:
+
+- `Manuals/Altibase_7.1/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_7.3/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_trunk/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_7.1/kor/External Procedures Manual.md`
+- `Manuals/Altibase_7.3/kor/External Procedures Manual.md`
+- `Manuals/Altibase_trunk/kor/External Procedures Manual.md`
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
+- `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- `GPTs/attachments/10_psm_stored_external_procedures.md`
+- `GPTs/attachments/03_sql_ddl_generation.md`
+- `GPTs/attachments/05_data_types_properties.md`
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J034 adds no new attachment filename, source family, or Korean/English source-drift
+case. No new item-level manual/source-backed gap was discovered. The existing PSM and
+external procedure compile/runtime verification limit remains because this job expanded
+source-backed BNF, examples, and diagnostics but did not compile PSM objects, build
+C/C++ shared libraries, load `$ALTIBASE_HOME/lib` files, or execute an Altibase server
+test.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
@@ -1256,32 +1312,38 @@ Source purpose: replication, HA, CDC/log analysis, Replication Manager, compatib
 
 ### 10_psm_stored_external_procedures.md
 
-Source purpose: PSM, stored procedures/functions, external procedures, PL/SQL compatibility notes.
+Source purpose: PSM, stored procedures/functions, triggers, external procedures, PL/SQL compatibility notes.
 
 - 7.1:
   - `Manuals/Altibase_7.1/eng/Stored Procedures Manual.md`
   - `Manuals/Altibase_7.1/eng/External Procedures Manual.md`
+  - `Manuals/Altibase_7.1/eng/SQL Reference.md`
   - `Manuals/Altibase_7.1/eng/General Reference-1.Data Types & Altibase Properties.md`
 - 7.3:
   - `Manuals/Altibase_7.3/eng/Stored Procedures Manual.md`
   - `Manuals/Altibase_7.3/eng/External Procedures Manual.md`
+  - `Manuals/Altibase_7.3/eng/SQL Reference.md`
   - `Manuals/Altibase_7.3/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `ReleaseNotes/eng/Altibase_7_3_0_0_1_Release_Notes.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/Stored Procedures Manual.md`
   - `Manuals/Altibase_trunk/eng/External Procedures Manual.md`
+  - `Manuals/Altibase_trunk/eng/SQL Reference.md`
   - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 - Korean source authority/check:
   - `Manuals/Altibase_7.1/kor/Stored Procedures Manual.md`
   - `Manuals/Altibase_7.1/kor/External Procedures Manual.md`
+  - `Manuals/Altibase_7.1/kor/SQL Reference.md`
   - `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
   - `Manuals/Altibase_7.3/kor/Stored Procedures Manual.md`
   - `Manuals/Altibase_7.3/kor/External Procedures Manual.md`
+  - `Manuals/Altibase_7.3/kor/SQL Reference.md`
   - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
   - `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
   - `Manuals/Altibase_trunk/kor/Stored Procedures Manual.md`
   - `Manuals/Altibase_trunk/kor/External Procedures Manual.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
   - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
   - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 

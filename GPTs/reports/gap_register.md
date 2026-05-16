@@ -436,6 +436,14 @@ recording or remediating gaps.
 - Required remediation shape: Add or refine BNF-like syntax and compile/runbook blocks
   from source diagrams. Add live-tested compile/load/run notes only when a test
   environment is available.
+- J034 update: `10_psm_stored_external_procedures.md` now expands the source-backed
+  PSM slice with trigger PSM body syntax and restrictions, package validation SQL,
+  VARRAY compatibility and `VARRAY_MEMORY_MAXIMUM` checks, external library version
+  boundaries, and external procedure diagnostics through `SYS_LIBRARIES_`,
+  `V$EXTPROC_AGENT`, `V$LIBRARY`, `V$PROCINFO`, and related agent properties. This
+  entry remains `Verification-limited` because J034 did not perform live PSM
+  compilation, C/C++ shared-library builds, `$ALTIBASE_HOME/lib` deployment, or
+  external procedure execution.
 
 ### GAP-J002-014: Java compatibility and alternate-server behavior are patch sensitive
 
@@ -698,9 +706,9 @@ recording or remediating gaps.
   `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`;
   `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`.
-- Required remediation shape: J011-J016 have completed their assigned SQL-generation
-  families. J034 and J039 should apply the same notation rules to PSM, external
-  procedure, Spatial, and tool-adjacent SQL, adding compact BNF roots and named clause
+- Required remediation shape: J011-J016 and J034 have completed their assigned
+  SQL-generation families. J039 should apply the same notation rules to Spatial, tool,
+  and integration-adjacent SQL by adding compact BNF roots and named clause
   productions, version scope, prerequisites, examples, validation SQL,
   destructive-operation and implicit-commit cautions, and cross-references. Keep Korean
   source precedence and customer-facing English normalization throughout.
@@ -745,3 +753,10 @@ recording or remediating gaps.
   `IF NOT EXISTS` boundaries, separates ordinary replication, SSL replication, and Log
   Analyzer forms, adds receive-only and offline replication SQL generation guardrails,
   and corrects `ALTER SESSION SET REPLICATION` to `{DEFAULT | NONE}` only.
+- J034 update: The PSM and external procedure specialized SQL family is source-audited
+  and expanded in `GPTs/attachments/10_psm_stored_external_procedures.md`, including
+  PSM object metadata checks, trigger PSM body grammar and restrictions, package
+  validation SQL, VARRAY sizing checks, external library DDL version boundaries,
+  external procedure call-spec rules, and external procedure diagnostics. The shared
+  syntax queue remains open for J039 Spatial and tool/integration-adjacent SQL plus any
+  later exact-version edge cases outside the selected J034 source slice.
