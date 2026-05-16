@@ -16,8 +16,29 @@ They are not intended to be only a high-frequency FAQ or summary set.
 
 ## Execution Management
 
-The initial attachment build jobs are complete. Current pre-upload verification is
-managed by the staged review/remediation cycle.
+The initial attachment build jobs are complete, and the staged review/remediation cycle
+has passed through all defined review stages. The current encyclopedia rebuild is managed
+by `.codex-jobs/altibase-gpt-encyclopedia-rebuild/`.
+
+Current rebuild workflow files:
+
+- Shared rebuild requirements: `.codex-jobs/altibase-gpt-encyclopedia-rebuild/requirements.md`
+- Job plan: `.codex-jobs/altibase-gpt-encyclopedia-rebuild/jobs.md`
+- Machine-readable job status: `.codex-jobs/altibase-gpt-encyclopedia-rebuild/jobs.tsv`
+- Job prompts: `.codex-jobs/altibase-gpt-encyclopedia-rebuild/prompts/`
+- User-run script: `.codex-jobs/altibase-gpt-encyclopedia-rebuild/run-all.sh`
+
+Rebuild execution rules:
+
+- The shared requirements file is prepended to every job prompt at runtime.
+- J001-J003 define source scope, coverage tracking, and extraction schemas.
+- J004-J040 expand properties, SQL, dictionary views, errors, operations, replication,
+  tools, connectors, migration, retrieval, and final readiness.
+- Each successful job must run scope-appropriate validation, review its final diff,
+  create a focused commit, and leave project files clean.
+
+The completed review/remediation cycle remains available as source-quality context and
+as an audit trail for the current rebuild.
 
 Current review-cycle files:
 

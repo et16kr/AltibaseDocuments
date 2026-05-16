@@ -32,7 +32,7 @@ one oversized remediation pass. The partitioning is:
 
 | ID | Status | Title | Goal |
 | --- | --- | --- | --- |
-| `J001` | `ToDo` | Requirements and source scope | Finalize encyclopedia-grade requirements, source corpus scope, and success criteria. |
+| `J001` | `Done` | Requirements and source scope | Finalize encyclopedia-grade requirements, source corpus scope, and success criteria. |
 | `J002` | `ToDo` | Coverage matrix and gap register | Map selected source families to the 20 attachments and record item-level gaps. |
 | `J003` | `ToDo` | Catalog schema and extraction rules | Define reusable item block schemas and Korean-first extraction rules for later jobs. |
 | `J004` | `ToDo` | Property inventory baseline | Inventory property names and version availability from General Reference 1 sources. |

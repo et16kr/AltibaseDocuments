@@ -8,6 +8,39 @@ This report inventories source availability for the 20 GPT attachment files. Kor
 
 For Altibase 8.1, the internally verified source set is the current 8.1 verified manual tree plus the 8.1 release notes. Customer-facing attachments must label this as "Altibase 8.1 verified source" or equivalent wording, not by the internal directory name.
 
+## J001 Rebuild Source Scope Addendum
+
+J001 confirms that this source inventory remains the support report for source roots and
+attachment-to-source mapping until the J002 coverage matrix and gap register are created.
+The current job does not change the 20 attachment filenames and does not require direct
+customer-facing attachment edits; it records the source-backed reason here because J001
+only finalizes requirements, source corpus scope, and success criteria.
+
+The scoped source corpus for the encyclopedia rebuild is:
+
+- Altibase 7.1 manuals: Korean manuals are authoritative; English manuals are extraction
+  aids when consistent.
+- Altibase 7.3 manuals: Korean manuals are authoritative; English manuals are extraction
+  aids when consistent.
+- Altibase 8.1 verified source manuals: Korean manuals are authoritative for detailed
+  manual behavior, checked against the 8.1 release notes before customer-facing use.
+- Release notes: Korean release notes are authoritative when release-note content differs;
+  English release notes are extraction aids.
+- Patch notes: supported 7.1 and 7.3 patch notes are allowed for patch-level behavior;
+  older 6.x patch notes are outside default answer scope unless a later job records a
+  source-backed migration or historical reason.
+- Tool manuals, technical documents, and third-party guides: Korean sources are
+  authoritative when paired, Korean-only, or more specific; English sources are extraction
+  aids.
+- Supporting reports under `GPTs/reports/`: internal traceability and validation sources
+  only, not customer-facing source labels.
+
+No new manual/source-backed coverage gap was discovered during J001. Known prior source
+detail risks, such as Korean-source-only 8.1 JSON, Temporary LOB, replication SSL,
+JSON-related errors, and `SQLFreeLob2` detail, remain governed by the existing
+English/Korean parity report and must be tracked in the J002 coverage matrix or later
+job-specific gap register entries.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

@@ -1,5 +1,5 @@
 id	status	kind	title	goal
-J001	ToDo	docs	Requirements and source scope	Finalize encyclopedia-grade requirements, source corpus scope, and success criteria.
+J001	Done	docs	Requirements and source scope	Finalize encyclopedia-grade requirements, source corpus scope, and success criteria.
 J002	ToDo	docs	Coverage matrix and gap register	Map selected source families to the 20 attachments and record item-level gaps.
 J003	ToDo	docs	Catalog schema and extraction rules	Define reusable item block schemas and Korean-first extraction rules for later jobs.
 J004	ToDo	docs	Property inventory baseline	Inventory property names and version availability from General Reference 1 sources.
