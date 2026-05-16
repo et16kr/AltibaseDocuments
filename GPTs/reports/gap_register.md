@@ -334,3 +334,31 @@ recording or remediating gaps.
   English, preserve literal tokens, and never expose internal source labels in
   customer-facing attachments. Reopen or split this entry if later jobs find missing
   item-level detail inside these 8.1 feature areas.
+
+### GAP-J004-001: Full per-property detail blocks remain split across property jobs
+
+- Status: `Open`
+- Source family and version scope: `general_reference_1_datatypes_properties`; Altibase
+  7.1, Altibase 7.3, and Altibase 8.1 verified source.
+- Missing item or behavior: J004 inventories `484` source-backed property names and
+  version availability, but `05_data_types_properties.md` still contains complete
+  decomposed blocks only for high-retrieval properties. Most inventoried names still
+  need source-backed defaults, ranges, units, dynamic-change support, change method,
+  related views, cautions, and examples where the manuals provide them.
+- Affected attachments: `05_data_types_properties.md`, with cross-references to
+  `03_sql_ddl_generation.md`, `06_data_dictionary_performance_views.md`,
+  `08_performance_tuning_monitoring.md`, `09_replication_ha_cdc.md`, and
+  `18_security_ssl_tls.md` when a property affects SQL generation, diagnostics,
+  tuning, replication, or security.
+- Evidence: `GPTs/reports/property_inventory.md`;
+  `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`;
+  `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`;
+  `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`.
+- Required remediation shape: Use the J003 property block schema for each later
+  expansion: name, version scope, meaning, default, range or values, dynamic-change
+  support, change method, `V$PROPERTY` check SQL, related views/properties, cautions,
+  and exact-version or environment prompts where source material is incomplete. J005
+  should start with initialization/storage properties, J006 with LOB/JSON/temporary
+  object properties, J007 with performance/optimizer properties, J008 with session,
+  network, security, and replication properties, and J009 with catalog QA and remaining
+  property gaps.

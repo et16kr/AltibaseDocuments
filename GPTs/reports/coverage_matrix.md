@@ -24,6 +24,8 @@ Use this report together with:
   remediation queue.
 - `GPTs/reports/catalog_schema_extraction_rules.md`: reusable item block schemas and
   Korean-first extraction rules for later jobs.
+- `GPTs/reports/property_inventory.md`: post-J004 General Reference 1 property-name
+  and version-availability baseline for J005-J009 property expansion.
 - `.codex-jobs/altibase-gpt-encyclopedia-rebuild/requirements.md`: rebuild contract,
   source policy, and success criteria.
 
@@ -117,8 +119,11 @@ for 8.1 customer-facing labels.
 - J003 defines reusable item block schemas and extraction rules in
   `GPTs/reports/catalog_schema_extraction_rules.md`; later jobs should apply those
   rules to the source families and coverage shapes in this matrix.
-- J004-J009 should use `general_reference_1_datatypes_properties` and close or split
-  property/data type gaps from `GAP-J002-001`, `GAP-J002-004`, and `GAP-J002-005`.
+- J004 created `GPTs/reports/property_inventory.md` and added a compact property-name
+  availability index to `05_data_types_properties.md`; J005-J009 should use that
+  baseline with `general_reference_1_datatypes_properties` and close or split
+  property/data type gaps from `GAP-J002-001`, `GAP-J002-004`, `GAP-J002-005`, and
+  `GAP-J004-001`.
 - J010-J016 should use `sql_reference`, `administrator_operations`, `migration_oracle`,
   and `spatial_nifi_tableau` to convert syntax diagrams and SQL families into compact
   BNF-like item blocks.

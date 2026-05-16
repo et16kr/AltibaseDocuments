@@ -78,6 +78,21 @@ for this job is a shared extraction and item-block structure for later item-leve
 No new manual/source-backed coverage gap was discovered during J003. Existing post-J002
 gaps remain tracked in `GPTs/reports/gap_register.md`.
 
+## J004 Property Inventory Addendum
+
+J004 creates `GPTs/reports/property_inventory.md` as the canonical property-name and
+version-availability baseline for the `general_reference_1_datatypes_properties` source
+family. The inventory is generated from Korean General Reference 1 detailed property
+headings for Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source, with the
+matching English manuals used only as extraction aids.
+
+J004 updates `GPTs/attachments/05_data_types_properties.md` with a compact
+customer-facing property-name availability index. The index records source-backed name
+presence by version family, but it does not claim complete per-property defaults,
+ranges, units, dynamic-change support, or restart behavior. Those details remain split
+work for J005-J009 and are tracked in `GPTs/reports/gap_register.md` as
+`GAP-J004-001`.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
