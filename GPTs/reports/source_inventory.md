@@ -1418,6 +1418,18 @@ Source purpose: C client interfaces, CLI, ODBC, C Interface, Precompiler, LOB AP
   - `Manuals/Altibase_trunk/kor/Altibase C Interface Manual.md`
   - `Manuals/Altibase_trunk/kor/Precompiler User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- J036 design note: `12_c_cli_odbc_precompiler.md` remains the C-facing client API
+  packaging file; no attachment boundary or file-name change was required. J036
+  expanded source-backed item blocks from Korean CLI, ODBC, Altibase C Interface, and
+  Precompiler manuals with CLI LOB API signature shapes, JSON LOB cleanup
+  compile-readiness cautions, CLI/ODBC diagnostic evidence collection, exact-code LOB
+  diagnostic routing, ACI native-error versus SQLSTATE rules, and APRE
+  `GET DIAGNOSTICS` syntax. The selected 8.1 release notes name `SQLEmptyLob()` and
+  `SQLGetLobLength2()`, but the checked selected sources still do not provide complete
+  callable signatures for those two functions, so compile-ready examples remain
+  gated on exact installed headers or a later source-backed manual page. J036 did not
+  perform live ODBC/CLI, ACI, APRE, TLS, or LOB execution tests.
 
 ### 13_isql_iloader_basic_tools.md
 

@@ -275,7 +275,13 @@ for 8.1 customer-facing labels.
   examples, Altibase-specific explain-plan APIs, and Adapter platform/version
   boundaries. Source traceability and remaining live-execution limits are recorded in
   `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
-- J036-J039 should use development, tool, connector, migration, and third-party guide
+- J036 expanded the C/CLI/ODBC/Precompiler slice in
+  `12_c_cli_odbc_precompiler.md`, including source-backed CLI LOB signature shapes,
+  JSON LOB cleanup cautions, CLI/ODBC diagnostic evidence collection, ACI diagnostic
+  rules, and APRE `GET DIAGNOSTICS` syntax. Source traceability and remaining
+  Empty LOB signature and live-execution limits are recorded in
+  `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
+- J037-J039 should use tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open
   register item is either closed, split into a later accepted work item, or documented

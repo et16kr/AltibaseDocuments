@@ -427,6 +427,11 @@ recording or remediating gaps.
   and Adapter for JDBC setup/version checks. This entry remains
   `Verification-limited` because J035 did not perform live JDBC, Spring, Hibernate,
   TLS, or `jdbcAdapter` execution tests.
+- J036 update: `12_c_cli_odbc_precompiler.md` now expands source-backed CLI/ODBC
+  diagnostic evidence collection, LOB/API error routing, ACI native-code versus
+  SQLSTATE rules, and APRE diagnostic syntax. This entry remains
+  `Verification-limited` because J036 did not perform live ODBC/CLI, ACI, APRE, TLS,
+  or LOB execution tests.
 
 ### GAP-J002-013: PSM and external procedure examples lack compile/runtime validation
 
@@ -485,6 +490,14 @@ recording or remediating gaps.
 - Required remediation shape: Verify exact headers or manuals, then add function item
   blocks with signature, arguments, return/diagnostic handling, LOB/JSON LOB context,
   version scope, and compile cautions.
+- J036 update: `12_c_cli_odbc_precompiler.md` now includes source-backed signature
+  shapes and return/diagnostic handling for documented Altibase-specific CLI LOB
+  functions, including `SQLBindFileToCol`, `SQLBindFileToParam`, `SQLGetLobLength`,
+  `SQLGetLob`, `SQLPutLob`, `SQLTrimLob`, `SQLFreeLob`, and Altibase 8.1 verified
+  source `SQLFreeLob2`. The selected 8.1 sources checked for J036 still only name
+  `SQLEmptyLob()` and `SQLGetLobLength2()` and do not provide complete callable
+  signatures, so this gap remains `Open` for exact installed-header or later manual
+  proof of those two functions.
 
 ### GAP-J002-016: Low-frequency utility and iLoader options are intentionally partial
 

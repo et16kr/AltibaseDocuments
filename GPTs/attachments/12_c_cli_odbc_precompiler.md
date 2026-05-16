@@ -13,6 +13,8 @@
 - How should `SQLDriverConnect` and ODBC connection strings be written?
 - Which ODBC functions are supported by the Altibase ODBC driver?
 - How should `BLOB`, `CLOB`, LOB locators, file-based LOB I/O, and JSON-related LOB cleanup be handled?
+- What signature shapes and compile-readiness cautions apply to Altibase-specific CLI LOB APIs?
+- What diagnostic evidence should be collected for CLI, ODBC, Altibase C Interface, and APRE failures?
 - What are the core Altibase C Interface calls for direct SQL and prepared statements?
 - How are APRE embedded SQL programs precompiled, connected, committed, and linked?
 
@@ -20,7 +22,8 @@
 
 - 7.1: Altibase 7.1 CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.
 - 7.3: Altibase 7.3 CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.
-- 8.1: Altibase 8.1 verified source CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.
+- 8.1: Altibase 8.1 verified source CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual; Altibase 8.1 release notes for Empty LOB CLI additions.
+- Supporting diagnostics: Altibase Error Message Reference for client/API native codes and APRE/utility overlap.
 
 ## Response Rules
 
@@ -29,6 +32,7 @@
 - For 8.1-specific statements, say `Altibase 8.1 verified source`.
 - Do not expose internal source labels, repository names, or workstation paths in customer answers.
 - For production C client design, ask for Altibase version, client package version, OS, compiler, driver manager, `SQLLEN` size, connection method, character set, SSL/TLS requirement, failover requirement, autocommit mode, and expected LOB size.
+- For compile-ready C involving `SQLEmptyLob()` or `SQLGetLobLength2()`, ask for the exact 8.1 client header or manual because the selected sources name the functions but do not provide complete callable signatures.
 - If the question is primarily SSL/TLS, use this attachment for ODBC/CLI connection keys and the SSL/TLS attachment for certificate and server setup.
 
 ## Fast Decision Map
@@ -100,6 +104,7 @@ Version block: 8.1
 - Use `Altibase 8.1 verified source` wording for 8.1-specific behavior.
 - Ordinary `BLOB` and `CLOB` CLI LOB locator guidance remains aligned with 7.1 and 7.3.
 - Altibase 8.1 verified source adds Empty LOB CLI interface support for LOB data with length 0 through `SQLEmptyLob()` and `SQLGetLobLength2()`.
+- The selected 8.1 sources preserve the Empty LOB function names but do not provide source-backed compile-ready signatures for `SQLEmptyLob()` or `SQLGetLobLength2()`.
 - Do not apply older 7.1/7.3 zero-length LOB guidance to 8.1 Empty LOB behavior without checking the target 8.1 client package.
 - Altibase 8.1 verified source adds JSON-related LOB cleanup guidance: when `SQLPutLob()` is used to update JSON data through a LOB locator, call `SQLFreeLob2(stmt, locator)` after the JSON update to release the JSON-related LOB locator resources.
 - `SQLFreeLob2()` does not commit or roll back changes. Use transaction control such as `SQLEndTran()` separately.
@@ -890,6 +895,81 @@ flowchart TD
   N --> O
 ```
 
+LOB API signature reference:
+
+- These are source-backed signature shapes for Altibase-specific CLI LOB APIs documented with full signatures in the selected CLI manuals.
+- Keep `SQLLEN`, `SQLUINTEGER`, and `SQLUBIGINT` literal because Driver Manager width and client headers matter.
+- Treat the following as API-shape reference, not a substitute for the exact installed client header when building production code.
+- `SQLFreeLob2()` is Altibase 8.1 verified source only in this attachment and is for JSON-related LOB locator cleanup after `SQLPutLob()`.
+
+```c
+SQLRETURN SQLBindFileToCol(
+    SQLHSTMT stmt,
+    SQLSMALLINT col,
+    SQLCHAR *fileName,
+    SQLLEN *fileNameLength,
+    SQLUINTEGER *fileOptions,
+    SQLLEN fileNameBufferSize,
+    SQLLEN *valueLength);
+
+SQLRETURN SQLBindFileToParam(
+    SQLHSTMT stmt,
+    SQLSMALLINT par,
+    SQLSMALLINT sqlType,
+    SQLCHAR *fileName,
+    SQLLEN *fileNameLength,
+    SQLUINTEGER *fileOptions,
+    SQLLEN maxFileNameLength,
+    SQLLEN *ind);
+
+SQLRETURN SQLGetLobLength(
+    SQLHSTMT stmt,
+    SQLUBIGINT locator,
+    SQLSMALLINT locatorCType,
+    SQLUINTEGER *valueLength);
+
+SQLRETURN SQLGetLob(
+    SQLHSTMT stmt,
+    SQLSMALLINT locatorCType,
+    SQLUBIGINT sourceLocator,
+    SQLUINTEGER fromPosition,
+    SQLUINTEGER forLength,
+    SQLSMALLINT targetCType,
+    SQLPOINTER value,
+    SQLUINTEGER bufferSize,
+    SQLUINTEGER *valueLength);
+
+SQLRETURN SQLPutLob(
+    SQLHSTMT stmt,
+    SQLSMALLINT locatorCType,
+    SQLUBIGINT targetLocator,
+    SQLUINTEGER fromPosition,
+    SQLUINTEGER forLength,
+    SQLSMALLINT sourceCType,
+    SQLPOINTER value,
+    SQLUINTEGER valueLength);
+
+SQLRETURN SQLTrimLob(
+    SQLHSTMT stmt,
+    SQLSMALLINT locatorCType,
+    SQLUBIGINT targetLocator,
+    SQLLEN fromPosition);
+
+SQLRETURN SQLFreeLob(
+    SQLHSTMT stmt,
+    SQLUBIGINT locator);
+
+SQLRETURN SQLFreeLob2(
+    SQLHSTMT stmt,
+    SQLUBIGINT locator);
+```
+
+Empty LOB signature caution for Altibase 8.1 verified source:
+
+- The selected 8.1 release notes identify `SQLEmptyLob()` and `SQLGetLobLength2()` as new Empty LOB CLI functions.
+- The selected CLI manuals and support reports checked for this job do not provide complete source-backed parameter lists for those two functions.
+- For compile-ready code using either function, ask for the installed `$ALTIBASE_HOME/include` header or exact client manual page before writing the call.
+
 LOB API block: `SQLBindFileToCol`
 
 - Type: Altibase-specific, non-standard CLI LOB function.
@@ -944,6 +1024,8 @@ LOB API block: `SQLFreeLob`
 
 - Type: Altibase-specific, non-standard CLI LOB function.
 - Purpose: releases server resources related to a LOB locator opened in the current transaction.
+- Signature: `SQLRETURN SQLFreeLob(SQLHSTMT stmt, SQLUBIGINT locator)`.
+- Return values: `SQL_SUCCESS`, `SQL_INVALID_HANDLE`, or `SQL_ERROR`.
 - Does not: commit or roll back LOB changes.
 - Transaction end: `SQLEndTran()` automatically releases locators, but explicit `SQLFreeLob()` is the clean resource-release pattern for ordinary `BLOB` and `CLOB` locator work.
 
@@ -953,6 +1035,7 @@ LOB API block: `SQLEmptyLob()`
 - Type: Empty LOB interface function.
 - Purpose: supports Empty LOB handling for LOB data with length 0.
 - Use when: an 8.1 CLI application must preserve Empty LOB behavior instead of treating zero-length LOB values as older 7.1/7.3 NULL-like guidance.
+- Compile-ready signature: not present in the selected source corpus; do not fabricate a parameter list.
 - Scope note: check the exact 8.1 client headers or manual for the function signature before generating compile-ready C code.
 
 LOB API block: `SQLGetLobLength2()`
@@ -961,6 +1044,7 @@ LOB API block: `SQLGetLobLength2()`
 - Type: Empty LOB length interface function.
 - Purpose: supports 8.1 Empty LOB length handling for LOB data with length 0.
 - Use when: an 8.1 CLI application must distinguish Empty LOB handling from older `SQLGetLobLength` guidance.
+- Compile-ready signature: not present in the selected source corpus; do not fabricate a parameter list.
 - Scope note: older 7.1/7.3 zero-length LOB guidance should not be assumed for 8.1 Empty LOB behavior.
 
 LOB API block: `SQLFreeLob2`
@@ -968,8 +1052,10 @@ LOB API block: `SQLFreeLob2`
 - Version: Altibase 8.1 verified source.
 - Type: JSON-related LOB locator cleanup function.
 - Purpose: releases resources related to a LOB locator for JSON data.
+- Signature: `SQLRETURN SQLFreeLob2(SQLHSTMT stmt, SQLUBIGINT locator)`.
 - Use when: `SQLPutLob()` was used to update JSON data.
 - Required guidance: after updating JSON data with `SQLPutLob()`, call `SQLFreeLob2(stmt, locator)`.
+- Return values: `SQL_SUCCESS`, `SQL_INVALID_HANDLE`, or `SQL_ERROR`.
 - Does not: commit or roll back changes. Use `SQLEndTran()` for transaction completion.
 - Do not apply to: 7.1 or 7.3 ordinary `BLOB` and `CLOB` answers unless explicitly comparing versions.
 
@@ -1016,6 +1102,7 @@ Empty LOB interface note for Altibase 8.1 verified source:
 
 - For LOB data with length 0, use 8.1 Empty LOB guidance and preserve the interface literals `SQLEmptyLob()` and `SQLGetLobLength2()`.
 - Do not answer 8.1 Empty LOB questions by reusing older 7.1/7.3 zero-length LOB guidance unless the target client package explicitly documents the same behavior.
+- Do not provide compile-ready calls for `SQLEmptyLob()` or `SQLGetLobLength2()` without the exact installed header or source page.
 
 ODBC Driver Manager LOB compatibility:
 
@@ -1182,12 +1269,59 @@ Diagnostic block: return values
 - `SQL_NO_DATA`: no related data is available.
 - `SQL_ERROR`: function failed.
 - `SQL_INVALID_HANDLE`: invalid handle.
+- Diagnostic records are expected for warnings and errors other than `SQL_SUCCESS`, `SQL_NO_DATA`, and `SQL_INVALID_HANDLE`.
 
 Diagnostic block: `SQLGetDiagRec`
 
 - Loop from record number `1` until `SQL_NO_DATA`.
 - Capture SQLSTATE, native error, message text, and message length.
 - Use the handle type that matches the failing call: `SQL_HANDLE_ENV`, `SQL_HANDLE_DBC`, or `SQL_HANDLE_STMT`.
+
+CLI/ODBC diagnostic collection pattern:
+
+```c
+SQLSMALLINT rec = 1;
+SQLRETURN diagRc;
+SQLCHAR sqlstate[6];
+SQLINTEGER nativeError;
+SQLCHAR messageText[1024];
+SQLSMALLINT messageLength;
+
+while ((diagRc = SQLGetDiagRec(handleType,
+                               handle,
+                               rec,
+                               sqlstate,
+                               &nativeError,
+                               messageText,
+                               sizeof(messageText),
+                               &messageLength)) != SQL_NO_DATA)
+{
+    if (diagRc == SQL_ERROR || diagRc == SQL_INVALID_HANDLE)
+    {
+        break;
+    }
+    rec++;
+}
+```
+
+Diagnostic evidence to collect before changing code:
+
+- Failing function name, return value, handle type, SQLSTATE, native error code, and complete message text.
+- Redacted connection string or DSN attributes, including `PORT`, `NLS_USE`, `CONNTYPE`, SSL-related keys, `AlternateServers`, and `LongDataCompat`.
+- Client package version, OS, compiler, driver manager name/version, and whether the selected ODBC library uses 32-bit or 64-bit `SQLLEN`.
+- Autocommit mode, transaction boundary, cursor state, and whether a LOB locator was obtained by `SQLBindCol()`, `SQLGetData()`, or an output parameter.
+- For LOB failures, record `locatorCType`, source/target locator value, `fromPosition`, `forLength`, `valueLength`, buffer type, and whether the target value is ordinary `BLOB`/`CLOB` or JSON on Altibase 8.1 verified source.
+
+LOB/API diagnostic map:
+
+- `SQLSTATE 01004`: truncation or insufficient buffer; increase output buffer or loop chunked reads.
+- `0x5112C` / `ulERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR`: CLI/ODBC LOB operation was attempted in autocommit mode; set `SQL_ATTR_AUTOCOMMIT` to `SQL_AUTOCOMMIT_OFF` and commit or roll back with `SQLEndTran()`.
+- `0x5113C` / `ulERR_ABORT_INVALID_APP_BUFFER_TYPE_LOB`: invalid buffer type for LOB; use `SQL_C_BINARY` for `BLOB`, `SQL_C_CHAR` for `CLOB`, or `SQL_C_BLOB_LOCATOR` / `SQL_C_CLOB_LOCATOR` only for locator buffers.
+- `0x51140` / `ulERR_ABORT_INVALID_LOB_RANGE`: invalid LOB range; re-check 0-based `fromPosition`, current LOB length, `forLength`, and `valueLength`.
+- `0x50137` / `ulERR_FATAL_LOB_NOT_OPENED` and `0x50139` / `ulERR_FATAL_LOB_INVALID_STATE`: collect trace and locator lifecycle evidence before retrying because the locator state itself is suspect.
+- `0x5112D` / `ulERR_ABORT_LOB_FILE_WRITE_ERR` and `0x5112E` / `ulERR_ABORT_LOB_FILE_READ_ERR`: check file path, existence, permissions, and available space for file-bound LOB APIs.
+- `0x314B4` / `qpERR_ABORT_QMX_LOB_AUTOCOMMIT_MODE`: SQL-level LOB operation cannot run in autocommit mode; handle similarly to client LOB autocommit errors and verify version scope.
+- Numeric `0x510xx` values overlap ODBC/CLI, APRE, utility, and Log Analyzer families. Use the exact symbol, component, and failing function before routing the error.
 
 SQLSTATE block: `01004`
 
@@ -1387,6 +1521,11 @@ ACI diagnostics block:
 - Connection diagnostics: `altibase_errno()`, `altibase_error()`, `altibase_sqlstate()`.
 - Statement diagnostics: `altibase_stmt_errno()`, `altibase_stmt_error()`, `altibase_stmt_sqlstate()`.
 - SQLSTATE values follow X/Open SQL CAE style.
+- Capture diagnostics immediately after the failed ACI call; another ACI call can overwrite the previous diagnostic state.
+- `altibase_errno()` and `altibase_stmt_errno()` return Altibase native error numbers, not ODBC SQLSTATE values.
+- Use `altibase_sqlstate()` or `altibase_stmt_sqlstate()` for SQLSTATE routing. Do not infer SQLSTATE from an Altibase native error number, and do not infer a native number from SQLSTATE.
+- For direct SQL failures, capture `altibase_errno(altibase)`, `altibase_error(altibase)`, and `altibase_sqlstate(altibase)`.
+- For prepared statement failures, capture `altibase_stmt_errno(stmt)`, `altibase_stmt_error(stmt)`, and `altibase_stmt_sqlstate(stmt)`.
 
 ACI LOB caution block:
 
@@ -1394,6 +1533,7 @@ ACI LOB caution block:
 - Avoid `altibase_stmt_store_result()` when LOB columns or a large number of rows can make client memory usage excessive.
 - If the requirement is partial LOB read/update through locators, prefer the CLI LOB locator APIs in this attachment.
 - `altibase_stmt_send_long_data()` is documented as not currently supported in the source manual; do not recommend it as a working streaming-Lob API.
+- If an ACI long-data path returns `ALTIBASE_NEED_DATA`, ask for the exact client package and source page before recommending any streaming-Lob implementation, because the selected ACI manual does not support `altibase_stmt_send_long_data()` as the answer path.
 
 ## Precompiler APRE Flow
 
@@ -1599,6 +1739,37 @@ APRE runtime error handling:
 - `WHENEVER` must appear before embedded SQL statements it should affect.
 - APRE `SQLCODE` values are negative decimal integers; error message manuals often list positive hexadecimal codes, so convert the absolute SQLCODE value to hexadecimal when correlating.
 
+APRE `GET DIAGNOSTICS` block:
+
+- Purpose: retrieves diagnostic information for the immediately preceding embedded SQL statement except `GET DIAGNOSTICS` itself.
+- Use when: multiple errors can be returned and `sqlca` would expose only the first diagnostic condition.
+- Statement information items: `NUMBER`, `ROW_COUNT`.
+- Condition information items: `RETURNED_SQLCODE`, `RETURNED_SQLSTATE`, `MESSAGE_TEXT`, `ROW_NUMBER`, `COLUMN_NUMBER`.
+- `NUMBER` gives the number of diagnostic conditions; loop condition numbers from `1` to `NUMBER`.
+- Host variable type caution: use compatible host variable types, such as `INTEGER` for `RETURNED_SQLCODE`, `CHAR(5)` plus a terminator-sized C buffer for `RETURNED_SQLSTATE`, `VARCHAR(2048)`-sized storage for `MESSAGE_TEXT`, and `INTEGER` for row/column numbers.
+- `GET DIAGNOSTICS` does not change the normal availability of `sqlca`, `SQLCODE`, or `SQLSTATE`.
+
+APRE `GET DIAGNOSTICS` syntax:
+
+```text
+EXEC SQL GET [ CURRENT ] DIAGNOSTICS
+    <:condition_count> = NUMBER;
+
+EXEC SQL GET [ CURRENT ] DIAGNOSTICS CONDITION <:condition_number>
+    <:returned_sqlcode> = RETURNED_SQLCODE,
+    <:returned_sqlstate> = RETURNED_SQLSTATE,
+    <:message_text> = MESSAGE_TEXT,
+    <:row_number> = ROW_NUMBER,
+    <:column_number> = COLUMN_NUMBER;
+```
+
+APRE diagnostic routing cautions:
+
+- `SQLSTATE 01004`: output host variable truncation; increase character/binary host variable size and check indicator length.
+- `SQLSTATE 22002`: NULL was fetched without a required indicator variable; add an indicator rather than relying on `-unsafe_null` for production logic.
+- `SQLSTATE HY009`, `HY010`, and `HY090`: check null pointer, cursor-open sequence, and indicator validity.
+- Numeric `0x510xx` error codes overlap APRE and other client/tool families; use the `ulpERR_*` symbol or APRE command/source context before choosing a Precompiler error block.
+
 APRE LOB output file syntax:
 
 ```text
@@ -1699,6 +1870,12 @@ Template: CLI LOB update
 Set `SQL_ATTR_AUTOCOMMIT` to `SQL_AUTOCOMMIT_OFF`, obtain a `SQL_C_BLOB_LOCATOR` or `SQL_C_CLOB_LOCATOR`, call `SQLPutLob()` or `SQLTrimLob()`, release the locator with `SQLFreeLob()`, and then commit or roll back with `SQLEndTran()`. For JSON data in Altibase 8.1 verified source, release the locator with `SQLFreeLob2()` after `SQLPutLob()`.
 ```
 
+Template: CLI/ODBC or ACI diagnostic request
+
+```text
+Please provide the exact Altibase version and client package, OS, compiler, Driver Manager and `SQLLEN` width if ODBC is used, the failing API function, return value, SQLSTATE, native error code, full message text, redacted connection string or DSN attributes, autocommit mode, and the SQL or LOB locator sequence that failed.
+```
+
 Template: APRE build
 
 ```text
@@ -1717,3 +1894,5 @@ Additional API families exist, but they have version, platform, package, and uns
 ## Residual Scope
 
 - Function, conversion, and APRE blocks are condensed for common client-development answers. For an unlisted API, attribute, diagnostic record, or patch-specific LOB behavior, verify the exact client manual or runtime header before generating production code.
+- `SQLEmptyLob()` and `SQLGetLobLength2()` are included as Altibase 8.1 verified source function names, but the selected corpus still lacks full compile-ready signatures. Ask for the installed 8.1 client header or exact manual page before generating those calls.
+- Live ODBC/CLI, ACI, APRE, TLS, and LOB execution was not performed for this attachment; runtime answers should keep source-backed settings separate from environment-specific test results.
