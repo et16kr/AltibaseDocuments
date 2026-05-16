@@ -63,6 +63,14 @@ Connection surfaces:
 - `Client SSL/TLS`: controlled by interface-specific settings such as JDBC properties, ODBC/CLI `SSL_*` properties, ADO.NET connection-string keys, and `ALTIBASE_SSL_PORT_NO`.
 - `Replication SSL/TLS`: an Altibase 8.1 replication feature using `CREATE REPLICATION ... USING SSL` and `REPLICATION_SSL_PORT_NO`.
 
+Port and endpoint separation:
+
+- Ordinary client/server TCP uses the ordinary service port, often configured through `ALTIBASE_PORT_NO` or client-specific connection keys.
+- Ordinary client/server SSL/TLS uses the server `SSL_PORT_NO`. JDBC `port`, ODBC/CLI `PORT`, ADO.NET `Port`, iSQL `-PORT`, or `ALTIBASE_SSL_PORT_NO` must point to this port when those clients use SSL/TLS.
+- Ordinary TCP replication uses the peer `REPLICATION_PORT_NO`, not `SSL_PORT_NO` and not the database service port.
+- Altibase 8.1 verified source SSL replication uses the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
+- `REPLICATION_SSL_PORT_NO` is a replication Receiver port. It does not replace the server `SSL_PORT_NO` used by application clients.
+
 Platform caveat: before production JDBC or ODBC/CLI SSL/TLS guidance, verify the exact Altibase version and platform against supported-platform information. The SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel-Linux; do not extend that support to other platforms without target-version evidence.
 
 ```mermaid
@@ -229,6 +237,25 @@ Client certificate decision matrix:
 - Private CA plus mutual authentication: import the server CA certificate into the truststore or client CA configuration, and configure the client certificate plus private key.
 - Public CA plus server-only authentication: no private CA import is normally needed if the client runtime already trusts the issuing CA.
 - Public CA plus mutual authentication: configure the client certificate plus private key.
+
+Certificate handling checklist:
+
+1. Identify whether the target is server-only authentication or mutual authentication.
+2. For the server, keep `SSL_CERT` as the server certificate path and `SSL_KEY` as the matching server private key path.
+3. Use `SSL_CA` or `SSL_CAPATH` when the server must verify a received client certificate or when a client must verify the server certificate through ODBC/CLI or ADO.NET settings.
+4. For JDBC server verification with a private CA, import the server CA certificate into a truststore and configure `truststore_url` and `truststore_password`.
+5. For JDBC mutual authentication, create or import a keystore that contains the client certificate and private key, then configure `keystore_url` and `keystore_password`.
+6. For ODBC/CLI or ADO.NET mutual authentication, configure PEM-format client `SSL_CERT`/`ssl cert` and `SSL_KEY`/`ssl key` files that the client process can read.
+7. Protect every private key file with OS permissions. Do not send server or client private keys as diagnostic evidence; ask for paths, file ownership, permissions, certificate subject/issuer/validity, and sanitized error text instead.
+
+Certificate evidence to request:
+
+- exact Altibase version and client interface;
+- authentication mode: server-only or mutual authentication;
+- server `SSL_CERT`, `SSL_KEY`, `SSL_CA`, `SSL_CAPATH`, `SSL_CLIENT_AUTHENTICATION`, `SSL_CIPHER_LIST`, `SSL_CIPHER_SUITES`, and `SSL_LOAD_CONFIG` values;
+- client truststore, keystore, PEM, `SSL_VERIFY`, `verify_server_certificate`, `ssl_protocols`, and cipher settings as applicable;
+- server startup listener output and `V$SESSION.COMM_NAME` evidence for successful SSL/TLS sessions;
+- OpenSSL or Java runtime version and OS/platform.
 
 JDBC setup checklist:
 
@@ -533,6 +560,24 @@ WHERE name IN (
 ORDER BY name;
 ```
 
+Verify port and session separation:
+
+```sql
+-- Ordinary client/server SSL/TLS sessions.
+SELECT id, db_username, comm_name
+FROM V$SESSION
+WHERE comm_name LIKE 'SSL%';
+
+-- Replication endpoint definitions; use 09_replication_ha_cdc.md for full replication triage.
+SELECT replication_name,
+       host_no,
+       host_ip,
+       port_no,
+       conn_type
+FROM system_.sys_repl_hosts_
+ORDER BY replication_name, host_no;
+```
+
 ## Troubleshooting Blocks
 
 Troubleshooting block: SSL listener is not shown at startup
@@ -542,6 +587,23 @@ Troubleshooting block: SSL listener is not shown at startup
 - Check OpenSSL installation and version for the Altibase version.
 - Check `SSL_CERT`, `SSL_KEY`, and CA configuration.
 - Check server logs for certificate load or OpenSSL load failures.
+
+Troubleshooting block: SSL/TLS connects to the wrong port
+
+- For application clients and tools, use the server `SSL_PORT_NO`.
+- For ordinary TCP replication, use the peer `REPLICATION_PORT_NO`.
+- For Altibase 8.1 verified source SSL replication, use the peer `REPLICATION_SSL_PORT_NO` and include `USING SSL`.
+- Do not point JDBC, ODBC/CLI, ADO.NET, or iSQL SSL/TLS connections at `REPLICATION_SSL_PORT_NO`.
+- Do not point replication `WITH 'peer', port USING SSL` at `SSL_PORT_NO`.
+
+Troubleshooting block: certificate verification fails
+
+- Confirm whether the failure is server certificate verification or mutual client certificate verification.
+- Check that `SSL_CERT` and `SSL_KEY` belong together on the server.
+- Check that the issuer of the server certificate is present in the JDBC truststore or ODBC/CLI or ADO.NET `SSL_CA`/`ssl ca` or `SSL_CAPATH`/`ssl capath` configuration.
+- For mutual authentication, check that the client certificate and private key are configured and readable by the client process.
+- Check certificate validity dates, subject/issuer, host naming policy, and sanitized client/server error text.
+- Use `verify_server_certificate=false`, `SSL_VERIFY=0`, or `ssl verify=false` only as a controlled troubleshooting or accepted-risk exception, not as a production default.
 
 Troubleshooting block: JDBC handshake fails
 
@@ -582,8 +644,10 @@ Troubleshooting block: replication SSL does not connect
 - Confirm each node's `REPLICATION_SSL_PORT_NO` is nonzero.
 - In each `CREATE REPLICATION`, use the peer node's `REPLICATION_SSL_PORT_NO`.
 - Include `USING SSL` on both replication objects.
+- Check `SYSTEM_.SYS_REPL_HOSTS_` and verify that host, port, and connection type match the intended peer endpoint.
 - Check firewall rules for both SSL replication ports.
 - Do not use `FOR ANALYSIS` Log Analyzer replication with `USING SSL`.
+- Use `09_replication_ha_cdc.md` for Sender/Receiver view checks, packet capture, heartbeat-test handling, and replication gap decisions.
 
 ## Attachment Cross-References
 

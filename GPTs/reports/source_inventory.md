@@ -938,6 +938,51 @@ case. No new item-level manual/source-backed gap was discovered. The existing
 selected source set supports package/runtime prerequisites and release-note caveats but
 does not provide a stable manifest for every distribution.
 
+## J033 Network Checks SSL TLS And Replication SSL Addendum
+
+J033 uses the `replication_manual`, `security_ssl_tls`,
+`general_reference_1_datatypes_properties`, `general_reference_2_dictionary_views`,
+`release_notes_platform`, and `technical_documents_support` source families for
+Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source. Korean SSL/TLS
+guides remain authoritative for ordinary server/client SSL/TLS setup, certificate
+properties, client trust/verification keys, OpenSSL/JRE requirements, session
+monitoring, and TCP access restrictions. Korean Replication Manual, Korean SQL
+Reference, Korean General Reference property material, Korean 8.1 release notes, and
+the Korean replication network-check note remain authoritative for replication
+transport ports, `USING SSL`, `REPLICATION_SSL_PORT_NO`, Log Analyzer SSL/IB
+exclusion, Sender/Receiver endpoint checks, and packet-capture troubleshooting.
+
+Design note: J033 keeps the 20-file attachment boundary unchanged. Replication network
+and transport diagnostics stay in `GPTs/attachments/09_replication_ha_cdc.md`; ordinary
+client/server TLS, certificate handling, port separation, and replication SSL security
+guardrails stay in `GPTs/attachments/18_security_ssl_tls.md`. The update does not move
+property catalog ownership out of `GPTs/attachments/05_data_types_properties.md` or
+error-code ownership out of `GPTs/attachments/07_error_messages_troubleshooting.md`;
+those files remain cross-reference targets.
+
+Scoped source paths checked for J033:
+
+- `Manuals/Altibase_7.1/kor/Altibase SSL TLS User's Guide.md`
+- `Manuals/Altibase_7.3/kor/Altibase SSL TLS User's Guide.md`
+- `Manuals/Altibase_trunk/kor/Altibase SSL TLS User's Guide.md`
+- `Manuals/Altibase_trunk/kor/Replication Manual.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- `Technical Documents/kor/Replication network check.md`
+- `GPTs/attachments/09_replication_ha_cdc.md`
+- `GPTs/attachments/18_security_ssl_tls.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J033 adds no new attachment filename, source family, or Korean/English source-drift
+case. No new item-level manual/source-backed gap was discovered. The existing
+mixed-version 8.1 replication SSL compatibility guardrail remains because no selected
+source provides an 8.1-to-older replication SSL compatibility matrix. The live TLS and
+connector integration guardrail also remains because this job expanded source-backed
+certificate and port diagnostics, but did not perform live handshakes against customer
+environments.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

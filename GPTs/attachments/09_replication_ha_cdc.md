@@ -1521,6 +1521,60 @@ FROM V$REPRECEIVER_COLUMN
 ORDER BY rep_name, user_name, table_name, partition_name, column_name;
 ```
 
+## Replication Network and Transport Diagnostics
+
+Use this section when replication does not start, a gap grows while the database is otherwise healthy, or packet loss is suspected between Sender and Receiver hosts.
+
+Transport separation block:
+
+- Ordinary TCP replication uses the peer `REPLICATION_PORT_NO`.
+- Altibase 8.1 verified source SSL replication uses the peer `REPLICATION_SSL_PORT_NO` and `USING SSL`.
+- InfiniBand replication uses the peer `REPLICATION_IB_PORT_NO` and `USING IB [ib_latency]`.
+- Ordinary database service ports, ordinary client/server `SSL_PORT_NO`, JDBC `port`, and `ALTIBASE_SSL_PORT_NO` are not replication Receiver ports.
+- `FOR ANALYSIS` and `FOR ANALYSIS PROPAGATION` are Log Analyzer CDC forms. Do not combine them with `USING SSL` or `USING IB`.
+
+Endpoint evidence SQL:
+
+```sql
+SELECT replication_name,
+       host_no,
+       host_ip,
+       port_no,
+       conn_type
+FROM system_.sys_repl_hosts_
+ORDER BY replication_name, host_no;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'REPLICATION_PORT_NO',
+  'REPLICATION_SSL_PORT_NO',
+  'REPLICATION_IB_PORT_NO',
+  'REPLICATION_HBT_DETECT_TIME',
+  'REPLICATION_RECEIVE_TIMEOUT',
+  'REPLICATION_SENDER_SEND_TIMEOUT',
+  'REPLICATION_SENDER_START_AFTER_GIVING_UP'
+)
+ORDER BY name;
+```
+
+Transport mismatch triage:
+
+1. Compare `SYSTEM_.SYS_REPL_HOSTS_.PORT_NO` with the peer node's relevant property value. For TCP, compare to the peer `REPLICATION_PORT_NO`; for SSL, compare to the peer `REPLICATION_SSL_PORT_NO`; for IB, compare to the peer `REPLICATION_IB_PORT_NO`.
+2. Compare `SYSTEM_.SYS_REPL_HOSTS_.CONN_TYPE` with the intended transport. If `USING` was omitted, treat it as ordinary TCP.
+3. For Altibase 8.1 SSL replication, confirm that each node's local `REPLICATION_SSL_PORT_NO` is nonzero and that ordinary SSL/TLS setup is complete on both replication target servers.
+4. If a host list contains multiple IP/port pairs, check every host row in order. A backup line can hide that the primary endpoint is wrong or blocked.
+5. Do not repair a wrong endpoint with `QUICKSTART` unless skipping unsent logs is intentional. Correct the endpoint, start or synchronize according to the gap state, and verify Sender/Receiver views.
+
+Network evidence collection block:
+
+- Capture evidence from both sides of the connection. A Sender-side trace alone cannot prove whether packets reached the Receiver host.
+- On the Standby or receiving side, check whether `V$REPRECEIVER.INSERT_SUCCESS_COUNT`, `UPDATE_SUCCESS_COUNT`, or `DELETE_SUCCESS_COUNT` continues to increase during normal replication or `SYNC`.
+- Capture Sender and Receiver thread states with platform tools such as `pstack` where available. Network-check guidance identifies Receiver waits around `recvXlog... select` and Sender waits around `sendCmBlock... write` as useful stack evidence.
+- Use `netstat` to inspect send queue, receive queue, retransmission behavior, routing, gateway, subnet mask, and interface.
+- Capture packets on both Sender and Receiver hosts in binary format, then inspect them with Wireshark or an equivalent packet analyzer.
+- During packet tests, if heartbeat socket churn makes analysis difficult, record the current `REPLICATION_HBT_DETECT_TIME`, temporarily raise it for the test window, and restore it afterward.
+
 ## Troubleshooting Playbooks
 
 Playbook block: replication does not start

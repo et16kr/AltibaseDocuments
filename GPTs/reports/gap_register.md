@@ -69,6 +69,11 @@ recording or remediating gaps.
   unsupported 8.1 Sender to older Receiver, 8.1 SSL cross-version, EAGER, offline, and
   optional-feature compatibility claims. This entry remains `Guardrail` for the missing
   higher-version 8.1 Sender to older Receiver and replication SSL compatibility matrix.
+- J033 update: `09_replication_ha_cdc.md` and `18_security_ssl_tls.md` now add explicit
+  endpoint and port guardrails for ordinary TCP replication, ordinary client/server
+  SSL/TLS, and Altibase 8.1 verified-source SSL replication. This entry remains
+  `Guardrail`; no selected source reviewed by J033 provides a mixed-version 8.1
+  replication SSL compatibility matrix.
 
 ### GAP-J002-003: Tablespace restore/recovery syntax diagrams source-audited by J011
 
@@ -413,6 +418,10 @@ recording or remediating gaps.
   Altibase version, client interface, OS/platform, Java/OpenSSL version, certificate
   mode, trust model, and target ports. Add live-tested examples only with environment
   and source notes.
+- J033 update: `18_security_ssl_tls.md` now includes a certificate evidence checklist,
+  port/surface separation, certificate-verification triage, and replication SSL
+  diagnostic routing. This entry remains `Verification-limited` because J033 did not
+  perform live TLS handshakes or connector execution tests.
 
 ### GAP-J002-013: PSM and external procedure examples lack compile/runtime validation
 
@@ -554,6 +563,13 @@ recording or remediating gaps.
   version scope are recorded in `GPTs/reports/source_inventory.md`. This gap remains
   `Open` for later Kubernetes/AKU and security/replication SSL high-risk procedure
   slices.
+- J033 update: the security/replication SSL procedure slice is now represented by
+  searchable English blocks for replication transport endpoint validation, Sender and
+  Receiver network evidence collection, ordinary TLS port separation, certificate
+  handling, certificate-verification triage, and Altibase 8.1 replication SSL
+  guardrails. Source paths and version scope are recorded in
+  `GPTs/reports/source_inventory.md`. This gap remains `Open` for the later
+  Kubernetes/AKU high-risk procedure slice.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 

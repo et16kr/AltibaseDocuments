@@ -31,7 +31,7 @@ J029	Done	docs	Restore recovery and media failure runbooks	Expand complete, inco
 J030	Done	docs	Administration tablespace user and privilege runbooks	Expand admin, account, privilege, storage, tablespace lifecycle, and operational safety runbooks.
 J031	Done	docs	Replication topology state and compatibility	Expand replication topology, object restrictions, states, modes, and compatibility checks.
 J032	Done	docs	Replication operations CDC Log Analyzer and RepMgr	Expand replication operations, synchronization, CDC, Log Analyzer, and Replication Manager workflows.
-J033	ToDo	docs	Network checks SSL TLS and replication SSL	Expand network diagnostics, ordinary TLS, certificate handling, and replication SSL separation.
+J033	Done	docs	Network checks SSL TLS and replication SSL	Expand network diagnostics, ordinary TLS, certificate handling, and replication SSL separation.
 J034	ToDo	docs	PSM stored and external procedures	Expand PSM, packages, triggers, VARRAY, external procedure, and library reference coverage.
 J035	ToDo	docs	Java JDBC Spring Hibernate and adapters	Expand JDBC, Java compatibility, Spring, Hibernate, Adapter for JDBC, and Java-facing examples.
 J036	ToDo	docs	CLI ODBC C Interface Precompiler and LOB APIs	Expand CLI, ODBC, Altibase C Interface, Precompiler, LOB, JSON LOB, and API diagnostics.
