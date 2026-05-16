@@ -281,8 +281,14 @@ for 8.1 customer-facing labels.
   rules, and APRE `GET DIAGNOSTICS` syntax. Source traceability and remaining
   Empty LOB signature and live-execution limits are recorded in
   `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
-- J037-J039 should use tool, connector, migration, and third-party guide
-  source families to expand API/tool/integration coverage.
+- J037 expanded the iSQL/iLoader and utilities/dataCompJ slice in
+  `13_isql_iloader_basic_tools.md` and `14_utilities_operation_tools.md`, including
+  iSQL host variables and `PREPARE`, low-frequency iLoader option blocks, `altiComp`
+  and `dataCompJ` output interpretation, and dump-family output evidence maps. Source
+  traceability and remaining installed-tool verification limits are recorded in
+  `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
+- J038-J039 should use connector, migration, and third-party guide source families to
+  expand remaining API/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open
   register item is either closed, split into a later accepted work item, or documented
   as a selected-source limitation.

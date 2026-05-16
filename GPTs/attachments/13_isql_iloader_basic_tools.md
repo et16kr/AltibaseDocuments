@@ -11,9 +11,10 @@
 - How do I connect to Altibase and run SQL with iSQL?
 - How do I run an iSQL script and save the output?
 - Which iSQL commands are useful for object inspection, transactions, output formatting, and troubleshooting?
+- How do iSQL host variables and `PREPARE` work for repeatable parameterized checks?
 - How do I export table data with iLoader?
 - How do I import table data with iLoader in `APPEND`, `REPLACE`, or `TRUNCATE` mode?
-- How do I handle CSV, custom delimiters, character sets, LOB data, date formats, bad rows, and performance options?
+- How do I handle CSV, custom delimiters, character sets, LOB data, date formats, bad rows, `structout`, `-displayquery`, `-partition`, `-geom WKB`, `-replication`, and performance options?
 - Which secure login and generated-file permission settings matter for iSQL and iLoader?
 
 ## Source Documents
@@ -439,6 +440,57 @@ SHOW ECHO;
 ```
 
 Use when: troubleshooting why a script or result format is behaving differently than expected.
+
+## iSQL Host Variables And Prepared SQL
+
+Block: declare host variables
+
+```sql
+VAR p1 INTEGER;
+VARIABLE p2 CHAR(10);
+VAR v_double DOUBLE;
+VAR v_real REAL;
+```
+
+Compact syntax:
+
+```text
+VAR[IABLE] var_name [INPUT | OUTPUT | INOUTPUT] var_type
+```
+
+Supported host-variable type families include `INTEGER`, `BIGINT`, `SMALLINT`, `BYTE(n)`, `NIBBLE(n)`, `NUMBER`, `NUMERIC`, `DECIMAL`, `FLOAT`, `DOUBLE`, `REAL`, `CHAR(n)`, `VARCHAR(n)`, `NCHAR(n)`, `NVARCHAR(n)`, and `DATE`.
+
+Block: assign and print host variables
+
+```sql
+EXECUTE :p1 := 100;
+EXEC :p2 := 'abc';
+PRINT VARIABLE;
+PRINT p2;
+```
+
+Use when: testing procedure/function arguments or running a parameterized check repeatedly inside iSQL.
+
+Block: run a prepared SQL statement with a host variable
+
+```sql
+VAR target_id INTEGER;
+EXEC :target_id := 1;
+PREPARE SELECT eno, e_firstname, e_lastname
+FROM employees
+WHERE eno = :target_id;
+```
+
+Meaning:
+
+- Ordinary SQL in iSQL uses direct execution: parse, validate, optimize, and execute together.
+- `PREPARE SQL_statement;` performs prepared execution and can bind iSQL host variables.
+- In iSQL itself, the documented result is not faster than direct execution; use it when variable binding is the behavior being tested or demonstrated.
+
+Cautions:
+
+- If `ALTER SESSION SET EXPLAIN PLAN = ON` is also used, prepared execution can show graph or plan information that differs from direct execution because the plan can be displayed before and after variable values are applied.
+- Host variables are an iSQL session feature. Do not describe them as database table columns or persistent SQL objects.
 
 ## iSQL History, Editing, And Shell Commands
 
@@ -1113,6 +1165,25 @@ Cautions:
 - When exporting with `-parallel`, iLoader uses two server connections.
 - For IPC connections, ensure `IPC_CHANNEL_COUNT` is high enough for the connection count.
 
+Cookbook: tune input file read size
+
+```bash
+iloader in -s 127.0.0.1 -u sys -p manager \
+  -f target_table.fmt \
+  -d target_table.dat \
+  -readsize 4194304 \
+  -bad target_table.bad \
+  -log target_table_in.log
+```
+
+Use when: file read size, filesystem behavior, or client-side buffering is suspected to be a bottleneck during upload.
+
+Cautions:
+
+- `-readsize` applies to `in`.
+- The value is bytes, must be greater than `0`, and the documented default is `1048576`.
+- Validate memory use and elapsed time with the target client package before standardizing a value.
+
 Cookbook: tune export fetch behavior
 
 ```bash
@@ -1124,6 +1195,118 @@ iloader out -s 127.0.0.1 -u sys -p manager \
 ```
 
 Use when: the installed client supports these options and fetch performance is the bottleneck.
+
+Option block: asynchronous prefetch
+
+- `-async_prefetch off`: do not use asynchronous prefetch; documented default.
+- `-async_prefetch on`: use asynchronous prefetch.
+- `-async_prefetch auto`: use auto tuning for asynchronous prefetch; documented as Linux-only.
+- Related CLI-side settings named in the source manuals are `ALTIBASE_PREFETCH_ASYNC`, `ALTIBASE_PREFETCH_AUTO_TUNING`, and `ALTIBASE_SOCK_RCVBUF_BLOCK_RATIO`.
+
+Option block: `-lightmode`
+
+- Purpose: faster upload by avoiding database logging for the target load path.
+- Version caution: documented in 7.3 and Altibase 8.1 verified source syntax and performance-option sections.
+- Can be used with `-parallel` and multiple iLoader instances.
+- Do not combine with `-direct`.
+- Do not use while other transactions insert, update, or delete the target table.
+- Do not use on a replication target table, and do not create replication for a table while `-lightmode` loading is in progress.
+- Failure caution: because database logging is not written for this path, normal recovery can be impossible after a failure; the source recommends recreating the target table in that case.
+
+## iLoader Low-Frequency Option Blocks
+
+Option block: `structout`
+
+```bash
+iloader structout -s 127.0.0.1 -u sys -p manager \
+  -T target_table \
+  -f target_table_struct.out
+```
+
+Purpose: creates a structure file that matches the specified table, similar to `formout`, for use when writing a client program.
+
+Caution: use `formout` for ordinary table export/import. Use `structout` only when the task is client-structure generation.
+
+Option block: `-displayquery`
+
+```bash
+iloader out -s 127.0.0.1 -u sys -p manager \
+  -f target_table.fmt \
+  -d target_table.dat \
+  -displayquery
+```
+
+Purpose: prints the query string generated by iLoader. Use it after FORM-file edits such as `DOWNLOAD CONDITION`, `HINT`, function mappings, or `DATEFORM` changes.
+
+Verification: compare the displayed SQL with the intended table, selected columns, filter, and hint before using the exported data.
+
+Option block: `-silent` and `-nst`
+
+- `-silent`: suppresses copyright and banner display.
+- `-nst`: suppresses elapsed-time display.
+- Use when: automation needs compact output and separate log files capture operation details.
+- Caution: do not omit `-log` and `-bad` in production merely because `-silent` makes terminal output cleaner.
+
+Option block: `-replication true|false`
+
+```bash
+iloader in -s 127.0.0.1 -u sys -p manager \
+  -f target_table.fmt \
+  -d target_table.dat \
+  -replication false \
+  -bad target_table.bad \
+  -log target_table_in.log
+```
+
+Purpose: controls whether replication is turned off while loading data. The documented default when omitted is `true`.
+
+Caution: before using `-replication false`, confirm the table's replication role, intended replication catch-up or rebuild plan, data ownership, and rollback procedure.
+
+Option block: `-partition`
+
+```bash
+iloader formout -s 127.0.0.1 -u sys -p manager \
+  -T partitioned_table \
+  -f partitioned_table.fmt \
+  -partition
+```
+
+Purpose: if the table named by `-T` is partitioned, iLoader creates one FORM file per partition. The documented naming pattern is `formfile_name.partition_name`. If the table is not partitioned, one FORM file is created with the supplied form file name.
+
+Use when: exporting or loading partition-by-partition and keeping each partition's FORM file explicit.
+
+Option block: `-geom WKB`
+
+```bash
+iloader out -s 127.0.0.1 -u sys -p manager \
+  -f spatial_table.fmt \
+  -d spatial_table.dat \
+  -geom WKB
+```
+
+Purpose: exports Spatial data in Well-Known Binary format. Use this for movement to a lower-version target or external tool that expects `WKB`.
+
+Caution: without `-geom WKB`, iLoader follows the Altibase-supported Spatial object format for the installed version. Confirm `GEOMETRY` type compatibility and target import expectations before generating a migration command.
+
+Option block: `-verbose`
+
+- Requires: `-log logfile`.
+- Purpose: when an upload error occurs and the column position can be determined, iLoader records the failed column position as `COLUMN_ORDER` in the log file.
+- Use when: diagnosing bad rows where the rejected value is not enough to identify the target column.
+
+Option block: `-dry-run`
+
+- Source-backed scope: listed in the 7.1, 7.3, and Altibase 8.1 verified source iLoader command syntax and help.
+- Selected-source limitation: the sampled selected sources do not provide a full semantic item block for `-dry-run`.
+- Safe answer pattern: before relying on `-dry-run` for a production precheck, ask for the exact client package/version and verify behavior with `iloader help`, the installed client manual, or a non-production run.
+
+Version-sensitive option block: `-stmt_prefix [prefix_value]`
+
+- 7.1 source documents `-stmt_prefix` for `in` and `out`.
+- Purpose: prefixes SQL generated by iLoader.
+- Documented default when no value is supplied: `NODE [META]`.
+- Example generated forms include `NODE [META] INSERT INTO ...` for upload and `NODE [DATA('NODE1')] SELECT ...` for export.
+- Caution: do not use this option in 7.3 or 8.1 answers without exact installed-client proof because it was not found in the sampled Korean 7.3 or Altibase 8.1 verified source option table.
 
 ## iLoader Remote Access Cookbook
 

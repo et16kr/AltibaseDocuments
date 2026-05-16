@@ -1451,6 +1451,14 @@ Source purpose: iSQL, iLoader, export/import, first-line operational tool usage.
   - `Manuals/Altibase_trunk/eng/iLoader User's Manual.md`
   - `Manuals/Altibase_trunk/kor/iLoader User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- J037 design note: `13_isql_iloader_basic_tools.md` remains the iSQL/iLoader
+  packaging file; no attachment boundary or file-name change was required. J037
+  expanded source-backed item blocks from Korean iSQL and iLoader manuals with iSQL
+  host variables, `PREPARE`, iLoader `structout`, `-displayquery`, `-silent`, `-nst`,
+  `-replication`, `-partition`, `-geom WKB`, `-verbose`, `-readsize`,
+  `-async_prefetch`, `-lightmode`, and version-scoped `-stmt_prefix` cautions. The
+  selected sources list `-dry-run` in syntax/help but do not provide full semantics, so
+  production use remains gated on exact installed-client help or a non-production test.
 
 ### 14_utilities_operation_tools.md
 
@@ -1474,6 +1482,14 @@ Source purpose: utilities, `aexport`, `altiComp`, `iloader`, `isql`, `aku`, `alt
   - `Manuals/Tools/Altibase_trunk/kor/dataCompJ User's Manual.md`
   - `Manuals/Tools/Altibase_trunk/eng/dataCompJ User's Manual.md`
 - Source authority note: Korean manuals and Korean release notes listed above are primary; English entries are secondary extraction/parity references.
+- J037 design note: `14_utilities_operation_tools.md` remains the operations-utility
+  packaging file; no attachment boundary or file-name change was required. J037
+  expanded source-backed evidence blocks from Korean Utilities and dataCompJ manuals
+  for `altiComp` DIFF/SYNC logs, `dataCompJ_report.txt`, DIFF CSV files, SYNC
+  `Try`/`Fail` fields, and dump-family output fields for `dumpbi`, `dumpct`, `dumpdb`,
+  `dumpddf`, `dumpla`, and `dumplf`. J037 did not run the utilities against live
+  Altibase files, so exact installed-tool output remains a target-version and file-copy
+  evidence check.
 
 ### 15_migration_oracle_compatibility.md
 

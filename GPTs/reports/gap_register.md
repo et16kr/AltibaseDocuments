@@ -501,11 +501,13 @@ recording or remediating gaps.
 
 ### GAP-J002-016: Low-frequency utility and iLoader options are intentionally partial
 
-- Status: `Open`
+- Status: `Verification-limited`
 - Source family and version scope: `isql_iloader`, `utilities_datacompj`; 7.1, 7.3,
   and 8.1 client package scope.
-- Missing item or behavior: Exhaustive low-frequency options and output fields for
-  iSQL, iLoader, utilities, `dataCompJ`, and dump tools.
+- Missing item or behavior: J037 expanded the selected-source coverage for
+  low-frequency options and output fields. Remaining risk is installed-client/package
+  drift, full `-dry-run` semantics, and live utility output validation against target
+  files rather than a missing selected-source item block.
 - Affected attachments: `13_isql_iloader_basic_tools.md`,
   `14_utilities_operation_tools.md`.
 - Evidence: `review/reports/R22_c_cli_odbc_precompiler_isql_iloader.md`;
@@ -513,6 +515,16 @@ recording or remediating gaps.
 - Required remediation shape: Tool option item blocks prioritized by operational risk,
   with command syntax, input files, outputs, patch/client-help caveat, and validation
   steps.
+- J037 update: `13_isql_iloader_basic_tools.md` now includes source-backed blocks for
+  iSQL host variables and `PREPARE`, iLoader `structout`, `-displayquery`, `-silent`,
+  `-nst`, `-replication`, `-partition`, `-geom WKB`, `-verbose`, `-readsize`,
+  `-async_prefetch`, `-lightmode`, and 7.1-scoped `-stmt_prefix`; it preserves a
+  source-limited caution for `-dry-run` because the checked selected sources list the
+  option but do not explain full semantics. `14_utilities_operation_tools.md` now
+  includes source-backed `altiComp`, `dataCompJ`, and dump-family output evidence maps.
+  No live `isql`, `iloader`, `altiComp`, `dataCompJ`, or dump utility execution was
+  performed during J037, so final production runbooks should still ask for exact
+  client/tool version and installed help/output when behavior is package-specific.
 
 ### GAP-J002-017: Spatial, migration, NiFi, and Tableau examples need deeper itemization
 

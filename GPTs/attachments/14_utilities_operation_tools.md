@@ -12,6 +12,7 @@
 - How do I run `aexport`, and which generated scripts should I execute during a logical migration?
 - How do I compare or synchronize replicated Altibase tables with `altiComp`?
 - When should I use `dataCompJ` instead of `altiComp`?
+- How should I interpret `altiComp`, `dataCompJ`, and dump-family output files?
 - How do I operate `aku` for Altibase in a Kubernetes StatefulSet?
 - What are `altiAudit`, `altiMon`, `altierr`, `altiProfile`, dump-family tools, `checkServer`, and `server` used for?
 - Where is Replication Manager GUI workflow guidance covered?
@@ -418,6 +419,52 @@ Verification:
 - `Try` and `Fail` counts in the sync log are reviewed.
 - A follow-up `DIFF` run shows no unexpected differences.
 
+## `altiComp` Output Evidence Blocks
+
+Output block: DIFF summary log
+
+- File pattern: `script_file_name.log`.
+- Contains the executed environment-file content and one summary for each `TABLES` group.
+- High-value fields:
+  - `Fetch Rec In Master`: fetched row count from the master database.
+  - `Fetch Rec In Slave`: fetched row count from the slave database.
+  - `MOSX = DF, Count`: rows found only in the master database.
+  - `MXSO = DF, Count`: rows found only in the slave database.
+  - `MOSO = DF, Count`: rows with the same primary key but different compared values.
+  - `MOSO = EQ, Count`: rows with the same primary key and matching compared values.
+  - `SCAN TPS` and `Time`: scan throughput and elapsed time for the comparison.
+
+Output block: DIFF per-table result file
+
+- File pattern: `master_table-user_name.slave_table.log`.
+- Record format:
+
+```text
+DF[m,n]-> COL_N (Vn_M, Vn_S):PK->{ PCOL_V }
+```
+
+- `DF`: difference class, such as `MOSX`, `MOSO`, or `MXSO`.
+- `m`: master-side record order in the comparison stream.
+- `n`: slave-side record order in the comparison stream.
+- `COL_N`: first compared column that differs.
+- `Vn_M`: master-side value for the differing column.
+- `Vn_S`: slave-side value for the differing column.
+- `PCOL_V`: primary-key value used to identify the record.
+- Caution: LOB column values are not recorded in the result file.
+
+Output block: SYNC summary log
+
+- File pattern: `script_file_name.log`.
+- Contains the executed environment-file content, synchronization policy summary, and one summary for each `TABLES` group.
+- Policy values include `SI` for insert-to-slave, `SU` for update-to-slave, and disabled policy markers where no corrective action is configured.
+- High-value fields:
+  - `Operation`: corrective action such as `INSERT`, `UPDATE`, or `DELETE`.
+  - `Try`: number of corrective attempts.
+  - `Fail`: number of failed corrective attempts.
+  - `OOP TPS`: out-of-place operation throughput for corrective work.
+  - `SCAN TPS`: comparison scan throughput.
+- If failures exist, preserve the error log and failed record detail, then rerun `DIFF` after fixing the root cause.
+
 ## Tool Block: `dataCompJ`
 
 Purpose: `dataCompJ` is a Java CLI tool for comparing Altibase data with a heterogeneous slave database and optionally synchronizing the slave database according to configured policies.
@@ -523,6 +570,45 @@ DIFF output files:
 - `SchemaName.TableName_SLAVE_diff.csv`: slave-side rows for `MOSO` differences.
 - `SchemaName.TableName_MASTER_only.csv`: rows present only in the master table (`MOSX`).
 - `SchemaName.TableName_SLAVE_only.csv`: rows present only in the slave table (`MXSO`).
+
+## `dataCompJ` Report Interpretation Blocks
+
+Output block: generated files
+
+- `dataCompJ_report.txt`: text report summarizing build and run results.
+- `dataCompJ.log`: program event log for detailed execution history.
+- `dataCompJ_data.log`: run-phase data-event log written when `<TraceInconsistentRecord>true</TraceInconsistentRecord>` is configured.
+- Caution: `dataCompJ_data.log` can become very large and slow the tool when many inconsistent records exist.
+
+Output block: Build section in `dataCompJ_report.txt`
+
+- `Started`, `Finished`, `Elapsed`: build-phase timing.
+- `[ User input information ]`: effective user-provided configuration summary.
+- `[ Problematic table(s): n ]`: table pairs rejected during build validation.
+- `[ Candidate table(s) for data comparison: n ]`: table pairs accepted for the run phase.
+- Per-candidate details:
+  - `SELECT SQL`: query generated for the master table comparison stream.
+  - `Excluded columns`: columns excluded by configuration or unsupported comparison.
+  - `Where condition`: selection predicate applied to both sides.
+  - `N/A data type columns`: columns excluded because the data type is not supported for comparison, for example `CLOB`.
+
+Output block: DIFF Run section in `dataCompJ_report.txt`
+
+- `Fetched record count from MASTER`: master-side row count read for the table pair.
+- `Fetched record count from SLAVE`: slave-side row count read for the table pair.
+- `MOSO Matched`: rows with matching primary key and matching compared values.
+- `MOSO Diff`: rows with matching primary key and different compared values.
+- `MOSX Master only`: rows present only in the master table.
+- `MXSO Slave only`: rows present only in the slave table.
+- For `MOSO` differences, compare `SchemaName.TableName_MASTER_diff.csv` and `SchemaName.TableName_SLAVE_diff.csv`; the files store corresponding records in the same order.
+
+Output block: SYNC Run section in `dataCompJ_report.txt`
+
+- `Type`: difference class, such as `MOSO`, `MOSX`, or `MXSO`.
+- `Resolution`: configured corrective action such as `UPDATE TO SLAVE`, `INSERT TO SLAVE`, or `DELETE FROM SLAVE`.
+- `Try`: number of attempted corrective operations.
+- `Fail`: number of failed corrective operations.
+- Verification: after `SYNC`, rerun `DIFF` on the same `TablePair` and confirm `MOSO Diff`, `MOSX Master only`, and `MXSO Slave only` are zero or match the approved residual list.
 
 Data type compatibility summary:
 
@@ -1012,6 +1098,77 @@ Verification Method:
 ## Dump-Family Diagnostic Tools
 
 The dump-family tools convert binary Altibase internal files into readable text for diagnostics. They are usually evidence-gathering tools, not normal data access tools. Keep outputs version-matched with the Altibase binary and share them with support when investigating recovery, storage, log, or crash issues.
+
+## Dump-Family Output Evidence Map
+
+Use this map when a customer pastes dump output and asks what fields matter. Do not treat dump output as current live state unless the file source, copy time, Altibase version, and server status are known.
+
+Output block: `dumpbi`
+
+- Sections: `[BACKUP INFO FILE HDR]`, `[BACKUP INFO SLOT]`.
+- High-value fields:
+  - `Backup info slot count`: number of stored backup slots.
+  - `Last backup LSN`: most recent backup LSN and backupInfo validity clue.
+  - `Database name`: database name recorded in the file.
+  - `Begin backup time`, `End backup time`: backup window.
+  - `Backup target`: `DATABASE` or `TABLESPACE`.
+  - `Backup level`: `level 0` or `level 1`.
+  - `Backup Type`: full, differential, or cumulative.
+  - `Tablespace ID`, `File ID`, `Backup Tag`, `Backup file name`: identify the backed-up scope and artifact.
+
+Output block: `dumpct`
+
+- Sections: `[CHANGE TRACKING FILE HDR]`, `[CHANGE TRACKING FILE BODY]`.
+- High-value fields:
+  - `Change tracking body count`: number of body areas in the changeTracking file.
+  - `Incremental backup chunk size`: `INCREMENTAL_BACKUP_CHUNK_SIZE` at creation time.
+  - `Last flush LSN` or `Flush LSN`: LSN when changed memory data was flushed to the file.
+  - `Database name`: database name recorded in the file.
+  - `Datafile descriptor slot` and `Slot ID`: link change-tracking body detail to datafile descriptors.
+
+Output block: `dumpdb`
+
+- Use `dumpdb -j 7 -f file_name` for memory tablespace incremental-backup metadata.
+- High-value fields for incremental backup output:
+  - `Binary DB Version`: version of the data file.
+  - `Redo LSN`: redo point for media recovery.
+  - `Create LSN`: checkpoint image creation LSN.
+  - `DataFileDescSlot ID`: changeTracking descriptor slot tied to the memory checkpoint image.
+
+Output block: `dumpddf`
+
+- Header fields:
+  - `Binary DB Version`: datafile version.
+  - `Redo LSN`: starting point for media recovery when loganchor redo is later than the datafile redo.
+  - `Create LSN`: datafile creation LSN.
+  - `MustRedo LSN`: redo target needed during media recovery.
+  - `DataFileDescSlot ID`: changeTracking descriptor slot tied to the disk datafile.
+- Incremental-backup header fields can include `Begin Backup Time`, `End Backup Time`, `IBChunk Count`, `Backup Target`, `Backup Level`, `Backup Type`, `TableSpace ID`, `File ID`, `Backup Tag Name`, and `Backup File Name`.
+
+Output block: `dumpla`
+
+- Sections: `[LOGANCHOR ATTRIBUTE SIZE]`, `[LOGANCHOR HEADER]`, `[TABLESPACE ATTRIBUTE]`, `[MEMORY CHECKPOINT PATH ATTRIBUTE]`, `[MEMORY CHECKPOINT IMAGE ATTRIBUTE]`, `[DISK DATABASE FILE ATTRIBUTE]`, `[Change Tracking ATTRIBUTE]`, and `[Backup Info ATTRIBUTE]`.
+- High-value header fields:
+  - `Binary DB Version`, `Archivelog Mode`, `Begin Checkpoint LSN`, `End Checkpoint LSN`, `Disk Redo LSN`, `LSN for Recovery from Replication`, `Server Status`, `End LSN`, `ResetLog LSN`, `Last Created Logfile Num`, and `Delete Logfile(s) Range`.
+- `Server Status` caution: if startup sees a status indicating the previous server was started rather than cleanly shut down, restart recovery is required.
+- Tablespace status values can include `OFFLINE`, `ONLINE`, `INCONSISTENT`, `CREATING`, `DROPPING`, `DROP_PENDING`, `DROPPED`, `DISCARDED`, `BACKUP`, `SWITCHING_TO_OFFLINE`, and `SWITCHING_TO_ONLINE`.
+- Disk datafile status values can include `OFFLINE`, `ONLINE`, `CREATING`, `BACKUP_BEGIN`, `BACKUP_END`, `DROPPING`, `RESIZING`, and `DROPPED`.
+
+Output block: `dumplf`
+
+- Common record fields:
+  - `LSN`: physical log position as file number and offset.
+  - `COMP`: whether the log record is compressed.
+  - `MAGIC`: validity value based on the log LSN.
+  - `TID`: transaction identifier.
+  - `BE`: begin-transaction flag.
+  - `REP`: whether a replication Sender sends or references the log.
+  - `ISVP` and `ISVP_DEPTH`: implicit savepoint flag and nesting depth.
+  - `PLSN`: previous log LSN for the same transaction chain.
+  - `LT`: log type.
+  - `SZ`: log size in bytes.
+- Frequently useful `LT` values include checkpoint, transaction commit/abort, savepoint, DDL, LOB-for-replication, memory update, NTA, compensation, file, disk redo/undo, and table metadata log types.
+- `-S lsn [-F path] [-g]` output summarizes `INSERT`, `UPDATE`, `DELETE`, `COMMIT`, and `ROLLBACK` counts in memory database logs from an LSN; with `-g`, include table object ID statistics.
 
 ## Tool Block: `dumpbi`
 
