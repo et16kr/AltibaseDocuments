@@ -262,6 +262,12 @@ recording or remediating gaps.
   Message References, with component-specific evidence prompts and cross-references.
   This gap remains `Open` for J026 QA and for exhaustive exact-code coverage outside
   the J023-J025 grouped blocks.
+- J026 update: `GPTs/attachments/07_error_messages_troubleshooting.md` now includes a
+  QA gate for exact-code answers, aligns the response format with `Required Customer
+  Input`, tightens uncovered-code and prefix-safety wording, and routes remaining
+  Spatial `ST Error Code` exact-code work into `GAP-J026-001`. This gap remains
+  `Open` only for exhaustive exact-code coverage outside the J023-J025 grouped blocks
+  and the explicitly split spatial/sharding follow-up gaps.
 
 ### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
 
@@ -289,6 +295,39 @@ recording or remediating gaps.
   evidence, and avoid broad 7.3 or 8.1 `sdERR_*` claims. If later accepted sharding
   sources are added, create exact-code maps with version scope, cause/action, and
   metadata/topology checks.
+
+### GAP-J026-001: Spatial `ST Error Code` exact-code blocks need itemization
+
+- Status: `Open`
+- Source family and version scope: `error_message_reference` plus
+  `spatial_nifi_tableau` and related dictionary metadata; Altibase 7.1, Altibase 7.3,
+  and Altibase 8.1 verified source, with Korean Error Message Reference and Spatial
+  SQL Reference manuals as the authority.
+- Missing item or behavior: The selected Korean Error Message Reference manuals list
+  `ST Error Code` / `stERR_*` chapters for Spatial SQL and geometry processing, but
+  the customer-facing error attachment does not yet provide exact-code maps for
+  Spatial errors such as WKT/WKB parsing, incompatible geometry types, SRID-sensitive
+  operations, invalid buffer distance, object integrity, ring/line/polygon validation,
+  and Spatial conversion failures.
+- Affected attachments: `07_error_messages_troubleshooting.md` for exact-code
+  troubleshooting blocks; `19_spatial_nifi_tableau_misc.md` for Spatial SQL,
+  `GEOMETRY`, SRID, `GEOMETRY_COLUMNS`, `SPATIAL_REF_SYS`, R-Tree, and
+  `altiShapeLoader` cross-references.
+- Evidence: `GPTs/reports/error_reference_inventory.md`;
+  `Manuals/Altibase_7.1/kor/Error Message Reference.md`;
+  `Manuals/Altibase_7.3/kor/Error Message Reference.md`;
+  `Manuals/Altibase_trunk/kor/Error Message Reference.md`;
+  `Manuals/Altibase_7.1/kor/Spatial SQL Reference.md`;
+  `Manuals/Altibase_7.3/kor/Spatial SQL Reference.md`;
+  `Manuals/Altibase_trunk/kor/Spatial SQL Reference.md`.
+- Required remediation shape: Add grouped exact-code maps with code, decimal value,
+  symbol, message, source-backed cause/action, affected version scope, and first
+  checks. Required customer-input prompts should request the failed Spatial SQL
+  function or operator, `GEOMETRY` column definition, WKT/WKB/EWKT/EWKB input when
+  safe to share, SRID value, `GEOMETRY_COLUMNS` and `SPATIAL_REF_SYS` evidence,
+  `altiShapeLoader` command/source file when relevant, exact version and patch level,
+  and trace or utility output. Cross-reference `19_spatial_nifi_tableau_misc.md` for
+  Spatial syntax and metadata procedures.
 
 ### GAP-J002-009: Monitoring API and SNMP behavior was source-reviewed, not live-tested
 

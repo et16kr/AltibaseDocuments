@@ -104,7 +104,7 @@ for 8.1 customer-facing labels.
 | `04_sql_dml_oracle_compatibility.md` | `sql_reference` | `general_reference_1_datatypes_properties`, `migration_oracle` | DML, functions, predicates, expressions, JSON SQL, and Altibase/Oracle difference blocks. | `GAP-J002-005`, `GAP-J002-017` |
 | `05_data_types_properties.md` | `general_reference_1_datatypes_properties` | `release_notes_platform`, `patch_notes`, `sql_reference` | Data type and property item blocks, JSON, LOB, Temporary LOB, property defaults/ranges/check SQL. | `GAP-J002-001`, `GAP-J002-004`, `GAP-J002-005` |
 | `06_data_dictionary_performance_views.md` | `general_reference_2_dictionary_views` | `performance_tuning`, `replication_manual`, `patch_notes` | Dictionary/performance view blocks, key columns, object lookup SQL, version-sensitive view availability. | `GAP-J002-006`, `GAP-J002-010` |
-| `07_error_messages_troubleshooting.md` | `error_message_reference` | `sql_reference`, `general_reference_1_datatypes_properties`, `replication_manual`, `security_ssl_tls` | Error code/cause/action blocks, exact-code troubleshooting, related properties/views/check SQL. | `GAP-J002-008` |
+| `07_error_messages_troubleshooting.md` | `error_message_reference` | `sql_reference`, `general_reference_1_datatypes_properties`, `replication_manual`, `security_ssl_tls`, `spatial_nifi_tableau` | Error code/cause/action blocks, exact-code troubleshooting, related properties/views/check SQL, uncovered-code response guardrails. | `GAP-J002-008`, `GAP-J026-001` |
 | `08_performance_tuning_monitoring.md` | `performance_tuning`, `monitoring_api_snmp` | `general_reference_2_dictionary_views`, `release_notes_platform` | Plan/tuning workflows, hints, statistics, monitoring APIs, SNMP, source-limited JSON plan guardrails. | `GAP-J002-001`, `GAP-J002-006`, `GAP-J002-009` |
 | `09_replication_ha_cdc.md` | `replication_manual`, `log_analyzer`, `replication_manager` | `security_ssl_tls`, `technical_documents_support`, `general_reference_2_dictionary_views` | Replication topology, DDL, state, compatibility, CDC, RepMgr, SSL, network runbooks. | `GAP-J002-002`, `GAP-J002-010`, `GAP-J002-011`, `GAP-J002-018` |
 | `10_psm_stored_external_procedures.md` | `stored_external_procedures` | `sql_reference`, `general_reference_1_datatypes_properties` | PSM, packages, triggers, external procedures, type mapping, external library deployment. | `GAP-J002-013` |
@@ -116,7 +116,7 @@ for 8.1 customer-facing labels.
 | `16_dblink_external_connectors.md` | `dblink_hadoop_external_connectors` | `jdbc_java`, `technical_documents_support`, `third_party_guides`, `security_ssl_tls` | DB Link, Hadoop Connector, third-party connector procedures, Java runtime and linker checks. | `GAP-J002-012`, `GAP-J002-014` |
 | `17_kubernetes_aku_cloud.md` | `kubernetes_aku`, `third_party_guides` | `release_notes_platform`, `utilities_datacompj`, `replication_manual`, `security_ssl_tls` | Kubernetes deployment, AKU samples, container operations, image/env fields, validation steps. | `GAP-J002-012`, `GAP-J002-018` |
 | `18_security_ssl_tls.md` | `security_ssl_tls` | `replication_manual`, `jdbc_java`, `c_cli_odbc_precompiler`, `technical_documents_support` | Client/server TLS, certificate setup, JDBC/CLI/tool TLS placement, replication SSL separation and checks. | `GAP-J002-002`, `GAP-J002-012`, `GAP-J002-018` |
-| `19_spatial_nifi_tableau_misc.md` | `spatial_nifi_tableau`, `third_party_guides` | `jdbc_java`, `isql_iloader`, `utilities_datacompj`, `migration_oracle` | Spatial SQL, `GEOMETRY`, altiShapeLoader, NiFi, Tableau, JDBC settings, validation outcomes. | `GAP-J002-017` |
+| `19_spatial_nifi_tableau_misc.md` | `spatial_nifi_tableau`, `third_party_guides` | `jdbc_java`, `isql_iloader`, `utilities_datacompj`, `migration_oracle`, `error_message_reference` | Spatial SQL, `GEOMETRY`, altiShapeLoader, NiFi, Tableau, JDBC settings, validation outcomes, Spatial error cross-references. | `GAP-J002-017`, `GAP-J026-001` |
 
 ## Later-Job Handoff
 
@@ -215,6 +215,11 @@ for 8.1 customer-facing labels.
   utility command syntax routed to `13` and `14`, DB Link/`AltiLinker` procedures
   routed to `16`, and SSL/TLS setup routed to `18`; `GAP-J002-008` remains open for
   J026 QA and non-scoped exact-code coverage.
+- J026 validated troubleshooting structure, exact-code handling, escalation wording,
+  and unresolved error gaps in `07_error_messages_troubleshooting.md`. It keeps the
+  20-file attachment boundary unchanged, adds QA guardrails for uncovered exact codes,
+  and splits Spatial `ST Error Code` exact-code itemization into `GAP-J026-001` for
+  the later Spatial expansion.
 - J027-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide

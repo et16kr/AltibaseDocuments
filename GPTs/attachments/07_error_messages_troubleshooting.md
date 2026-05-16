@@ -12,6 +12,7 @@
 - How should a GPT answer when the user provides only `ERR-xxxxx`, an error message, or a trace log excerpt?
 - Which log files, SQL checks, and commands should be requested for startup, SQL execution, connection, replication, SSL, LOB, JSON, regular expression, tablespace, and lock errors?
 - Which errors are version-sensitive in 7.1, 7.3, and 8.1?
+- How should unresolved `stERR_*`, `sdERR_*`, overlapping `0x510xx`, or other exact-code gaps be handled without inventing a cause?
 - How should an error response be formatted so the answer is consistent in any user language?
 
 ## Source Documents
@@ -38,15 +39,15 @@ Expanded block routing:
 - Storage, backup, recovery, datafile, log, lock, and tablespace errors: use storage/recovery error blocks when present.
 - SQL, DDL, data type, constraint, JSON, Temporary LOB, LOB, and regular expression errors: use SQL/data-type error blocks when present.
 - Client, network, SSL/TLS, replication, utility, DB Link, Log Analyzer, APRE, and CLI/ODBC errors: use client/tool/replication error blocks when present.
-- Unresolved exact-code gaps and source-drift cases: preserve the supplied code and ask for exact version and evidence before a definitive answer.
+- Unresolved exact-code gaps and source-drift cases: preserve the supplied code and ask for exact version, patch level, and evidence before a definitive answer.
 
 ## Response Rules
 
 - Answer explanations in the user's language.
 - Keep SQL object names, function names, error codes, reference symbols, property names, commands, file paths, and environment variables literal.
 - Preserve the exact error code and message the user provided. Do not translate or rewrite `ERR-31363`, `0x31363`, `qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE`, `TEMPORARY_LOB_ENABLE`, `REGEXP_MODE`, `ALTIBASE_SSL_PORT_NO`, or similar tokens.
-- If the user gives only an error code, ask for the full error line, Altibase version, SQL or command, and relevant trace log excerpt before making a final diagnosis.
-- If the user gives a specific Altibase error code that does not match one of the consolidated error blocks, preserve the supplied code and message. Do not answer only that the code is absent from the attachments. Set cause/action beyond the user's evidence to `Unknown from the supplied message`, and ask for the Altibase version, full error line, SQL or command, and relevant trace log excerpt. Do not infer cause, action, `SQLSTATE`, module, or severity from the prefix or code family alone.
+- If the user gives only an error code, ask for the full error line, Altibase version and patch level, SQL or command, and relevant trace log excerpt before making a final diagnosis.
+- If the user gives a specific Altibase error code that does not match one of the consolidated error blocks, preserve the supplied code and message. Do not answer only that the code is absent from the attachments. Set cause/action beyond the user's evidence to `Unknown from the supplied message`, and ask for the Altibase version and patch level, full error line, SQL or command, object definition when relevant, and trace log excerpt. Do not infer cause, action, `SQLSTATE`, module, or severity from the prefix or code family alone.
 - Runtime messages often appear as `[ERR-31363 : Cannot execute DDL when a temporary table is in use.]`. The Error Message Reference may list the same code as `0x31363 (201571)` with a reference symbol. Keep both forms when known.
 - Treat placeholders such as `<0%s>`, `<1%d>`, and `<0%lu>` as values that Altibase substitutes at runtime. Do not ask users to type placeholders literally.
 - If the reference action says to contact support, first collect version, exact command, SQL text, timestamp, trace log excerpts, OS error number if present, and reproduction steps.
@@ -66,12 +67,21 @@ Symptom:
 Primary Causes:
 Immediate Action:
 Check SQL or Command:
+Required Customer Input:
 Version Cautions:
 Escalation:
 Related Document:
 ```
 
 If one field is unknown, say `Unknown from the supplied message` instead of inventing it.
+
+QA gate before answering:
+
+- Exact code: keep the user's literal `ERR-xxxxx`, `0x...`, symbol, and message. If a grouped block has an exact-code map, use the map row before general prose.
+- Missing evidence: fill `Required Customer Input` with the exact missing version, patch level, SQL or command, object definition, topology, OS error, client/tool version, certificate path, or trace excerpt needed for a safe answer.
+- Prefix safety: use prefixes such as `rpERR_*`, `stERR_*`, or `ulERR_*` only as routing hints after the exact symbol, message, component, and context are known.
+- Action safety: do not recommend restart, recovery, datafile replacement, `RESETLOGS`, object drop/rebuild, replication rebuild, certificate replacement, or property changes until the required evidence supports that action.
+- Gap handling: for uncovered exact codes, preserve the code, state `Unknown from the supplied message` for unsupported cause/action fields, provide the safest source-backed next check, and cross-reference the owning attachment.
 
 Short answers may compress the fields, but preserve the same order:
 
@@ -150,7 +160,7 @@ Inherited escalation default for every error block:
 flowchart TD
   A[Capture exact error line] --> B[Identify Altibase version and client or server context]
   B --> C[Normalize runtime code to reference code if possible]
-  C --> D{Which module?}
+  C --> D{Which exact entry or context lane?}
   D --> E[SQL or object metadata]
   D --> F[Storage, tablespace, lock, backup, recovery]
   D --> G[Connection, utility, SSL, network]
@@ -185,7 +195,7 @@ tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
 tail -200 "$ALTIBASE_HOME/trc/altibase_rp.log"
 ```
 
-Use `altibase_rp.log` when the error prefix is `rpERR_*` or the message mentions replication sender, receiver, handshake, sync, or replication socket.
+Use `altibase_rp.log` when the reference symbol is `rpERR_*` or the message mentions replication sender, receiver, handshake, sync, or replication socket.
 
 ## Common Check SQL
 
@@ -2701,6 +2711,16 @@ Use this order:
 3. For LOB locator errors, check autocommit and transaction boundaries.
 4. For JSON path errors, validate JSON data, JSON path expression, wrapper option, and `RETURNING` clause.
 
+### Uncovered, Sharding, and Spatial Error Codes
+
+Use this order:
+
+1. Preserve the exact runtime code, reference code, symbol, and message. Do not route by numeric code alone, especially for overlapping `0x510xx` families.
+2. For `sdERR_*`, use the 7.1 source-backed sharding caution and require exact installed-version evidence before making a 7.3 or 8.1 `sdERR_*` claim.
+3. For `stERR_*` Spatial errors, ask for the failed Spatial SQL function or operator, `GEOMETRY` column definition, WKT/WKB/EWKT/EWKB input if safe to share, SRID value, `GEOMETRY_COLUMNS` and `SPATIAL_REF_SYS` evidence, and the exact version and patch level.
+4. For Spatial SRID or replication-geometry messages under `QP` or `RP`, use the exact code first and cross-check Spatial metadata before recommending DDL or replication changes.
+5. If no consolidated exact-code block exists, use `Unknown from the supplied message` for unsupported cause/action fields and route the user to the safest source-backed check in `19_spatial_nifi_tableau_misc.md` or the owning attachment.
+
 ## Version Differences
 
 - 7.1: Use 7.1 Error Message Reference wording when the customer reports a 7.1 system. Do not assume 8.1 JSON behavior.
@@ -2719,11 +2739,13 @@ Use this order:
 - Use `14_utilities_operation_tools.md` when the normalized error comes from `aexport`, `altiComp`, dump/profile utilities, or other operational tools.
 - Use `16_dblink_external_connectors.md` when the normalized error involves DB Link, `AltiLinker`, `dblink.conf`, remote SQL, or global transactions.
 - Use `18_security_ssl_tls.md` for SSL/TLS listener, certificate, cipher, FIPS, client handshake, and replication SSL configuration checks.
+- Use `19_spatial_nifi_tableau_misc.md` when the normalized error involves Spatial SQL, `GEOMETRY`, SRID metadata, WKT/WKB/EWKT/EWKB conversion, R-Tree behavior, `altiShapeLoader`, NiFi, or Tableau integration checks.
 
 ## Residual Scope
 
 - J023 expanded storage, backup, recovery, datafile, log, checkpoint, incremental backup, and tablespace exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps are still grouped troubleshooting blocks, not a replacement for the complete source manuals.
 - J024 expanded SQL parser, DDL, table/column/data type, constraint, regular-expression, JSON, LOB, Temporary LOB, and related client/utility LOB exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. JSON and Temporary LOB blocks remain 8.1-scoped.
 - J025 expanded client connection, network, SSL/TLS, replication, utility, DB Link, Log Analyzer, APRE, and CLI/ODBC grouped exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps preserve component-specific evidence prompts and avoid numeric-only routing for overlapping `0x510xx` families.
+- J026 QA aligned the response format with `Required Customer Input`, tightened uncovered-code and prefix-safety wording, and recorded the remaining Spatial `ST Error Code` exact-code itemization gap as `GAP-J026-001`.
 - Add future error blocks only after source-backed review, and keep the standardized error format above.
 - The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here.

@@ -607,6 +607,45 @@ existing client and server SSL error blocks. No new manual/source-backed gap was
 discovered during J025; `GAP-J002-008` remains open for J026 QA and for exhaustive
 exact-code coverage outside the J023-J025 grouped blocks.
 
+## J026 Troubleshooting QA And Unresolved Error Gap Addendum
+
+J026 uses the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Error Message Reference manuals remain
+authoritative for exact code, decimal code, symbol, severity heading, message, cause,
+and action; matching English manuals are extraction aids only when consistent.
+Supporting source families for unresolved-gap routing are `spatial_nifi_tableau`,
+`general_reference_2_dictionary_views`, `replication_manual`, and the existing owner
+attachments.
+
+Design note: J026 keeps the 20-file attachment boundary unchanged. It does not attempt
+to convert every remaining Error Message Reference entry into `07_error_messages_troubleshooting.md`.
+Instead, it validates the J022-J025 troubleshooting structure, adds a customer-facing
+QA gate for exact-code answers, aligns the response format with `Required Customer
+Input`, tightens uncovered-code and prefix-safety wording, and records remaining
+manual-backed work in the gap register.
+
+Scoped source paths checked for J026:
+
+- `Manuals/Altibase_7.1/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.3/kor/Error Message Reference.md`
+- `Manuals/Altibase_trunk/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.1/kor/Spatial SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/Spatial SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/Spatial SQL Reference.md`
+- `GPTs/attachments/19_spatial_nifi_tableau_misc.md`
+- `GPTs/reports/error_reference_inventory.md`
+- `GPTs/reports/gap_register.md`
+
+J026 updated `GPTs/attachments/07_error_messages_troubleshooting.md` to require
+explicit `Required Customer Input` handling, preserve user-supplied exact codes and
+messages, avoid module/severity/`SQLSTATE` inference from prefixes alone, and stop
+before destructive or environment-changing remedies when evidence is incomplete. No
+new Korean/English source-drift case was found beyond the existing `SD Error Code`
+drift tracked as `GAP-J022-001`. J026 records `GAP-J026-001` for the remaining
+Spatial `ST Error Code` exact-code itemization gap across the selected Korean 7.1,
+7.3, and Altibase 8.1 verified source Error Message Reference and Spatial SQL
+Reference sources.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

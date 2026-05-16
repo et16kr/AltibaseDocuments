@@ -57,7 +57,7 @@ one oversized remediation pass. The partitioning is:
 | `J023` | `ToDo` | Storage backup recovery and tablespace errors | Expand storage, backup, recovery, datafile, log, and tablespace error coverage. |
 | `J024` | `Done` | SQL DDL data type JSON and LOB errors | Expand SQL, DDL, data type, constraint, JSON, LOB, and Temporary LOB error coverage. |
 | `J025` | `ToDo` | Client network security replication and tool errors | Expand client, network, SSL/TLS, replication, utility, and tool error coverage. |
-| `J026` | `ToDo` | Troubleshooting QA and unresolved error gaps | Validate troubleshooting structure, exact-code handling, escalation wording, and gaps. |
+| `J026` | `Done` | Troubleshooting QA and unresolved error gaps | Validate troubleshooting structure, exact-code handling, escalation wording, and gaps. |
 | `J027` | `ToDo` | Installation platform startup and shutdown runbooks | Expand installation, platform, database creation, startup, shutdown, and first-run runbooks. |
 | `J028` | `ToDo` | Backup archive and incremental backup runbooks | Expand logical, offline, online, archive log, loganchor, and incremental backup runbooks. |
 | `J029` | `ToDo` | Restore recovery and media failure runbooks | Expand complete, incomplete, incremental, tablespace, datafile, temp file, and media recovery runbooks. |

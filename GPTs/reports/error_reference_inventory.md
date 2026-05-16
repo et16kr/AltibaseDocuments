@@ -117,7 +117,7 @@ Severity notation below: `F` = `FATAL`, `A` = `ABORT`, `I` = `IGNORE`, `R` = `RE
 | RP Error Code | `rpERR_*` | Replication definition, sender, receiver, sockets, handshake, sync, metadata | 358 (`F8/A338/I12`) | 390 (`F8/A369/I12/R1`) | 390 (`F8/A369/I12/R1`) | J025 |
 | QP Error Code | `qpERR_*` | SQL parser, DDL, DML, metadata, objects, privileges, PSM, query execution | 851 (`F19/A827/R5`) | 857 (`F19/A833/R5`) | 873 (`F19/A849/R5`) | J023/J024 by topic |
 | SD Error Code | `sdERR_*` | Sharding metadata, shard nodes, shard keys, shard SQL restrictions | 67 (`A67`) | Not listed | Not listed in the checked Korean source | J026 source-drift handling |
-| ST Error Code | `stERR_*` | Spatial SQL and geometry operations | 78 (`F3/A74/I1`) | 79 (`F3/A75/I1`) | 79 (`F3/A75/I1`) | J026 residual or J039 spatial expansion |
+| ST Error Code | `stERR_*` | Spatial SQL and geometry operations | 78 (`F3/A74/I1`) | 79 (`F3/A75/I1`) | 79 (`F3/A75/I1`) | `GAP-J026-001`; J039 spatial expansion |
 | MM Error Code | `mmERR_*` | Main module, sessions, startup, shutdown, protocol, access mode | 155 (`F22/A124/I9`) | 156 (`F22/A125/I9`) | 156 (`F22/A125/I9`) | J025 and later operations runbooks |
 | ODBC Error Code | `ulERR_*` | CLI/ODBC client connection, fetch, bind, LOB, SSL client settings | 152 (`F5/A135/I12`) | 142 (`F5/A125/I12`) | 142 (`F5/A125/I12`) | J025 and J036 |
 | APRE Error Code | `ulpERR_*`, with related `ulERR_*` and `utERR_*` entries | Precompiler and embedded SQL diagnostics | 93 (`A93`) | 93 (`A93`) | 93 (`A93`) | J025 and J036 |
@@ -340,3 +340,38 @@ Message References, except that numeric `0x510xx` values are intentionally treat
 component-sensitive because ODBC/CLI, APRE, and Log Analyzer entries can share numeric
 reference codes with different symbols and messages. `GAP-J002-008` remains open for
 J026 QA and for exhaustive exact-code coverage outside the J023-J025 grouped blocks.
+
+## J026 Completion Addendum
+
+J026 used the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source, with Korean Error Message Reference manuals
+checked first. Supporting source families for QA and unresolved-gap routing were
+`spatial_nifi_tableau`, `general_reference_2_dictionary_views`, `replication_manual`,
+and the existing customer-facing owner attachments.
+
+Design note: J026 keeps the attachment boundary unchanged and does not convert the
+full Error Message Reference into the upload attachment. It validates the
+troubleshooting structure added by J022-J025, aligns the customer-facing format with
+the report schema's `Required Customer Input` field, tightens uncovered-code and
+prefix-safety wording, and records remaining exact-code work in the gap register.
+
+J026 QA confirmed these customer-facing rules in
+`GPTs/attachments/07_error_messages_troubleshooting.md`:
+
+- exact code, symbol, message, and user-supplied `SQLSTATE` must be preserved;
+- grouped blocks must use exact-code map rows before generalized troubleshooting
+  prose;
+- uncovered exact codes must not be answered only as absent from the attachment;
+- causes, actions, severity, module, and `SQLSTATE` must not be inferred from a
+  prefix or numeric code family alone;
+- destructive actions such as restart, recovery, `RESETLOGS`, datafile replacement,
+  object rebuild/drop, replication rebuild, certificate replacement, or property
+  changes require evidence and escalation wording.
+
+No new Korean/English source-drift case was found beyond the existing `SD Error Code`
+drift tracked as `GAP-J022-001`. J026 split the remaining Spatial `ST Error Code`
+exact-code itemization into `GAP-J026-001`, because the selected Korean Error Message
+References include `stERR_*` chapters across 7.1, 7.3, and Altibase 8.1 verified
+source, while customer-facing coverage currently provides Spatial concepts and
+metadata checks in `19_spatial_nifi_tableau_misc.md` but not exact `stERR_*`
+troubleshooting maps in `07_error_messages_troubleshooting.md`.
