@@ -12,6 +12,7 @@
 - How do I generate check SQL for a specific object name?
 - How do I check running sessions, statements, waits, locks, and replication gap?
 - How do I inspect tablespaces, datafiles, archive log mode, backup metadata, checkpoint image state, and file I/O hotspots?
+- How do I inspect optimizer statistics, SQL plan cache, system/session counters, buffer pool, flushers, memory GC, segments, undo, temporary-table spill, and direct-path insert counters?
 - Which dictionary and performance view checks are version-sensitive in 8.1?
 - How should a GPT answer data dictionary questions in the user's language while preserving SQL names and object names literally?
 
@@ -20,6 +21,7 @@
 - 7.1: Altibase 7.1 General Reference 2.
 - 7.3: Altibase 7.3 General Reference 2.
 - 8.1: Altibase 8.1 verified source General Reference 2; Altibase 8.1 Release Notes.
+- Performance interpretation uses the corresponding Performance Tuning Guides where a view is tied to optimizer, plan cache, statistics, buffer, flusher, temporary-table, or memory-GC diagnosis.
 
 ## Response Rules
 
@@ -185,8 +187,9 @@ Use these first when selecting the right source:
 | Transactions | `V$TRANSACTION`, `V$TRANSACTION_MGR`, `V$DBA_2PC_PENDING` |
 | Plan cache | `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT` |
 | System and session counters | `V$STATNAME`, `V$SYSSTAT`, `V$SESSTAT` |
-| Memory module usage | `V$MEMSTAT` |
-| Buffer pool statistics | `V$BUFFPOOL_STAT` |
+| Memory module usage and memory GC | `V$MEMSTAT`, `V$MEMGC` |
+| Buffer pool, undo buffer, and flushers | `V$BUFFPAGEINFO`, `V$BUFFPOOL_STAT`, `V$UNDO_BUFF_STAT`, `V$FLUSHER`, `V$FLUSHINFO`, `V$SBUFFER_STAT`, `V$SFLUSHER`, `V$SFLUSHINFO` |
+| Table, index, segment, undo, temporary, and direct-path internals | `V$MEMTBL_INFO`, `V$DISKTBL_INFO`, `V$INDEX`, `V$DISK_BTREE_HEADER`, `V$MEM_BTREE_HEADER`, `V$MEM_BTREE_NODEPOOL`, `V$SEGMENT`, `V$DB_FREEPAGELISTS`, `V$TSSEGS`, `V$TXSEGS`, `V$UDSEGS`, `V$DISK_UNDO_USAGE`, `V$DISK_TEMP_INFO`, `V$DISK_TEMP_STAT`, `V$DIRECT_PATH_INSERT` |
 | Statistics | `V$DBMS_STATS`, `V$LOCK_TABLE_STATS`, `V$USAGE` |
 | Replication definition | `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, `SYSTEM_.SYS_REPL_ITEMS_` |
 | Replication runtime | `V$REPEXEC`, `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSENDER`, `V$REPRECEIVER` |
@@ -1731,6 +1734,370 @@ ORDER BY u.user_name, t.table_name;
 
 `STAT_LOCKED` values include `NONE` and `LOCKED`.
 
+## Cookbook: Buffer, Memory, Segment, and Temporary Storage Views
+
+### Check Buffer Pool Pressure by Page Type
+
+```sql
+SELECT page_type,
+       read_page_count,
+       get_page_count,
+       fix_page_count,
+       create_page_count,
+       hit_ratio
+FROM V$BUFFPAGEINFO
+ORDER BY read_page_count DESC, get_page_count DESC;
+```
+
+Use `V$BUFFPAGEINFO` when a disk-buffer question needs page-type detail. `PAGE TABLE`, `PAGE INDEX BTREE`, `PAGE TEMP TABLE DATA`, `PAGE UNDO`, and `PAGE LOB DATA` identify the broad page family causing reads, fixes, or new-page requests.
+
+### Check Buffer Pool Lists and Replacement Pressure
+
+```sql
+SELECT id,
+       pool_size,
+       page_size,
+       hot_list_pages,
+       cold_list_pages,
+       prepare_list_pages,
+       flush_list_pages,
+       checkpoint_list_pages,
+       read_pages,
+       hit_ratio,
+       victim_fails,
+       prepare_again_victims,
+       victim_search_warp
+FROM V$BUFFPOOL_STAT
+ORDER BY id;
+```
+
+Compare time-window deltas. Low `HIT_RATIO` with rising `READ_PAGES` means disk pages are being read instead of found in the buffer. Rising `VICTIM_SEARCH_WARP` means replacement-target search pressure is continuing to another prepare list after a target was not found.
+
+### Check Undo Buffer Counters
+
+```sql
+SELECT read_page_count,
+       get_page_count,
+       fix_page_count,
+       create_page_count,
+       hit_ratio
+FROM V$UNDO_BUFF_STAT;
+```
+
+Use this only for undo tablespace buffer statistics. Pair it with `V$DISK_UNDO_USAGE`, `V$TXSEGS`, and transaction evidence before changing undo or transaction-segment properties.
+
+### Check Flusher and Checkpoint Flush State
+
+```sql
+SELECT id,
+       alive,
+       current_job,
+       doing_io,
+       replace_flush_jobs,
+       replace_flush_pages,
+       checkpoint_flush_jobs,
+       checkpoint_flush_pages,
+       object_flush_jobs,
+       object_flush_pages,
+       total_flush_pages,
+       total_log_sync_usec,
+       total_dw_usec,
+       total_write_usec,
+       total_sync_usec,
+       db_write_perf,
+       temp_write_perf
+FROM V$FLUSHER
+ORDER BY id;
+
+SELECT low_flush_length,
+       high_flush_length,
+       low_prepare_length,
+       checkpoint_flush_count,
+       fast_start_io_target,
+       fast_start_logfile_target,
+       req_job_count
+FROM V$FLUSHINFO;
+```
+
+`CURRENT_JOB` values are `1` replacement flush, `2` checkpoint flush, and `3` object flush. Use these views with checkpoint trace timing, `V$BUFFPOOL_STAT.CHECKPOINT_LIST_PAGES`, and OS I/O samples.
+
+### Check Secondary Buffer and Secondary Flushers
+
+```sql
+SELECT page_count,
+       hash_pages,
+       flush_pages,
+       checkpoint_list_pages,
+       get_pages,
+       read_pages,
+       write_pages,
+       hit_ratio,
+       single_read_perf,
+       multi_read_perf
+FROM V$SBUFFER_STAT;
+
+SELECT id,
+       alive,
+       current_job,
+       doing_io,
+       replace_flush_pages,
+       checkpoint_flush_pages,
+       total_flush_pages,
+       total_dw_usec,
+       total_write_usec,
+       total_sync_usec,
+       db_write_perf,
+       temp_write_perf
+FROM V$SFLUSHER
+ORDER BY id;
+
+SELECT flusher_count,
+       checkpoint_list_count,
+       req_job_count,
+       replace_pages,
+       checkpoint_pages,
+       min_spaceid,
+       min_pageid
+FROM V$SFLUSHINFO;
+```
+
+Use this family only when the secondary buffer is configured or the question names secondary-buffer flushing. If the views or columns are absent, verify the target version and `V$ALLCOLUMN` before generating final SQL.
+
+### Check Memory Modules and Memory Garbage Collection
+
+```sql
+SELECT name,
+       alloc_size,
+       alloc_count,
+       max_total_size
+FROM V$MEMSTAT
+ORDER BY alloc_size DESC;
+
+SELECT gc_name,
+       currsystemviewscn,
+       minmemscnintxs,
+       oldesttx,
+       add_oid_cnt,
+       gc_oid_cnt,
+       aging_request_oid_cnt,
+       aging_processed_oid_cnt,
+       thread_count
+FROM V$MEMGC
+ORDER BY gc_name;
+```
+
+`V$MEMSTAT` identifies the module using memory. `V$MEMGC` identifies memory-table MVCC aging pressure; compare `AGING_REQUEST_OID_CNT` and `AGING_PROCESSED_OID_CNT`, then join `OLDESTTX` to transaction/session evidence before recommending an action.
+
+### Check Memory and Disk Table Internals
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       m.tablespace_id,
+       m.mem_page_cnt,
+       m.mem_var_page_cnt,
+       m.fixed_alloc_mem,
+       m.fixed_used_mem,
+       m.var_alloc_mem,
+       m.var_used_mem,
+       m.statement_rebuild_count,
+       m.unique_violation_count,
+       m.update_retry_count,
+       m.delete_retry_count,
+       m.is_consistent
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u,
+     V$MEMTBL_INFO m
+WHERE t.user_id = u.user_id
+  AND t.table_oid = m.table_oid
+ORDER BY u.user_name, t.table_name;
+
+SELECT u.user_name,
+       t.table_name,
+       d.tablespace_id,
+       d.disk_total_page_cnt,
+       d.disk_page_cnt,
+       d.seg_pid,
+       d.pctfree,
+       d.pctused,
+       d.inittrans,
+       d.maxtrans,
+       d.compressed_logging,
+       d.is_consistent
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u,
+     V$DISKTBL_INFO d
+WHERE t.user_id = u.user_id
+  AND t.table_oid = d.table_oid
+ORDER BY u.user_name, t.table_name;
+```
+
+Use table-internal views for evidence only. Do not infer table health from one counter without object DDL, statistics age, recent DDL, and workload context.
+
+### Check Index Internals and Node Pools
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       i.index_id,
+       i.index_seg_pid,
+       i.indextype
+FROM V$INDEX i,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.table_oid = t.table_oid
+  AND t.user_id = u.user_id
+ORDER BY u.user_name, t.table_name, i.index_id;
+
+SELECT index_name,
+       index_id,
+       index_status,
+       index_tbs_id,
+       table_tbs_id,
+       is_unique,
+       is_consistent,
+       free_node_cnt,
+       initextents,
+       nextextents,
+       minextents,
+       maxextents
+FROM V$DISK_BTREE_HEADER
+ORDER BY index_name;
+
+SELECT index_name,
+       index_id,
+       index_status,
+       index_tbs_id,
+       table_tbs_id,
+       is_unique,
+       is_consistent,
+       used_node_count,
+       prepare_node_count,
+       built_type
+FROM V$MEM_BTREE_HEADER
+ORDER BY index_name;
+
+SELECT total_page_count,
+       total_node_count,
+       free_node_count,
+       used_node_count,
+       node_size,
+       total_alloc_req,
+       total_free_req,
+       free_req_count
+FROM V$MEM_BTREE_NODEPOOL;
+```
+
+Use the BTREE header and node-pool views for low-level index status, node use, and consistency evidence. For RTREE-specific questions, first check `V$TABLE` and `V$ALLCOLUMN` for `V$DISK_RTREE_HEADER`, `V$MEM_RTREE_HEADER`, and `V$MEM_RTREE_NODEPOOL`, then use the Spatial attachment for SQL and object semantics.
+
+### Check Segment, Free Page, and Object Space Views
+
+```sql
+SELECT space_id,
+       table_oid,
+       segment_pid,
+       segment_type,
+       segment_state,
+       extent_total_count
+FROM V$SEGMENT
+ORDER BY space_id, segment_type, table_oid, segment_pid;
+
+SELECT space_id,
+       resource_group_id,
+       first_free_page_id,
+       free_page_count
+FROM V$DB_FREEPAGELISTS
+ORDER BY space_id, resource_group_id;
+
+SELECT type,
+       target_id,
+       meta_space,
+       used_space,
+       ageable_space,
+       free_space
+FROM V$USAGE
+ORDER BY type, target_id;
+```
+
+`V$USAGE` is statistics-backed. Run or verify `GATHER_DATABASE_STATS`, `GATHER_TABLE_STATS`, or related `DBMS_STATS` work before treating `V$USAGE` as current object-space evidence.
+
+### Check Undo Segment and Disk Temporary Table Views
+
+```sql
+SELECT tx_ext_cnt,
+       used_ext_cnt,
+       unstealable_ext_cnt,
+       reusable_ext_cnt,
+       total_ext_cnt
+FROM V$DISK_UNDO_USAGE;
+
+SELECT id,
+       trans_id,
+       min_disk_view_scn,
+       commit_scn,
+       first_disk_view_scn,
+       tss_rid,
+       fst_udseg_extent_rid,
+       lst_udseg_extent_rid
+FROM V$TXSEGS
+ORDER BY id;
+
+SELECT space_id,
+       seg_pid,
+       txseg_entry_id,
+       cur_alloc_extent_rid,
+       cur_alloc_page_id,
+       total_extent_count,
+       total_extdir_count,
+       page_count_in_extent
+FROM V$TSSEGS
+ORDER BY space_id, txseg_entry_id;
+
+SELECT space_id,
+       seg_pid,
+       txseg_entry_id,
+       cur_alloc_extent_rid,
+       cur_alloc_page_id,
+       total_extent_count,
+       total_extdir_count,
+       page_count_in_extent
+FROM V$UDSEGS
+ORDER BY space_id, txseg_entry_id;
+
+SELECT tbs_id,
+       transaction_id,
+       consume_time,
+       read_count,
+       write_count,
+       write_page_count,
+       alloc_wait_count,
+       work_area_size,
+       max_work_area_size,
+       disk_usage,
+       runtime_map_size
+FROM V$DISK_TEMP_STAT
+ORDER BY consume_time DESC, disk_usage DESC;
+
+SELECT name, value, unit
+FROM V$DISK_TEMP_INFO
+ORDER BY name;
+```
+
+Use these views for undo pressure, transaction-segment binding, and disk temporary-table spill evidence. If `V$DISK_TEMP_STAT` is empty, confirm whether the workload exceeded `TEMP_STATS_WATCH_TIME` before concluding there was no temporary-table activity.
+
+### Check Direct-Path Insert Counters
+
+```sql
+SELECT commit_tx_count,
+       abort_tx_count,
+       insert_row_count,
+       alloc_buffer_page_try_count,
+       alloc_buffer_page_fail_count
+FROM V$DIRECT_PATH_INSERT;
+```
+
+Use this when the workload uses iLoader or `APPEND`/direct-path insert. Rising `ALLOC_BUFFER_PAGE_FAIL_COUNT` is allocation-failure evidence; pair it with load options, target table DDL, memory settings, and trace/error output.
+
 ## Cookbook: Replication
 
 ### Check Replication Definitions
@@ -2793,6 +3160,32 @@ Searchable module groups:
 | Transaction and temporary memory | `Transaction_DiskPage_Touched_List`, `Transaction_OID_List`, `Transaction_Segment_Table`, `Transaction_Table`, `Transaction_Table_Info`, `Temp_Memory`, `Volatile_Log_Buffer`, `Volatile_Memory_Manager`, `Volatile_Memory_Page` |
 | Extension and support modules | `Database_Link`, `External_Procedure`, `External_Procedure_Agent`, `GIS_DataType`, `GIS_Disk_Index`, `GIS_Function`, `Thread_Stack`, `Timer_Manager`, `SYSTEM` |
 
+### Object Block: `V$MEMGC`
+
+Purpose: shows memory-table garbage collection and MVCC aging state.
+
+Key columns: `GC_NAME`, `CURRSYSTEMVIEWSCN`, `MINMEMSCNINTXS`, `OLDESTTX`, `SCNOFTAIL`, `IS_EMPTY_OIDLIST`, `ADD_OID_CNT`, `GC_OID_CNT`, `AGING_REQUEST_OID_CNT`, `AGING_PROCESSED_OID_CNT`, `THREAD_COUNT`.
+
+When to query: use this view when memory-table old versions are not being reclaimed, memory use grows during long transactions, or an answer needs to identify the oldest transaction holding back memory-table aging.
+
+Representative SQL:
+
+```sql
+SELECT gc_name,
+       currsystemviewscn,
+       minmemscnintxs,
+       oldesttx,
+       add_oid_cnt,
+       gc_oid_cnt,
+       aging_request_oid_cnt,
+       aging_processed_oid_cnt,
+       thread_count
+FROM V$MEMGC
+ORDER BY gc_name;
+```
+
+Interpretation notes: `OLDESTTX` is the transaction ID that owns the oldest memory view SCN. `AGING_REQUEST_OID_CNT` counts requested aging work by OID, while `AGING_PROCESSED_OID_CNT` counts processed aging work by OID. Join to `V$TRANSACTION` and `V$SESSION` before naming a blocking session.
+
 ### Object Block: `V$BUFFPOOL_STAT`
 
 Purpose: shows buffer pool size, list structure, hit ratio, page access counters, replacement-search counters, and disk read performance.
@@ -2844,6 +3237,118 @@ SELECT id,
        lru_searchs_avg
 FROM V$BUFFPOOL_STAT
 ORDER BY id;
+```
+
+### Object Block: `V$BUFFPAGEINFO` and `V$UNDO_BUFF_STAT`
+
+Purpose: `V$BUFFPAGEINFO` shows buffer-frame statistics by page type; `V$UNDO_BUFF_STAT` shows undo tablespace buffer counters.
+
+Key columns: `V$BUFFPAGEINFO.PAGE_TYPE`, `READ_PAGE_COUNT`, `GET_PAGE_COUNT`, `FIX_PAGE_COUNT`, `CREATE_PAGE_COUNT`, `HIT_RATIO`; `V$UNDO_BUFF_STAT.READ_PAGE_COUNT`, `GET_PAGE_COUNT`, `FIX_PAGE_COUNT`, `CREATE_PAGE_COUNT`, `HIT_RATIO`.
+
+When to query: use `V$BUFFPAGEINFO` when a disk-buffer problem needs page-family evidence, such as table pages, index pages, temporary-table pages, undo pages, LOB pages, or segment-header pages. Use `V$UNDO_BUFF_STAT` only for undo-buffer hit and page-request counters.
+
+Representative SQL:
+
+```sql
+SELECT page_type,
+       read_page_count,
+       get_page_count,
+       fix_page_count,
+       create_page_count,
+       hit_ratio
+FROM V$BUFFPAGEINFO
+ORDER BY read_page_count DESC;
+
+SELECT read_page_count,
+       get_page_count,
+       fix_page_count,
+       create_page_count,
+       hit_ratio
+FROM V$UNDO_BUFF_STAT;
+```
+
+Searchable `PAGE_TYPE` examples: `PAGE TABLE`, `PAGE INDEX BTREE`, `PAGE INDEX RTREE`, `PAGE TEMP TABLE DATA`, `PAGE TSS`, `PAGE UNDO`, `PAGE LOB DATA`, `PAGE LOB INODE`, `PAGE FMS SEGHDR`, `PAGE TMS SEGHDR`, `PAGE CMS SEGHDR`, `PAGE FEBT FSB`, `PAGE LOB META`, and `PAGE HV TEMP NODE`.
+
+### Object Block: `V$FLUSHER` and `V$FLUSHINFO`
+
+Purpose: `V$FLUSHER` shows per-flusher activity and accumulated flush I/O counters; `V$FLUSHINFO` shows flush-manager thresholds and queued work.
+
+Key columns: `V$FLUSHER.ID`, `ALIVE`, `CURRENT_JOB`, `DOING_IO`, `REPLACE_FLUSH_JOBS`, `REPLACE_FLUSH_PAGES`, `CHECKPOINT_FLUSH_JOBS`, `CHECKPOINT_FLUSH_PAGES`, `OBJECT_FLUSH_JOBS`, `OBJECT_FLUSH_PAGES`, `TOTAL_FLUSH_PAGES`, `TOTAL_LOG_SYNC_USEC`, `TOTAL_DW_USEC`, `TOTAL_WRITE_USEC`, `TOTAL_SYNC_USEC`, `DB_WRITE_PERF`, `TEMP_WRITE_PERF`; `V$FLUSHINFO.LOW_FLUSH_LENGTH`, `HIGH_FLUSH_LENGTH`, `LOW_PREPARE_LENGTH`, `CHECKPOINT_FLUSH_COUNT`, `FAST_START_IO_TARGET`, `FAST_START_LOGFILE_TARGET`, `REQ_JOB_COUNT`.
+
+When to query: use this family for checkpoint flush delay, replacement flush backlog, object flush work, or verifying a flusher identifier before `ALTER SYSTEM START FLUSHER` or `ALTER SYSTEM STOP FLUSHER`.
+
+Value notes: `CURRENT_JOB = 1` means replacement flush, `2` means checkpoint flush, and `3` means object flush. `ALIVE` indicates whether the flusher is active.
+
+Representative SQL:
+
+```sql
+SELECT id,
+       alive,
+       current_job,
+       doing_io,
+       checkpoint_flush_jobs,
+       checkpoint_flush_pages,
+       total_flush_pages,
+       total_log_sync_usec,
+       total_dw_usec,
+       total_write_usec,
+       total_sync_usec,
+       db_write_perf
+FROM V$FLUSHER
+ORDER BY id;
+
+SELECT low_flush_length,
+       high_flush_length,
+       low_prepare_length,
+       checkpoint_flush_count,
+       fast_start_io_target,
+       fast_start_logfile_target,
+       req_job_count
+FROM V$FLUSHINFO;
+```
+
+### Object Block: `V$SBUFFER_STAT`, `V$SFLUSHER`, and `V$SFLUSHINFO`
+
+Purpose: shows secondary-buffer statistics, secondary-buffer flusher activity, and secondary-buffer flush-manager state.
+
+Key columns: `V$SBUFFER_STAT.PAGE_COUNT`, `HASH_BUCKET_COUNT`, `CHECKPOINT_LIST_COUNT`, `HASH_PAGES`, `FLUSH_PAGES`, `CHECKPOINT_LIST_PAGES`, `GET_PAGES`, `READ_PAGES`, `WRITE_PAGES`, `HIT_RATIO`, `SINGLE_PAGE_READ_USEC`, `SINGLE_PAGE_WRITE_USEC`, `MPR_READ_USEC`, `MPR_READ_PAGE_COUNT`, `SINGLE_READ_PERF`, `MULTI_READ_PERF`; `V$SFLUSHER` shares the main flusher activity columns such as `CURRENT_JOB`, `REPLACE_FLUSH_PAGES`, `CHECKPOINT_FLUSH_PAGES`, `TOTAL_DW_USEC`, `TOTAL_WRITE_USEC`, and `TOTAL_SYNC_USEC`; `V$SFLUSHINFO` includes `FLUSHER_COUNT`, `CHECKPOINT_LIST_COUNT`, `REQ_JOB_COUNT`, `REPLACE_PAGES`, `CHECKPOINT_PAGES`, `MIN_SPACEID`, and `MIN_PAGEID`.
+
+When to query: use this family only when the secondary buffer is in scope or the question names secondary-buffer reads, writes, hit ratio, or secondary flusher state.
+
+Representative SQL:
+
+```sql
+SELECT page_count,
+       hash_pages,
+       flush_pages,
+       checkpoint_list_pages,
+       get_pages,
+       read_pages,
+       write_pages,
+       hit_ratio,
+       single_read_perf,
+       multi_read_perf
+FROM V$SBUFFER_STAT;
+
+SELECT id,
+       alive,
+       current_job,
+       doing_io,
+       checkpoint_flush_pages,
+       total_flush_pages,
+       db_write_perf,
+       temp_write_perf
+FROM V$SFLUSHER
+ORDER BY id;
+
+SELECT flusher_count,
+       checkpoint_list_count,
+       req_job_count,
+       replace_pages,
+       checkpoint_pages,
+       min_spaceid,
+       min_pageid
+FROM V$SFLUSHINFO;
 ```
 
 ### Object Block: `V$INTERNAL_SESSION`
@@ -3150,13 +3655,48 @@ ORDER BY ls.is_grant, ls.session_id, ls.id;
 
 Purpose: show SQL plan cache size, hit/miss counters, plan cache objects, and cached SQL text.
 
-Key columns: `CURRENT_CACHE_SIZE`, `CURRENT_CACHE_OBJ_COUNT`, `CACHE_HIT_COUNT`, `CACHE_MISS_COUNT`, `SQL_TEXT_ID`, `PCO_ID`, `HIT_COUNT`, `REBUILD_COUNT`, `PLAN_STATE`, `PLAN_CACHE_KEEP`, `SQL_TEXT`.
+Key columns: `V$SQL_PLAN_CACHE.MAX_CACHE_SIZE`, `CURRENT_HOT_LRU_SIZE`, `CURRENT_COLD_LRU_SIZE`, `CURRENT_CACHE_SIZE`, `CURRENT_CACHE_OBJ_COUNT`, `CACHE_HIT_COUNT`, `CACHE_MISS_COUNT`, `CACHE_IN_FAIL_COUNT`, `CACHE_OUT_COUNT`, `CACHE_INSERTED_COUNT`, `NONE_CACHE_SQL_TRY_COUNT`; `V$SQL_PLAN_CACHE_PCO.SQL_TEXT_ID`, `PCO_ID`, `CREATE_REASON`, `HIT_COUNT`, `REBUILD_COUNT`, `PLAN_STATE`, `LRU_REGION`, `PLAN_SIZE`, `FIX_COUNT`, `PLAN_CACHE_KEEP`; `V$SQL_PLAN_CACHE_SQLTEXT.SQL_TEXT_ID`, `SQL_TEXT`, `CHILD_PCO_COUNT`, `CHILD_PCO_CREATE_COUNT`, `PLAN_CACHE_KEEP`.
+
+When to query: use the summary view for plan-cache capacity and hit/miss trends, the `PCO` view for child plan state and rebuild reasons, and the `SQLTEXT` view to map a `SQL_TEXT_ID` to SQL text and parent keep state.
+
+Value notes: `CREATE_REASON` values include `CREATE_BY_CACHE_MISS`, `CREATE_BY_PLAN_INVALIDATION`, and `CREATE_BY_PLAN_TOO_OLD`. `PLAN_STATE` values include `READY` and `OLD_PLAN`. `LRU_REGION` values include `HOT_REGION` and `COLD_REGION`. `PLAN_CACHE_KEEP` values include `KEEP` and `UNKEEP`.
 
 Representative SQL:
 
 ```sql
-SELECT current_cache_size, current_cache_obj_count, cache_hit_count, cache_miss_count
+SELECT max_cache_size,
+       current_hot_lru_size,
+       current_cold_lru_size,
+       current_cache_size,
+       current_cache_obj_count,
+       cache_hit_count,
+       cache_miss_count,
+       cache_in_fail_count,
+       cache_out_count,
+       cache_inserted_count
 FROM V$SQL_PLAN_CACHE;
+
+SELECT sql_text_id,
+       pco_id,
+       create_reason,
+       hit_count,
+       rebuild_count,
+       plan_state,
+       lru_region,
+       plan_size,
+       fix_count,
+       plan_cache_keep
+FROM V$SQL_PLAN_CACHE_PCO
+ORDER BY hit_count DESC, rebuild_count DESC;
+
+SELECT sql_text_id,
+       child_pco_count,
+       child_pco_create_count,
+       plan_cache_keep,
+       sql_text
+FROM V$SQL_PLAN_CACHE_SQLTEXT
+WHERE sql_text LIKE '%<SQL_TEXT_FRAGMENT>%'
+ORDER BY sql_text_id;
 ```
 
 ### Object Block: `V$DBMS_STATS`
@@ -3204,6 +3744,226 @@ FROM V$LOCK_TABLE_STATS l,
 WHERE l.table_oid = t.table_oid
   AND t.user_id = u.user_id
 ORDER BY u.user_name, t.table_name;
+```
+
+### Object Block: `V$MEMTBL_INFO` and `V$DISKTBL_INFO`
+
+Purpose: show low-level memory-table and disk-table storage state.
+
+Key columns: `V$MEMTBL_INFO.TABLESPACE_ID`, `TABLE_OID`, `MEM_PAGE_CNT`, `MEM_VAR_PAGE_CNT`, `MEM_SLOT_PERPAGE`, `MEM_SLOT_SIZE`, `FIXED_ALLOC_MEM`, `FIXED_USED_MEM`, `VAR_ALLOC_MEM`, `VAR_USED_MEM`, `STATEMENT_REBUILD_COUNT`, `UNIQUE_VIOLATION_COUNT`, `UPDATE_RETRY_COUNT`, `DELETE_RETRY_COUNT`, `COMPRESSED_LOGGING`, `IS_CONSISTENT`; `V$DISKTBL_INFO.TABLESPACE_ID`, `TABLE_OID`, `DISK_TOTAL_PAGE_CNT`, `DISK_PAGE_CNT`, `SEG_PID`, `PCTFREE`, `PCTUSED`, `INITRANS`, `MAXTRANS`, `INITEXTENTS`, `NEXTEXTENTS`, `MINEXTENTS`, `MAXEXTENTS`, `COMPRESSED_LOGGING`, `IS_CONSISTENT`.
+
+When to query: use these views when a question needs storage evidence for a specific table, memory fixed/variable-area usage, disk page counts, extent settings, compressed logging, consistency flags, or statement-rebuild and retry counters.
+
+Representative SQL:
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       m.tablespace_id,
+       m.mem_page_cnt,
+       m.mem_var_page_cnt,
+       m.fixed_alloc_mem,
+       m.fixed_used_mem,
+       m.var_alloc_mem,
+       m.var_used_mem,
+       m.statement_rebuild_count,
+       m.unique_violation_count,
+       m.update_retry_count,
+       m.delete_retry_count,
+       m.is_consistent
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u,
+     V$MEMTBL_INFO m
+WHERE t.user_id = u.user_id
+  AND t.table_oid = m.table_oid
+ORDER BY u.user_name, t.table_name;
+
+SELECT u.user_name,
+       t.table_name,
+       d.tablespace_id,
+       d.disk_total_page_cnt,
+       d.disk_page_cnt,
+       d.seg_pid,
+       d.pctfree,
+       d.pctused,
+       d.inittrans,
+       d.maxtrans,
+       d.is_consistent
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u,
+     V$DISKTBL_INFO d
+WHERE t.user_id = u.user_id
+  AND t.table_oid = d.table_oid
+ORDER BY u.user_name, t.table_name;
+```
+
+### Object Block: `V$INDEX` and Index Header Views
+
+Purpose: `V$INDEX` maps tables to index identifiers and segment pages. BTREE and RTREE header views expose lower-level index build, consistency, storage, and node-use state.
+
+Key columns: `V$INDEX.TABLE_OID`, `INDEX_SEG_PID`, `INDEX_ID`, `INDEXTYPE`; `V$DISK_BTREE_HEADER.INDEX_NAME`, `INDEX_ID`, `INDEX_STATUS`, `INDEX_TBS_ID`, `TABLE_TBS_ID`, `IS_UNIQUE`, `IS_CONSISTENT`, `IS_CREATED_WITH_LOGGING`, `IS_CREATED_WITH_FORCE`, `FREE_NODE_CNT`, `INITEXTENTS`, `NEXTEXTENTS`, `MINEXTENTS`, `MAXEXTENTS`; `V$MEM_BTREE_HEADER.INDEX_NAME`, `INDEX_ID`, `INDEX_STATUS`, `INDEX_TBS_ID`, `TABLE_TBS_ID`, `IS_CONSISTENT`, `IS_UNIQUE`, `IS_NOT_NULL`, `USED_NODE_COUNT`, `PREPARE_NODE_COUNT`, `BUILT_TYPE`; node-pool views expose `TOTAL_PAGE_COUNT`, `TOTAL_NODE_COUNT`, `FREE_NODE_COUNT`, `USED_NODE_COUNT`, `NODE_SIZE`, `TOTAL_ALLOC_REQ`, `TOTAL_FREE_REQ`, and `FREE_REQ_COUNT`.
+
+When to query: use this family when the user asks whether an index is a primary or normal index, whether an index is consistent or disabled, whether a disk BTREE index was created with logging/force options, or whether memory index node pools show allocation pressure.
+
+Representative SQL:
+
+```sql
+SELECT u.user_name,
+       t.table_name,
+       i.index_id,
+       i.index_seg_pid,
+       i.indextype
+FROM V$INDEX i,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE i.table_oid = t.table_oid
+  AND t.user_id = u.user_id
+ORDER BY u.user_name, t.table_name, i.index_id;
+
+SELECT index_name,
+       index_id,
+       index_status,
+       is_unique,
+       is_consistent,
+       is_created_with_logging,
+       is_created_with_force,
+       free_node_cnt
+FROM V$DISK_BTREE_HEADER
+ORDER BY index_name;
+
+SELECT index_name,
+       index_id,
+       index_status,
+       is_unique,
+       is_not_null,
+       is_consistent,
+       used_node_count,
+       prepare_node_count,
+       built_type
+FROM V$MEM_BTREE_HEADER
+ORDER BY index_name;
+```
+
+Availability note: the inventory includes `V$DISK_BTREE_HEADER`, `V$DISK_RTREE_HEADER`, `V$MEM_BTREE_HEADER`, `V$MEM_BTREE_NODEPOOL`, `V$MEM_RTREE_HEADER`, and `V$MEM_RTREE_NODEPOOL`. For uncommon RTREE/header columns, first query `V$TABLE` and `V$ALLCOLUMN` on the installed server, then route SQL semantics to `19_spatial_nifi_tableau_misc.md` for Spatial-specific interpretation.
+
+### Object Block: `V$SEGMENT`, `V$USAGE`, and `V$DB_FREEPAGELISTS`
+
+Purpose: show disk segment state, object space usage, and free-page lists.
+
+Key columns: `V$SEGMENT.SPACE_ID`, `TABLE_OID`, `SEGMENT_PID`, `SEGMENT_TYPE`, `SEGMENT_STATE`, `EXTENT_TOTAL_COUNT`; `V$USAGE.TYPE`, `TARGET_ID`, `META_SPACE`, `USED_SPACE`, `AGEABLE_SPACE`, `FREE_SPACE`; `V$DB_FREEPAGELISTS.SPACE_ID`, `RESOURCE_GROUP_ID`, `FIRST_FREE_PAGE_ID`, `FREE_PAGE_COUNT`.
+
+When to query: use `V$SEGMENT` when a table, index, LOB, TSS, or undo segment's state and extent count matter. Use `V$USAGE` after statistics collection to explain table/index space. Use `V$DB_FREEPAGELISTS` when free-page distribution inside a tablespace is relevant.
+
+Representative SQL:
+
+```sql
+SELECT space_id,
+       table_oid,
+       segment_pid,
+       segment_type,
+       segment_state,
+       extent_total_count
+FROM V$SEGMENT
+ORDER BY space_id, segment_type, table_oid, segment_pid;
+
+SELECT type,
+       target_id,
+       meta_space,
+       used_space,
+       ageable_space,
+       free_space
+FROM V$USAGE
+ORDER BY type, target_id;
+
+SELECT space_id,
+       resource_group_id,
+       first_free_page_id,
+       free_page_count
+FROM V$DB_FREEPAGELISTS
+ORDER BY space_id, resource_group_id;
+```
+
+Caution: `V$USAGE` depends on `DBMS_STATS` collection. If exact object names are needed, join `V$USAGE.TARGET_ID` to `SYSTEM_.SYS_TABLES_.TABLE_OID` for `TYPE = 'T'` and to `SYSTEM_.SYS_INDICES_.INDEX_ID` for `TYPE = 'I'`.
+
+### Object Block: `V$TSSEGS`, `V$TXSEGS`, `V$UDSEGS`, and `V$DISK_UNDO_USAGE`
+
+Purpose: show undo tablespace segment lists, transaction-bound segments, and current undo extent usage.
+
+Key columns: `V$TSSEGS.SPACE_ID`, `SEG_PID`, `TXSEG_ENTRY_ID`, `CUR_ALLOC_EXTENT_RID`, `CUR_ALLOC_PAGE_ID`, `TOTAL_EXTENT_COUNT`, `TOTAL_EXTDIR_COUNT`, `PAGE_COUNT_IN_EXTENT`; `V$TXSEGS.ID`, `TRANS_ID`, `MIN_DISK_VIEW_SCN`, `COMMIT_SCN`, `FIRST_DISK_VIEW_SCN`, `TSS_RID`, `TSSEG_EXTENT_RID`, `FST_UDSEG_EXTENT_RID`, `LST_UDSEG_EXTENT_RID`; `V$UDSEGS` uses the same segment-allocation columns as `V$TSSEGS`; `V$DISK_UNDO_USAGE.TX_EXT_CNT`, `USED_EXT_CNT`, `UNSTEALABLE_EXT_CNT`, `REUSABLE_EXT_CNT`, `TOTAL_EXT_CNT`.
+
+When to query: use this family when disk undo tablespace usage is high, transaction segments are exhausted, or a disk update transaction needs segment evidence.
+
+Representative SQL:
+
+```sql
+SELECT tx_ext_cnt,
+       used_ext_cnt,
+       unstealable_ext_cnt,
+       reusable_ext_cnt,
+       total_ext_cnt
+FROM V$DISK_UNDO_USAGE;
+
+SELECT id,
+       trans_id,
+       min_disk_view_scn,
+       commit_scn,
+       first_disk_view_scn,
+       tss_rid,
+       fst_udseg_extent_rid,
+       lst_udseg_extent_rid
+FROM V$TXSEGS
+ORDER BY id;
+```
+
+### Object Block: `V$DISK_TEMP_INFO` and `V$DISK_TEMP_STAT`
+
+Purpose: show disk temporary-table memory requirement summary and currently watched disk temporary-table activity.
+
+Key columns: `V$DISK_TEMP_INFO.NAME`, `VALUE`, `UNIT`; `V$DISK_TEMP_STAT.TBS_ID`, `TRANSACTION_ID`, `CONSUME_TIME`, `READ_COUNT`, `WRITE_COUNT`, `WRITE_PAGE_COUNT`, `ALLOC_WAIT_COUNT`, `WORK_AREA_SIZE`, `MAX_WORK_AREA_SIZE`, `DISK_USAGE`, `RUNTIME_MAP_SIZE`.
+
+When to query: use this family when sort, hash join, `GROUP BY`, `DISTINCT`, or other temporary operations spill to disk or run longer than expected.
+
+Representative SQL:
+
+```sql
+SELECT tbs_id,
+       transaction_id,
+       consume_time,
+       read_count,
+       write_count,
+       write_page_count,
+       alloc_wait_count,
+       work_area_size,
+       max_work_area_size,
+       disk_usage,
+       runtime_map_size
+FROM V$DISK_TEMP_STAT
+ORDER BY consume_time DESC, disk_usage DESC;
+
+SELECT name, value, unit
+FROM V$DISK_TEMP_INFO
+ORDER BY name;
+```
+
+Caution: `V$DISK_TEMP_STAT` collects activity when the disk temporary-table operation exceeds the `TEMP_STATS_WATCH_TIME` threshold. An empty result is not proof that no temporary work happened.
+
+### Object Block: `V$DIRECT_PATH_INSERT`
+
+Purpose: shows cumulative direct-path load counters.
+
+Key columns: `COMMIT_TX_COUNT`, `ABORT_TX_COUNT`, `INSERT_ROW_COUNT`, `ALLOC_BUFFER_PAGE_TRY_COUNT`, `ALLOC_BUFFER_PAGE_FAIL_COUNT`.
+
+When to query: use this view for iLoader direct-path upload or SQL direct-path insert questions, especially when direct-path load success, rollback, inserted row count, or buffer-page allocation failures are in scope.
+
+Representative SQL:
+
+```sql
+SELECT commit_tx_count,
+       abort_tx_count,
+       insert_row_count,
+       alloc_buffer_page_try_count,
+       alloc_buffer_page_fail_count
+FROM V$DIRECT_PATH_INSERT;
 ```
 
 ### Object Block: `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, and `SYSTEM_.SYS_REPL_ITEMS_`
@@ -3601,7 +4361,8 @@ Use this when the user asks "what is running/blocked/slow":
 3. Query `V$SESSION_WAIT`.
 4. Query `V$LOCK_WAIT` and `V$LOCK_STATEMENT` if blocking is suspected.
 5. Query `V$TRANSACTION` when transaction state or update size matters.
-6. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
+6. Query `V$SQL_PLAN_CACHE`, `V$DBMS_STATS`, `V$BUFFPOOL_STAT`, `V$FLUSHER`, `V$DISK_TEMP_STAT`, or `V$MEMGC` only when the symptom points to plan reuse, statistics, buffer pressure, checkpoint/flush work, temporary spill, or memory GC.
+7. Map the observed condition to the relevant response block in `07_error_messages_troubleshooting.md` or `08_performance_tuning_monitoring.md` before recommending an action.
 
 ### Template: Replication Health Request
 

@@ -17,8 +17,8 @@ J015	Done	docs	DML functions expressions and JSON SQL	Expand DML, predicates, fu
 J016	Done	docs	Replication and administrative SQL generation	Expand replication DDL, Log Analyzer SQL, property SQL, and administrative SQL generation.
 J017	Done	docs	Dictionary view inventory baseline	Inventory dictionary and performance view names, version availability, and grouping.
 J018	Done	docs	Storage log archive backup and tablespace views	Expand storage, datafile, log, archive, backup, checkpoint, and tablespace view blocks.
-J019	ToDo	docs	Session statement wait lock and transaction views	Expand session, statement, SQL text, wait, lock, transaction, and service-thread views.
-J020	ToDo	docs	Optimizer plan cache statistics and buffer views	Expand optimizer, plan cache, statistics, buffer pool, checkpoint, and performance views.
+J019	Done	docs	Session statement wait lock and transaction views	Expand session, statement, SQL text, wait, lock, transaction, and service-thread views.
+J020	Done	docs	Optimizer plan cache statistics and buffer views	Expand optimizer, plan cache, statistics, buffer pool, checkpoint, and performance views.
 J021	ToDo	docs	Replication CDC security monitoring and SNMP views	Expand replication, CDC, security, Monitoring API, and SNMP view/API mappings.
 J022	ToDo	docs	Error reference inventory and response schema	Inventory error code families and define error block and troubleshooting response schema.
 J023	ToDo	docs	Storage backup recovery and tablespace errors	Expand storage, backup, recovery, datafile, log, and tablespace error coverage.

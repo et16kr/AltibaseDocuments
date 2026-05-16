@@ -382,6 +382,64 @@ open for later J020-J021 slices and for exhaustive per-view, patch-sensitive col
 coverage outside the J019 session/statement/wait/lock/transaction/service-thread
 scope.
 
+## J020 Optimizer Plan Cache Statistics Buffer View Addendum
+
+J020 uses the `general_reference_2_dictionary_views`, `performance_tuning`,
+`general_reference_1_datatypes_properties`, and `sql_reference` source families for
+Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source. Korean General
+Reference 2 manuals remain authoritative for optimizer statistics, SQL plan cache,
+system/session statistics, memory, buffer, flusher, table/index internals, segment,
+undo, disk temporary-table, and direct-path insert performance-view columns. Korean
+Performance Tuning Guides remain authoritative for buffer, memory-GC, statistics, SQL
+plan cache, checkpoint/flusher, disk temporary-table, and direct-path insert
+interpretation. Matching English manuals were used only for customer-facing wording
+when consistent.
+
+Design note: J020 keeps the 20-file attachment boundary unchanged. It expands
+`GPTs/attachments/06_data_dictionary_performance_views.md` as the evidence collection
+and view-reference surface for plan cache, optimizer statistics, buffer, memory,
+flusher, table/index, segment, undo, temp, and direct-path counters. It expands
+`GPTs/attachments/08_performance_tuning_monitoring.md` only where the same views need
+operational tuning interpretation. Property defaults and change methods remain routed
+to `05_data_types_properties.md`; SQL generation and administrative statements remain
+routed to `03_sql_ddl_generation.md`.
+
+J020 updates `GPTs/attachments/06_data_dictionary_performance_views.md` with richer
+cookbook checks and searchable object blocks for `V$SQL_PLAN_CACHE`,
+`V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT`, `V$DBMS_STATS`,
+`V$LOCK_TABLE_STATS`, `V$STATNAME`, `V$SYSSTAT`, `V$SESSTAT`, `V$MEMSTAT`,
+`V$MEMGC`, `V$BUFFPAGEINFO`, `V$BUFFPOOL_STAT`, `V$UNDO_BUFF_STAT`,
+`V$SBUFFER_STAT`, `V$FLUSHER`, `V$FLUSHINFO`, `V$SFLUSHER`, `V$SFLUSHINFO`,
+`V$MEMTBL_INFO`, `V$DISKTBL_INFO`, `V$INDEX`, BTREE/RTREE header and node-pool view
+families, `V$SEGMENT`, `V$USAGE`, `V$DB_FREEPAGELISTS`, `V$TSSEGS`, `V$TXSEGS`,
+`V$UDSEGS`, `V$DISK_UNDO_USAGE`, `V$DISK_TEMP_INFO`, `V$DISK_TEMP_STAT`, and
+`V$DIRECT_PATH_INSERT`. It updates `GPTs/attachments/08_performance_tuning_monitoring.md`
+with view-backed checkpoint/flusher, disk temporary-table spill, and direct-path insert
+diagnostic blocks.
+
+Scoped source paths checked for J020:
+
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/kor/Performance Tuning Guide.md`
+- `Manuals/Altibase_7.3/kor/Performance Tuning Guide.md`
+- `Manuals/Altibase_trunk/kor/Performance Tuning Guide.md`
+- `Manuals/Altibase_7.1/eng/Performance Tuning Guide.md`
+- `Manuals/Altibase_7.3/eng/Performance Tuning Guide.md`
+- `Manuals/Altibase_trunk/eng/Performance Tuning Guide.md`
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+
+No new manual/source-backed gap was discovered during J020. `GAP-J002-006` remains
+open for J021 and for exhaustive per-view, patch-sensitive column coverage outside the
+J020 optimizer/statistics/plan-cache/buffer/flusher/table, index, segment, undo, temp
+scope.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

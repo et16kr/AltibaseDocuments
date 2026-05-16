@@ -175,6 +175,14 @@ for 8.1 customer-facing labels.
   root-cause interpretation routed to `08_performance_tuning_monitoring.md`; the
   broader per-view column gap remains open for J020-J021 and non-scoped
   patch-sensitive details.
+- J020 expanded the optimizer statistics, SQL plan cache, system/session statistics,
+  memory, buffer pool, undo buffer, flusher, secondary buffer, table/index internals,
+  segment, undo, disk temporary-table, direct-path insert, and related performance-view
+  slice in `06_data_dictionary_performance_views.md`. It keeps property semantics
+  routed to `05_data_types_properties.md`, SQL generation routed to
+  `03_sql_ddl_generation.md`, and operational tuning interpretation routed to
+  `08_performance_tuning_monitoring.md`; the broader per-view column gap remains open
+  for J021 and non-scoped patch-sensitive details.
 - J022-J026 should use `error_message_reference` and related operational sources to
   expand exact-code troubleshooting and close error-block gaps.
 - J027-J033 should use operations, replication, networking, and TLS source families to

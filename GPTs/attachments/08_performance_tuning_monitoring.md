@@ -8,7 +8,7 @@
 
 ## Questions This File Can Answer
 
-- How should a GPT diagnose slow SQL, high CPU, disk I/O, waits, lock waits, checkpoint stalls, plan-cache misses, or MVCC garbage-collection pressure?
+- How should a GPT diagnose slow SQL, high CPU, disk I/O, waits, lock waits, checkpoint stalls, plan-cache misses, disk temporary-table spill, direct-path insert pressure, or MVCC garbage-collection pressure?
 - How do I enable and read Altibase execution plan trees?
 - Which plan nodes, scan methods, join methods, statistics, hints, and properties matter for tuning?
 - Which exact statistics procedures, hint spellings, hint arguments, and plan-control SQL should be used?
@@ -2292,10 +2292,45 @@ iostat
 
 Use platform-equivalent OS I/O tools when `sar` or `iostat` is unavailable, and compare the output with checkpoint trace timestamps.
 
+```sql
+SELECT id,
+       alive,
+       current_job,
+       doing_io,
+       checkpoint_flush_jobs,
+       checkpoint_flush_pages,
+       total_flush_pages,
+       total_log_sync_usec,
+       total_dw_usec,
+       total_write_usec,
+       total_sync_usec,
+       db_write_perf
+FROM V$FLUSHER
+ORDER BY id;
+
+SELECT low_flush_length,
+       high_flush_length,
+       low_prepare_length,
+       checkpoint_flush_count,
+       fast_start_io_target,
+       fast_start_logfile_target,
+       req_job_count
+FROM V$FLUSHINFO;
+
+SELECT id,
+       flush_list_pages,
+       checkpoint_list_pages,
+       read_pages,
+       hit_ratio,
+       victim_search_warp
+FROM V$BUFFPOOL_STAT
+ORDER BY id;
+```
+
 - Immediate Action: If OS I/O confirms a bottleneck, reduce competing storage load or place log files and data files on separate disks. Change `CHECKPOINT_BULK_WRITE_PAGE_COUNT`, `CHECKPOINT_BULK_WRITE_SLEEP_SEC`, `CHECKPOINT_BULK_WRITE_SLEEP_USEC`, or `CHECKPOINT_BULK_SYNC_PAGE_COUNT` only one at a time and keep the previous value for rollback.
-- Verification: Compare checkpoint trace duration and OS I/O latency before and after the change in the same workload window.
-- Version Cautions: Verify the checkpoint property names in `V$PROPERTY` on the target server, and use OS commands appropriate to the platform.
-- Escalation: If checkpoint delays persist or storage latency remains high, collect Altibase version, checkpoint trace excerpts, property values, storage layout, and OS I/O samples before further property changes.
+- Verification: Compare checkpoint trace duration, OS I/O latency, `V$FLUSHER` deltas, `V$FLUSHINFO.REQ_JOB_COUNT`, and `V$BUFFPOOL_STAT.CHECKPOINT_LIST_PAGES` before and after the change in the same workload window.
+- Version Cautions: Verify the checkpoint property names in `V$PROPERTY` and view columns in `V$ALLCOLUMN` on the target server, and use OS commands appropriate to the platform. `V$FLUSHER.CURRENT_JOB = 2` indicates checkpoint flush.
+- Escalation: If checkpoint delays persist or storage latency remains high, collect Altibase version, checkpoint trace excerpts, `V$FLUSHER`, `V$FLUSHINFO`, and `V$BUFFPOOL_STAT` snapshots, property values, storage layout, and OS I/O samples before further property changes.
 
 Server issue block: `Disk buffer pressure`
 
@@ -2317,6 +2352,57 @@ FROM V$BUFFPOOL_STAT;
 - Verification: Repeat the `V$BUFFPOOL_STAT` snapshot over the same interval. `READ_PAGES`, `VICTIM_FAILS`, `PREPARE_AGAIN_VICTIMS`, and `VICTIM_SEARCH_WARP` deltas should flatten or fall, `HIT_RATIO` should improve or stabilize, and the affected SQL should show lower elapsed time or disk-read pressure.
 - Version Cautions: `V$BUFFPOOL_STAT` values are cumulative since server start; compare deltas over a time window and verify column availability on the target server before interpreting the metrics.
 - Escalation: If buffer pressure remains after SQL tuning and a bounded buffer-size review, collect Altibase version, before/after `V$BUFFPOOL_STAT` snapshots with all four paired counters, top disk-read SQL, execution plans, OS I/O samples, and current buffer property values.
+
+Server issue block: `Disk temporary table spill`
+
+- Symptom: Sort, hash join, `GROUP BY`, `DISTINCT`, or large intermediate work runs slowly and uses disk temporary space.
+- Primary Causes: Intermediate result sets are too large for the work area, the SQL plan chooses a memory-intensive join/sort strategy, disk temporary tablespace I/O is slow, or the workload exceeds the configured temporary-memory limits.
+- Check SQL or Command:
+
+```sql
+SELECT tbs_id,
+       transaction_id,
+       consume_time,
+       read_count,
+       write_count,
+       write_page_count,
+       alloc_wait_count,
+       work_area_size,
+       max_work_area_size,
+       disk_usage,
+       runtime_map_size
+FROM V$DISK_TEMP_STAT
+ORDER BY consume_time DESC, disk_usage DESC;
+
+SELECT name, value, unit
+FROM V$DISK_TEMP_INFO
+ORDER BY name;
+```
+
+- Immediate Action: Tune the SQL plan first: reduce avoidable full scans, verify join predicates, gather current statistics, and compare sort/hash plan nodes. Consider temporary-table or work-area properties only after the SQL shape and plan are understood, and keep previous values for rollback.
+- Verification: Re-run `V$DISK_TEMP_STAT` during a comparable workload. `WRITE_PAGE_COUNT`, `ALLOC_WAIT_COUNT`, and `DISK_USAGE` should fall or stabilize for the target transaction, and the plan should show less temporary work or better elapsed time.
+- Version Cautions: `V$DISK_TEMP_STAT` collects rows only when disk temporary-table work exceeds `TEMP_STATS_WATCH_TIME`; an empty view is not proof that no temporary work occurred. Verify exact columns with `V$ALLCOLUMN` before hard-coding monitoring SQL.
+- Escalation: If spill remains high after SQL and statistics review, collect Altibase version, execution plan, SQL text, `V$DISK_TEMP_STAT` snapshots, temp tablespace layout, work-area property values, and OS I/O samples.
+
+Server issue block: `Direct-path insert allocation pressure`
+
+- Symptom: iLoader direct-path upload or SQL direct-path insert slows, rolls back, or reports memory/page allocation pressure.
+- Primary Causes: Direct-path loading is requesting more buffer pages than available, load batches are too large, target table or index maintenance is expensive, or memory and disk I/O are saturated.
+- Check SQL or Command:
+
+```sql
+SELECT commit_tx_count,
+       abort_tx_count,
+       insert_row_count,
+       alloc_buffer_page_try_count,
+       alloc_buffer_page_fail_count
+FROM V$DIRECT_PATH_INSERT;
+```
+
+- Immediate Action: Compare deltas before and after a load attempt. If `ALLOC_BUFFER_PAGE_FAIL_COUNT` rises, reduce load batch pressure, review direct-path options, target table/index layout, and memory settings before changing server properties.
+- Verification: Repeat the counter snapshot for a comparable load. `ABORT_TX_COUNT` and `ALLOC_BUFFER_PAGE_FAIL_COUNT` should stop increasing for successful loads, and `INSERT_ROW_COUNT` should align with expected row counts.
+- Version Cautions: These counters are cumulative since startup. Pair them with iLoader or SQL load logs and exact target table DDL before assigning cause.
+- Escalation: If allocation failures continue, collect Altibase version, load command/options, target DDL and index list, before/after `V$DIRECT_PATH_INSERT`, memory/buffer properties, and trace/error output.
 
 Server issue block: `Service thread overload`
 
@@ -2701,7 +2787,12 @@ WHERE name IN (
   'V$DBMS_STATS',
   'V$MEMGC',
   'V$SERVICE_THREAD',
+  'V$BUFFPAGEINFO',
   'V$BUFFPOOL_STAT',
+  'V$FLUSHER',
+  'V$FLUSHINFO',
+  'V$DISK_TEMP_STAT',
+  'V$DIRECT_PATH_INSERT',
   'V$REPGAP',
   'V$REPSENDER_SENT_LOG_COUNT'
 )
@@ -2714,7 +2805,10 @@ WHERE tablename IN (
   'V$STATEMENT',
   'V$SESSION_WAIT',
   'V$SQL_PLAN_CACHE',
-  'V$SQL_PLAN_CACHE_PCO'
+  'V$SQL_PLAN_CACHE_PCO',
+  'V$BUFFPOOL_STAT',
+  'V$FLUSHER',
+  'V$DISK_TEMP_STAT'
 )
 ORDER BY tablename, colname;
 ```

@@ -188,12 +188,15 @@ ORDER BY t.table_name;
 - J019 used the server/session/statement and wait/lock/transaction groups as the
   source-name baseline and expanded the customer-facing session, statement, SQL text,
   wait, lock, transaction, latch/mutex, and service-thread view blocks.
-- J020 should use the optimizer statistics, SQL plan cache, buffer, memory, table/index,
-  segment, and space groups as the source-name baseline.
+- J020 used the optimizer statistics, SQL plan cache, buffer, memory, table/index,
+  segment, undo, temporary-storage, direct-path insert, and space groups as the
+  source-name baseline and expanded the customer-facing plan-cache, statistics, buffer,
+  flusher, memory-GC, table/index, segment, undo, disk temporary-table, and direct-path
+  insert view blocks.
 - J021 should use the replication, database link, security/audit, Monitoring API, SNMP,
   and related runtime groups as the source-name baseline.
 - `GAP-J002-006` remains open for exhaustive per-view column blocks. J017 narrows it by
-  providing the source-backed name/version/group baseline, and J018-J019 narrow it by
+  providing the source-backed name/version/group baseline, and J018-J020 narrow it by
   expanding their assigned view-family slices.
 - `GAP-J017-001` records the 8.1 `SYS_REPL_TABLE_OID_IN_USE_` source conflict and
   English/Korean list drift so later jobs do not overstate availability.

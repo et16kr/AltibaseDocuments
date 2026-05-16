@@ -155,6 +155,20 @@ recording or remediating gaps.
   `GPTs/attachments/06_data_dictionary_performance_views.md`. The gap remains open
   for J020-J021 view families and exhaustive per-view, patch-sensitive column proof
   beyond the J019 scope.
+- J020 update: the optimizer/statistics/plan-cache/buffer/flusher/memory/table and
+  index, segment, undo, temp, and direct-path slice now has richer customer-facing cookbook checks
+  and object blocks for `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`,
+  `V$SQL_PLAN_CACHE_SQLTEXT`, `V$DBMS_STATS`, `V$LOCK_TABLE_STATS`,
+  `V$STATNAME`, `V$SYSSTAT`, `V$SESSTAT`, `V$MEMSTAT`, `V$MEMGC`,
+  `V$BUFFPAGEINFO`, `V$BUFFPOOL_STAT`, `V$UNDO_BUFF_STAT`, `V$SBUFFER_STAT`,
+  `V$FLUSHER`, `V$FLUSHINFO`, `V$SFLUSHER`, `V$SFLUSHINFO`, `V$MEMTBL_INFO`,
+  `V$DISKTBL_INFO`, `V$INDEX`, BTREE/RTREE index header and node-pool view families,
+  `V$SEGMENT`, `V$USAGE`, `V$DB_FREEPAGELISTS`, `V$TSSEGS`, `V$TXSEGS`,
+  `V$UDSEGS`, `V$DISK_UNDO_USAGE`, `V$DISK_TEMP_INFO`, `V$DISK_TEMP_STAT`, and
+  `V$DIRECT_PATH_INSERT` in `GPTs/attachments/06_data_dictionary_performance_views.md`,
+  with tuning interpretation updates in `GPTs/attachments/08_performance_tuning_monitoring.md`.
+  The gap remains open for J021 view families and exhaustive per-view,
+  patch-sensitive column proof beyond the J020 scope.
 
 ### GAP-J017-001: Dictionary and performance view inventory source drift
 
