@@ -35,6 +35,8 @@ evals/altibase_answerability/
   README.md
   SCORING.md
   policy.json
+  SOURCE_COVERAGE_MAP.md
+  source_taxonomy.json
   schemas/
   questions/
   manifests/
@@ -44,7 +46,11 @@ evals/altibase_answerability/
 ```
 
 - `schemas/`: JSON schemas for benchmark policy, question records, manifest records,
-  answer records, judgments, and aggregate reports.
+  answer records, judgments, aggregate reports, and the source taxonomy.
+- `source_taxonomy.json`: machine-readable source-family, domain, user-level, version,
+  and target-count map for question-generation jobs.
+- `SOURCE_COVERAGE_MAP.md`: human-readable summary of the source taxonomy and domain
+  coverage plan.
 - `questions/`: source-backed JSONL question sets. Later jobs should create one file per
   required domain.
 - `manifests/`: run manifests that select question files, configure run metadata, and
@@ -76,6 +82,11 @@ domain is below its required minimum.
 
 Question generation should target about 270 questions so later pruning still leaves more
 than 200 usable items.
+
+J004-J010 should use `source_taxonomy.json` and `SOURCE_COVERAGE_MAP.md` as the planning
+map for source families, subdomain targets, user-level mix, version-scope mix, answer
+type mix, retrieval-risk mix, and exclusions. The taxonomy is planning and judge-side
+material; it must not be provided to the answering model.
 
 ## Question Records
 

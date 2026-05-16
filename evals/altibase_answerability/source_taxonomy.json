@@ -1,0 +1,1934 @@
+{
+  "$schema": "schemas/source_taxonomy.schema.json",
+  "taxonomy_id": "altibase_answerability_source_taxonomy",
+  "version": 1,
+  "job_id": "J002",
+  "source_boundary": {
+    "selected_source_inventory": "GPTs/reports/source_inventory.md",
+    "durable_root": "evals/altibase_answerability",
+    "authoritative_language_rule": "Use repository-local selected sources only. When paired Korean and English Altibase manuals, release notes, patch notes, tool manuals, technical documents, or third-party guides differ, derive expected facts from the Korean source and write the benchmark record in canonical English.",
+    "answer_generation_sources": [
+      "GPTs/attachments/*.md",
+      "allowlisted_question_projection",
+      "optional_manifest_selected_gpt_instruction_draft"
+    ],
+    "question_generation_sources": [
+      "GPTs/reports/source_inventory.md",
+      "Manuals/Altibase_7.1/kor",
+      "Manuals/Altibase_7.1/eng",
+      "Manuals/Altibase_7.3/kor",
+      "Manuals/Altibase_7.3/eng",
+      "Manuals/Altibase_trunk/kor",
+      "Manuals/Altibase_trunk/eng",
+      "Manuals/Tools/Altibase_release/kor",
+      "Manuals/Tools/Altibase_release/eng",
+      "Manuals/Tools/Altibase_trunk/kor",
+      "Manuals/Tools/Altibase_trunk/eng",
+      "ReleaseNotes/kor",
+      "ReleaseNotes/eng",
+      "PatchNotes/*/kor",
+      "PatchNotes/*/eng",
+      "Technical Documents/kor",
+      "Technical Documents/eng",
+      "3rd Party Guide for Altibase/kor",
+      "3rd Party Guide for Altibase/eng"
+    ]
+  },
+  "user_levels": [
+    {
+      "id": "beginner",
+      "definition": "New Altibase user who needs version-aware orientation, safe first checks, and basic command or SQL examples without assuming DBA background."
+    },
+    {
+      "id": "intermediate",
+      "definition": "User who understands general SQL or database operations and needs Altibase-specific syntax, objects, properties, and compatibility boundaries."
+    },
+    {
+      "id": "advanced_operator",
+      "definition": "DBA or operations engineer handling installation, configuration, replication, backup, recovery, monitoring, troubleshooting, and service-impacting changes."
+    },
+    {
+      "id": "developer",
+      "definition": "Application, API, migration, connector, or tooling user who needs driver, PSM, CLI, JDBC, ODBC, precompiler, utility, or integration details."
+    },
+    {
+      "id": "expert",
+      "definition": "User asking version-sensitive, patch-specific, cross-manual, failure-mode, or high-risk operational questions where wrong assumptions would be costly."
+    }
+  ],
+  "source_families": [
+    {
+      "id": "release_notes_platform",
+      "label": "Release notes and supported platform documents",
+      "source_types": [
+        "release_note",
+        "technical_document"
+      ],
+      "authority": "Prefer Korean release notes and Korean Supported Platforms where present; use English release notes and platform documents for English extraction and parity checks.",
+      "authoritative_path_patterns": [
+        "ReleaseNotes/kor/*.md",
+        "Technical Documents/kor/Supported Platforms.md"
+      ],
+      "supporting_path_patterns": [
+        "ReleaseNotes/eng/*.md",
+        "Technical Documents/eng/Supported Platforms.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/00_version_release_platform.md"
+      ],
+      "primary_domains": [
+        "operations_admin",
+        "properties",
+        "sql_ddl_dml_datatypes",
+        "views_performance_monitoring",
+        "replication_cdc_security_network",
+        "tools_apis_connectors_migration"
+      ],
+      "coverage_notes": "Use for version availability, upgrade cautions, changed defaults or ranges, new 8.1 features, tool release changes, and supported platform boundaries."
+    },
+    {
+      "id": "patch_notes",
+      "label": "Patch notes",
+      "source_types": [
+        "patch_note"
+      ],
+      "authority": "Prefer Korean patch notes for patch-level behavior; use English patch notes only as supporting extraction where available.",
+      "authoritative_path_patterns": [
+        "PatchNotes/*/kor/*.md"
+      ],
+      "supporting_path_patterns": [
+        "PatchNotes/*/eng/*.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/00_version_release_platform.md",
+        "GPTs/attachments/05_data_types_properties.md",
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/09_replication_ha_cdc.md"
+      ],
+      "primary_domains": [
+        "properties",
+        "sql_ddl_dml_datatypes",
+        "views_performance_monitoring",
+        "replication_cdc_security_network",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use sparingly for patch-specific feature boundaries, changed behavior, compatibility fixes, and high-risk version caveats."
+    },
+    {
+      "id": "getting_started_installation",
+      "label": "Getting Started and Installation manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean manuals for installation and first-run behavior; use English manuals as extraction references.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Getting Started Guide.md",
+        "Manuals/Altibase_7.1/kor/Installation Guide.md",
+        "Manuals/Altibase_7.3/kor/Getting Started Guide.md",
+        "Manuals/Altibase_7.3/kor/Installation Guide.md",
+        "Manuals/Altibase_trunk/kor/Getting Started Guide.md",
+        "Manuals/Altibase_trunk/kor/Installation Guide.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Getting Started Guide.md",
+        "Manuals/Altibase_7.1/eng/Installation Guide.md",
+        "Manuals/Altibase_7.3/eng/Getting Started Guide.md",
+        "Manuals/Altibase_7.3/eng/Installation Guide.md",
+        "Manuals/Altibase_trunk/eng/Getting Started Guide.md",
+        "Manuals/Altibase_trunk/eng/Installation Guide.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/01_getting_started_installation.md"
+      ],
+      "primary_domains": [
+        "operations_admin"
+      ],
+      "coverage_notes": "Use for installation prerequisites, environment setup, database creation, startup, shutdown, and first health checks."
+    },
+    {
+      "id": "administrator_operations",
+      "label": "Administrator manuals and administrative SQL support",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean Administrator and SQL Reference manuals; use English manuals for extraction and wording parity.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Administrator* Manual.md",
+        "Manuals/Altibase_7.1/kor/SQL Reference.md",
+        "Manuals/Altibase_7.3/kor/Administrator* Manual.md",
+        "Manuals/Altibase_7.3/kor/SQL Reference.md",
+        "Manuals/Altibase_trunk/kor/Administrator* Manual.md",
+        "Manuals/Altibase_trunk/kor/SQL Reference.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Administrator* Manual.md",
+        "Manuals/Altibase_7.1/eng/SQL Reference.md",
+        "Manuals/Altibase_7.3/eng/Administrator* Manual.md",
+        "Manuals/Altibase_7.3/eng/SQL Reference.md",
+        "Manuals/Altibase_trunk/eng/Administrator* Manual.md",
+        "Manuals/Altibase_trunk/eng/SQL Reference.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/02_administration_operations.md",
+        "GPTs/attachments/03_sql_ddl_generation.md"
+      ],
+      "primary_domains": [
+        "operations_admin",
+        "sql_ddl_dml_datatypes"
+      ],
+      "coverage_notes": "Use for accounts, privileges, tablespaces, backup, restore, recovery, datafiles, logs, server modes, and administrative SQL."
+    },
+    {
+      "id": "sql_reference",
+      "label": "SQL Reference manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean SQL Reference manuals for syntax and restrictions; use English SQL Reference manuals for extraction and examples.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/SQL Reference.md",
+        "Manuals/Altibase_7.3/kor/SQL Reference.md",
+        "Manuals/Altibase_trunk/kor/SQL Reference.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/SQL Reference.md",
+        "Manuals/Altibase_7.3/eng/SQL Reference.md",
+        "Manuals/Altibase_trunk/eng/SQL Reference.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/03_sql_ddl_generation.md",
+        "GPTs/attachments/04_sql_dml_oracle_compatibility.md",
+        "GPTs/attachments/10_psm_stored_external_procedures.md",
+        "GPTs/attachments/19_spatial_nifi_tableau_misc.md"
+      ],
+      "primary_domains": [
+        "sql_ddl_dml_datatypes",
+        "tools_apis_connectors_migration"
+      ],
+      "coverage_notes": "Use for DDL, DML, DCL, functions, expressions, hints, data type syntax, SQL generation boundaries, and Oracle-difference questions."
+    },
+    {
+      "id": "general_reference_1_datatypes_properties",
+      "label": "General Reference 1: data types and Altibase properties",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean General Reference 1 manuals; use English General Reference 1 manuals for extraction and English terminology.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md",
+        "Manuals/Altibase_7.3/kor/General*Reference-1.Data Types & Altibase Properties.md",
+        "Manuals/Altibase_trunk/kor/General*Reference-1.Data Types & Altibase Properties.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/General Reference-1.Data Types & Altibase Properties.md",
+        "Manuals/Altibase_7.3/eng/General Reference-1.Data Types & Altibase Properties.md",
+        "Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/05_data_types_properties.md",
+        "GPTs/attachments/03_sql_ddl_generation.md",
+        "GPTs/attachments/04_sql_dml_oracle_compatibility.md"
+      ],
+      "primary_domains": [
+        "properties",
+        "sql_ddl_dml_datatypes",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for property catalog facts, defaults, ranges, dynamic-change support, data type definitions, JSON and LOB behavior, and property-related troubleshooting."
+    },
+    {
+      "id": "general_reference_2_dictionary_views",
+      "label": "General Reference 2: data dictionary and performance views",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean General Reference 2 manuals; use English General Reference 2 manuals for extraction and object-name review.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md",
+        "Manuals/Altibase_7.3/kor/General*Reference-2.The Data Dictionary.md",
+        "Manuals/Altibase_trunk/kor/General*Reference-2.The Data Dictionary.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md",
+        "Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md",
+        "Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/08_performance_tuning_monitoring.md"
+      ],
+      "primary_domains": [
+        "views_performance_monitoring",
+        "properties",
+        "operations_admin",
+        "replication_cdc_security_network"
+      ],
+      "coverage_notes": "Use for meta tables, performance views, object lookup SQL, property checks, version-sensitive view availability, and monitoring SQL."
+    },
+    {
+      "id": "error_message_reference",
+      "label": "Error Message Reference manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean Error Message Reference manuals; use English references for extraction and customer-facing terms.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Error Message Reference.md",
+        "Manuals/Altibase_7.3/kor/Error Message Reference.md",
+        "Manuals/Altibase_trunk/kor/Error Message Reference.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Error Message Reference.md",
+        "Manuals/Altibase_7.3/eng/Error Message Reference.md",
+        "Manuals/Altibase_trunk/eng/Error Message Reference.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/07_error_messages_troubleshooting.md"
+      ],
+      "primary_domains": [
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for error code message, cause, action, symptom mapping, and safe troubleshooting response structure."
+    },
+    {
+      "id": "performance_tuning",
+      "label": "Performance Tuning Guide manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean performance material where selected; use English Performance Tuning Guides for extraction when Korean parity is not listed in the source inventory.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Performance Tuning Guide.md",
+        "Manuals/Altibase_7.3/kor/Performance Tuning Guide.md",
+        "Manuals/Altibase_trunk/kor/Performance Tuning Guide.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Performance Tuning Guide.md",
+        "Manuals/Altibase_7.3/eng/Performance Tuning Guide.md",
+        "Manuals/Altibase_trunk/eng/Performance Tuning Guide.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/08_performance_tuning_monitoring.md"
+      ],
+      "primary_domains": [
+        "views_performance_monitoring"
+      ],
+      "coverage_notes": "Use for optimizer, plan, index, join, statistics, trace, and tuning questions that require Altibase-specific plan or hint behavior."
+    },
+    {
+      "id": "monitoring_api_snmp",
+      "label": "Monitoring API Developer's Guide and SNMP Agent Guide",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean Monitoring API and SNMP Agent guides; use English guides for extraction and API terminology.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Monitoring API Developer's Guide.md",
+        "Manuals/Altibase_7.1/kor/SNMP Agent Guide.md",
+        "Manuals/Altibase_7.3/kor/Monitoring API Developer's Guide.md",
+        "Manuals/Altibase_7.3/kor/SNMP Agent Guide.md",
+        "Manuals/Altibase_trunk/kor/Monitoring API Developer's Guide.md",
+        "Manuals/Altibase_trunk/kor/SNMP Agent Guide.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Monitoring API Developer's Guide.md",
+        "Manuals/Altibase_7.1/eng/SNMP Agent Guide.md",
+        "Manuals/Altibase_7.3/eng/Monitoring API Developer's Guide.md",
+        "Manuals/Altibase_7.3/eng/SNMP Agent Guide.md",
+        "Manuals/Altibase_trunk/eng/Monitoring API Developer's Guide.md",
+        "Manuals/Altibase_trunk/eng/SNMP Agent Guide.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/08_performance_tuning_monitoring.md"
+      ],
+      "primary_domains": [
+        "views_performance_monitoring",
+        "tools_apis_connectors_migration"
+      ],
+      "coverage_notes": "Use for monitoring API call sequences, SNMP configuration, ports, counters, traps, and operational monitoring integration questions."
+    },
+    {
+      "id": "replication_manual",
+      "label": "Replication manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean Replication Manuals and Korean SQL Reference for replication SQL; use English manuals for extraction and examples.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Replication Manual.md",
+        "Manuals/Altibase_7.1/kor/SQL Reference.md",
+        "Manuals/Altibase_7.3/kor/Replication Manual.md",
+        "Manuals/Altibase_7.3/kor/SQL Reference.md",
+        "Manuals/Altibase_trunk/kor/Replication Manual.md",
+        "Manuals/Altibase_trunk/kor/SQL Reference.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Replication Manual.md",
+        "Manuals/Altibase_7.1/eng/SQL Reference.md",
+        "Manuals/Altibase_7.3/eng/Replication Manual.md",
+        "Manuals/Altibase_7.3/eng/SQL Reference.md",
+        "Manuals/Altibase_trunk/eng/Replication Manual.md",
+        "Manuals/Altibase_trunk/eng/SQL Reference.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/03_sql_ddl_generation.md"
+      ],
+      "primary_domains": [
+        "replication_cdc_security_network",
+        "sql_ddl_dml_datatypes",
+        "operations_admin"
+      ],
+      "coverage_notes": "Use for replication topology, states, modes, DDL, prerequisites, failover/failback cautions, gap checks, and replication state-changing runbooks."
+    },
+    {
+      "id": "log_analyzer",
+      "label": "Log Analyzer User's Manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean Log Analyzer manuals; use English manuals for extraction and API terminology.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md",
+        "Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md",
+        "Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Log Analyzer User's Manual.md",
+        "Manuals/Altibase_7.3/eng/Log Analyzer User's Manual.md",
+        "Manuals/Altibase_trunk/eng/Log Analyzer User's Manual.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/09_replication_ha_cdc.md"
+      ],
+      "primary_domains": [
+        "replication_cdc_security_network",
+        "tools_apis_connectors_migration"
+      ],
+      "coverage_notes": "Use for CDC, XLog Sender, XLog Collector, Log Analysis API, ODBC C conversion, and log-analysis runbooks."
+    },
+    {
+      "id": "replication_manager",
+      "label": "Replication Manager tool manuals and release notes",
+      "source_types": [
+        "tool_manual",
+        "release_note"
+      ],
+      "authority": "Prefer Korean Replication Manager tool manuals and release notes; use English tool manuals as extraction references.",
+      "authoritative_path_patterns": [
+        "Manuals/Tools/Altibase_release/kor/Replication Manager User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/kor/Replication Manager User's Manual.md",
+        "ReleaseNotes/kor/Altibase_Replication_Manager_*_Release_Notes.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Tools/Altibase_release/eng/Replication Manager User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/eng/Replication Manager User's Manual.md",
+        "ReleaseNotes/eng/Altibase_Replication_Manager_*_Release_Notes.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/09_replication_ha_cdc.md"
+      ],
+      "primary_domains": [
+        "replication_cdc_security_network",
+        "tools_apis_connectors_migration"
+      ],
+      "coverage_notes": "Use for GUI-based replication management, connection prerequisites, panes, actions, and tool release boundaries."
+    },
+    {
+      "id": "security_ssl_tls",
+      "label": "Altibase SSL/TLS User's Guides",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean SSL/TLS guides when selected; use English SSL/TLS guides as extraction references. For 8.1 replication SSL, also verify against Korean release notes and Korean Replication Manual where present.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Altibase SSL TLS User's Guide.md",
+        "Manuals/Altibase_7.3/kor/Altibase SSL TLS User's Guide.md",
+        "Manuals/Altibase_trunk/kor/Altibase SSL TLS User's Guide.md",
+        "Manuals/Altibase_trunk/kor/Replication Manual.md",
+        "ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Altibase SSL TLS User's Guide.md",
+        "Manuals/Altibase_7.3/eng/Altibase SSL TLS User's Guide.md",
+        "Manuals/Altibase_trunk/eng/Altibase SSL TLS User's Guide.md",
+        "Manuals/Altibase_trunk/eng/Replication Manual.md",
+        "ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/18_security_ssl_tls.md",
+        "GPTs/attachments/09_replication_ha_cdc.md"
+      ],
+      "primary_domains": [
+        "replication_cdc_security_network",
+        "operations_admin",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for listener/client TLS, certificate properties, cipher settings, network security cautions, and 8.1 replication SSL behavior."
+    },
+    {
+      "id": "stored_external_procedures",
+      "label": "Stored Procedures and External Procedures manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean stored and external procedure manuals; use English manuals for extraction and PSM terminology.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Stored Procedures Manual.md",
+        "Manuals/Altibase_7.1/kor/External Procedures Manual.md",
+        "Manuals/Altibase_7.3/kor/Stored Procedures Manual.md",
+        "Manuals/Altibase_7.3/kor/External Procedures Manual.md",
+        "Manuals/Altibase_trunk/kor/Stored Procedures Manual.md",
+        "Manuals/Altibase_trunk/kor/External Procedures Manual.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Stored Procedures Manual.md",
+        "Manuals/Altibase_7.1/eng/External Procedures Manual.md",
+        "Manuals/Altibase_7.3/eng/Stored Procedures Manual.md",
+        "Manuals/Altibase_7.3/eng/External Procedures Manual.md",
+        "Manuals/Altibase_trunk/eng/Stored Procedures Manual.md",
+        "Manuals/Altibase_trunk/eng/External Procedures Manual.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/10_psm_stored_external_procedures.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "sql_ddl_dml_datatypes"
+      ],
+      "coverage_notes": "Use for PSM syntax, stored procedure and function behavior, package-like migration cautions, external procedure setup, and PSM error handling."
+    },
+    {
+      "id": "jdbc_java",
+      "label": "JDBC, Adapter for JDBC, Java compatibility, Spring, and Hibernate sources",
+      "source_types": [
+        "manual",
+        "technical_document",
+        "third_party_guide"
+      ],
+      "authority": "Prefer Korean JDBC manuals, Adapter for JDBC manuals, JavaCompatibility, and Korean third-party guides where present; use English manuals and guides for extraction.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/JDBC User's Manual.md",
+        "Manuals/Altibase_7.1/kor/Adapter for JDBC User's Manual.md",
+        "Manuals/Altibase_7.3/kor/JDBC User's Manual.md",
+        "Manuals/Altibase_7.3/kor/Adapter for JDBC User's Manual.md",
+        "Manuals/Altibase_trunk/kor/JDBC User's Manual.md",
+        "Manuals/Altibase_trunk/kor/Adapter for JDBC User's Manual.md",
+        "Technical Documents/kor/JavaCompatibility.md",
+        "3rd Party Guide for Altibase/kor/Spring Data JPA*.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/JDBC User's Manual.md",
+        "Manuals/Altibase_7.1/eng/Adapter for JDBC User's Manual.md",
+        "Manuals/Altibase_7.3/eng/JDBC User's Manual.md",
+        "Manuals/Altibase_7.3/eng/Adapter for JDBC User's Manual.md",
+        "Manuals/Altibase_trunk/eng/JDBC User's Manual.md",
+        "Manuals/Altibase_trunk/eng/Adapter for JDBC User's Manual.md",
+        "3rd Party Guide for Altibase/eng/Spring Data JPA*.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/11_java_jdbc_spring.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for JDBC URLs, driver classes, timeouts, LOB handling, Java compatibility, Spring Data JPA, Hibernate, and Java-side troubleshooting."
+    },
+    {
+      "id": "c_cli_odbc_precompiler",
+      "label": "CLI, ODBC, C Interface, and Precompiler manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean CLI manuals where selected and Korean parity manuals where present; use English ODBC, C Interface, and Precompiler manuals for extraction.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/CLI User's Manual.md",
+        "Manuals/Altibase_7.1/kor/ODBC User's Manual.md",
+        "Manuals/Altibase_7.1/kor/Altibase C Interface Manual.md",
+        "Manuals/Altibase_7.1/kor/Precompiler User* Manual.md",
+        "Manuals/Altibase_7.3/kor/CLI User's Manual.md",
+        "Manuals/Altibase_7.3/kor/ODBC User's Manual.md",
+        "Manuals/Altibase_7.3/kor/Altibase C Interface Manual.md",
+        "Manuals/Altibase_7.3/kor/Precompiler User* Manual.md",
+        "Manuals/Altibase_trunk/kor/CLI User's Manual.md",
+        "Manuals/Altibase_trunk/kor/ODBC User's Manual.md",
+        "Manuals/Altibase_trunk/kor/Altibase C Interface Manual.md",
+        "Manuals/Altibase_trunk/kor/Precompiler User* Manual.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/CLI User's Manual.md",
+        "Manuals/Altibase_7.1/eng/ODBC User's Manual.md",
+        "Manuals/Altibase_7.1/eng/Altibase C Interface Manual.md",
+        "Manuals/Altibase_7.1/eng/Precompiler User* Manual.md",
+        "Manuals/Altibase_7.3/eng/CLI User's Manual.md",
+        "Manuals/Altibase_7.3/eng/ODBC User's Manual.md",
+        "Manuals/Altibase_7.3/eng/Altibase C Interface Manual.md",
+        "Manuals/Altibase_7.3/eng/Precompiler User* Manual.md",
+        "Manuals/Altibase_trunk/eng/CLI User's Manual.md",
+        "Manuals/Altibase_trunk/eng/ODBC User's Manual.md",
+        "Manuals/Altibase_trunk/eng/Altibase C Interface Manual.md",
+        "Manuals/Altibase_trunk/eng/Precompiler User* Manual.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/12_c_cli_odbc_precompiler.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for connection attributes, client API call flow, ODBC DSN setup, C Interface behavior, precompiler options, LOB API use, and diagnostics."
+    },
+    {
+      "id": "isql_iloader",
+      "label": "iSQL and iLoader manuals",
+      "source_types": [
+        "manual"
+      ],
+      "authority": "Prefer Korean iSQL and iLoader manuals; use English manuals for extraction and command examples.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/iSQL User's Manual.md",
+        "Manuals/Altibase_7.1/kor/iLoader User's Manual.md",
+        "Manuals/Altibase_7.3/kor/iSQL User's Manual.md",
+        "Manuals/Altibase_7.3/kor/iLoader User's Manual.md",
+        "Manuals/Altibase_trunk/kor/iSQL User's Manual.md",
+        "Manuals/Altibase_trunk/kor/iLoader User's Manual.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/iSQL User's Manual.md",
+        "Manuals/Altibase_7.1/eng/iLoader User's Manual.md",
+        "Manuals/Altibase_7.3/eng/iSQL User's Manual.md",
+        "Manuals/Altibase_7.3/eng/iLoader User's Manual.md",
+        "Manuals/Altibase_trunk/eng/iSQL User's Manual.md",
+        "Manuals/Altibase_trunk/eng/iLoader User's Manual.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/13_isql_iloader_basic_tools.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "operations_admin",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for command-line SQL sessions, script execution, export/import/load workflows, format files, error files, and operational checks."
+    },
+    {
+      "id": "utilities_datacompj",
+      "label": "Utilities manuals and dataCompJ tool manuals",
+      "source_types": [
+        "manual",
+        "tool_manual",
+        "release_note"
+      ],
+      "authority": "Prefer Korean Utilities manuals, Korean dataCompJ manuals, and Korean tool release notes; use English material for extraction.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Utilities Manual.md",
+        "Manuals/Altibase_7.3/kor/Utilities Manual.md",
+        "Manuals/Altibase_trunk/kor/Utilities Manual.md",
+        "Manuals/Tools/Altibase_release/kor/dataCompJ User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/kor/dataCompJ User's Manual.md",
+        "ReleaseNotes/kor/Altibase_dataCompJ_*_Release_Notes.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Utilities Manual.md",
+        "Manuals/Altibase_7.3/eng/Utilities Manual.md",
+        "Manuals/Altibase_trunk/eng/Utilities Manual.md",
+        "Manuals/Tools/Altibase_release/eng/dataCompJ User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/eng/dataCompJ User's Manual.md",
+        "ReleaseNotes/eng/Altibase_dataCompJ_*_Release_Notes.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/14_utilities_operation_tools.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "operations_admin",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for aexport, altiComp, aku, altiMon, dataCompJ, dump tools, operational utilities, and tool-specific cautions."
+    },
+    {
+      "id": "migration_oracle",
+      "label": "Migration Center and Adapter for Oracle manuals",
+      "source_types": [
+        "manual",
+        "tool_manual",
+        "release_note"
+      ],
+      "authority": "Prefer Korean Adapter for Oracle, Migration Center manuals, and Migration Center release notes; use English material for extraction.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Adapter for Oracle User's Manual.md",
+        "Manuals/Altibase_7.3/kor/Adapter for Oracle User's Manual.md",
+        "Manuals/Altibase_trunk/kor/Adapter for Oracle User's Manual.md",
+        "Manuals/Tools/Altibase_release/kor/Migration Center User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/kor/Migration Center User's Manual.md",
+        "ReleaseNotes/kor/Altibase_Migration_Center_*_Release_Notes.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Adapter for Oracle User's Manual.md",
+        "Manuals/Altibase_7.3/eng/Adapter for Oracle User's Manual.md",
+        "Manuals/Altibase_trunk/eng/Adapter for Oracle User's Manual.md",
+        "Manuals/Tools/Altibase_release/eng/Migration Center User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/eng/Migration Center User's Manual.md",
+        "ReleaseNotes/eng/Altibase_Migration_Center_*_Release_Notes.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/15_migration_oracle_compatibility.md",
+        "GPTs/attachments/04_sql_dml_oracle_compatibility.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "sql_ddl_dml_datatypes"
+      ],
+      "coverage_notes": "Use for Oracle-to-Altibase migration, compatibility reports, conversion limits, Adapter for Oracle, project options, comparison, and post-migration validation."
+    },
+    {
+      "id": "dblink_hadoop_external_connectors",
+      "label": "DB Link, Hadoop Connector, and external connector guides",
+      "source_types": [
+        "manual",
+        "tool_manual",
+        "technical_document",
+        "third_party_guide"
+      ],
+      "authority": "Prefer Korean DB Link, Hadoop Connector, third-party connector guides, and supporting Java compatibility material where present; use English material for extraction.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/DB Link User's Manual.md",
+        "Manuals/Altibase_7.1/kor/Hadoop Connector User's Manual.md",
+        "Manuals/Altibase_7.3/kor/DB Link User's Manual.md",
+        "Manuals/Altibase_7.3/kor/Hadoop Connector User's Manual.md",
+        "Manuals/Altibase_trunk/kor/DB Link User's Manual.md",
+        "Manuals/Altibase_trunk/kor/Hadoop Connector User's Manual.md",
+        "Manuals/Tools/Altibase_release/kor/Altibase 3rd Party Connector Guide.md",
+        "Manuals/Tools/Altibase_trunk/kor/Altibase 3rd Party Connector Guide.md",
+        "Technical Documents/kor/JavaCompatibility.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/DB Link User's Manual.md",
+        "Manuals/Altibase_7.1/eng/Hadoop Connector User's Manual.md",
+        "Manuals/Altibase_7.3/eng/DB Link User's Manual.md",
+        "Manuals/Altibase_7.3/eng/Hadoop Connector User's Manual.md",
+        "Manuals/Altibase_trunk/eng/DB Link User's Manual.md",
+        "Manuals/Altibase_trunk/eng/Hadoop Connector User's Manual.md",
+        "Manuals/Tools/Altibase_release/eng/Altibase 3rd Party Connector Guide.md",
+        "Manuals/Tools/Altibase_trunk/eng/Altibase 3rd Party Connector Guide.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/16_dblink_external_connectors.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "views_performance_monitoring",
+        "errors_troubleshooting"
+      ],
+      "coverage_notes": "Use for DB Link syntax, DB Link monitoring views, Hadoop Connector setup, DBeaver, GoldenGate, and connector compatibility checks."
+    },
+    {
+      "id": "kubernetes_aku",
+      "label": "Kubernetes and AKU guides",
+      "source_types": [
+        "third_party_guide",
+        "manual",
+        "release_note"
+      ],
+      "authority": "Prefer Korean Kubernetes and AKU guides and Korean release notes where present; use English third-party guides for extraction.",
+      "authoritative_path_patterns": [
+        "3rd Party Guide for Altibase/kor/Kubernetes User's Guide for Altibase.md",
+        "3rd Party Guide for Altibase/kor/Altibase aku Sample Guide for Kubernetes.md",
+        "Manuals/Altibase_7.1/kor/Utilities Manual.md",
+        "Manuals/Altibase_7.3/kor/Utilities Manual.md",
+        "Manuals/Altibase_trunk/kor/Utilities Manual.md",
+        "ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md",
+        "ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md"
+      ],
+      "supporting_path_patterns": [
+        "3rd Party Guide for Altibase/eng/Kubernetes User's Guide for Altibase.md",
+        "3rd Party Guide for Altibase/eng/Altibase aku Sample Guide for Kubernetes.md",
+        "ReleaseNotes/eng/Altibase_7_3_0_0_1_Release_Notes.md",
+        "ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/17_kubernetes_aku_cloud.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "operations_admin"
+      ],
+      "coverage_notes": "Use for container deployment, Kubernetes resources, AKU sample operations, and cloud/container caveats."
+    },
+    {
+      "id": "spatial_nifi_tableau",
+      "label": "Spatial SQL, altiShapeLoader, NiFi, and Tableau sources",
+      "source_types": [
+        "manual",
+        "tool_manual",
+        "third_party_guide",
+        "release_note"
+      ],
+      "authority": "Prefer Korean Spatial, altiShapeLoader, NiFi, and Tableau sources where present; use English manuals and guides for extraction.",
+      "authoritative_path_patterns": [
+        "Manuals/Altibase_7.1/kor/Spatial SQL Reference.md",
+        "Manuals/Altibase_7.3/kor/Spatial SQL Reference.md",
+        "Manuals/Altibase_trunk/kor/Spatial SQL Reference.md",
+        "Manuals/Tools/Altibase_release/kor/altiShapeLoader User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/kor/altiShapeLoader User's Manual.md",
+        "3rd Party Guide for Altibase/kor/NiFi User's Guide for Altibase.md",
+        "3rd Party Guide for Altibase/kor/Tableau User's Guide for Altibase/*.md",
+        "ReleaseNotes/kor/Altibase_altiShapeLoader_*_Release_Notes.md"
+      ],
+      "supporting_path_patterns": [
+        "Manuals/Altibase_7.1/eng/Spatial SQL Reference.md",
+        "Manuals/Altibase_7.3/eng/Spatial SQL Reference.md",
+        "Manuals/Altibase_trunk/eng/Spatial SQL Reference.md",
+        "Manuals/Tools/Altibase_release/eng/altiShapeLoader User's Manual.md",
+        "Manuals/Tools/Altibase_trunk/eng/altiShapeLoader User's Manual.md",
+        "3rd Party Guide for Altibase/eng/NiFi User's Guide for Altibase.md",
+        "3rd Party Guide for Altibase/eng/Tableau User's Guide for Altibase/*.md",
+        "ReleaseNotes/eng/Altibase_altiShapeLoader_*_Release_Notes.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/19_spatial_nifi_tableau_misc.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration",
+        "sql_ddl_dml_datatypes"
+      ],
+      "coverage_notes": "Use for GEOMETRY, spatial SQL, altiShapeLoader configuration, NiFi database service setup, Tableau connection details, and related integration troubleshooting."
+    },
+    {
+      "id": "technical_documents_support",
+      "label": "Approved supplemental technical documents",
+      "source_types": [
+        "technical_document"
+      ],
+      "authority": "Prefer Korean technical documents when paired or Korean-only; use English documents for extraction and customer-facing wording.",
+      "authoritative_path_patterns": [
+        "Technical Documents/kor/JavaCompatibility.md",
+        "Technical Documents/kor/ReplicationCompatibility.md",
+        "Technical Documents/kor/Replication network check.md",
+        "Technical Documents/kor/Supported Platforms.md"
+      ],
+      "supporting_path_patterns": [
+        "Technical Documents/eng/Supported Platforms.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/00_version_release_platform.md",
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/11_java_jdbc_spring.md",
+        "GPTs/attachments/16_dblink_external_connectors.md"
+      ],
+      "primary_domains": [
+        "replication_cdc_security_network",
+        "tools_apis_connectors_migration",
+        "operations_admin"
+      ],
+      "coverage_notes": "Use for approved compatibility matrices, network diagnostic procedures, Java compatibility details, and platform boundaries that are not fully covered by manuals."
+    },
+    {
+      "id": "third_party_guides",
+      "label": "Approved third-party integration guides",
+      "source_types": [
+        "third_party_guide"
+      ],
+      "authority": "Prefer Korean third-party guides where present; use English guides for extraction and UI/procedure wording.",
+      "authoritative_path_patterns": [
+        "3rd Party Guide for Altibase/kor/*.md",
+        "3rd Party Guide for Altibase/kor/*/*.md"
+      ],
+      "supporting_path_patterns": [
+        "3rd Party Guide for Altibase/eng/*.md",
+        "3rd Party Guide for Altibase/eng/*/*.md"
+      ],
+      "attachment_files": [
+        "GPTs/attachments/11_java_jdbc_spring.md",
+        "GPTs/attachments/16_dblink_external_connectors.md",
+        "GPTs/attachments/17_kubernetes_aku_cloud.md",
+        "GPTs/attachments/19_spatial_nifi_tableau_misc.md"
+      ],
+      "primary_domains": [
+        "tools_apis_connectors_migration"
+      ],
+      "coverage_notes": "Use for Spring Data JPA, Hibernate, Kubernetes, AKU, NiFi, Tableau, DBeaver, and other approved integration procedures; avoid unsupported integrations outside the selected corpus."
+    }
+  ],
+  "domain_coverage": [
+    {
+      "id": "properties",
+      "owner_job": "J004",
+      "required_minimum": 40,
+      "target": 50,
+      "question_file": "evals/altibase_answerability/questions/properties.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/05_data_types_properties.md",
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/07_error_messages_troubleshooting.md",
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/18_security_ssl_tls.md"
+      ],
+      "primary_source_family_ids": [
+        "general_reference_1_datatypes_properties",
+        "general_reference_2_dictionary_views",
+        "release_notes_platform"
+      ],
+      "supporting_source_family_ids": [
+        "patch_notes",
+        "replication_manual",
+        "security_ssl_tls",
+        "error_message_reference"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "property_catalog",
+          "label": "Property purpose, units, default, range, and value interpretation",
+          "target": 12,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "defaults_ranges_changed_behavior",
+          "label": "Changed defaults, ranges, removed properties, and 8.1 additions",
+          "target": 10,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties",
+            "release_notes_platform",
+            "patch_notes"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "dynamic_static_changes",
+          "label": "Dynamic versus static property change support and restart implications",
+          "target": 8,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "property_check_sql",
+          "label": "V$PROPERTY and related view SQL for checking or verifying properties",
+          "target": 8,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties",
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "version_sensitive_properties",
+          "label": "Version-sensitive property behavior, including JSON, Temporary LOB, regex, logging, and replication SSL properties",
+          "target": 7,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties",
+            "release_notes_platform",
+            "replication_manual",
+            "security_ssl_tls"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "property_troubleshooting",
+          "label": "Property-related symptoms, unsafe assumptions, and missing environment inputs",
+          "target": 5,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties",
+            "error_message_reference"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 4,
+        "intermediate": 14,
+        "advanced_operator": 18,
+        "developer": 4,
+        "expert": 10
+      },
+      "version_scope_targets": {
+        "7.1": 8,
+        "7.3": 7,
+        "8.1": 13,
+        "cross-version": 15,
+        "patch-specific": 7
+      },
+      "answer_type_targets": {
+        "reference": 28,
+        "sql_generation": 8,
+        "runbook": 6,
+        "troubleshooting": 4,
+        "compatibility": 2,
+        "tool_api": 0,
+        "mixed": 2
+      },
+      "retrieval_risk_targets": {
+        "low": 8,
+        "medium": 22,
+        "high": 20
+      },
+      "question_selection_notes": [
+        "Favor properties that affect safety, startup, logging, memory, JSON, Temporary LOB, replication SSL, SQL plan output, and compatibility.",
+        "Require expected facts to state whether exact patch level, restart, or related view checks are needed.",
+        "Use property names as required tokens and prohibit generic database tuning advice that is not in the Altibase sources."
+      ],
+      "exclusion_notes": [
+        "Do not create questions from properties that cannot be verified in the selected source corpus.",
+        "Do not ask the answering model to infer property behavior from source_refs or expected_facts."
+      ]
+    },
+    {
+      "id": "sql_ddl_dml_datatypes",
+      "owner_job": "J005",
+      "required_minimum": 35,
+      "target": 45,
+      "question_file": "evals/altibase_answerability/questions/sql_ddl_dml_datatypes.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/03_sql_ddl_generation.md",
+        "GPTs/attachments/04_sql_dml_oracle_compatibility.md",
+        "GPTs/attachments/05_data_types_properties.md",
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/15_migration_oracle_compatibility.md",
+        "GPTs/attachments/19_spatial_nifi_tableau_misc.md"
+      ],
+      "primary_source_family_ids": [
+        "sql_reference",
+        "general_reference_1_datatypes_properties",
+        "administrator_operations"
+      ],
+      "supporting_source_family_ids": [
+        "release_notes_platform",
+        "patch_notes",
+        "replication_manual",
+        "migration_oracle",
+        "spatial_nifi_tableau"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "ddl_generation",
+          "label": "Altibase-specific DDL for tablespaces, tables, partitions, indexes, constraints, users, privileges, and storage",
+          "target": 12,
+          "source_family_ids": [
+            "sql_reference",
+            "administrator_operations"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "advanced_operator",
+            "developer"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "dml_expressions_functions",
+          "label": "DML, expressions, functions, hints, and Oracle-overlap differences",
+          "target": 7,
+          "source_family_ids": [
+            "sql_reference"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "developer"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "datatypes_json_lob",
+          "label": "Data types, JSON, LOB, Temporary LOB, storage modifiers, and version boundaries",
+          "target": 8,
+          "source_family_ids": [
+            "general_reference_1_datatypes_properties",
+            "release_notes_platform"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "oracle_differences",
+          "label": "Oracle compatibility, migration-sensitive syntax, and unsupported generic assumptions",
+          "target": 7,
+          "source_family_ids": [
+            "sql_reference",
+            "migration_oracle"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "replication_admin_sql",
+          "label": "Replication SQL, administrative SQL, and DDL boundaries for high-risk changes",
+          "target": 6,
+          "source_family_ids": [
+            "sql_reference",
+            "replication_manual",
+            "administrator_operations"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "syntax_restrictions_examples",
+          "label": "BNF-like syntax details, required clauses, and example generation constraints",
+          "target": 5,
+          "source_family_ids": [
+            "sql_reference",
+            "general_reference_1_datatypes_properties"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "developer"
+          ],
+          "retrieval_risk": "medium"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 4,
+        "intermediate": 12,
+        "advanced_operator": 8,
+        "developer": 13,
+        "expert": 8
+      },
+      "version_scope_targets": {
+        "7.1": 6,
+        "7.3": 5,
+        "8.1": 10,
+        "cross-version": 19,
+        "patch-specific": 5
+      },
+      "answer_type_targets": {
+        "reference": 6,
+        "sql_generation": 20,
+        "runbook": 2,
+        "troubleshooting": 2,
+        "compatibility": 9,
+        "tool_api": 0,
+        "mixed": 6
+      },
+      "retrieval_risk_targets": {
+        "low": 6,
+        "medium": 19,
+        "high": 20
+      },
+      "question_selection_notes": [
+        "Prefer questions that force Altibase-specific SQL or DDL instead of generic Oracle-compatible SQL.",
+        "Include required tokens for SQL keywords, property names, data type names, functions, and object placeholders.",
+        "For destructive or state-changing SQL, expected facts must require prerequisites, verification, and missing-object input."
+      ],
+      "exclusion_notes": [
+        "Do not benchmark generic SQL behavior unless Altibase has a documented difference, restriction, or syntax pattern.",
+        "Do not create questions whose answer depends on an original syntax diagram that has not been converted or referenced in the selected source corpus."
+      ]
+    },
+    {
+      "id": "operations_admin",
+      "owner_job": "J006",
+      "required_minimum": 25,
+      "target": 35,
+      "question_file": "evals/altibase_answerability/questions/operations_admin.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/00_version_release_platform.md",
+        "GPTs/attachments/01_getting_started_installation.md",
+        "GPTs/attachments/02_administration_operations.md",
+        "GPTs/attachments/03_sql_ddl_generation.md",
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/13_isql_iloader_basic_tools.md",
+        "GPTs/attachments/14_utilities_operation_tools.md",
+        "GPTs/attachments/17_kubernetes_aku_cloud.md"
+      ],
+      "primary_source_family_ids": [
+        "getting_started_installation",
+        "administrator_operations",
+        "general_reference_2_dictionary_views"
+      ],
+      "supporting_source_family_ids": [
+        "release_notes_platform",
+        "patch_notes",
+        "isql_iloader",
+        "utilities_datacompj",
+        "kubernetes_aku",
+        "technical_documents_support"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "installation_startup_shutdown",
+          "label": "Installation, database creation, startup, shutdown, first checks, and environment setup",
+          "target": 6,
+          "source_family_ids": [
+            "getting_started_installation"
+          ],
+          "preferred_user_levels": [
+            "beginner",
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "accounts_tablespaces_admin",
+          "label": "Users, privileges, roles, tablespaces, memory/disk/temporary storage, and administrative SQL",
+          "target": 7,
+          "source_family_ids": [
+            "administrator_operations",
+            "sql_reference"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "backup_restore_recovery",
+          "label": "Backup, restore, recovery, archive logging, incremental backup, and protected operational runbooks",
+          "target": 9,
+          "source_family_ids": [
+            "administrator_operations",
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "datafile_log_operations",
+          "label": "Datafile, log file, checkpoint, backup directory, and storage movement operations",
+          "target": 5,
+          "source_family_ids": [
+            "administrator_operations",
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "platform_upgrade_cautions",
+          "label": "Supported platforms, release boundaries, upgrade cautions, and version selection",
+          "target": 4,
+          "source_family_ids": [
+            "release_notes_platform",
+            "technical_documents_support"
+          ],
+          "preferred_user_levels": [
+            "beginner",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "admin_runbook_safety",
+          "label": "Safe operational sequencing, prechecks, rollback limits, and verification SQL",
+          "target": 4,
+          "source_family_ids": [
+            "administrator_operations",
+            "isql_iloader",
+            "utilities_datacompj"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 5,
+        "intermediate": 8,
+        "advanced_operator": 15,
+        "developer": 2,
+        "expert": 5
+      },
+      "version_scope_targets": {
+        "7.1": 6,
+        "7.3": 5,
+        "8.1": 8,
+        "cross-version": 12,
+        "patch-specific": 4
+      },
+      "answer_type_targets": {
+        "reference": 6,
+        "sql_generation": 2,
+        "runbook": 20,
+        "troubleshooting": 4,
+        "compatibility": 1,
+        "tool_api": 0,
+        "mixed": 2
+      },
+      "retrieval_risk_targets": {
+        "low": 5,
+        "medium": 14,
+        "high": 16
+      },
+      "question_selection_notes": [
+        "Include protected-topic questions for backup and recovery, datafile movement, destructive administrative operations, and startup/shutdown states.",
+        "Expected facts should require environment, object, file path, and log details when the safe procedure depends on them.",
+        "Prefer operational questions that need both manual procedure facts and verification SQL from dictionary/performance views."
+      ],
+      "exclusion_notes": [
+        "Do not turn platform or Kubernetes supplemental notes into unsupported production architecture promises.",
+        "Do not create a runbook question if the selected sources do not provide the command or state transition being tested."
+      ]
+    },
+    {
+      "id": "views_performance_monitoring",
+      "owner_job": "J007",
+      "required_minimum": 20,
+      "target": 30,
+      "question_file": "evals/altibase_answerability/questions/views_performance_monitoring.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/08_performance_tuning_monitoring.md",
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/16_dblink_external_connectors.md"
+      ],
+      "primary_source_family_ids": [
+        "general_reference_2_dictionary_views",
+        "performance_tuning",
+        "monitoring_api_snmp"
+      ],
+      "supporting_source_family_ids": [
+        "release_notes_platform",
+        "patch_notes",
+        "replication_manual",
+        "dblink_hadoop_external_connectors"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "dictionary_meta_tables",
+          "label": "Meta tables and dictionary SQL for objects, privileges, partitions, comments, and storage",
+          "target": 7,
+          "source_family_ids": [
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "developer",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "performance_views_check_sql",
+          "label": "Performance views and check SQL for sessions, locks, waits, transactions, plan cache, replication, and backup state",
+          "target": 7,
+          "source_family_ids": [
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "optimizer_plan_tuning",
+          "label": "Optimizer, plan interpretation, hints, statistics, indexes, joins, and tuning diagnostics",
+          "target": 7,
+          "source_family_ids": [
+            "performance_tuning",
+            "sql_reference"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "monitoring_api_snmp",
+          "label": "Monitoring API and SNMP setup, counters, ports, traps, and operational monitoring",
+          "target": 5,
+          "source_family_ids": [
+            "monitoring_api_snmp"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "developer"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "version_sensitive_view_availability",
+          "label": "Version-sensitive views, columns, and portable availability checks",
+          "target": 4,
+          "source_family_ids": [
+            "general_reference_2_dictionary_views",
+            "release_notes_platform",
+            "patch_notes"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 2,
+        "intermediate": 6,
+        "advanced_operator": 10,
+        "developer": 5,
+        "expert": 7
+      },
+      "version_scope_targets": {
+        "7.1": 4,
+        "7.3": 4,
+        "8.1": 6,
+        "cross-version": 12,
+        "patch-specific": 4
+      },
+      "answer_type_targets": {
+        "reference": 12,
+        "sql_generation": 8,
+        "runbook": 4,
+        "troubleshooting": 2,
+        "compatibility": 1,
+        "tool_api": 1,
+        "mixed": 2
+      },
+      "retrieval_risk_targets": {
+        "low": 4,
+        "medium": 13,
+        "high": 13
+      },
+      "question_selection_notes": [
+        "Use view and column names as required tokens and require portable availability checks when view support differs by version.",
+        "Include questions that need multiple views, not just a single-object lookup.",
+        "Favor plan and monitoring questions where generic database answers are likely to miss Altibase-specific views or counters."
+      ],
+      "exclusion_notes": [
+        "Do not benchmark direct DML against meta tables except as a prohibited claim.",
+        "Do not assume a view exists across all versions without source-backed availability or a V$TABLE/V$ALLCOLUMN check."
+      ]
+    },
+    {
+      "id": "replication_cdc_security_network",
+      "owner_job": "J008",
+      "required_minimum": 20,
+      "target": 30,
+      "question_file": "evals/altibase_answerability/questions/replication_cdc_security_network.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/18_security_ssl_tls.md",
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/03_sql_ddl_generation.md"
+      ],
+      "primary_source_family_ids": [
+        "replication_manual",
+        "log_analyzer",
+        "replication_manager",
+        "security_ssl_tls"
+      ],
+      "supporting_source_family_ids": [
+        "release_notes_platform",
+        "patch_notes",
+        "technical_documents_support",
+        "general_reference_2_dictionary_views",
+        "general_reference_1_datatypes_properties"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "replication_topology_states",
+          "label": "Replication topology, modes, states, objects, target matching, and runtime views",
+          "target": 8,
+          "source_family_ids": [
+            "replication_manual",
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "replication_state_changes",
+          "label": "Create, start, stop, synchronize, flush, alter, and drop replication operations",
+          "target": 5,
+          "source_family_ids": [
+            "replication_manual",
+            "sql_reference"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "cdc_log_analyzer_repmgr",
+          "label": "Log Analyzer CDC, XLog components, Replication Manager workflows, and tool prerequisites",
+          "target": 5,
+          "source_family_ids": [
+            "log_analyzer",
+            "replication_manager"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "developer"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "compatibility_network_diagnostics",
+          "label": "Replication compatibility, protocol versions, network diagnostics, ports, and gap checks",
+          "target": 4,
+          "source_family_ids": [
+            "technical_documents_support",
+            "replication_manual",
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "security_tls_replication_ssl",
+          "label": "TLS, certificate configuration, client/server SSL, and 8.1 replication SSL",
+          "target": 6,
+          "source_family_ids": [
+            "security_ssl_tls",
+            "replication_manual",
+            "general_reference_1_datatypes_properties"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "version_patch_replication_caveats",
+          "label": "Version and patch-specific replication, CDC, security, and protocol caveats",
+          "target": 2,
+          "source_family_ids": [
+            "release_notes_platform",
+            "patch_notes"
+          ],
+          "preferred_user_levels": [
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 2,
+        "intermediate": 5,
+        "advanced_operator": 12,
+        "developer": 4,
+        "expert": 7
+      },
+      "version_scope_targets": {
+        "7.1": 5,
+        "7.3": 4,
+        "8.1": 8,
+        "cross-version": 9,
+        "patch-specific": 4
+      },
+      "answer_type_targets": {
+        "reference": 7,
+        "sql_generation": 5,
+        "runbook": 8,
+        "troubleshooting": 4,
+        "compatibility": 3,
+        "tool_api": 1,
+        "mixed": 2
+      },
+      "retrieval_risk_targets": {
+        "low": 3,
+        "medium": 10,
+        "high": 17
+      },
+      "question_selection_notes": [
+        "Treat replication state changes and security/TLS as protected-topic candidates; expected facts should require version, topology, replication object names, gap status, and rollback cautions when needed.",
+        "Include cross-source questions that combine replication manuals, views, properties, release notes, and network technical documents.",
+        "Use literal tokens for replication SQL, view names, property names, ports, and tool/API names."
+      ],
+      "exclusion_notes": [
+        "Do not imply replication automatically synchronizes DDL or resolves active-active conflicts unless the selected source says so.",
+        "Do not mix ordinary client TLS and replication SSL without preserving the documented version boundary."
+      ]
+    },
+    {
+      "id": "errors_troubleshooting",
+      "owner_job": "J009",
+      "required_minimum": 20,
+      "target": 30,
+      "question_file": "evals/altibase_answerability/questions/errors_troubleshooting.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/07_error_messages_troubleshooting.md",
+        "GPTs/attachments/02_administration_operations.md",
+        "GPTs/attachments/05_data_types_properties.md",
+        "GPTs/attachments/06_data_dictionary_performance_views.md",
+        "GPTs/attachments/08_performance_tuning_monitoring.md",
+        "GPTs/attachments/09_replication_ha_cdc.md",
+        "GPTs/attachments/18_security_ssl_tls.md"
+      ],
+      "primary_source_family_ids": [
+        "error_message_reference"
+      ],
+      "supporting_source_family_ids": [
+        "general_reference_1_datatypes_properties",
+        "general_reference_2_dictionary_views",
+        "administrator_operations",
+        "replication_manual",
+        "security_ssl_tls",
+        "jdbc_java",
+        "c_cli_odbc_precompiler",
+        "isql_iloader",
+        "utilities_datacompj"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "error_code_cause_action",
+          "label": "Error code, message, cause, and action from Error Message Reference",
+          "target": 10,
+          "source_family_ids": [
+            "error_message_reference"
+          ],
+          "preferred_user_levels": [
+            "beginner",
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "symptom_log_collection",
+          "label": "Symptom triage, log collection, missing input requests, and first diagnostic commands",
+          "target": 6,
+          "source_family_ids": [
+            "error_message_reference",
+            "administrator_operations",
+            "general_reference_2_dictionary_views"
+          ],
+          "preferred_user_levels": [
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "sql_property_errors",
+          "label": "SQL, property, data type, JSON, LOB, and object-definition error scenarios",
+          "target": 5,
+          "source_family_ids": [
+            "error_message_reference",
+            "sql_reference",
+            "general_reference_1_datatypes_properties"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "high_risk_operations_errors",
+          "label": "Backup/recovery, replication, security/TLS, and destructive-operation troubleshooting",
+          "target": 5,
+          "source_family_ids": [
+            "error_message_reference",
+            "administrator_operations",
+            "replication_manual",
+            "security_ssl_tls"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "tool_driver_errors",
+          "label": "Tool, driver, connector, iSQL, iLoader, utility, and API troubleshooting",
+          "target": 4,
+          "source_family_ids": [
+            "error_message_reference",
+            "jdbc_java",
+            "c_cli_odbc_precompiler",
+            "isql_iloader",
+            "utilities_datacompj"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 4,
+        "intermediate": 8,
+        "advanced_operator": 10,
+        "developer": 4,
+        "expert": 4
+      },
+      "version_scope_targets": {
+        "7.1": 5,
+        "7.3": 4,
+        "8.1": 5,
+        "cross-version": 10,
+        "patch-specific": 6
+      },
+      "answer_type_targets": {
+        "reference": 8,
+        "sql_generation": 1,
+        "runbook": 3,
+        "troubleshooting": 15,
+        "compatibility": 1,
+        "tool_api": 0,
+        "mixed": 2
+      },
+      "retrieval_risk_targets": {
+        "low": 4,
+        "medium": 12,
+        "high": 14
+      },
+      "question_selection_notes": [
+        "Use literal error codes and messages as required tokens where present.",
+        "Expected facts should separate source-backed cause/action from environment-specific inference.",
+        "Include questions that test whether the answer asks for logs, exact SQL, object definition, version, or patch level only when needed."
+      ],
+      "exclusion_notes": [
+        "Do not invent root causes not present in the selected source corpus.",
+        "Do not turn a generic symptom into a single-cause answer when the safe response requires more input."
+      ]
+    },
+    {
+      "id": "tools_apis_connectors_migration",
+      "owner_job": "J010",
+      "required_minimum": 40,
+      "target": 50,
+      "question_file": "evals/altibase_answerability/questions/tools_apis_connectors_migration.jsonl",
+      "attachment_files": [
+        "GPTs/attachments/10_psm_stored_external_procedures.md",
+        "GPTs/attachments/11_java_jdbc_spring.md",
+        "GPTs/attachments/12_c_cli_odbc_precompiler.md",
+        "GPTs/attachments/13_isql_iloader_basic_tools.md",
+        "GPTs/attachments/14_utilities_operation_tools.md",
+        "GPTs/attachments/15_migration_oracle_compatibility.md",
+        "GPTs/attachments/16_dblink_external_connectors.md",
+        "GPTs/attachments/17_kubernetes_aku_cloud.md",
+        "GPTs/attachments/19_spatial_nifi_tableau_misc.md"
+      ],
+      "primary_source_family_ids": [
+        "stored_external_procedures",
+        "jdbc_java",
+        "c_cli_odbc_precompiler",
+        "isql_iloader",
+        "utilities_datacompj",
+        "migration_oracle",
+        "dblink_hadoop_external_connectors",
+        "kubernetes_aku",
+        "spatial_nifi_tableau"
+      ],
+      "supporting_source_family_ids": [
+        "release_notes_platform",
+        "patch_notes",
+        "technical_documents_support",
+        "third_party_guides",
+        "log_analyzer",
+        "replication_manager",
+        "monitoring_api_snmp"
+      ],
+      "source_language_basis_expectation": "ko+en",
+      "subdomain_targets": [
+        {
+          "id": "psm_external_procedures",
+          "label": "PSM, stored procedures, functions, external procedures, and PL/SQL migration boundaries",
+          "target": 7,
+          "source_family_ids": [
+            "stored_external_procedures",
+            "sql_reference"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "jdbc_java_spring_hibernate",
+          "label": "JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, and Hibernate",
+          "target": 8,
+          "source_family_ids": [
+            "jdbc_java",
+            "technical_documents_support"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "intermediate"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "c_cli_odbc_precompiler",
+          "label": "CLI, ODBC, C Interface, Precompiler, LOB APIs, and C-side diagnostics",
+          "target": 7,
+          "source_family_ids": [
+            "c_cli_odbc_precompiler"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "isql_iloader",
+          "label": "iSQL, iLoader, command options, data load/extract, and operational files",
+          "target": 7,
+          "source_family_ids": [
+            "isql_iloader"
+          ],
+          "preferred_user_levels": [
+            "beginner",
+            "intermediate",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "utilities_datacompj",
+          "label": "Utilities, aexport, altiComp, aku, altiMon, dataCompJ, and operational tools",
+          "target": 7,
+          "source_family_ids": [
+            "utilities_datacompj"
+          ],
+          "preferred_user_levels": [
+            "advanced_operator",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "migration_oracle_adapter",
+          "label": "Migration Center, Adapter for Oracle, Oracle compatibility, conversion reports, and validation",
+          "target": 5,
+          "source_family_ids": [
+            "migration_oracle"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "expert"
+          ],
+          "retrieval_risk": "high"
+        },
+        {
+          "id": "dblink_kubernetes_connectors",
+          "label": "DB Link, Hadoop, third-party connectors, Kubernetes, AKU, and container procedures",
+          "target": 5,
+          "source_family_ids": [
+            "dblink_hadoop_external_connectors",
+            "kubernetes_aku",
+            "third_party_guides"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "advanced_operator"
+          ],
+          "retrieval_risk": "medium"
+        },
+        {
+          "id": "spatial_nifi_tableau",
+          "label": "Spatial SQL, altiShapeLoader, NiFi, Tableau, and miscellaneous approved integrations",
+          "target": 4,
+          "source_family_ids": [
+            "spatial_nifi_tableau",
+            "third_party_guides"
+          ],
+          "preferred_user_levels": [
+            "developer",
+            "intermediate"
+          ],
+          "retrieval_risk": "medium"
+        }
+      ],
+      "user_level_targets": {
+        "beginner": 4,
+        "intermediate": 11,
+        "advanced_operator": 10,
+        "developer": 17,
+        "expert": 8
+      },
+      "version_scope_targets": {
+        "7.1": 7,
+        "7.3": 7,
+        "8.1": 8,
+        "cross-version": 24,
+        "patch-specific": 4
+      },
+      "answer_type_targets": {
+        "reference": 8,
+        "sql_generation": 3,
+        "runbook": 6,
+        "troubleshooting": 4,
+        "compatibility": 6,
+        "tool_api": 18,
+        "mixed": 5
+      },
+      "retrieval_risk_targets": {
+        "low": 8,
+        "medium": 24,
+        "high": 18
+      },
+      "question_selection_notes": [
+        "Use exact class, method, package, option, property, path, command, and connector names as required tokens.",
+        "Prefer questions that require tool-specific prerequisites, generated files, version boundaries, and API call order.",
+        "Include UI-heavy guide questions only after translating the source procedure into canonical English facts and preserving literal technical tokens."
+      ],
+      "exclusion_notes": [
+        "Do not include third-party tools or integrations outside the approved selected source inventory.",
+        "Do not rely on screenshots as expected facts unless the selected Markdown source exposes the needed field names or procedure text."
+      ]
+    }
+  ]
+}

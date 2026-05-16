@@ -1,0 +1,509 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://altibase.local/evals/altibase_answerability/schemas/source_taxonomy.schema.json",
+  "title": "Altibase Answerability Source Taxonomy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "taxonomy_id",
+    "version",
+    "job_id",
+    "source_boundary",
+    "user_levels",
+    "source_families",
+    "domain_coverage"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "taxonomy_id": {
+      "const": "altibase_answerability_source_taxonomy"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "job_id": {
+      "const": "J002"
+    },
+    "source_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_source_inventory",
+        "durable_root",
+        "authoritative_language_rule",
+        "answer_generation_sources",
+        "question_generation_sources"
+      ],
+      "properties": {
+        "selected_source_inventory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "durable_root": {
+          "const": "evals/altibase_answerability"
+        },
+        "authoritative_language_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "answer_generation_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "question_generation_sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "user_levels": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "definition"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/user_level"
+          },
+          "definition": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "source_families": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "source_types",
+          "authority",
+          "authoritative_path_patterns",
+          "supporting_path_patterns",
+          "attachment_files",
+          "primary_domains",
+          "coverage_notes"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_types": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/source_type"
+            },
+            "uniqueItems": true
+          },
+          "authority": {
+            "type": "string",
+            "minLength": 1
+          },
+          "authoritative_path_patterns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "supporting_path_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "attachment_files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^GPTs/attachments/[0-9]{2}_[a-z0-9_]+\\.md$"
+            },
+            "uniqueItems": true
+          },
+          "primary_domains": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/domain_id"
+            },
+            "uniqueItems": true
+          },
+          "coverage_notes": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "domain_coverage": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner_job",
+          "required_minimum",
+          "target",
+          "question_file",
+          "attachment_files",
+          "primary_source_family_ids",
+          "supporting_source_family_ids",
+          "source_language_basis_expectation",
+          "subdomain_targets",
+          "user_level_targets",
+          "version_scope_targets",
+          "answer_type_targets",
+          "retrieval_risk_targets",
+          "question_selection_notes",
+          "exclusion_notes"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/domain_id"
+          },
+          "owner_job": {
+            "type": "string",
+            "pattern": "^J[0-9]{3}$"
+          },
+          "required_minimum": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "target": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "question_file": {
+            "type": "string",
+            "pattern": "^evals/altibase_answerability/questions/[a-z0-9_]+\\.jsonl$"
+          },
+          "attachment_files": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^GPTs/attachments/[0-9]{2}_[a-z0-9_]+\\.md$"
+            },
+            "uniqueItems": true
+          },
+          "primary_source_family_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "uniqueItems": true
+          },
+          "supporting_source_family_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "uniqueItems": true
+          },
+          "source_language_basis_expectation": {
+            "enum": [
+              "ko",
+              "en",
+              "ko+en"
+            ],
+            "type": "string"
+          },
+          "subdomain_targets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/subdomain_target"
+            }
+          },
+          "user_level_targets": {
+            "$ref": "#/$defs/user_level_targets"
+          },
+          "version_scope_targets": {
+            "$ref": "#/$defs/version_scope_targets"
+          },
+          "answer_type_targets": {
+            "$ref": "#/$defs/answer_type_targets"
+          },
+          "retrieval_risk_targets": {
+            "$ref": "#/$defs/retrieval_risk_targets"
+          },
+          "question_selection_notes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "exclusion_notes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "answer_type_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "sql_generation",
+        "runbook",
+        "troubleshooting",
+        "compatibility",
+        "tool_api",
+        "mixed"
+      ],
+      "properties": {
+        "reference": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sql_generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runbook": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "troubleshooting": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "compatibility": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tool_api": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mixed": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "domain_id": {
+      "enum": [
+        "properties",
+        "sql_ddl_dml_datatypes",
+        "operations_admin",
+        "views_performance_monitoring",
+        "replication_cdc_security_network",
+        "errors_troubleshooting",
+        "tools_apis_connectors_migration"
+      ],
+      "type": "string"
+    },
+    "retrieval_risk": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "type": "string"
+    },
+    "retrieval_risk_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "properties": {
+        "low": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "medium": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "high": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "source_type": {
+      "enum": [
+        "manual",
+        "release_note",
+        "patch_note",
+        "tool_manual",
+        "technical_document",
+        "third_party_guide",
+        "supporting_report"
+      ],
+      "type": "string"
+    },
+    "subdomain_target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "target",
+        "source_family_ids",
+        "preferred_user_levels",
+        "retrieval_risk"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "source_family_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "uniqueItems": true
+        },
+        "preferred_user_levels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/user_level"
+          },
+          "uniqueItems": true
+        },
+        "retrieval_risk": {
+          "$ref": "#/$defs/retrieval_risk"
+        }
+      }
+    },
+    "user_level": {
+      "enum": [
+        "beginner",
+        "intermediate",
+        "advanced_operator",
+        "developer",
+        "expert"
+      ],
+      "type": "string"
+    },
+    "user_level_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "beginner",
+        "intermediate",
+        "advanced_operator",
+        "developer",
+        "expert"
+      ],
+      "properties": {
+        "beginner": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "intermediate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "advanced_operator": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "developer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expert": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "version_scope_targets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "7.1",
+        "7.3",
+        "8.1",
+        "cross-version",
+        "patch-specific"
+      ],
+      "properties": {
+        "7.1": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "7.3": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "8.1": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cross-version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "patch-specific": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

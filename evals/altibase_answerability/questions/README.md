@@ -5,6 +5,9 @@ Question files are JSONL files, preferably one file per benchmark domain.
 Each line must validate against `../schemas/question.schema.json`. Question-generation
 jobs must use the selected repository-local source corpus, prefer Korean manuals where
 paired Korean and English manuals exist, and write expected facts in canonical English.
+Use `../source_taxonomy.json` and `../SOURCE_COVERAGE_MAP.md` for the durable mapping
+from domains to selected source families, target counts, user-level mix, version-scope
+mix, answer type mix, retrieval risk, and exclusion notes.
 
 Suggested future files:
 

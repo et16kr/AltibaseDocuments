@@ -8,6 +8,8 @@ These schemas define the durable benchmark exchange formats.
 - `answer_record.schema.json`: attachments-only answer runner output.
 - `judgment.schema.json`: source-backed judgment for one answer.
 - `aggregate_report.schema.json`: manifest-level readiness report.
+- `source_taxonomy.schema.json`: source-family, domain, user-level, version, target-count,
+  and retrieval-risk coverage map for question-generation jobs.
 
 Later script jobs should validate JSON and JSONL files against these schemas before
 running answer generation or judging.
