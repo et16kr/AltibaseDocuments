@@ -501,6 +501,17 @@ recording or remediating gaps.
   `GPTs/reports/source_inventory.md`. This gap remains `Open` for the later
   backup/recovery, replication, Kubernetes/AKU, and security/replication SSL
   high-risk procedure slices.
+- J028 update: the backup/recovery workflow slice for
+  `02_administration_operations.md` is now represented by procedural runbooks for
+  logical `iLoader` backup/restore, offline physical backup/restore, online database
+  and tablespace backup, archive-log retention, log-anchor backup/restore decisions,
+  incremental backup initialization, recurring level 0/level 1 backups, backup-file
+  movement/deletion, and invalid `backupInfo` removal. `03_sql_ddl_generation.md` now
+  includes the Altibase 7.3/8.1 source-backed `REMOVE BACKUP INFO FILE` repair clause
+  with a `PROCESS`/`SYSDBA` guardrail and a 7.1 confirmation caution. Source paths and
+  version scope are recorded in `GPTs/reports/source_inventory.md`. This gap remains
+  `Open` for later restore/media failure, replication, Kubernetes/AKU, and
+  security/replication SSL high-risk procedure slices.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 

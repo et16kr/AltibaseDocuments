@@ -941,6 +941,7 @@ alter_database ::=
   | change_backup_directory_clause
   | move_backup_clause
   | delete_backup_clause
+  | backup_info_repair_clause
   | change_tracking_clause
   | snapshot_clause
   | checkpoint_scale_clause }
@@ -1008,6 +1009,9 @@ move_backup_clause ::=
 delete_backup_clause ::=
   DELETE OBSOLETE BACKUP FILES
 
+backup_info_repair_clause ::=
+  REMOVE BACKUP INFO FILE
+
 change_tracking_clause ::=
   {ENABLE | DISABLE} INCREMENTAL CHUNK CHANGE TRACKING
 ```
@@ -1021,6 +1025,7 @@ Backup and recovery generation notes:
 - `RESTORE TABLESPACE tablespace_name [, ...]` is source-audited for 7.1, 7.3, and the Altibase 8.1 verified source. It is the restore grammar only; do not invent `RECOVER TABLESPACE`. After restore or OS-level file copy, use the documented `RECOVER DATABASE` procedure when media recovery is required.
 - `RESTORE DATABASE UNTIL CANCEL` is not supported for incremental backup restoration. Restore with no target, `FROM TAG`, or `UNTIL TIME`, then recover with `UNTIL CANCEL` only when the recovery plan and required logs support that path.
 - If the customer gives a tag-based restore and recovery plan, use the same `FROM TAG` value for `RESTORE DATABASE` and `RECOVER DATABASE` unless they explicitly intend to restore from a tag and recover beyond it with `UNTIL TIME` or `UNTIL CANCEL`.
+- `REMOVE BACKUP INFO FILE` is an incremental-backup repair operation for invalid or discarded `backupInfo`, source-backed in Altibase 7.3 and the Altibase 8.1 verified source. It is run in `PROCESS` as `SYSDBA`; do not generate it for Altibase 7.1 unless the exact target manual or runtime support is confirmed, and do not generate it for any version unless the recovery plan intentionally abandons the existing incremental backup catalog and evidence has been preserved.
 
 #### Directory DDL Syntax
 

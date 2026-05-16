@@ -692,6 +692,58 @@ representing the high-risk installer and first-run procedure as procedural text,
 copy-ready command blocks, expected output markers, and stop conditions. `GAP-J002-007`
 remains a guardrail for exhaustive 7.1 and 7.3 minor patch platform review.
 
+## J028 Backup Archive And Incremental Backup Runbook Addendum
+
+J028 uses the `administrator_operations`, `sql_reference`,
+`general_reference_1_datatypes_properties`, `general_reference_2_dictionary_views`, and
+`isql_iloader` source families for Altibase 7.1, Altibase 7.3, and the Altibase 8.1
+verified source. Korean Administrator, SQL Reference, General Reference, and iLoader
+manuals remain authoritative for backup method boundaries, archive-log behavior,
+log-anchor handling, snapshot export, incremental backup metadata, and recovery
+preconditions; matching English manuals remain extraction aids only when consistent.
+
+Design note: J028 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/02_administration_operations.md` with backup strategy blocks and
+runbooks for logical `iLoader` backup/restore, offline physical backup/restore, online
+database and tablespace backup, archive-log retention, log-anchor backup/restore
+decisions, incremental backup initialization, recurring level 0/level 1 backup, backup
+file movement/deletion, and invalid `backupInfo` removal with a 7.3/8.1 source-backed
+caution. It updates
+`GPTs/attachments/03_sql_ddl_generation.md` only to expose the source-backed
+Altibase 7.3/8.1 `ALTER DATABASE REMOVE BACKUP INFO FILE` repair clause and its
+generation guardrail.
+
+Scoped source paths checked for J028:
+
+- `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
+- `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
+- `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/kor/iLoader User's Manual.md`
+- `Manuals/Altibase_7.3/kor/iLoader User's Manual.md`
+- `Manuals/Altibase_trunk/kor/iLoader User's Manual.md`
+- `GPTs/attachments/02_administration_operations.md`
+- `GPTs/attachments/03_sql_ddl_generation.md`
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/attachments/13_isql_iloader_basic_tools.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J028 adds no new attachment filename, source family, or Korean/English source-drift
+case. It narrows `GAP-J002-018` for the backup/recovery workflow slice by replacing
+high-risk source workflow tables and examples with searchable English runbook steps,
+copy-ready SQL/command examples, archive/log-anchor stop conditions, and view-backed
+validation hooks. No new manual/source-backed gap was discovered during the scoped
+backup, archive, log-anchor, and incremental-backup review.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

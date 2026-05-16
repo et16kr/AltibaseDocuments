@@ -225,7 +225,14 @@ for 8.1 customer-facing labels.
   runbook guardrails in `01_getting_started_installation.md`, with source-family
   traceability recorded in `GPTs/reports/source_inventory.md` and the relevant
   `GAP-J002-007`/`GAP-J002-018` updates recorded in `GPTs/reports/gap_register.md`.
-- J028-J033 should use operations, replication, networking, and TLS source families to
+- J028 expanded logical `iLoader`, offline physical, online database/tablespace,
+  archive-log, log-anchor, and incremental backup runbooks in
+  `02_administration_operations.md`, added the guarded Altibase 7.3/8.1
+  `REMOVE BACKUP INFO FILE` administrative repair clause to
+  `03_sql_ddl_generation.md`, and recorded source-family
+  traceability in `GPTs/reports/source_inventory.md` plus the `GAP-J002-018` update in
+  `GPTs/reports/gap_register.md`.
+- J029-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.

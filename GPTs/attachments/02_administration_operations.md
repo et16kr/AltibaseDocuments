@@ -20,6 +20,8 @@
 - 7.3: Altibase 7.3 Administrator's Manual.
 - 8.1: Altibase 8.1 verified source Administrator's Manual.
 - SQL Reference: datafile rename phase wording for 7.1, 7.3, and Altibase 8.1 verified source.
+- iLoader manuals: table-level logical backup and restore command behavior.
+- General Reference: backup, archive, log-anchor, snapshot, and incremental-backup properties and views.
 
 ## Altibase Hybrid Architecture
 - Altibase supports memory, disk, and volatile tablespaces in one database engine. Treat this as an operational storage choice, not a blanket performance guarantee.
@@ -1242,6 +1244,32 @@ Rules:
 
 ## Backup Strategy
 
+Backup decision block:
+
+- Logical backup with `iLoader`: table data as text files. Use for table-level rescue, migration, or a logical reload path. It does not preserve database files, log anchors, online logs, complete schema dependencies, privileges, or point-in-time media recovery.
+- Offline physical backup: all files needed to restart the database at the backup point after a clean shutdown. Use for `NOARCHIVELOG` databases or when a full stopped copy is required.
+- Online physical backup: database-level, tablespace-level, or log-anchor backup while service continues. Requires `ARCHIVELOG` mode and enough archive-log storage for redo generated during and after the backup.
+- Archive-log backup: operating-system backup or transfer of closed archive log files from `ARCHIVE_DIR` to managed backup storage. This protects the logs needed to recover online backups.
+- Incremental backup: online physical backup of changed pages. Requires page change tracking, a level 0 baseline, `backupInfo`, and the incremental backup files.
+- Log-anchor backup: backup of `loganchor*` metadata. Current log anchors are normally preferred for complete recovery; historical log anchors are used only for incomplete recovery or when current metadata no longer contains needed objects.
+
+Required backup planning inputs:
+
+- Exact Altibase version and patch level when patch-sensitive behavior is suspected.
+- Current database mode: `ARCHIVELOG` or `NOARCHIVELOG`.
+- Backup type: logical, offline physical, online database, online tablespace, log anchor, archive logs, or incremental.
+- Service window and expected DML volume during backup.
+- Source and backup paths, including `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `ARCHIVE_DIR`, disk data files, and target backup storage.
+- Recovery objective: restore only to backup time, recover to current point, recover to a past time, recover until cancel, or reload selected tables.
+
+Stop conditions:
+
+- Do not start online backup unless `ARCHIVELOG` is confirmed and `ARCHIVE_DIR` has writable capacity.
+- Do not delete online logs, archive logs, or log anchors to create space unless a source-backed recovery-retention review proves they are no longer needed.
+- Do not treat an `iLoader` export as a complete database backup.
+- Do not rely on level 1 incremental backups after `changeTracking` is lost, disabled, recreated, or invalidated until a new level 0 backup is taken.
+- Do not run incomplete recovery, restore historical log anchors, or execute `META RESETLOGS` without exact target time/tag, backup evidence, and business approval.
+
 Backup method block: logical backup with `iLoader`
 
 - Scope: user tables.
@@ -1249,12 +1277,78 @@ Backup method block: logical backup with `iLoader`
 - Restore operation: `iLoader` `in`.
 - Service impact: can be done online.
 - Best use: table-level export, migration, or logical rescue.
+- Not a full database backup: `iLoader` data files and FORM files do not replace physical data files, log anchors, online logs, archive logs, catalog metadata, indexes, constraints, triggers, privileges, sequences, or stored modules.
+- For related tables that need one consistent read point during service, set `BEGIN SNAPSHOT` as `SYSDBA`, run the exports, then always execute `END SNAPSHOT`.
 
 ```text
 iLoader> formout -T table_name -f table_name.fmt
 iLoader> out -d table_name.dat -f table_name.fmt
 iLoader> in -d table_name.dat -f table_name.fmt
 ```
+
+Runbook: logical table backup with `iLoader`
+
+1. Confirm source version, client version, table list, owner, character set, LOB columns, expected row counts, output directory, and whether related tables need a consistent snapshot.
+2. Generate or preserve the DDL separately. The FORM file is required for iLoader mapping, but it is not a full schema export.
+3. If multiple related tables must be exported at one consistent SCN while service continues, start a snapshot as `SYSDBA` and monitor undo pressure:
+
+```sql
+ALTER DATABASE BEGIN SNAPSHOT;
+
+SELECT scn,
+       begin_time,
+       begin_mem_usage,
+       begin_disk_undo_usage,
+       current_time,
+       current_mem_usage,
+       current_disk_undo_usage
+FROM V$SNAPSHOT;
+```
+
+4. For each table, create a FORM file and export data. Use production-safe log and file permission settings; keep credentials out of shell history where possible.
+
+```bash
+iloader formout -s source-host -u app_user -p app_password -port 20300 \
+  -T APP_ORDERS \
+  -f APP_ORDERS.fmt
+
+iloader out -s source-host -u app_user -p app_password -port 20300 \
+  -f APP_ORDERS.fmt \
+  -d APP_ORDERS.dat \
+  -log APP_ORDERS_out.log \
+  -silent
+```
+
+5. Verify row counts, output files, logs, and any LOB side files before ending the backup record.
+
+```sql
+SELECT COUNT(*) AS source_rows
+FROM APP_ORDERS;
+```
+
+6. If a snapshot was used, release it immediately after exports finish:
+
+```sql
+ALTER DATABASE END SNAPSHOT;
+```
+
+Runbook: logical restore with `iLoader`
+
+1. Confirm the target database version, character set, target table definition, constraints, indexes, triggers, replication status, and desired load mode.
+2. Recreate or verify the table and dependent objects separately before loading. Use `03_sql_ddl_generation.md` and `13_isql_iloader_basic_tools.md` for detailed DDL and iLoader option handling.
+3. Load with `APPEND`, `REPLACE`, or `TRUNCATE` only after target impact is approved. Always capture `-bad` and `-log` files in production work.
+
+```bash
+iloader in -s target-host -u app_user -p app_password -port 20300 \
+  -f APP_ORDERS.fmt \
+  -d APP_ORDERS.dat \
+  -mode append \
+  -bad APP_ORDERS.bad \
+  -log APP_ORDERS_in.log \
+  -errors 50
+```
+
+4. Compare load count, `-bad` file, `-log` file, target row count, and representative business keys. Recreate indexes, constraints, triggers, and privileges if they were staged separately.
 
 Backup method block: offline physical backup
 
@@ -1263,6 +1357,7 @@ Backup method block: offline physical backup
 - Backup manifest: copy the exact `$ALTIBASE_HOME/conf/altibase.properties` used at backup time, all memory checkpoint directories from `MEM_DB_DIR`, all log anchor files from `LOGANCHOR_DIR`, all log files needed for the backup strategy, and all disk tablespace data files.
 - Works in `NOARCHIVELOG` mode.
 - Restores only to the backup point.
+- Offline backup is a stopped file copy. If the server remains running, log files can change during the copy and the backup is not a safe offline backup.
 
 Preflight discovery:
 
@@ -1272,7 +1367,7 @@ SELECT name,
        value1, value2, value3, value4,
        value5, value6, value7, value8
 FROM V$PROPERTY
-WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR', 'LOG_DIR')
+WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR', 'LOG_DIR', 'ARCHIVE_DIR')
 ORDER BY name;
 
 SELECT spaceid, id, name
@@ -1280,7 +1375,12 @@ FROM V$DATAFILES
 ORDER BY spaceid, id;
 ```
 
-The copy commands below are placeholders. Expand them to every discovered path and create a manifest or file-count check after the copy.
+Runbook: offline physical backup
+
+1. Record `DB_NAME`, Altibase version, database mode, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `ARCHIVE_DIR`, and every disk data file path.
+2. Choose a backup path on storage independent from the source files. Confirm capacity for memory checkpoint files, disk data files, log anchors, log files, and the exact property file.
+3. Stop Altibase normally and confirm the server is stopped before copying files.
+4. Copy every discovered file family. The commands below are placeholders; expand them to every discovered path and create a manifest or file-count check after the copy.
 
 ```bash
 server stop
@@ -1296,17 +1396,77 @@ cp -r $ALTIBASE_HOME/dbs/*.dbf /backup/altibase/offline/
 find /backup/altibase/offline -type f | sort > /backup/altibase/offline_manifest.txt
 ```
 
+5. Preserve the manifest, command transcript, Altibase version, property file, and backup timestamp with the backup set.
+
+Runbook: restore from offline physical backup
+
+1. Stop Altibase and preserve a copy of the failed environment before overwriting files.
+2. Restore the exact backed-up `altibase.properties`, memory checkpoint directories, log-anchor directories, log files, and disk data files to the paths expected by the restored property file.
+3. Confirm file ownership and permissions for the Altibase OS account.
+4. Start the database. Offline backup restore returns the database to the backup point; it does not recover changes made after the backup.
+
+```bash
+server stop
+
+# Placeholder examples; restore every file family recorded in the offline manifest.
+cp /backup/altibase/offline/altibase.properties $ALTIBASE_HOME/conf/altibase.properties
+cp -r /backup/altibase/offline/dbs0 $ALTIBASE_HOME/
+cp -r /backup/altibase/offline/dbs1 $ALTIBASE_HOME/
+cp -r /backup/altibase/offline/logs $ALTIBASE_HOME/
+cp /backup/altibase/offline/*.dbf $ALTIBASE_HOME/dbs/
+
+server start
+```
+
 Backup method block: online full database backup
 
 - Scope: all memory and disk tablespaces plus log anchors.
 - Requires `ARCHIVELOG` mode.
 - Runs while service continues.
 - Use when complete media recovery to current point is required.
+- Heavy DML during online backup can generate large archive-log volume. Prefer a low-DML window and monitor archive capacity.
 
 ```sql
 ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/full';
 ALTER SYSTEM SWITCH LOGFILE;
 ```
+
+Runbook: online full database backup
+
+1. Confirm `ARCHIVELOG` mode, archiver progress, and archive destination capacity.
+
+```sql
+SELECT archivelog_mode
+FROM V$LOG;
+
+SELECT lfg_id,
+       archive_mode,
+       archive_thr_running,
+       archive_dest,
+       nextlogfile_to_arch,
+       oldest_active_logfile,
+       current_logfile
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+
+SELECT name,
+       value1, value2, value3, value4,
+       value5, value6, value7, value8
+FROM V$PROPERTY
+WHERE name IN ('ARCHIVE_DIR', 'ARCHIVE_FULL_ACTION')
+ORDER BY name;
+```
+
+2. Stop if `ARCHIVELOG` is not enabled, an archive destination is missing or full, or `ARCHIVE_FULL_ACTION` policy could allow missed archive logs that the recovery plan requires.
+3. Run the database-level backup and then force log archival:
+
+```sql
+ALTER DATABASE BACKUP DATABASE TO '/backup/altibase/full_20260517';
+ALTER SYSTEM SWITCH LOGFILE;
+```
+
+4. Verify the backup directory contains memory checkpoint image files, disk data files, and `loganchor*` files. Verify archive-log progress again with `V$ARCHIVE`.
+5. Copy or protect the generated backup set and the archive logs needed from the backup checkpoint to the recovery objective. Record the backup timestamp, file list, and archive-log range.
 
 Backup method block: online tablespace backup
 
@@ -1314,20 +1474,104 @@ Backup method block: online tablespace backup
 - Requires `ARCHIVELOG` mode.
 - Can be database-driven with `ALTER DATABASE BACKUP TABLESPACE ... TO ...`.
 - Can be DBA-driven with `ALTER TABLESPACE ... BEGIN BACKUP`, OS copy, and `ALTER TABLESPACE ... END BACKUP`.
+- For memory tablespaces, copy only stable checkpoint image files for the target version and checkpoint scale.
+- For the undo tablespace, if `TRANSACTION_SEGMENT_COUNT` is greater than `900`, also preserve the `txSegEntry.hdr` segment-header file located with the undo data file.
 
 ```sql
 ALTER DATABASE BACKUP TABLESPACE app_data TO '/backup/altibase/app_data';
 ALTER SYSTEM SWITCH LOGFILE;
 ```
 
+Runbook: online tablespace backup
+
+1. Confirm `ARCHIVELOG`, target tablespace type, state, data files, page size, and whether the tablespace contains replication-sensitive objects.
+
+```sql
+SELECT id, name, type, state, datafile_count, total_page_count, page_size
+FROM V$TABLESPACES
+WHERE name = 'APP_DATA';
+
+SELECT t.name AS tablespace_name,
+       d.id,
+       d.name AS datafile_name,
+       d.currsize * t.page_size AS curr_bytes
+FROM V$DATAFILES d,
+     V$TABLESPACES t
+WHERE d.spaceid = t.id
+  AND t.name = 'APP_DATA'
+ORDER BY d.id;
+```
+
+2. For database-driven backup, run one backup statement for the target tablespace and then force log archival:
+
+```sql
+ALTER DATABASE BACKUP TABLESPACE app_data TO '/backup/altibase/app_data_20260517';
+ALTER SYSTEM SWITCH LOGFILE;
+```
+
+3. For DBA-driven backup, keep the backup window as short as possible:
+
+```sql
+ALTER TABLESPACE app_data BEGIN BACKUP;
+-- OS copy the target disk data files, or copy stable memory checkpoint image files.
+ALTER TABLESPACE app_data END BACKUP;
+ALTER SYSTEM SWITCH LOGFILE;
+```
+
+4. Verify `END BACKUP` ran, files exist in backup storage, and required archive logs are retained. If a structural change occurred, also back up `SYS_TBS_MEM_DIC`, the changed tablespace, and log anchors, or take a full database backup.
+
 Backup method block: log anchor backup
 
 - Scope: log anchor files.
 - Requires `ARCHIVELOG` mode when performed online.
+- Use after tablespace add, drop, rename, or other structure changes that affect tablespace metadata.
+- Online database backup includes log anchors, but a targeted log-anchor backup is useful after metadata-only changes.
 
 ```sql
 ALTER DATABASE BACKUP LOGANCHOR TO '/backup/altibase/loganchor';
 ```
+
+Runbook: log-anchor backup and restore decision
+
+1. Back up log anchors together with database or tablespace structure changes:
+
+```sql
+ALTER DATABASE BACKUP LOGANCHOR TO '/backup/altibase/loganchor_20260517';
+```
+
+2. Verify the backup directory contains the expected `loganchor0`, `loganchor1`, and `loganchor2` files.
+3. For ordinary complete media recovery, keep current `loganchor*` files whenever possible.
+4. Restore historical `loganchor*` files only when the recovery scenario requires historical metadata, such as incomplete recovery to a past point or recovery from accidental tablespace drop where current log anchors no longer contain the object.
+5. If historical log anchors are restored for incremental recovery, restore the matching historical `backupInfo`, disable invalid `changeTracking` in `PROCESS`, and take a new level 0 backup before later level 1 incremental backups.
+
+Runbook: archive-log backup and retention
+
+Use this for `ARCHIVELOG` databases where online backup and media recovery depend on archived redo.
+
+1. Confirm archive mode, archive destinations, and current archiver progress:
+
+```sql
+SELECT archivelog_mode,
+       oldest_logfile_no,
+       oldest_logfile_offset
+FROM V$LOG;
+
+SELECT lfg_id,
+       archive_mode,
+       archive_thr_running,
+       archive_dest,
+       nextlogfile_to_arch,
+       oldest_active_logfile,
+       current_logfile
+FROM V$ARCHIVE
+ORDER BY lfg_id;
+```
+
+2. Confirm each `ARCHIVE_DIR` path exists, is writable, and is mapped one-to-one with `LOG_DIR` when multiple log directories are configured.
+3. Copy closed archive log files from `ARCHIVE_DIR` to managed backup storage according to the site's recovery objective. Keep enough archive logs to recover the oldest retained online or incremental backup.
+4. Verify copied archive logs by file count, size, checksum, or the site's backup catalog before removing any archive-log copy from the archive destination.
+5. If archive storage is full, free or extend archive storage first. Do not delete online log files or log anchors. With `ARCHIVE_FULL_ACTION` values that skip failed archive writes, missing archive logs can make media recovery impossible.
+6. After a database, tablespace, or DBA-driven online backup, run `ALTER SYSTEM SWITCH LOGFILE` and verify the backup-related log was archived or protected.
 
 Backup method block: snapshot for `iLoader`
 
@@ -1381,7 +1625,7 @@ ORDER BY lfg_id;
 ```
 
 2. Plan downtime. Changing between `ARCHIVELOG` and `NOARCHIVELOG` requires the `CONTROL` startup phase, so normal application service is unavailable during the stop, mode change, verification, and return to `SERVICE`.
-3. Before enabling `ARCHIVELOG`, confirm every `ARCHIVE_DEST` directory exists, is writable by the Altibase OS account, and has enough filesystem capacity for expected log generation plus the site's archive-log backup and retention window. Before disabling `ARCHIVELOG`, confirm the business accepts losing online backup and ordinary media recovery capability.
+3. Before enabling `ARCHIVELOG`, confirm every `ARCHIVE_DIR` path reported as `V$ARCHIVE.ARCHIVE_DEST` exists, is writable by the Altibase OS account, and has enough filesystem capacity for expected log generation plus the site's archive-log backup and retention window. Before disabling `ARCHIVELOG`, confirm the business accepts losing online backup and ordinary media recovery capability.
 4. Stop the database cleanly. Use the planned-maintenance shutdown path; do not use abort unless normal shutdown is impossible.
 
 ```bash
@@ -1482,44 +1726,108 @@ flowchart TD
 
 Incremental backup block: prerequisites
 
-- Incremental backups are physical online backups of changed pages.
-- A level 0 incremental backup is required before level 1 backups.
-- Page change tracking must be enabled.
+- Incremental backups are physical online backups of changed data pages.
+- A level 0 incremental backup is required before any level 1 backup.
+- Ordinary full or online backup files cannot substitute for a level 0 incremental backup in an incremental backup chain.
+- Page change tracking must be enabled, and changed-page tracking begins when the level 0 backup is taken.
 - `changeTracking` and `backupInfo` files are created in `$ALTIBASE_HOME/dbs`.
-- If `backupInfo` is lost, previously created incremental backup files cannot be used.
-- Before incremental restore, verify that `$ALTIBASE_HOME/dbs/changeTracking` and `$ALTIBASE_HOME/dbs/backupInfo` exist.
-- If startup in `CONTROL` fails because these files are missing, start `PROCESS`, disable incremental chunk change tracking if needed, restore `backupInfo` from the latest incremental backup tag directory, then continue to `CONTROL`.
+- `backupInfo` records incremental level, backup type, tag, start/end time, and backup-file location. It is required to determine restore order.
+- If `backupInfo` is lost or no longer matches the backup files, the corresponding incremental backup files cannot be used for restore.
+- Before incremental restore, verify that `$ALTIBASE_HOME/dbs/changeTracking`, `$ALTIBASE_HOME/dbs/backupInfo`, and the needed tag directories exist.
+- If startup in `CONTROL` fails because these files are missing, start `PROCESS`, disable incremental chunk change tracking if needed, restore `backupInfo` from the latest usable incremental backup tag directory, then continue to `CONTROL`.
 
-Enable and configure:
+Runbook: initialize incremental backup
 
 ```sql
+-- Run as SYSDBA after the database is in SERVICE.
 ALTER DATABASE ENABLE INCREMENTAL CHUNK CHANGE TRACKING;
 ALTER DATABASE CHANGE BACKUP DIRECTORY '/backup/altibase/incremental';
 ```
 
-Disable:
+1. Confirm `ARCHIVELOG` policy and backup storage capacity. Incremental backups are online physical backups, and later media recovery still needs required archive and online logs.
+2. Enable page change tracking in `SERVICE` as `SYSDBA`.
+3. Set the incremental backup directory before the first backup. The directory is managed by the Altibase server.
+4. Take a level 0 incremental backup immediately after enabling tracking and setting the backup path.
+5. Confirm `backupInfo`, `changeTracking`, `loganchor*`, and backup files are present in the backup directory and `$ALTIBASE_HOME/dbs`.
+
+```sql
+ALTER DATABASE BACKUP INCREMENTAL LEVEL 0 DATABASE WITH TAG 'BASE_L0_20260517';
+
+SELECT begin_backup_time,
+       end_backup_time,
+       backup_target,
+       backup_level,
+       backup_type,
+       backup_tag,
+       backup_file
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+Runbook: disable or reset page change tracking
 
 ```sql
 ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING;
 ```
 
-Level 0 examples:
+Use this only when incremental tracking must be stopped, is invalid, or must be recreated after changing tracking-related properties. Disabling tracking deletes the `changeTracking` file. Do not resume level 1 backups until tracking is enabled again and a new level 0 incremental backup is taken.
+
+Runbook: recurring incremental backup
+
+1. Verify that a usable level 0 backup exists and that `V$BACKUP_INFO` shows the expected chain.
+2. Choose differential or cumulative level 1:
+
+- Differential level 1 backs up pages changed after the most recent level 0 or level 1 backup.
+- Cumulative level 1 backs up pages changed after the most recent level 0 backup.
+- Differential backups are usually smaller, but many differential files can increase restore work.
+- Cumulative backups can be larger, but restore usually needs the latest cumulative level 1 after the level 0.
+
+3. Run the backup at database or tablespace level:
 
 ```sql
 ALTER DATABASE BACKUP INCREMENTAL LEVEL 0 DATABASE;
 ALTER DATABASE BACKUP INCREMENTAL LEVEL 0 DATABASE WITH TAG 'MONDAY';
 ALTER DATABASE BACKUP INCREMENTAL LEVEL 0 TABLESPACE app_data WITH TAG 'APP_DATA_L0';
-```
 
-Level 1 examples:
-
-```sql
 ALTER DATABASE BACKUP INCREMENTAL LEVEL 1 DATABASE;
 ALTER DATABASE BACKUP INCREMENTAL LEVEL 1 CUMULATIVE DATABASE;
 ALTER DATABASE BACKUP INCREMENTAL LEVEL 1 TABLESPACE app_data WITH TAG 'APP_DATA_L1';
 ```
 
-Backup file management:
+4. Verify the catalog and files after every backup:
+
+```sql
+SELECT backup_tag,
+       backup_level,
+       backup_type,
+       backup_target,
+       tablespace_id,
+       file_id,
+       backup_file
+FROM V$BACKUP_INFO
+ORDER BY begin_backup_time, backup_file;
+```
+
+5. Protect the matching `backupInfo` and `loganchor*` files generated under the tag directory. For incomplete recovery to a past point, the historical `loganchor*` and matching `backupInfo` may be required.
+
+Incremental backup chain example:
+
+```text
+MONDAY     level 0 database backup
+TUESDAY    level 1 differential database backup
+WEDNESDAY  level 1 differential database backup
+THURSDAY   new level 0 database backup
+SATURDAY   level 1 cumulative database backup
+SUNDAY     level 1 differential database backup
+```
+
+Restore implication:
+
+- `RESTORE DATABASE` chooses the latest usable level 0 and needed level 1 backups.
+- `RESTORE DATABASE FROM TAG 'WEDNESDAY'` restores through the named tag by using the nearest prior level 0 and the needed level 1 backups.
+- If an intermediate incremental backup file is missing, restore to an earlier usable tag and recover beyond it only if the required archive and online logs exist.
+
+Runbook: manage incremental backup files
 
 ```sql
 ALTER DATABASE MOVE BACKUP FILE TO '/backup/altibase/incremental2';
@@ -1529,10 +1837,23 @@ ALTER DATABASE DELETE OBSOLETE BACKUP FILES;
 
 Rules:
 
-- Differential level 1 backs up pages changed after the most recent level 0 or level 1 backup.
-- Cumulative level 1 backs up pages changed after the most recent level 0 backup.
 - `INCREMENTAL_BACKUP_CHUNK_SIZE` controls the incremental chunk size used by page change tracking.
-- If change tracking is lost or invalid, disable and re-enable tracking, then run a new level 0 backup before relying on level 1 backups.
+- Changing `INCREMENTAL_BACKUP_CHUNK_SIZE` requires changing the property file, restarting, disabling/re-enabling page change tracking, and taking a new level 0 backup before level 1 backups.
+- `INCREMENTAL_BACKUP_INFO_RETENTION_PERIOD` controls how long backup information is retained in `backupInfo`.
+- `ALTER DATABASE DELETE OBSOLETE BACKUP FILES` deletes only files shown in `V$OBSOLETE_BACKUP_INFO`; if that view returns no rows, no backup files are deleted.
+- Do not move incremental backup files with only OS commands unless you also update `backupInfo` with `ALTER DATABASE MOVE BACKUP FILE TO ...` or intentionally use the manual path-update workflow.
+- Use `WITH CONTENTS` when the SQL operation should update `backupInfo` and move the backup files together.
+
+Runbook: remove invalid `backupInfo`
+
+Use this only when `backupInfo` and backup files are inconsistent, the corresponding incremental backup chain is invalid or intentionally discarded, and evidence has been preserved. `ALTER DATABASE REMOVE BACKUP INFO FILE` is source-backed in Altibase 7.3 and the Altibase 8.1 verified source. For Altibase 7.1, do not issue the command unless the exact target manual or runtime support is confirmed; otherwise preserve the evidence and rebuild the incremental backup baseline with a new level 0 chain using the documented 7.1 procedures.
+
+```sql
+STARTUP PROCESS;
+ALTER DATABASE REMOVE BACKUP INFO FILE;
+```
+
+After removing `backupInfo`, reinitialize incremental backup: enable page change tracking if needed, set the backup directory, and take a new level 0 backup before any level 1 backup.
 
 ## Recovery Strategy
 
