@@ -41,6 +41,27 @@ JSON-related errors, and `SQLFreeLob2` detail, remain governed by the existing
 English/Korean parity report and must be tracked in the J002 coverage matrix or later
 job-specific gap register entries.
 
+## J002 Coverage Matrix And Gap Register Addendum
+
+J002 creates the coverage matrix and primary post-J002 gap register promised by J001:
+
+- `GPTs/reports/coverage_matrix.md` maps selected source families to the 20 upload
+  attachments, records the required coverage shape for each family, and assigns later
+  job handoff areas.
+- `GPTs/reports/gap_register.md` records item-level gaps, residual source limitations,
+  and verification limits discovered from the selected source reports and review-cycle
+  reports.
+
+This source inventory remains the source-root and attachment-to-source path inventory.
+After J002, use `GPTs/reports/gap_register.md` as the primary tracking artifact when a
+later job discovers, splits, closes, or accepts an item-level source-backed gap.
+
+J002 did not change the 20 customer-facing attachment filenames and did not require
+direct attachment edits. The source-backed reason is that the existing attachment
+boundary still maps all selected source families to an upload unit, while the newly
+created matrix/register provide the missing concrete work queue for item-level coverage
+expansion.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
@@ -194,6 +215,13 @@ Source purpose: data types, Altibase properties, JSON, LOB behavior, version-spe
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/kor/Altibase_7_1_0_1_2_Release_Notes.md`
+  - `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 06_data_dictionary_performance_views.md
 
@@ -361,6 +389,8 @@ Source purpose: JDBC, Adapter for JDBC, Java compatibility, Spring Data JPA, Hib
   - `Manuals/Altibase_7.3/kor/Adapter for JDBC User's Manual.md`
   - `Manuals/Altibase_trunk/kor/JDBC User's Manual.md`
   - `Manuals/Altibase_trunk/kor/Adapter for JDBC User's Manual.md`
+  - `3rd Party Guide for Altibase/kor/Spring Data JPA User's Guide for Altibase.md`
+  - `3rd Party Guide for Altibase/kor/Spring Data JPA with Hibernate 6.4 User's Guide for Altibase.md`
 - Korean supplemental technical documents:
   - `Technical Documents/kor/JavaCompatibility.md`
 
@@ -374,18 +404,27 @@ Source purpose: C client interfaces, CLI, ODBC, C Interface, Precompiler, LOB AP
   - `Manuals/Altibase_7.1/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_7.1/eng/Altibase C Interface Manual.md`
   - `Manuals/Altibase_7.1/eng/Precompiler User’s Manual.md`
+  - `Manuals/Altibase_7.1/kor/ODBC User's Manual.md`
+  - `Manuals/Altibase_7.1/kor/Altibase C Interface Manual.md`
+  - `Manuals/Altibase_7.1/kor/Precompiler User's Manual.md`
 - 7.3:
   - `Manuals/Altibase_7.3/kor/CLI User's Manual.md`
   - `Manuals/Altibase_7.3/eng/CLI User's Manual.md`
   - `Manuals/Altibase_7.3/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_7.3/eng/Altibase C Interface Manual.md`
   - `Manuals/Altibase_7.3/eng/Precompiler User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/ODBC User's Manual.md`
+  - `Manuals/Altibase_7.3/kor/Altibase C Interface Manual.md`
+  - `Manuals/Altibase_7.3/kor/Precompiler User's Manual.md`
 - Altibase 8.1 verified source:
   - `Manuals/Altibase_trunk/kor/CLI User's Manual.md`
   - `Manuals/Altibase_trunk/eng/CLI User's Manual.md`
   - `Manuals/Altibase_trunk/eng/ODBC User's Manual.md`
   - `Manuals/Altibase_trunk/eng/Altibase C Interface Manual.md`
   - `Manuals/Altibase_trunk/eng/Precompiler User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/ODBC User's Manual.md`
+  - `Manuals/Altibase_trunk/kor/Altibase C Interface Manual.md`
+  - `Manuals/Altibase_trunk/kor/Precompiler User's Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 13_isql_iloader_basic_tools.md
@@ -524,6 +563,15 @@ Source purpose: SSL/TLS server/client setup, certificate configuration, replicat
   - `Manuals/Altibase_trunk/eng/Altibase SSL TLS User's Guide.md`
   - `Manuals/Altibase_trunk/eng/Replication Manual.md`
   - `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Altibase SSL TLS User's Guide.md`
+  - `Manuals/Altibase_7.3/kor/Altibase SSL TLS User's Guide.md`
+  - `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
+  - `Manuals/Altibase_trunk/kor/Altibase SSL TLS User's Guide.md`
+  - `Manuals/Altibase_trunk/kor/Replication Manual.md`
+  - `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+  - `Manuals/Altibase_trunk/kor/SQL Reference.md`
+  - `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
 
 ### 19_spatial_nifi_tableau_misc.md
 
@@ -543,6 +591,15 @@ Source purpose: Spatial SQL, `GEOMETRY`, altiShapeLoader, NiFi, Tableau.
   - `Manuals/Tools/Altibase_trunk/eng/altiShapeLoader User's Manual.md`
   - `3rd Party Guide for Altibase/eng/NiFi User's Guide for Altibase.md`
   - `3rd Party Guide for Altibase/eng/Tableau User's Guide for Altibase/Tableau User's Guide for Altibase.md`
+- Korean source authority/check:
+  - `Manuals/Altibase_7.1/kor/Spatial SQL Reference.md`
+  - `Manuals/Altibase_7.3/kor/Spatial SQL Reference.md`
+  - `Manuals/Altibase_trunk/kor/Spatial SQL Reference.md`
+  - `Manuals/Tools/Altibase_release/kor/altiShapeLoader User's Manual.md`
+  - `Manuals/Tools/Altibase_trunk/kor/altiShapeLoader User's Manual.md`
+  - `3rd Party Guide for Altibase/kor/NiFi User's Guide for Altibase.md`
+  - `3rd Party Guide for Altibase/kor/Tableau User's Guide for Altibase/Tableau User's Guide for Altibase.md`
+  - `ReleaseNotes/kor/Altibase_altiShapeLoader_1_0_Release_Notes.md`
 
 ## Follow-Up Notes
 
