@@ -884,6 +884,60 @@ compatibility from source-backed protocol checks, while still refusing unsupport
 8.1 Sender to older Receiver, 8.1 SSL cross-version, EAGER, offline, and optional-feature
 compatibility claims without exact source confirmation.
 
+## J032 Replication Operations CDC Log Analyzer And RepMgr Addendum
+
+J032 uses the `replication_manual`, `log_analyzer`, `replication_manager`,
+`general_reference_1_datatypes_properties`, and
+`general_reference_2_dictionary_views` source families for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Replication Manuals remain authoritative
+for `SYNC`, `SYNC ONLY`, `START`, `QUICKSTART`, `STOP`, `RESET`, `FLUSH`, EAGER
+failback, and offline-operational wording. Korean Log Analyzer manuals remain
+authoritative for XLog Collector API order, ACK/Restart SN behavior, control XLog
+handling, collector status fields, and unsupported CDC transport. Korean Replication
+Manager manuals and Korean Replication Manager release notes remain authoritative for
+GUI workflow boundaries, pane/object actions, JDBC driver import, extra host IP,
+full-mesh impact, and high-risk `Quick Start` warnings.
+
+Design note: J032 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/09_replication_ha_cdc.md` because replication operations, CDC, Log
+Analyzer, and Replication Manager are already owned by attachment 09. The update adds
+searchable workflow blocks for synchronization retries, `REPLICATION_SYNC_TUPLE_COUNT`
+conflict handling, EAGER failback incremental/normal sync behavior, Replication Manager
+inspection/create/edit/drop flows, and Log Analyzer ACK/restart/status/control-XLog
+handling. `GPTs/attachments/14_utilities_operation_tools.md` remains a cross-reference
+target for `altiComp` mismatch comparison and generic tool routing, not the main home
+for Replication Manager runbooks.
+
+Scoped source paths checked for J032:
+
+- `Manuals/Altibase_7.1/kor/Replication Manual.md`
+- `Manuals/Altibase_7.3/kor/Replication Manual.md`
+- `Manuals/Altibase_trunk/kor/Replication Manual.md`
+- `Manuals/Altibase_7.1/kor/Log Analyzer User's Manual.md`
+- `Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md`
+- `Manuals/Altibase_trunk/kor/Log Analyzer User's Manual.md`
+- `Manuals/Tools/Altibase_release/kor/Replication Manager User's Manual.md`
+- `Manuals/Tools/Altibase_trunk/kor/Replication Manager User's Manual.md`
+- `ReleaseNotes/kor/Altibase_Replication_Manager_1_2_Release_Notes.md`
+- `ReleaseNotes/kor/Altibase_Replication_Manager_1_3_Release_Notes.md`
+- `ReleaseNotes/kor/Altibase_Replication_Manager_1_4_Release_Notes.md`
+- `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `GPTs/attachments/09_replication_ha_cdc.md`
+- `GPTs/attachments/14_utilities_operation_tools.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J032 adds no new attachment filename, source family, or Korean/English source-drift
+case. No new item-level manual/source-backed gap was discovered. The existing
+`GAP-J002-011` Replication Manager package-manifest guardrail remains because the
+selected source set supports package/runtime prerequisites and release-note caveats but
+does not provide a stable manifest for every distribution.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

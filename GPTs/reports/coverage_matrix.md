@@ -251,9 +251,13 @@ for 8.1 customer-facing labels.
   `V$REPSYNC` fast-map polish in `06_data_dictionary_performance_views.md`. Source
   traceability and remaining compatibility limits are recorded in
   `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
-- J032-J033 should continue with replication operations, CDC/Log Analyzer, Replication
-  Manager, networking, and TLS source families and keep unresolved compatibility limits
-  explicit.
+- J032 expanded replication operations, synchronization retry/conflict handling, EAGER
+  failback, CDC/Log Analyzer ACK/restart/status workflows, and Replication Manager
+  GUI task guardrails in `09_replication_ha_cdc.md`, with traceability in
+  `GPTs/reports/source_inventory.md` and the `GAP-J002-011` update in
+  `GPTs/reports/gap_register.md`.
+- J033 should continue with replication networking, ordinary TLS, certificate handling,
+  replication SSL separation, and remaining network/TLS guardrails.
 - J034-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open

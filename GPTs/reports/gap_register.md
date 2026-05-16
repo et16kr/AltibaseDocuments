@@ -389,6 +389,12 @@ recording or remediating gaps.
 - Required remediation shape: Keep package contents as an installed-tool or release
   package verification step. If a stable manifest source is later selected, add an item
   block with release, files, driver placement, and startup validation.
+- J032 update: `09_replication_ha_cdc.md` now has Replication Manager workflow blocks
+  for driver import, DB connection testing, `Extra Host IP`, pane/object action
+  routing, create/full-mesh/join flows, edit/sync/drop guardrails, and SQL
+  cross-checks after GUI actions. This entry remains `Guardrail` only for stable
+  package-manifest content across all distributions; answers should verify installed
+  package contents and exact tool release before giving file-manifest claims.
 
 ### GAP-J002-012: TLS and connector live integration behavior is not validated
 

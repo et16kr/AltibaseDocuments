@@ -701,6 +701,7 @@ Operation block: `SYNC`
 - Resolves duplicate primary-key conflicts according to conflict resolution rules.
 - Can target specific tables or partitions.
 - `PARALLEL parallel_factor` uses 1 when omitted; the practical maximum is `CPU count * 2`.
+- For disk-table synchronization, a `PARALLEL` value at least as large as the number of disk tables can improve throughput, but values greater than `CPU count * 2` do not create more than that practical thread count.
 
 Operation block: `SYNC ONLY`
 
@@ -804,6 +805,64 @@ SELECT rep_name,
        peer_ip,
        peer_port
 FROM V$REPRECEIVER
+ORDER BY rep_name;
+```
+
+## Synchronization And Failback Workflows
+
+Synchronization block: initial alignment
+
+1. Verify that the same `replication_name`, target tables or partitions, primary keys, character sets, and peer ports are correct on both nodes.
+2. Prefer `ALTER REPLICATION replication_name SYNC` when the local node should copy current target rows to the peer and then start the Sender.
+3. Use `ALTER REPLICATION replication_name SYNC ONLY` when the goal is data alignment only; follow with an explicit `START` only after the service plan allows it.
+4. For selected targets, include `TABLE user_name.table_name [PARTITION partition_name]` so the answer does not imply every target in the replication object will be copied.
+5. While synchronization is running, monitor `V$REPSYNC.SYNC_TABLE`, `V$REPSYNC.SYNC_PARTITION`, and `V$REPSYNC.SYNC_RECORD_COUNT`; after completion, check `V$REPSENDER`, `V$REPRECEIVER`, and `V$REPGAP`.
+
+Synchronization block: interrupted `SYNC`
+
+- If `STOP` interrupts `SYNC`, Altibase does not guarantee that all synchronization rows reached the remote server.
+- Before retrying the same `SYNC`, remove the partially synchronized rows from every affected remote target table or partition, then run `SYNC` again.
+- Do not hide this as a harmless retry. Ask for the target list, service-write state, and whether remote target rows can be truncated or otherwise safely removed.
+
+Synchronization block: existing remote rows or insert conflicts
+
+- During `SYNC`, only insert-style conflicts are expected because local rows are being sent to the remote target.
+- The safest source-backed remediation is to clear the remote target rows and rerun `SYNC`.
+- If the customer cannot clear the remote rows, require a deliberate conflict policy review before suggesting `REPLICATION_SYNC_TUPLE_COUNT = 1`.
+- With `REPLICATION_SYNC_TUPLE_COUNT = 1`, synchronization follows the configured conflict-resolution policy, can be slower, and can still leave source and target data different when the policy keeps the existing remote row.
+- For data mismatch cleanup after a risky synchronization, route comparison and repair work to `altiComp` guidance in `14_utilities_operation_tools.md`.
+
+EAGER failback synchronization block:
+
+- EAGER failback requires both sides' matching replication objects to be EAGER and running in the recovery environment.
+- Incremental Sync handles a case where a node failed after writing a commit log locally but before the peer received the commit log. The recovered node can have data that differs from the peer that continued service.
+- Altibase determines master and slave roles from `SYSTEM_.SYS_REPLICATIONS_.REMOTE_FAULT_DETECT_TIME`; the node with the later fault-detect time becomes master.
+- The slave Sender analyzes from Restart SN to find rows that may differ from the master and fetches those rows from the master. Both Sender sides must be available; if either side is stopped, incremental sync cannot complete.
+- Control incremental sync with `REPLICATION_FAILBACK_INCREMENTAL_SYNC`, and set it consistently on both nodes.
+- After incremental sync completes or is skipped, Normal Sync sends transactions that the active peer could not send during the failure. During this catch-up, replication temporarily behaves like LAZY mode; when the gap is gone, it returns to EAGER mode.
+- Do not promise EAGER failback can repair every application-level inconsistency. Ask for exact versions, replication object names, `V$REPGAP`, `V$REPSENDER`, `V$REPRECEIVER`, `REMOTE_FAULT_DETECT_TIME`, and the current `REPLICATION_FAILBACK_INCREMENTAL_SYNC` value before advising failback.
+
+Failback evidence SQL:
+
+```sql
+SELECT replication_name,
+       remote_fault_detect_time,
+       repl_mode,
+       is_started
+FROM system_.sys_replications_
+ORDER BY replication_name;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'REPLICATION_FAILBACK_INCREMENTAL_SYNC',
+  'REPLICATION_SYNC_LOCK_TIMEOUT',
+  'REPLICATION_SYNC_TUPLE_COUNT'
+)
+ORDER BY name;
+
+SELECT rep_name, rep_gap, rep_gap_size
+FROM V$REPGAP
 ORDER BY rep_name;
 ```
 
@@ -1586,6 +1645,30 @@ Replication Manager guardrails:
 - Use `Monitor` for replication-object monitoring, `Show DDL` to inspect a replication object and dependent objects such as tables and indexes, and `Compare DDL` to compare two replication-object DDL definitions before corrective action.
 - Replication Manager can make replication operations easier to trigger. For production answers, still include the same prerequisites required for SQL-based replication operations: version, topology, object names, gap state, write ownership, backup status, maintenance window, and rollback limits.
 
+Replication Manager workflow: inspect before changing
+
+1. Import the JDBC driver that matches each target Altibase server and test every DB connection.
+2. If the host has multiple IP addresses, add every address used by peer replication definitions as `Extra Host IP`.
+3. Use `DB Connections`, `Replication Pairs`, or `Map` according to the operator's current pane, then inspect `Properties`.
+4. Use `Show DDL` to capture the replication object and dependent object DDL, and use `Compare DDL` before changing a mismatched pair.
+5. Cross-check the GUI view with SQL evidence from `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, `SYSTEM_.SYS_REPL_ITEMS_`, `V$REPSENDER`, `V$REPRECEIVER`, and `V$REPGAP`.
+
+Replication Manager workflow: create or extend topology
+
+1. Confirm the intended topology, object names, peer IP and port pairs, table or partition list, write ownership, and whether the objects should be ordinary pair replication or full-mesh.
+2. For a two-node pair, use `Create Replication Pair` only after confirming both DB connections and version-matched drivers.
+3. For a full-mesh operation, count the objects first. The manual's four-connection example creates 16 same-named replication objects, so the action can multiply operational impact quickly.
+4. For `Join to Full-mesh`, validate DB connection names, `Extra Host IP`, target addresses, replication names, and the table list before applying the join.
+5. After creation, run the same SQL verification used for hand-written `CREATE REPLICATION`, then choose `Sync`, `Sync Only`, or `Start` from the production data-alignment plan.
+
+Replication Manager workflow: edit, synchronize, or drop
+
+- `Edit Table List`, `Drop`, `Drop Replications`, and pair-level `Drop` require stopped replication objects. Stop first and verify the stopped state before applying the action.
+- When editing a table list, preserve the same table or partition granularity used by the SQL replication definition, then run a targeted `Sync` for newly added targets when data must be copied.
+- Before `Sync` or `Sync Only`, check whether remote target rows already exist and whether the operation can tolerate conflicts, locks, and the `REPLICATION_SYNC_LOCK_TIMEOUT` wait.
+- Before any `Quick Start` action, obtain explicit confirmation that skipping unsent XLogs is intentional and accepted.
+- After any GUI operation, recheck SQL metadata and runtime views; do not rely only on the GUI status color or success dialog.
+
 ## Log Analyzer CDC
 
 Use Log Analyzer when the goal is CDC-style external consumption of changes rather than direct table-to-table replication. The XLog Sender is inside Altibase; the XLog Collector is inside a client application and receives XLogs and metadata through the Log Analysis API.
@@ -1694,6 +1777,24 @@ API cautions:
 - If applying XLogs to a database through ODBC, set `AUTOCOMMIT` to `OFF`.
 - `ALA_ReceiveXLog()` and `ALA_GetXLog()` do not have to be called by the same thread.
 - After `ALA_FreeXLog()`, the XLog and related data must no longer be used.
+
+CDC restart and status workflow:
+
+1. Create the collector with a socket string that matches the XLog Sender definition, then complete `ALA_Handshake()` before expecting XLogs.
+2. Start the SQL-side XLog Sender only after the collector is waiting; otherwise `START` can fail or retry according to the chosen SQL operation.
+3. In the receive loop, call `ALA_ReceiveXLog()`, obtain queued XLogs with `ALA_GetXLog()`, inspect or convert the payload, process the change, call `ALA_SendACK()` at the designed interval, and free each XLog with `ALA_FreeXLog()`.
+4. Use `ALA_GetXLogCollectorStatus()` to inspect `mMyIP`, `mMyPort`, `mPeerIP`, `mPeerPort`, `mSocketFile`, `mXLogCountInPool`, `mLastArrivedSN`, `mLastProcessedSN`, and `mNetworkValid`.
+5. If `mXLogCountInPool` keeps shrinking or `ALA_ReceiveXLog()` returns pool-empty behavior, free processed XLogs faster or increase the pool with `ALA_SetXLogPoolSize()` after confirming application memory capacity.
+6. If `mNetworkValid` is false or an `ALA_ERROR_ABORT` network/protocol condition occurs, correct the cause and perform `ALA_Handshake()` again; after a successful handshake, the Sender resumes from the Restart SN established by ACK behavior.
+
+CDC control XLog handling:
+
+- `XLOG_TYPE_KEEP_ALIVE` means the connection is still alive when there is no data XLog to send.
+- `XLOG_TYPE_REPL_STOP` means the XLog Sender is stopping normally. Send ACK, finish or roll back any in-progress external apply unit as appropriate, then allow the connection to close and release collector resources cleanly.
+- `XLOG_TYPE_CHANGE_META` means DDL changed metadata for an analyzed table. The Sender sends the metadata-change event, then sends `REPL_STOP` so the application can refresh metadata and reconnect.
+- After `CHANGE_META`, do not continue applying with stale cached column or table metadata. Refresh replication/table/column metadata through the API, reconnect or handshake as required, and restart from the source-backed Restart SN path.
+- ACK messages can advance Sender restart metadata. Process every XLog obtained by `ALA_GetXLog()` before calling `ALA_SendACK()` when the ACK could acknowledge that XLog.
+- If the application does not send ACK within `REPLICATION_RECEIVE_TIMEOUT`, the Sender can terminate the network connection. Long ACK delays can also cause the Sender to give up and restart from a later recorded log SN.
 
 ## XLog Sender SQL
 
@@ -1957,10 +2058,22 @@ Template: answer a CDC question
 Use Log Analyzer when an external application needs changed-row events. Create `CREATE REPLICATION ... FOR ANALYSIS` for the XLog Sender, start an XLog Collector in the application through the Log Analysis API, perform `ALA_Handshake()`, then receive, inspect, acknowledge, and free XLogs. For SQL-side evidence, verify `SYSTEM_.SYS_REPLICATIONS_.ROLE IN (1, 4)`, check `SYSTEM_.SYS_REPL_HOSTS_` and `SYSTEM_.SYS_REPL_ITEMS_`, then use `V$REPSENDER`, `V$REPSENDER_TRANSTBL`, and `V$REPGAP`. Do not describe this as direct table-to-table replication.
 ```
 
+Template: answer a CDC restart or metadata-change question
+
+```text
+For Log Analyzer, treat ACK and Restart SN as part of recovery. Process all XLogs already obtained with `ALA_GetXLog()` before sending an ACK that may advance the Sender's restart point. If `XLOG_TYPE_CHANGE_META` appears, refresh metadata because the Sender will send `REPL_STOP` and reconnect. If the API reports an abort-level network or protocol condition, correct the cause and run `ALA_Handshake()` again; after handshake, the Sender resumes from the Restart SN path.
+```
+
 Template: answer a Replication Manager question
 
 ```text
 Use Replication Manager for GUI-based replication object management after importing the JDBC driver that matches each target Altibase server and creating tested DB connections. Use `DB Connections`, `Replication Pairs`, `Map`, and `Properties` according to the task, and keep high-risk actions such as `Quick Start`, `Drop`, full-mesh creation, and `Sync` behind the same production checks used for SQL-based replication operations.
+```
+
+Template: answer a failed or interrupted synchronization question
+
+```text
+First determine whether `SYNC` was interrupted or failed because remote target rows already existed. If `STOP` interrupted `SYNC`, Altibase does not guarantee that all rows were sent; clear the affected remote target rows or partitions before retrying. If duplicate rows caused conflict during `SYNC`, the safest path is also to clear the remote rows and rerun `SYNC`. Use `REPLICATION_SYNC_TUPLE_COUNT = 1` only after reviewing the chosen conflict policy and accepting possible performance cost and remaining data mismatch.
 ```
 
 Template: answer a failover question
