@@ -2,7 +2,7 @@
 
 Job: `J010`
 Status: Active support artifact
-Last updated: 2026-05-16
+Last updated: 2026-05-17
 
 ## Reconfirmed Requirement And Boundary
 
@@ -236,6 +236,16 @@ Korean source.
 - Required conversion shape: Function/operator item blocks plus BNF for options,
   concise Oracle-difference notes, examples, return-type/LOB restrictions, and
   error/property cross-references.
+- J015 completion note: `GPTs/attachments/04_sql_dml_oracle_compatibility.md` now
+  contains source-audited compact blocks for expression placement, arithmetic and date
+  arithmetic, concatenation, `CAST`, logical/operator precedence, condition semantics,
+  function family indexes, analytic/window placement, regular expression mode cautions,
+  8.1 JSON path essentials, JSON DML examples, JSON function option grammar,
+  `JSON_VALID`, `IS JSON`, and Oracle SQL/JSON difference checks. J015 also adds a JSON
+  SQL cross-reference in `GPTs/attachments/05_data_types_properties.md` and a JSON SQL
+  migration rewrite caution in `GPTs/attachments/15_migration_oracle_compatibility.md`.
+  No direct J015 edit was needed in `GPTs/attachments/19_spatial_nifi_tableau_misc.md`;
+  specialized Spatial function/operator extraction remains owned by J039.
 
 ### J016 Baseline: Replication, DB Link, And Control SQL
 
@@ -336,8 +346,10 @@ named_clause ::=
   audited restore clause and do not invent `RECOVER TABLESPACE`.
 - `GAP-J002-004` remains the anchor for direct-key supported data type and partial-key
   behavior until J012/J013 expand table and index direct-key blocks.
-- `GAP-J002-005` remains the anchor for JSON SQL and function option grammar until J015
-  extracts the 8.1 Korean-source JSON section into English-normalized item blocks.
+- `GAP-J002-005` was closed by J015 for the selected-source JSON SQL and function
+  option grammar scope. Keep the remaining guardrail that Oracle SQL/JSON constructs
+  not listed in the Altibase SQL Reference require manual redesign or exact
+  target-version proof.
 - `GAP-J002-018` remains the high-risk visual audit anchor. This J010 inventory narrows
   the SQL syntax portion of that audit but does not close it.
 - `GAP-J010-001` in `GPTs/reports/gap_register.md` tracks the remaining SQL syntax

@@ -2,7 +2,7 @@
 
 Job: `J002`
 Status: Active support artifact
-Last updated: 2026-05-16
+Last updated: 2026-05-17
 
 ## Reconfirmed Requirement And Boundary
 
@@ -152,6 +152,12 @@ for 8.1 customer-facing labels.
   supporting metadata checks and object blocks in
   `06_data_dictionary_performance_views.md`. The SQL syntax queue remains open for
   J015-J016 and later specialized SQL families.
+- J015 expanded DML, predicates, expressions, function families, regular-expression
+  routing, 8.1 JSON SQL, JSON path rules, and Oracle SQL/JSON difference checks in
+  `04_sql_dml_oracle_compatibility.md`, with JSON cross-references in
+  `05_data_types_properties.md` and JSON migration cautions in
+  `15_migration_oracle_compatibility.md`. The SQL syntax queue remains open for J016
+  and later specialized SQL families.
 - J017-J021 should use `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
 - J022-J026 should use `error_message_reference` and related operational sources to

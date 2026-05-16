@@ -11,14 +11,14 @@
 - Can ordinary Oracle `SELECT`, `INSERT`, `UPDATE`, `DELETE`, or `MERGE` SQL run in Altibase?
 - Which DML clauses need Altibase syntax instead of Oracle syntax?
 - How should row limiting, joins, hierarchical queries, hints, DML `RETURN`, and transaction clauses be generated?
-- Which Oracle-style functions are available, and which Altibase function differences should be checked?
+- Which Oracle-style functions, expressions, operators, and predicates are available, and which Altibase differences should be checked?
 - How should 8.1 JSON functions such as `JSON_VALUE` and `JSON_QUERY` be used?
 
 ## Source Documents
 
 - 7.1: Altibase 7.1 SQL Reference; General Reference 1 for `REGEXP_MODE`.
 - 7.3: Altibase 7.3 SQL Reference; General Reference 1 for `REGEXP_MODE`.
-- 8.1: Altibase 8.1 verified source SQL Reference; General Reference 1 for `REGEXP_MODE`.
+- 8.1: Altibase 8.1 verified source SQL Reference; General Reference 1 for `REGEXP_MODE`, native `JSON`, JSON path, and Temporary LOB prerequisites.
 
 ## Core Guidance
 
@@ -27,6 +27,7 @@
 - Compress generic Oracle SQL into short guidance. Expand only clauses where Altibase behavior differs or where the SQL Reference lists restrictions.
 - If no version is specified, use the 8.1 baseline and mention that JSON functions and `IS JSON` require 8.1.
 - For DML on customer tables, confirm whether the target is a table, view, partition, queue table, memory table, disk table, LOB column, or JSON column when that affects syntax or restrictions.
+- For function questions, distinguish a source-listed Altibase function from an Oracle-only function name. If the requested function is not listed for the customer's target version, ask for the exact Altibase version and provide the closest source-backed rewrite pattern instead of inventing parity.
 - For DDL, data type definitions, properties, and migration tooling, use the companion attachments rather than repeating them here.
 
 ## Oracle Compatibility Classifier
@@ -330,6 +331,72 @@ Generation notes:
 - Required for deleting from a table or updatable view.
 - Allowed for `SYS`, the table owner, users with `DELETE ANY TABLE`, and users with `DELETE` object privilege.
 - `MOVE` requires `DELETE` privilege on the source table and `INSERT` privilege on the target table.
+
+## Expression and Operator Generation
+
+### Expression Item: Placement
+
+Altibase SQL expressions can appear in `SELECT` lists, `WHERE`, `START WITH`, `CONNECT BY`, `GROUP BY`, `HAVING`, `ORDER BY`, DML value lists, `UPDATE SET`, function arguments, and supported DDL clauses. When rewriting Oracle SQL, preserve the expression only after checking data type compatibility, LOB or JSON restrictions, and whether the expression contains an Oracle-only function.
+
+### Expression Item: Arithmetic Operators
+
+```text
++ number
+- number
+number1 + number2
+number1 - number2
+number1 * number2
+number1 / number2
+```
+
+Generation notes:
+
+- Arithmetic operators work on numeric values and values that can be converted to numeric values.
+- `DATE + n` and `DATE - n` interpret `n` as days.
+- To add hours, minutes, or seconds to a `DATE`, convert the unit to days: `hours / 24`, `minutes / (24*60)`, or `seconds / (24*60*60)`.
+- `DATE - DATE` returns the interval in day units.
+- Do not generate multiplication or division directly on `DATE` values.
+
+Example:
+
+```sql
+SELECT SYSDATE + (10 / (24 * 60)) AS ten_minutes_later
+FROM dual;
+```
+
+### Expression Item: Concatenation
+
+```text
+char1 || char2
+```
+
+Use `||` or `CONCAT(expr1, expr2)` for string concatenation. Check `NULL` and empty-string behavior before assuming Oracle application output is identical; Altibase treats an empty string as `NULL`.
+
+Example:
+
+```sql
+SELECT RTRIM(e_firstname) || ' ' || RTRIM(e_lastname) AS full_name
+FROM employees;
+```
+
+### Expression Item: CAST
+
+```text
+CAST(expr AS data_type)
+```
+
+Use `CAST` for explicit conversion. The SQL Reference supports conversion to all data types except `BLOB` and `CLOB` through this operator. For LOB conversion use source-listed conversion functions such as `TO_CLOB` or `TO_BLOB` only where the target version supports them.
+
+Example:
+
+```sql
+SELECT CAST('3.14159265359' AS DOUBLE) AS pi
+FROM dual;
+```
+
+### Expression Item: Operator Precedence
+
+For logical conditions, Altibase evaluates comparison operators before `NOT`, then `AND`, then `OR`. Operators with the same precedence are processed left to right. Use parentheses when translating Oracle SQL that mixes `AND` and `OR`.
 
 ## SELECT Differences and Checks
 
@@ -650,6 +717,8 @@ Do not carry Oracle hints across blindly. Keep only hints listed in Altibase gui
 
 Supported logical operators are `AND`, `OR`, and `NOT`. Altibase condition precedence is comparison operators, then `NOT`, then `AND`, then `OR`. Use parentheses when preserving Oracle behavior matters.
 
+Conditions return `TRUE`, `FALSE`, or `UNKNOWN`. They can be used in `WHERE`, `START WITH`, `CONNECT BY`, `HAVING`, and in `DELETE` or `UPDATE` `WHERE` clauses.
+
 ### Condition Item: Comparison
 
 Altibase supports simple comparisons and group comparisons. For multi-column comparison, only equality comparison is valid, and the number of expressions on both sides must match.
@@ -732,15 +801,22 @@ regexp_like_condition ::=
 
 unique_condition ::=
   UNIQUE (subquery)
+
+is_json_condition ::=
+  expr IS [NOT] JSON
 ```
 
 Generation notes:
 
+- `BETWEEN` is logically equivalent to `expr >= low_expr AND expr <= high_expr`.
+- `EXISTS (subquery)` is true when the subquery returns at least one row.
+- `IN` is equivalent to `= ANY`; `NOT IN` is equivalent to `!= ALL`.
 - For row-value comparison, Altibase supports only equality and inequality operators; do not generate row-value `>`, `<`, `>=`, or `<=`.
 - `ANY` and `SOME` are equivalent.
 - `NOT IN` and `!= ALL` can behave unexpectedly when the right side contains `NULL`; prefer `NOT EXISTS` when null-safe anti-join behavior is required.
 - `INLIST` is Altibase-specific and takes a single ASCII comma-separated string, not a normal SQL list.
 - `ESCAPE` in `LIKE` takes a single-character string used to escape literal `%` and `_`.
+- `IS JSON` and `IS NOT JSON` are 8.1 JSON conditions. Do not use them for 7.1 or 7.3 target SQL unless the customer supplies version-specific proof.
 
 ### Condition Item: INLIST
 
@@ -769,6 +845,60 @@ ALTER SESSION SET REGEXP_MODE=1;
 - For the property definition and permanent configuration path, see `05_data_types_properties.md` (`REGEXP_MODE`). For PCRE2 character-set and runtime errors, see `07_error_messages_troubleshooting.md`.
 
 ## SQL Function Compatibility
+
+### Function Family Index
+
+Version scope: non-JSON function families below are source-listed in the 7.1, 7.3, and 8.1 SQL Reference families unless a note says otherwise. JSON functions are Altibase 8.1 verified source features.
+
+Use this index for retrieval and first-pass Oracle conversion. For exact argument grammar, return type, or edge-case behavior, check the function item block or ask for the exact Altibase target version before generating production SQL.
+
+Function category: aggregate
+
+- `AVG`, `CORR`, `COUNT`, `COVAR_POP`, `COVAR_SAMP`, `CUME_DIST`, `FIRST`, `GROUP_CONCAT`, `LAST`, `LISTAGG`, `MAX`, `MEDIAN`, `MIN`, `PERCENTILE_CONT`, `PERCENTILE_DISC`, `PERCENT_RANK`, `RANK`, `STATS_ONE_WAY_ANOVA`, `STDDEV`, `STDDEV_POP`, `STDDEV_SAMP`, `SUM`, `VARIANCE`, `VAR_POP`, `VAR_SAMP`.
+- Aggregate functions can appear in a `SELECT` list, `ORDER BY`, or `HAVING`. If a query has `GROUP BY`, non-aggregate select-list expressions must also be valid grouping expressions.
+
+Function category: window and analytic
+
+- Aggregate window functions: `AVG`, `CORR`, `COUNT`, `COVAR_POP`, `COVAR_SAMP`, `GROUP_CONCAT`, `LISTAGG`, `MAX`, `MEDIAN`, `MIN`, `PERCENTILE_CONT`, `PERCENTILE_DISC`, `RATIO_TO_REPORT`, `STDDEV`, `SUM`, `VARIANCE`.
+- Ranking window functions: `RANK`, `DENSE_RANK`, `ROW_NUMBER`, `LAG`, `LAG_IGNORE_NULLS`, `LEAD`, `LEAD_IGNORE_NULLS`, `NTILE`, `FIRST`, `LAST`.
+- Row-order window functions: `FIRST_VALUE`, `FIRST_VALUE_IGNORE_NULLS`, `LAST_VALUE`, `LAST_VALUE_IGNORE_NULLS`, `NTH_VALUE`, `NTH_VALUE_IGNORE_NULLS`.
+- Window functions can appear only in a `SELECT` list or `ORDER BY`. Ranking functions require `ORDER BY` in `OVER (...)`. Do not generate window functions directly in `WHERE`.
+
+Function category: numeric and bit
+
+- Numeric: `ABS`, `ACOS`, `ASIN`, `ATAN`, `ATAN2`, `CEIL`, `COS`, `COSH`, `EXP`, `FLOOR`, `ISNUMERIC`, `LN`, `LOG`, `MOD`, `POWER`, `RAND`, `RANDOM`, `ROUND`, `SIGN`, `SIN`, `SINH`, `SQRT`, `TAN`, `TANH`, `TRUNC`.
+- Bit and numeric helpers: `BITAND`, `BITOR`, `BITXOR`, `BITNOT`, `NUMAND`, `NUMOR`, `NUMSHIFT`, `NUMXOR`.
+- Check overflow, implicit conversion, and integer versus floating behavior before treating Oracle numeric output as identical.
+
+Function category: character and regular expression
+
+- Character string result: `CHR`, `CHOSUNG`, `CONCAT`, `DIGITS`, `INITCAP`, `LOWER`, `LPAD`, `LTRIM`, `NCHR`, `PKCS7PAD16`, `PKCS7UNPAD16`, `RANDOM_STRING`, `REGEXP_REPLACE`, `REGEXP_SUBSTR`, `REPLICATE`, `REPLACE2`, `REVERSE_STR`, `RPAD`, `RTRIM`, `STUFF`, `SUBSTR`, `SUBSTRB`, `SUBSTRING`, `TRANSLATE`, `TRIM`, `UPPER`.
+- Character or byte length and search result: `ASCII`, `CHAR_LENGTH`, `CHARACTER_LENGTH`, `DIGEST`, `INSTR`, `INSTRB`, `LENGTH`, `LENGTHB`, `OCTET_LENGTH`, `POSITION`, `REGEXP_COUNT`, `REGEXP_INSTR`, `SIZEOF`.
+- Regular expression behavior depends on `REGEXP_MODE`. Do not assume Oracle regular expression extensions unless the target uses `REGEXP_MODE=1` and the source-backed character-set cautions are satisfied.
+
+Function category: datetime
+
+- `ADD_MONTHS`, `CONV_TIMEZONE`, `CURRENT_DATE`, `CURRENT_TIMESTAMP`, `DATEADD`, `DATEDIFF`, `DATENAME`, `DATEPART`, `DB_TIMEZONE`, `EXTRACT`, `LAST_DAY`, `MONTHS_BETWEEN`, `NEXT_DAY`, `ROUND`, `SESSION_TIMEZONE`, `SYSDATE`, `SYSTIMESTAMP`, `TRUNC`, `UNIX_DATE`, `UNIX_TIMESTAMP`.
+- Check `DEFAULT_DATE_FORMAT`, session time zone behavior, and fractional-second precision before claiming Oracle-equivalent output.
+
+Function category: conversion
+
+- `ASCIISTR`, `BIN_TO_NUM`, `CONVERT`, `DATE_TO_UNIX`, `HEX_DECODE`, `HEX_ENCODE`, `HEX_TO_NUM`, `OCT_TO_NUM`, `RAW_TO_FLOAT`, `RAW_TO_INTEGER`, `RAW_TO_NUMERIC`, `RAW_TO_VARCHAR`, `TO_BIN`, `TO_BLOB`, `TO_CHAR`, `TO_CLOB`, `TO_DATE`, `TO_HEX`, `TO_INTERVAL`, `TO_NCHAR`, `TO_NUMBER`, `TO_OCT`, `TO_RAW`, `UNISTR`, `UNIX_TO_DATE`.
+- For `TO_CHAR`, `TO_DATE`, `TO_NUMBER`, and date/time format masks, use Altibase format support and do not assume every Oracle mask is valid.
+
+Function category: encryption
+
+- `AESDECRYPT`, `AESENCRYPT`, `DESDECRYPT`, `DESENCRYPT`, `TDESDECRYPT`, `TDESENCRYPT`, `TRIPLE_DESDECRYPT`, `TRIPLE_DESENCRYPT`.
+- Treat key handling, padding, and output encoding as application-sensitive. Ask for exact input/output expectations before rewriting production encryption SQL.
+
+Function category: null, conditional, grouping, identity, queue, raw, and session helpers
+
+- Conditional and null handling: `CASE WHEN`, `CASE2`, `COALESCE`, `DECODE`, `GREATEST`, `LEAST`, `LNNVL`, `NULLIF`, `NVL`, `NVL2`, `NVL_EQUAL`, `NVL_NOT_EQUAL`.
+- Grouping and pseudo/session values: `GROUPING`, `GROUPING_ID`, `ROWNUM`, `SYS_CONNECT_BY_PATH`, `SYS_CONTEXT`, `SYS_GUID`, `SYS_GUID_STR`, `USER_ID`, `USER_NAME`, `SESSION_ID`, `HOST_NAME`.
+- Invoke-user helpers: `INVOKE_USER_ID`, `INVOKE_USER_NAME` are listed in the 7.3 and 8.1 Korean SQL Reference. Do not state 7.1 availability unless the exact 7.1 source being used lists them.
+- Queue/message helpers: `MSG_CREATE_QUEUE`, `MSG_DROP_QUEUE`, `MSG_SND_QUEUE`, `MSG_RCV_QUEUE`, `SENDMSG`.
+- Raw and encoding helpers: `BASE64_DECODE`, `BASE64_DECODE_STR`, `BASE64_ENCODE`, `BASE64_ENCODE_STR`, `BINARY_LENGTH`, `DUMP`, `EMPTY_BLOB`, `EMPTY_CLOB`, `HASH`, `QUOTE_PRINTABLE_DECODE`, `QUOTE_PRINTABLE_ENCODE`, `RAW_CONCAT`, `RAW_SIZEOF`, `SUBRAW`, `USER_LOCK_REQUEST`, `USER_LOCK_RELEASE`.
+- `HASH` is listed in the 7.3 and 8.1 Korean SQL Reference. Do not state 7.1 availability unless the exact 7.1 source being used lists it.
 
 ### Function Syntax Diagram Conversions
 
@@ -925,6 +1055,36 @@ JSON functions are 8.1 baseline features. Do not use them for 7.1 or 7.3 unless 
 - JSON validation: `JSON_VALID`.
 - JSON condition: `IS JSON`, `IS NOT JSON`.
 
+### JSON Item: Path Expression Essentials
+
+Version scope: Altibase 8.1 verified source.
+
+Path expressions are used by `JSON_EXISTS`, `JSON_QUERY`, and `JSON_VALUE` to find data inside a JSON document.
+
+Common path tokens:
+
+- `$`: root node.
+- `@`: current node inside a filter.
+- `.`: object key access.
+- `[]`: array element access. Array brackets can use numeric positions and wildcards.
+- `*`: wildcard.
+- `?(logical-expr)`: filter expression.
+
+Examples:
+
+```text
+$.customer.id
+$.items[0]
+$.items[*].sku
+$.status?(@=="OPEN")
+```
+
+Generation notes:
+
+- Path expressions must be supplied in string form.
+- Use literal path strings in generated SQL unless the customer provides target-version proof for a different operand form.
+- For filters, preserve JSON comparison punctuation literally, for example `?(@=="KOREA")`.
+
 ### JSON Item: Native JSON Column DML Cautions
 
 - Native `JSON` columns are 8.1 baseline features. For 7.1 or 7.3, do not generate native `JSON` column DML unless the customer provides version-specific confirmation.
@@ -933,6 +1093,46 @@ JSON functions are 8.1 baseline features. Do not use them for 7.1 or 7.3 unless 
 - Do not generate `SELECT FOR UPDATE` against `JSON` columns.
 - JSON path operands for `JSON_EXISTS`, `JSON_QUERY`, and `JSON_VALUE` must be string-form path expressions. Use literal path strings in generated examples, and do not use bind variables, `NULL`, table columns, SQL functions, or user-defined functions as the path operand unless a later exact target source confirms support.
 - For full JSON type, path-expression, storage, and property details, use `05_data_types_properties.md`.
+
+### JSON Item: DML Cookbook
+
+Use native JSON DML only for Altibase 8.1 verified source targets.
+
+```sql
+CREATE TABLE app_event (
+  event_id BIGINT,
+  payload JSON
+);
+
+INSERT INTO app_event (event_id, payload)
+VALUES (
+  1,
+  JSON_OBJECT('customerId', 1001, 'status', 'OPEN' RETURNING JSON)
+);
+
+UPDATE app_event
+SET payload = JSON_OBJECT('customerId', 1001, 'status', 'CLOSED' RETURNING JSON)
+WHERE event_id = 1
+  AND JSON_EXISTS(payload, '$.status?(@=="OPEN")');
+
+SELECT event_id,
+       JSON_VALUE(payload, '$.customerId' RETURNING BIGINT) AS customer_id,
+       JSON_QUERY(payload, '$' RETURNING JSON) AS payload_doc
+FROM app_event
+WHERE payload IS JSON
+  AND JSON_EXISTS(payload, '$.customerId');
+
+DELETE FROM app_event
+WHERE JSON_VALUE(payload, '$.status') = 'CLOSED';
+```
+
+Generation notes:
+
+- Use `RETURNING JSON` when the generated JSON value will be stored in a native `JSON` column.
+- Use `JSON_VALUE` for scalar extraction and declare `RETURNING` when numeric comparison or output type matters.
+- Use `JSON_QUERY` for JSON object or array extraction. Add `WITH WRAPPER` when the path can return multiple values.
+- Use `JSON_EXISTS` in predicates and `IS JSON` or `JSON_VALID` for validation checks.
+- If JSON SQL fails, check the JSON path literal, `TEMPORARY_LOB_ENABLE`, Temporary LOB memory properties, and JSON-specific errors in `07_error_messages_troubleshooting.md`.
 
 ### JSON Item: JSON_ARRAY
 
@@ -1070,6 +1270,10 @@ FROM dual;
 
 Purpose: return `1` when input JSON text is valid JSON, otherwise `0`.
 
+```text
+JSON_VALID(json_data)
+```
+
 ```sql
 SELECT JSON_VALID('{"ID":"AA000001","NAME":"HONG GILDONG","NATION":"KOREA"}') AS valid
 FROM dual;
@@ -1078,6 +1282,11 @@ FROM dual;
 ### JSON Item: IS JSON
 
 Purpose: test whether an expression is valid JSON.
+
+```text
+is_json_condition ::=
+  expr IS [NOT] JSON
+```
 
 ```sql
 SELECT 1 AS result
@@ -1088,6 +1297,13 @@ SELECT 1 AS result
 FROM dual
 WHERE 'invalid_json' IS NOT JSON;
 ```
+
+### JSON Item: Oracle SQL/JSON Difference Checks
+
+- Altibase 8.1 verified source lists `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, `IS JSON`, and `IS NOT JSON` for SQL/JSON work.
+- Do not translate Oracle JSON SQL by name alone. Oracle SQL/JSON constructs that are not in the selected Altibase SQL Reference, such as `JSON_TABLE`, `JSON_SERIALIZE`, `JSON_TRANSFORM`, `JSON_MERGEPATCH`, dot-notation shortcuts, or Oracle-specific `RETURNING` and error-clause variants, require manual redesign or exact target-version proof.
+- For 7.1 or 7.3 migrations, route JSON storage questions to `15_migration_oracle_compatibility.md`: Migration Center maps Oracle JSON-capable columns to `CLOB` when the Altibase target does not support native `JSON`.
+- For 8.1 migrations, review `TEMPORARY_LOB_ENABLE`, JSON path literals, JSON return types, and excluded `IS JSON` check constraints before accepting converted SQL.
 
 ## Queue DML
 

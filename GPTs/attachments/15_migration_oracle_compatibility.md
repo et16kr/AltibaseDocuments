@@ -447,6 +447,8 @@ Difference block: JSON
 - For Altibase 7.3 and earlier, Oracle `JSON` columns are converted to `CLOB`.
 - For Altibase 8.1 verified source and later JSON-capable targets, Oracle `JSON` columns are converted to `JSON`.
 - Oracle `VARCHAR2`, `BLOB`, or `CLOB` columns with an `IS JSON` check constraint can be treated as JSON source columns, but the `IS JSON` check constraint itself is excluded from migration.
+- SQL rewrite mapping: in 8.1 target SQL, use only source-listed Altibase SQL/JSON functions and predicates such as `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON`. For Oracle SQL/JSON constructs not listed in the Altibase SQL Reference, such as `JSON_TABLE` or Oracle-specific JSON dot notation, route the statement to manual Reconcile review and rewrite it with `04_sql_dml_oracle_compatibility.md`.
+- Runtime cautions: native `JSON` processing uses Temporary LOB. Before accepting 8.1 JSON SQL in migrated application code, check `TEMPORARY_LOB_ENABLE`, path-expression literal forms, return types, and JSON-specific errors.
 
 Difference block: PSM
 

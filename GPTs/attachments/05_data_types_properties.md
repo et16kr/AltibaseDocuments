@@ -610,6 +610,7 @@ JSON function family:
 - JSON search: `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`.
 - JSON validation: `JSON_VALID`.
 - JSON condition: `IS JSON`, `IS NOT JSON`.
+- For SQL option grammar, examples, and Oracle SQL/JSON difference checks, use `04_sql_dml_oracle_compatibility.md`.
 
 JSON path elements:
 

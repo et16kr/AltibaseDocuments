@@ -2,7 +2,7 @@
 
 Job: `J002`
 Status: Active primary register
-Last updated: 2026-05-16
+Last updated: 2026-05-17
 
 ## Register Rules
 
@@ -95,14 +95,16 @@ recording or remediating gaps.
 - Required remediation shape: Searchable item block by key type with supported data
   types, unsupported combinations, version scope, DDL example, and validation query.
 
-### GAP-J002-005: JSON SQL and function option grammar needs full itemization
+### GAP-J002-005: JSON SQL and function option grammar source-audited by J015
 
-- Status: `Open`
+- Status: `Closed-trace`
 - Source family and version scope: `sql_reference`,
   `general_reference_1_datatypes_properties`, `migration_oracle`; Altibase 8.1 verified
   source, with 7.1/7.3 negative-scope cautions.
-- Missing item or behavior: Full JSON function option grammar and deeper JSON DML
-  behavior beyond the sampled family/path restrictions.
+- Missing item or behavior: Closed by J015 for the selected-source SQL scope. The 8.1
+  Korean SQL Reference JSON function grammar and General Reference 1 JSON type/path
+  restrictions were converted to English-normalized item blocks, and Migration Center
+  JSON mapping cautions were cross-referenced.
 - Affected attachments: `03_sql_ddl_generation.md`,
   `04_sql_dml_oracle_compatibility.md`, `05_data_types_properties.md`,
   `15_migration_oracle_compatibility.md`.
@@ -111,10 +113,12 @@ recording or remediating gaps.
   `review/reports/R06_lob_json_datatype_ddl.md`;
   `review/reports/R07_dml_functions_oracle_overlap.md`;
   `review/reports/R08_oracle_migration_compatibility.md`.
-- Required remediation shape: BNF-like syntax and function blocks for `JSON`,
-  `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`,
-  `JSON_VALID`, and `IS JSON`; include path operand restrictions, migration mapping,
-  examples, and cross-references to error and property blocks.
+- Required remediation shape: Completed for `JSON_ARRAY`, `JSON_OBJECT`,
+  `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, `IS JSON`, JSON path
+  operand restrictions, JSON DML examples, migration mapping, and Temporary LOB/error
+  cross-references. Keep this trace so later jobs preserve the guardrail: Oracle
+  SQL/JSON constructs not listed in the selected Altibase SQL Reference, such as
+  `JSON_TABLE`, require manual redesign or exact target-version proof.
 
 ### GAP-J002-006: Dictionary and performance view columns are not exhaustively proven
 
@@ -473,3 +477,10 @@ recording or remediating gaps.
   `GPTs/attachments/03_sql_ddl_generation.md`, with supporting metadata checks and
   object blocks in `GPTs/attachments/06_data_dictionary_performance_views.md`. The
   shared syntax queue remains open for J015-J016 and later specialized SQL families.
+- J015 update: The DML, query expression, function, condition, operator, and 8.1 JSON
+  SQL family is source-audited and expanded in
+  `GPTs/attachments/04_sql_dml_oracle_compatibility.md`, with JSON data type
+  cross-reference support in `GPTs/attachments/05_data_types_properties.md` and
+  migration rewrite cautions in
+  `GPTs/attachments/15_migration_oracle_compatibility.md`. The shared syntax queue
+  remains open for J016 and later specialized SQL families.

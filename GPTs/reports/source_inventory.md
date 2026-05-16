@@ -231,6 +231,45 @@ Scoped source paths checked for J014:
 No new manual/source-backed gap was discovered during J014. The shared SQL syntax
 conversion queue remains open for J015-J016 and later specialized SQL families.
 
+## J015 DML, Functions, Expressions, And JSON SQL Addendum
+
+J015 uses the `sql_reference`, `general_reference_1_datatypes_properties`, and
+`migration_oracle` source families for Altibase 7.1, Altibase 7.3, and the Altibase
+8.1 verified source. Korean SQL Reference and General Reference 1 manuals remain
+authoritative for DML, conditions, expression operators, function families, native
+`JSON`, JSON path, Temporary LOB prerequisites, and 8.1 JSON SQL grammar. Matching
+English manuals were used only for customer-facing terminology when consistent.
+Migration Center release notes and manuals were used for Oracle JSON migration mapping.
+
+J015 updates `GPTs/attachments/04_sql_dml_oracle_compatibility.md` with expanded
+expression/operator guidance, condition semantics, function family indexes, function
+placement cautions, 8.1 JSON path and function option grammar, JSON DML examples, and
+Oracle SQL/JSON difference checks. It updates
+`GPTs/attachments/05_data_types_properties.md` with a JSON SQL cross-reference and
+`GPTs/attachments/15_migration_oracle_compatibility.md` with JSON SQL rewrite and
+Temporary LOB migration cautions. No attachment boundary or customer-facing source-label
+change was needed.
+
+Scoped source paths checked for J015:
+
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/eng/SQL Reference.md`
+- `Manuals/Altibase_7.3/eng/SQL Reference.md`
+- `Manuals/Altibase_trunk/eng/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Altibase_trunk/eng/General Reference-1.Data Types & Altibase Properties.md`
+- `Manuals/Tools/Altibase_release/kor/Migration Center User's Manual.md`
+- `Manuals/Tools/Altibase_release/eng/Migration Center User's Manual.md`
+- `Manuals/Tools/Altibase_trunk/kor/Migration Center User's Manual.md`
+- `Manuals/Tools/Altibase_trunk/eng/Migration Center User's Manual.md`
+- `ReleaseNotes/kor/Altibase_Migration_Center_7_16_Release_Notes.md`
+- `ReleaseNotes/eng/Altibase_Migration_Center_7_16_Release_Notes.md`
+
+No new manual/source-backed gap was discovered during J015. The shared SQL syntax
+conversion queue remains open for J016 and later specialized SQL families.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference
