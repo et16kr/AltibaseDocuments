@@ -189,6 +189,48 @@ Scoped source paths checked for J013:
 No new source family was added. The shared SQL syntax conversion queue remains open for
 J014-J016 and later specialized SQL families.
 
+## J014 Users, Privileges, Roles, And Schema Object SQL Addendum
+
+J014 uses the `sql_reference`, `administrator_operations`,
+`general_reference_2_dictionary_views`, `stored_external_procedures`, and
+`security_ssl_tls` source families for Altibase 7.1, Altibase 7.3, and the Altibase
+8.1 verified source. Korean SQL Reference and General Reference 2 manuals remain
+authoritative for user, privilege, role, sequence, synonym, view, materialized view,
+directory, trigger, and job SQL plus metadata validation; matching English manuals were
+used only for customer-facing terminology when consistent.
+
+J014 updates `GPTs/attachments/03_sql_ddl_generation.md` with source-audited compact
+syntax and examples for user/role/grant/revoke policy, full sequence lifecycle,
+directory, synonym, view, materialized view, trigger, and job SQL. It adds source-backed
+cautions for 8.1-only idempotent clauses, directory file-system boundaries, synonym
+privilege/name-resolution behavior, view `FORCE` validation, materialized-view refresh
+limits, trigger body restrictions, replication-trigger separation, LOB-trigger cautions,
+and scheduler-job prerequisites. J014 also updates
+`GPTs/attachments/06_data_dictionary_performance_views.md` with metadata checks and
+object blocks for schema-object validation, and narrows `GAP-J010-001` to the remaining
+J015-J016 SQL families plus later specialized SQL work.
+
+Scoped source paths checked for J014:
+
+- `Manuals/Altibase_7.1/kor/SQL Reference.md`
+- `Manuals/Altibase_7.3/kor/SQL Reference.md`
+- `Manuals/Altibase_trunk/kor/SQL Reference.md`
+- `Manuals/Altibase_7.1/eng/SQL Reference.md`
+- `Manuals/Altibase_7.3/eng/SQL Reference.md`
+- `Manuals/Altibase_trunk/eng/SQL Reference.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/eng/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.1/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_7.3/kor/Stored Procedures Manual.md`
+- `Manuals/Altibase_trunk/kor/Stored Procedures Manual.md`
+
+No new manual/source-backed gap was discovered during J014. The shared SQL syntax
+conversion queue remains open for J015-J016 and later specialized SQL families.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

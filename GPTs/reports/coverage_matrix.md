@@ -143,6 +143,15 @@ for 8.1 customer-facing labels.
   validation hooks. Queue DML wait semantics are cross-referenced in
   `04_sql_dml_oracle_compatibility.md`, and LOB storage routing is cross-referenced in
   `05_data_types_properties.md`.
+- J013 expanded index, optimizer statistics, hint, and execution-plan SQL in
+  `08_performance_tuning_monitoring.md`, with supporting dictionary blocks in
+  `06_data_dictionary_performance_views.md` and index-generation cautions in
+  `03_sql_ddl_generation.md`.
+- J014 expanded users, privileges, roles, sequences, synonyms, views, materialized
+  views, directories, triggers, and scheduler jobs in `03_sql_ddl_generation.md`, with
+  supporting metadata checks and object blocks in
+  `06_data_dictionary_performance_views.md`. The SQL syntax queue remains open for
+  J015-J016 and later specialized SQL families.
 - J017-J021 should use `general_reference_2_dictionary_views`, `performance_tuning`,
   `monitoring_api_snmp`, and replication/security view sources to close view/API gaps.
 - J022-J026 should use `error_message_reference` and related operational sources to

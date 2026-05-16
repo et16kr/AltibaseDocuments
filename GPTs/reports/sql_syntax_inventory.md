@@ -206,6 +206,19 @@ Korean source.
   `10_psm_stored_external_procedures.md`, `18_security_ssl_tls.md`.
 - Required conversion shape: Object-type blocks with privileges, 8.1 idempotent
   clauses where source-backed, examples, cleanup syntax, and metadata validation SQL.
+- J014 completion note: `GPTs/attachments/03_sql_ddl_generation.md` now contains
+  source-audited BNF-like syntax, generation notes, examples, and verification SQL for
+  user accounts, password policy clauses, roles, `GRANT`, `REVOKE`, full sequence
+  lifecycle, directories, synonyms, views, materialized views, triggers, and scheduler
+  jobs. `GPTs/attachments/06_data_dictionary_performance_views.md` now includes
+  metadata cookbook queries and object blocks for `SYSTEM_.SYS_GRANT_SYSTEM_`,
+  `SYSTEM_.SYS_GRANT_OBJECT_`, `SYSTEM_.SYS_USER_ROLES_`, `SYSTEM_.SYS_SYNONYMS_`,
+  `SYSTEM_.SYS_DIRECTORIES_`, `SYSTEM_.SYS_MATERIALIZED_VIEWS_`,
+  `SYSTEM_.SYS_TRIGGERS_`, trigger source/dependency tables, and `SYSTEM_.SYS_JOBS_`.
+  The update preserves Korean-source precedence for 8.1-only idempotent clauses,
+  directory file-system boundaries, synonym privilege/name-resolution behavior, view
+  and materialized-view validation limits, trigger restrictions, replication-trigger
+  separation, and job scheduler prerequisites.
 
 ### J015 Baseline: DML, Functions, And JSON SQL
 

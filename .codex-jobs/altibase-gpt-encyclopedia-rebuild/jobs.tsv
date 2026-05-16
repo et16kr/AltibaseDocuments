@@ -12,7 +12,7 @@ J010	Done	docs	SQL syntax inventory and BNF rules	Inventory SQL statement famili
 J011	Done	docs	Database tablespace and datafile SQL	Expand database, tablespace, datafile, archive, backup, restore, and recovery SQL coverage.
 J012	Done	docs	Table column constraint partition and queue DDL	Expand table, column, constraint, partition, LOB storage, and queue DDL coverage.
 J013	Done	docs	Index statistics hint and plan SQL	Expand index, statistics, hint, execution plan, and tuning-related SQL coverage.
-J014	ToDo	docs	Users privileges roles and schema object SQL	Expand user, privilege, role, sequence, synonym, view, and schema-object SQL coverage.
+J014	Done	docs	Users privileges roles and schema object SQL	Expand user, privilege, role, sequence, synonym, view, and schema-object SQL coverage.
 J015	ToDo	docs	DML functions expressions and JSON SQL	Expand DML, predicates, functions, expressions, JSON SQL, and Oracle-difference coverage.
 J016	ToDo	docs	Replication and administrative SQL generation	Expand replication DDL, Log Analyzer SQL, property SQL, and administrative SQL generation.
 J017	ToDo	docs	Dictionary view inventory baseline	Inventory dictionary and performance view names, version availability, and grouping.

@@ -62,6 +62,9 @@ Use these first when selecting the right source:
 | Property effect checks | `V$PROPERTY` plus the related performance view, such as `V$SQL_PLAN_CACHE`, `V$TIME_ZONE_NAMES`, `V$TEMPORARY_LOBS`, or replication views |
 | Performance view inventory | `V$TABLE`, `V$ALLCOLUMN` |
 | Tables, views, sequences, queues | `SYSTEM_.SYS_TABLES_` |
+| Synonyms | `SYSTEM_.SYS_SYNONYMS_` |
+| Materialized views | `SYSTEM_.SYS_MATERIALIZED_VIEWS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_VIEWS_` |
+| Directories and jobs | `SYSTEM_.SYS_DIRECTORIES_`, `SYSTEM_.SYS_JOBS_` |
 | Columns | `SYSTEM_.SYS_COLUMNS_` |
 | Data type lookup | `V$DATATYPE` |
 | Comments | `SYSTEM_.SYS_COMMENTS_` |
@@ -71,6 +74,7 @@ Use these first when selecting the right source:
 | Constraints | `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_CONSTRAINT_COLUMNS_` |
 | Users and roles | `SYSTEM_.SYS_USERS_`, `SYSTEM_.DBA_USERS_`, `SYSTEM_.SYS_USER_ROLES_` |
 | Privileges | `SYSTEM_.SYS_PRIVILEGES_`, `SYSTEM_.SYS_GRANT_SYSTEM_`, `SYSTEM_.SYS_GRANT_OBJECT_` |
+| Trigger metadata | `SYSTEM_.SYS_TRIGGERS_`, `SYSTEM_.SYS_TRIGGER_STRINGS_`, `SYSTEM_.SYS_TRIGGER_DML_TABLES_`, `SYSTEM_.SYS_TRIGGER_UPDATE_COLUMNS_` |
 | Tablespaces and datafiles | `V$TABLESPACES`, `V$DATAFILES`, `V$MEM_TABLESPACES`, `V$VOL_TABLESPACES` |
 | Sessions | `V$SESSION`, `V$INTERNAL_SESSION`, `V$SESSIONMGR` |
 | SQL text and statements | `V$STATEMENT`, `V$SQLTEXT` |
@@ -396,6 +400,80 @@ WHERE t.user_id = u.user_id
   AND u.user_name = '<OWNER_NAME>'
   AND t.table_name = '<SEQUENCE_NAME>';
 ```
+
+### Check Synonyms
+
+```sql
+SELECT owner.user_name AS synonym_owner,
+       s.synonym_name,
+       s.object_owner_name,
+       s.object_name,
+       s.created,
+       s.last_ddl_time
+FROM SYSTEM_.SYS_SYNONYMS_ s,
+     SYSTEM_.SYS_USERS_ owner
+WHERE s.synonym_owner_id = owner.user_id
+  AND owner.user_name = '<OWNER_NAME>'
+ORDER BY owner.user_name, s.synonym_name;
+```
+
+`SYSTEM_.SYS_SYNONYMS_` stores the alias owner, alias name, target owner, and target object name. Privileges are checked against the target object, not the synonym row.
+
+### Check Directory Objects
+
+```sql
+SELECT directory_id,
+       user_id,
+       directory_name,
+       directory_path,
+       created,
+       last_ddl_time
+FROM SYSTEM_.SYS_DIRECTORIES_
+WHERE directory_name = '<DIRECTORY_NAME>';
+```
+
+Directory objects are database metadata for PSM file access. The corresponding operating-system directory must still exist on disk, and directory object privileges are visible through `SYSTEM_.SYS_GRANT_OBJECT_` with `OBJ_TYPE = 'D'`.
+
+```sql
+SELECT grantee.user_name AS grantee_name,
+       p.priv_name,
+       d.directory_name,
+       g.with_grant_option
+FROM SYSTEM_.SYS_GRANT_OBJECT_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p,
+     SYSTEM_.SYS_DIRECTORIES_ d
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+  AND g.obj_id = d.directory_id
+  AND g.obj_type = 'D'
+  AND d.directory_name = '<DIRECTORY_NAME>'
+ORDER BY grantee.user_name, p.priv_name;
+```
+
+For directory grants to `PUBLIC`, `GRANTEE_ID` is `0` and does not join to `SYSTEM_.SYS_USERS_`.
+
+### Check Scheduler Jobs
+
+```sql
+SELECT job_id,
+       job_name,
+       exec_query,
+       start_time,
+       end_time,
+       interval,
+       interval_type,
+       state,
+       last_exec_time,
+       exec_count,
+       error_code,
+       is_enable,
+       comment
+FROM SYSTEM_.SYS_JOBS_
+WHERE job_name = '<JOB_NAME>';
+```
+
+`STATE` shows whether a job is running, `IS_ENABLE` shows whether the scheduler may execute it, and `ERROR_CODE` records the last execution error when one exists.
 
 ## Cookbook: Indexes and Constraints
 
@@ -872,6 +950,46 @@ ORDER BY vp.seq_no;
 
 Concatenate `PARSE` values in `SEQ_NO` order in the client if a complete source string is needed.
 
+### Check Materialized Views
+
+```sql
+SELECT u.user_name,
+       m.mview_name,
+       m.table_id,
+       m.view_id,
+       m.refresh_type,
+       m.refresh_time,
+       m.created,
+       m.last_ddl_time,
+       m.last_refresh_time
+FROM SYSTEM_.SYS_MATERIALIZED_VIEWS_ m,
+     SYSTEM_.SYS_USERS_ u
+WHERE m.user_id = u.user_id
+  AND u.user_name = '<OWNER_NAME>'
+ORDER BY m.mview_name;
+```
+
+`REFRESH_TYPE` values include `C` complete, `F` fast, and `R` force. `REFRESH_TIME` values include `D` on demand and `C` on commit. Source SQL Reference notes that Altibase currently does not support fast refresh, on-commit refresh, or never-refresh materialized views; check the DDL before assuming those codes can be produced for a new materialized view.
+
+To inspect the internal maintenance objects for one materialized view:
+
+```sql
+SELECT m.mview_name,
+       mt.table_name AS maintenance_table,
+       mv.table_name AS maintenance_view
+FROM SYSTEM_.SYS_MATERIALIZED_VIEWS_ m,
+     SYSTEM_.SYS_TABLES_ mt,
+     SYSTEM_.SYS_TABLES_ mv,
+     SYSTEM_.SYS_USERS_ u
+WHERE m.user_id = u.user_id
+  AND m.user_id = mt.user_id
+  AND m.table_id = mt.table_id
+  AND m.user_id = mv.user_id
+  AND m.view_id = mv.table_id
+  AND u.user_name = '<OWNER_NAME>'
+  AND m.mview_name = '<MVIEW_NAME>';
+```
+
 ### Check Invalid Stored Procedures and Functions
 
 ```sql
@@ -1002,6 +1120,55 @@ ORDER BY tr.trigger_name;
 ```
 
 `IS_ENABLE` values are `0` disabled and `1` enabled. `EVENT_TIME` values include `1` before, `2` after, `3` instead of. `EVENT_TYPE` values include `1` insert, `2` delete, `4` update. `GRANULARITY` values include `1` for each row and `2` for each statement.
+
+### Retrieve Trigger Source and Dependencies
+
+```sql
+SELECT ts.seqno,
+       ts.substring
+FROM SYSTEM_.SYS_TRIGGER_STRINGS_ ts,
+     SYSTEM_.SYS_TRIGGERS_ tr
+WHERE ts.table_id = tr.table_id
+  AND ts.trigger_oid = tr.trigger_oid
+  AND tr.user_name = '<OWNER_NAME>'
+  AND tr.trigger_name = '<TRIGGER_NAME>'
+ORDER BY ts.seqno;
+```
+
+Concatenate `SUBSTRING` values in `SEQNO` order in the client to reconstruct the trigger text.
+
+```sql
+SELECT base.table_name AS trigger_table,
+       dml.table_name AS referenced_table,
+       td.stmt_type
+FROM SYSTEM_.SYS_TRIGGER_DML_TABLES_ td,
+     SYSTEM_.SYS_TRIGGERS_ tr,
+     SYSTEM_.SYS_TABLES_ base,
+     SYSTEM_.SYS_TABLES_ dml
+WHERE td.table_id = tr.table_id
+  AND td.trigger_oid = tr.trigger_oid
+  AND tr.table_id = base.table_id
+  AND td.dml_table_id = dml.table_id
+  AND tr.user_name = '<OWNER_NAME>'
+  AND tr.trigger_name = '<TRIGGER_NAME>'
+ORDER BY referenced_table, td.stmt_type;
+```
+
+`STMT_TYPE` values include `8` delete, `19` insert, and `33` update.
+
+```sql
+SELECT c.column_name
+FROM SYSTEM_.SYS_TRIGGER_UPDATE_COLUMNS_ tuc,
+     SYSTEM_.SYS_TRIGGERS_ tr,
+     SYSTEM_.SYS_COLUMNS_ c
+WHERE tuc.table_id = tr.table_id
+  AND tuc.trigger_oid = tr.trigger_oid
+  AND tuc.table_id = c.table_id
+  AND tuc.column_id = c.column_id
+  AND tr.user_name = '<OWNER_NAME>'
+  AND tr.trigger_name = '<TRIGGER_NAME>'
+ORDER BY c.column_name;
+```
 
 ## Cookbook: Sessions, Statements, Waits, Locks, and Transactions
 
@@ -1740,6 +1907,106 @@ Representative SQL:
 SELECT user_id, user_name, user_type, account_lock, disable_tcp, created
 FROM SYSTEM_.SYS_USERS_
 ORDER BY user_type, user_name;
+```
+
+### Object Block: `SYSTEM_.SYS_GRANT_SYSTEM_`, `SYSTEM_.SYS_GRANT_OBJECT_`, and `SYSTEM_.SYS_USER_ROLES_`
+
+Purpose: stores system privilege grants, object privilege grants, and role grants.
+
+Key columns: system grants use `GRANTOR_ID`, `GRANTEE_ID`, `PRIV_ID`; object grants add `USER_ID`, `OBJ_ID`, `OBJ_TYPE`, `WITH_GRANT_OPTION`; role grants use `GRANTEE_ID` and `ROLE_ID`.
+
+Representative SQL:
+
+```sql
+SELECT grantee.user_name AS grantee_name, p.priv_name
+FROM SYSTEM_.SYS_GRANT_SYSTEM_ g,
+     SYSTEM_.SYS_USERS_ grantee,
+     SYSTEM_.SYS_PRIVILEGES_ p
+WHERE g.grantee_id = grantee.user_id
+  AND g.priv_id = p.priv_id
+ORDER BY grantee.user_name, p.priv_name;
+```
+
+`SYSTEM_.SYS_GRANT_OBJECT_.OBJ_TYPE` common values are `T` table or view, `S` sequence, `P` stored procedure or function, `A` stored package, `D` directory, and `Y` library.
+
+### Object Block: `SYSTEM_.SYS_SYNONYMS_`
+
+Purpose: stores private and public synonym metadata.
+
+Key columns: `SYNONYM_OWNER_ID`, `SYNONYM_NAME`, `OBJECT_OWNER_NAME`, `OBJECT_NAME`, `CREATED`, `LAST_DDL_TIME`.
+
+Representative SQL:
+
+```sql
+SELECT owner.user_name AS synonym_owner,
+       s.synonym_name,
+       s.object_owner_name,
+       s.object_name
+FROM SYSTEM_.SYS_SYNONYMS_ s,
+     SYSTEM_.SYS_USERS_ owner
+WHERE s.synonym_owner_id = owner.user_id
+ORDER BY owner.user_name, s.synonym_name;
+```
+
+### Object Block: `SYSTEM_.SYS_DIRECTORIES_`
+
+Purpose: stores directory objects used by stored procedures for file access.
+
+Key columns: `DIRECTORY_ID`, `USER_ID`, `DIRECTORY_NAME`, `DIRECTORY_PATH`, `CREATED`, `LAST_DDL_TIME`.
+
+Representative SQL:
+
+```sql
+SELECT directory_name, directory_path, created, last_ddl_time
+FROM SYSTEM_.SYS_DIRECTORIES_
+ORDER BY directory_name;
+```
+
+### Object Block: `SYSTEM_.SYS_MATERIALIZED_VIEWS_`
+
+Purpose: stores materialized view metadata and the internal maintenance table/view identifiers.
+
+Key columns: `USER_ID`, `MVIEW_ID`, `MVIEW_NAME`, `TABLE_ID`, `VIEW_ID`, `REFRESH_TYPE`, `REFRESH_TIME`, `CREATED`, `LAST_DDL_TIME`, `LAST_REFRESH_TIME`.
+
+Representative SQL:
+
+```sql
+SELECT u.user_name, m.mview_name, m.refresh_type, m.refresh_time,
+       m.last_refresh_time
+FROM SYSTEM_.SYS_MATERIALIZED_VIEWS_ m,
+     SYSTEM_.SYS_USERS_ u
+WHERE m.user_id = u.user_id
+ORDER BY u.user_name, m.mview_name;
+```
+
+### Object Block: `SYSTEM_.SYS_TRIGGERS_`
+
+Purpose: stores default trigger metadata; related trigger text and referenced-table metadata live in `SYSTEM_.SYS_TRIGGER_STRINGS_`, `SYSTEM_.SYS_TRIGGER_DML_TABLES_`, and `SYSTEM_.SYS_TRIGGER_UPDATE_COLUMNS_`.
+
+Key columns: `USER_ID`, `USER_NAME`, `TRIGGER_OID`, `TRIGGER_NAME`, `TABLE_ID`, `IS_ENABLE`, `EVENT_TIME`, `EVENT_TYPE`, `UPDATE_COLUMN_CNT`, `GRANULARITY`, `REF_ROW_CNT`, `SUBSTRING_CNT`, `STRING_LENGTH`, `CREATED`, `LAST_DDL_TIME`.
+
+Representative SQL:
+
+```sql
+SELECT user_name, trigger_name, table_id, is_enable, event_time,
+       event_type, granularity, created, last_ddl_time
+FROM SYSTEM_.SYS_TRIGGERS_
+ORDER BY user_name, trigger_name;
+```
+
+### Object Block: `SYSTEM_.SYS_JOBS_`
+
+Purpose: stores scheduler job definitions and last execution state.
+
+Key columns: `JOB_ID`, `JOB_NAME`, `EXEC_QUERY`, `START_TIME`, `END_TIME`, `INTERVAL`, `INTERVAL_TYPE`, `STATE`, `LAST_EXEC_TIME`, `EXEC_COUNT`, `ERROR_CODE`, `IS_ENABLE`, `COMMENT`.
+
+Representative SQL:
+
+```sql
+SELECT job_name, exec_query, start_time, interval, interval_type,
+       state, is_enable, error_code, last_exec_time
+FROM SYSTEM_.SYS_JOBS_
+ORDER BY job_name;
 ```
 
 ### Object Block: `V$SESSION`

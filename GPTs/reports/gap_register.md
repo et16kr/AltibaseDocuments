@@ -468,3 +468,8 @@ recording or remediating gaps.
   J013 change was required in `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
   because DML hint placement is covered in the tuning attachment. The shared syntax
   queue remains open for J014-J016 and later specialized SQL families.
+- J014 update: The user, privilege, role, sequence, synonym, view, materialized view,
+  directory, trigger, and job SQL family is source-audited and expanded in
+  `GPTs/attachments/03_sql_ddl_generation.md`, with supporting metadata checks and
+  object blocks in `GPTs/attachments/06_data_dictionary_performance_views.md`. The
+  shared syntax queue remains open for J015-J016 and later specialized SQL families.

@@ -671,13 +671,17 @@ Generation notes:
 
 - `IF NOT EXISTS` on `CREATE USER` and `IF EXISTS` on `DROP USER` are available in the Altibase 8.1 verified source. Omit them for 7.1 and 7.3.
 - `CREATE SESSION` is required for a normal application user to connect.
+- User passwords are password-authentication tokens, not schema object names. Source manuals state a maximum password length of `40` bytes. By default lowercase passwords are treated as uppercase; set `CASE_SENSITIVE_PASSWORD = 1` and quote the password only when case-sensitive lowercase or mixed-case passwords are required.
+- If `DEFAULT TABLESPACE` is omitted, the user's default is the system memory default tablespace. If `TEMPORARY TABLESPACE` is omitted, the user's default temporary tablespace is the system temporary tablespace. One user can have multiple data tablespace access grants but only one default temporary tablespace.
 - New application schemas usually need only specific DDL privileges, such as `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE VIEW`, and object privileges on required tables.
 - Runtime accounts normally need `CREATE SESSION` plus object privileges such as `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `EXECUTE`, or `SELECT` on a sequence. Do not grant schema DDL privileges to runtime accounts unless the application really creates objects.
 - To allow additional tablespace access after user creation, generate `ALTER USER user_name ACCESS tablespace_name ON`.
+- New general users are source-documented as receiving baseline creation privileges, including `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE SYNONYM`, `CREATE MATERIALIZED VIEW`, `CREATE DATABASE LINK`, and `CREATE LIBRARY`; audit and revoke unused DDL privileges for runtime accounts.
 - Use least privilege. Avoid `ALL PRIVILEGES`, `TO PUBLIC`, and `ANY` privileges such as `SELECT ANY TABLE` unless the customer explicitly needs administrative scope and accepts the blast radius.
 - `CREATE ROLE` creates an empty role. Grant system or object privileges to the role, then grant the role to users. A user must reconnect before privileges newly granted through a role are enabled.
 - A role cannot be granted to another role or to `PUBLIC`. A user can have at most 126 granted roles.
 - `WITH GRANT OPTION` lets the grantee re-grant object privileges. Do not use it for ordinary application users, and do not use it when granting object privileges to a role.
+- If only one of `PASSWORD_REUSE_MAX` or `PASSWORD_REUSE_TIME` is specified, the same password cannot be reused under the documented password policy behavior.
 - `ALTER USER ... LIMIT (...)` can be executed only by `SYS`; when a password policy is changed, policy items omitted from the new `LIMIT` clause are initialized.
 - `ALTER USER ... ACCOUNT LOCK|UNLOCK` explicitly controls account lock state. `ALTER USER ... DISABLE TCP` restricts ordinary TCP connections for that user; SSL or IPC can still be used where configured.
 - When changing the `SYS` password with `ALTER USER`, also update the `syspassword` file with `altipasswd` and update scripts that embed the old password.
@@ -688,7 +692,7 @@ Generation notes:
 
 ```text
 sequence ::=
-  CREATE SEQUENCE [owner.]sequence_name
+  CREATE SEQUENCE [IF NOT EXISTS] [owner.]sequence_name
   [START WITH integer]
   [INCREMENT BY integer]
   [MINVALUE integer | NOMINVALUE]
@@ -696,13 +700,28 @@ sequence ::=
   [CYCLE | NOCYCLE]
   [CACHE integer | NOCACHE]
   [ENABLE SYNC TABLE | DISABLE SYNC TABLE]
+| ALTER SEQUENCE [owner.]sequence_name sequence_alter_option ...
+| DROP SEQUENCE [IF EXISTS] [owner.]sequence_name
+
+sequence_alter_option ::=
+    INCREMENT BY integer
+  | MINVALUE integer | NOMINVALUE
+  | MAXVALUE integer | NOMAXVALUE
+  | CYCLE | NOCYCLE
+  | CACHE integer | NOCACHE
+  | FLUSH CACHE
+  | ENABLE SYNC TABLE | DISABLE SYNC TABLE
+  | RESTART [WITH integer | START WITH integer]
 ```
 
 Generation notes:
 
+- `IF NOT EXISTS` on `CREATE SEQUENCE` and `IF EXISTS` on `DROP SEQUENCE` are available in the Altibase 8.1 verified source. Omit them for 7.1 and 7.3.
+- Required privilege: `SYS` or `CREATE SEQUENCE`; use `CREATE ANY SEQUENCE` for another user's schema. `ALTER SEQUENCE` requires `SYS`, sequence ownership, or `ALTER ANY SEQUENCE`. `DROP SEQUENCE` requires `SYS`, ownership, or `DROP ANY SEQUENCE`.
 - `NEXTVAL` must be called before `CURRVAL` can be read for a newly created sequence.
 - The default `INCREMENT BY` is `1`; the default `CACHE` value is `20`.
 - `ENABLE SYNC TABLE` creates a custom table named `[sequence name]$seq` for sequence replication. The sequence name must be 36 bytes or shorter for this option.
+- `ALTER SEQUENCE ... FLUSH CACHE` discards currently cached sequence values. `ALTER SEQUENCE ... RESTART`, `RESTART WITH n`, or `RESTART START WITH n` restarts the sequence from the source-defined boundary or explicit value.
 
 ### Replication Syntax
 
@@ -1020,7 +1039,7 @@ materialized_view_ddl ::=
 trigger_ddl ::=
   CREATE [OR REPLACE] TRIGGER [IF NOT EXISTS] [owner.]trigger_name
   { simple_dml_trigger | instead_of_dml_trigger }
-| ALTER TRIGGER [owner.]trigger_name {ENABLE | DISABLE}
+| ALTER TRIGGER [owner.]trigger_name {ENABLE | DISABLE | COMPILE}
 | DROP TRIGGER [IF EXISTS] [owner.]trigger_name
 
 simple_dml_trigger ::=
@@ -1074,6 +1093,18 @@ job_ddl ::=
   | COMMENT text }
 | DROP JOB job_name
 ```
+
+Schema object generation notes:
+
+- `IF NOT EXISTS` on `CREATE DIRECTORY`, `CREATE SYNONYM`, `CREATE VIEW`, `CREATE MATERIALIZED VIEW`, and `CREATE TRIGGER`, plus `IF EXISTS` on the corresponding `DROP` statements, are Altibase 8.1 verified source syntax. Omit them for 7.1 and 7.3.
+- `CREATE DIRECTORY` and `DROP DIRECTORY` change only the database directory object recorded in `SYSTEM_.SYS_DIRECTORIES_`; they do not create or delete an operating-system directory. A directory object is always owned by `SYS`. The creator receives read/write privileges with `WITH GRANT OPTION`.
+- `CREATE SYNONYM` can target a table, view, sequence, stored procedure, stored function, or another synonym. The target object does not need to exist and the creator does not need target-object privileges at synonym creation time. Privileges are checked on the underlying object when DML or DCL uses the synonym.
+- Name resolution checks schema objects before synonyms. Private synonyms are searched before public synonyms. A qualified reference such as `owner.name` searches only that owner's object and private synonym namespace; it does not fall back to public synonyms.
+- `CREATE VIEW ... FORCE` can create an invalid view when base objects or privileges are missing. After using `FORCE`, validate with a test `SELECT` or `SYSTEM_.SYS_VIEWS_`; use `ALTER VIEW ... COMPILE` only to recompile, not to change the view definition. Use `CREATE OR REPLACE VIEW` to redefine a view.
+- `CREATE MATERIALIZED VIEW` creates the materialized view plus internal maintenance table/view objects in the same schema. Altibase materialized views are read-only. `FAST`, `ON COMMIT`, and `NEVER REFRESH` are source-listed but currently unsupported; `FORCE` behaves like complete refresh because fast refresh is not supported. Use `REFRESH_MATERIALIZED_VIEW` for manual refresh.
+- `CREATE TRIGGER` can define ordinary DML triggers on tables or `INSTEAD OF` row triggers on views. Replication receiver-applied changes do not fire triggers. A trigger body cannot use transaction control, session-control statements, schema DDL such as `CREATE TABLE`, stored procedure calls, or recursive trigger-event operations.
+- For LOB tables, the source permits creating `BEFORE INSERT ... FOR EACH ROW` or `BEFORE UPDATE ... FOR EACH ROW` triggers, but the DML that fires them can error; avoid those trigger designs unless the customer has verified exact behavior in the target version.
+- `CREATE JOB`, `ALTER JOB`, and `DROP JOB` are `SYS`-only. A job is disabled by default unless `ENABLE` is specified, and the scheduler must have `JOB_SCHEDULER_ENABLE = 1` plus `JOB_THREAD_COUNT > 0`. Job procedures cannot have `OUT` or `INOUT` parameters. Errors and `SYSTEM_.PRINTLN` output go to `JOB_MSGLOG_FILE`.
 
 #### Table Maintenance Syntax
 
@@ -2344,6 +2375,143 @@ WHERE t.user_id = u.user_id
   AND u.user_name = 'APP';
 ```
 
+Alter and drop sequences:
+
+```sql
+ALTER SEQUENCE app.seq_app_user CACHE 200 FLUSH CACHE;
+ALTER SEQUENCE app.seq_app_user RESTART WITH 1;
+DROP SEQUENCE app.seq_order_history;
+```
+
+### Schema Object Examples
+
+Create a directory object for PSM file access, then grant directory object privileges. Create the operating-system directory separately before PSM code uses it:
+
+```sql
+CREATE OR REPLACE DIRECTORY app_dump_dir AS '/data/altibase/app_dump';
+GRANT READ, WRITE ON DIRECTORY app_dump_dir TO app;
+
+SELECT directory_name, directory_path, created, last_ddl_time
+FROM SYSTEM_.SYS_DIRECTORIES_
+WHERE directory_name = 'APP_DUMP_DIR';
+```
+
+Create a private synonym and verify that privileges are still privileges on the underlying object:
+
+```sql
+CREATE OR REPLACE SYNONYM app_runtime.app_user FOR app.app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON app.app_user TO app_runtime_dml_role;
+
+SELECT owner.user_name AS synonym_owner,
+       s.synonym_name,
+       s.object_owner_name,
+       s.object_name
+FROM SYSTEM_.SYS_SYNONYMS_ s,
+     SYSTEM_.SYS_USERS_ owner
+WHERE s.synonym_owner_id = owner.user_id
+  AND owner.user_name = 'APP_RUNTIME'
+  AND s.synonym_name = 'APP_USER';
+```
+
+Create and validate a read-only view:
+
+```sql
+CREATE OR REPLACE VIEW app.v_active_user (user_id, user_name, created_at)
+AS
+SELECT user_id, user_name, created_at
+FROM app.app_user
+WHERE status = 'A'
+WITH READ ONLY;
+
+ALTER VIEW app.v_active_user COMPILE;
+
+SELECT u.user_name, t.table_name AS view_name, v.status, v.read_only
+FROM SYSTEM_.SYS_VIEWS_ v,
+     SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_USERS_ u
+WHERE v.user_id = t.user_id
+  AND v.view_id = t.table_id
+  AND t.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND t.table_name = 'V_ACTIVE_USER';
+```
+
+Create a materialized view only when the owner has the required base-table `SELECT` privileges and object-creation privileges for the internal maintenance objects:
+
+```sql
+CREATE MATERIALIZED VIEW app.mv_user_status
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT status, COUNT(*) AS user_count
+FROM app.app_user
+GROUP BY status;
+
+EXEC REFRESH_MATERIALIZED_VIEW('APP', 'MV_USER_STATUS');
+
+SELECT u.user_name, m.mview_name, m.refresh_type, m.refresh_time,
+       m.last_refresh_time
+FROM SYSTEM_.SYS_MATERIALIZED_VIEWS_ m,
+     SYSTEM_.SYS_USERS_ u
+WHERE m.user_id = u.user_id
+  AND u.user_name = 'APP'
+  AND m.mview_name = 'MV_USER_STATUS';
+```
+
+Create, compile, and inspect a DML trigger. Use this pattern only for ordinary table DML, not for changes applied by a replication receiver:
+
+```sql
+CREATE TABLE app.app_user_audit (
+    user_id     INTEGER,
+    old_status  CHAR(1),
+    new_status  CHAR(1),
+    changed_at  DATE
+);
+
+CREATE OR REPLACE TRIGGER app.trg_app_user_status
+AFTER UPDATE OF status ON app.app_user
+REFERENCING OLD ROW old_row NEW ROW new_row
+FOR EACH ROW
+WHEN (old_row.status <> new_row.status)
+AS BEGIN
+    INSERT INTO app.app_user_audit
+    VALUES (old_row.user_id, old_row.status, new_row.status, SYSDATE);
+END;
+/
+
+ALTER TRIGGER app.trg_app_user_status COMPILE;
+
+SELECT tr.user_name, t.table_name, tr.trigger_name,
+       tr.is_enable, tr.event_time, tr.event_type, tr.granularity
+FROM SYSTEM_.SYS_TRIGGERS_ tr,
+     SYSTEM_.SYS_TABLES_ t
+WHERE tr.table_id = t.table_id
+  AND tr.user_name = 'APP'
+  AND tr.trigger_name = 'TRG_APP_USER_STATUS';
+```
+
+Create and inspect a scheduler job. Run job DDL as `SYS`, enable the scheduler properties before expecting execution, and avoid `OUT` or `INOUT` procedure parameters:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('JOB_SCHEDULER_ENABLE', 'JOB_THREAD_COUNT', 'JOB_MSGLOG_FILE');
+
+CREATE JOB app_daily_rollup_job
+EXEC app.proc_daily_rollup
+START SYSDATE
+INTERVAL 1 DAY
+DISABLE
+COMMENT 'daily application rollup';
+
+ALTER JOB app_daily_rollup_job SET ENABLE;
+
+SELECT job_name, exec_query, start_time, interval, interval_type,
+       state, is_enable, error_code, last_exec_time
+FROM SYSTEM_.SYS_JOBS_
+WHERE job_name = 'APP_DAILY_ROLLUP_JOB';
+```
+
 ### Replication Examples
 
 Use this section only after confirming that the target tables and primary keys already exist on both nodes. Replace host names, ports, owners, and table names with the customer's environment.
@@ -2486,10 +2654,11 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 - State the assumed Altibase version.
 - State the assumed owner/schema, tablespaces, file paths, host names, and ports.
 - Include prerequisite privileges or `SYS` requirements for tablespace, user, role, table, queue, and replication DDL.
-- Generate DDL in execution order: tablespaces, users, grants, tables, constraints, queues, indexes, sequences, replication.
+- Generate DDL in execution order: tablespaces, users, grants, tables, constraints, queues, indexes, sequences, schema objects, jobs, replication.
 - For users and grants, include least-privilege notes and verification SQL for roles, system privileges, object privileges, and broad grants.
+- For synonyms, views, materialized views, directories, triggers, and jobs, include the required owner/`SYS` prerequisite plus dictionary verification SQL.
 - For Oracle conversion requests, explicitly state table-level differences for storage target, temporary tables, LOB storage, JSON, partitions, and queues.
-- Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_CONSTRAINT_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `SYSTEM_.SYS_INDEX_COLUMNS_`, `SYSTEM_.SYS_PART_INDICES_`, `SYSTEM_.SYS_INDEX_PARTITIONS_`, `V$DISK_BTREE_HEADER`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
+- Include verification SQL using `V$PROPERTY`, `V$TABLESPACES`, `V$MEM_TABLESPACES`, `V$DATAFILES`, `SYSTEM_.SYS_USERS_`, `SYSTEM_.SYS_GRANT_SYSTEM_`, `SYSTEM_.SYS_GRANT_OBJECT_`, `SYSTEM_.SYS_USER_ROLES_`, `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYSTEM_.SYS_CONSTRAINTS_`, `SYSTEM_.SYS_CONSTRAINT_COLUMNS_`, `SYSTEM_.SYS_TABLE_PARTITIONS_`, `SYSTEM_.SYS_INDICES_`, `SYSTEM_.SYS_INDEX_COLUMNS_`, `SYSTEM_.SYS_PART_INDICES_`, `SYSTEM_.SYS_INDEX_PARTITIONS_`, `SYSTEM_.SYS_SYNONYMS_`, `SYSTEM_.SYS_VIEWS_`, `SYSTEM_.SYS_VIEW_PARSE_`, `SYSTEM_.SYS_VIEW_RELATED_`, `SYSTEM_.SYS_MATERIALIZED_VIEWS_`, `SYSTEM_.SYS_DIRECTORIES_`, `SYSTEM_.SYS_TRIGGERS_`, `SYSTEM_.SYS_TRIGGER_STRINGS_`, `SYSTEM_.SYS_TRIGGER_DML_TABLES_`, `SYSTEM_.SYS_TRIGGER_UPDATE_COLUMNS_`, `SYSTEM_.SYS_JOBS_`, `V$DISK_BTREE_HEADER`, `V$SEQ`, `V$TEMPORARY_LOBS`, and replication meta tables/views as applicable.
 - Keep examples free of internal source labels and local repository paths.
 
 ## Residual Scope
