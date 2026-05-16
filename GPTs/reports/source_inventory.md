@@ -837,6 +837,53 @@ searchable English runbooks with copy-ready SQL, source-backed safety notes, and
 view-backed validation hooks. No new manual/source-backed gap was discovered during the
 scoped administration, user, privilege, storage, or tablespace lifecycle review.
 
+## J031 Replication Topology State And Compatibility Addendum
+
+J031 uses the `replication_manual`, `release_notes_platform`,
+`technical_documents_support`, `general_reference_2_dictionary_views`, and
+`patch_notes` source families for Altibase 7.1, Altibase 7.3, and the Altibase 8.1
+verified source. Korean Replication Manuals, Korean 8.1 release notes, Korean
+Replication Compatibility technical notes, and Korean 7.1 patch notes remain
+authoritative for target eligibility, conflict behavior, mode restrictions,
+receive-only patch evidence, and replication backward-compatibility wording; matching
+English manuals remain extraction aids only when consistent.
+
+Design note: J031 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/09_replication_ha_cdc.md` rather than moving replication behavior into
+the SQL generation or dictionary attachments. The replication attachment now has
+searchable blocks for Active-Active conflict handling, target object and column
+eligibility, partition/storage/platform compatibility, mode and optional-feature
+compatibility, receive-only patch/meta-version checks, and 8.1 LAZY backward
+compatibility direction. `GPTs/attachments/06_data_dictionary_performance_views.md`
+only received a retrieval polish update that adds `V$REPSYNC` to the fast replication
+runtime row; detailed view coverage was already present.
+
+Scoped source paths checked for J031:
+
+- `Manuals/Altibase_7.1/kor/Replication Manual.md`
+- `Manuals/Altibase_7.3/kor/Replication Manual.md`
+- `Manuals/Altibase_trunk/kor/Replication Manual.md`
+- `Manuals/Altibase_7.1/eng/Replication Manual.md`
+- `Manuals/Altibase_7.3/eng/Replication Manual.md`
+- `Manuals/Altibase_trunk/eng/Replication Manual.md`
+- `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- `ReleaseNotes/eng/Altibase_8_1_0_0_1_Release_Notes.md`
+- `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_8_5_Patch_Notes.md`
+- `Technical Documents/kor/ReplicationCompatibility.md`
+- `Technical Documents/kor/Replication network check.md`
+- `GPTs/attachments/09_replication_ha_cdc.md`
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+
+J031 adds no new attachment filename, source family, or Korean/English source-drift
+case. It closes the receive-only patch/meta-version documentation gap for the scoped
+7.1/7.3/8.1 replication slice and narrows the 8.1 compatibility guardrail: the
+attachment can now answer lower-version Sender to higher-version Receiver LAZY
+compatibility from source-backed protocol checks, while still refusing unsupported
+8.1 Sender to older Receiver, 8.1 SSL cross-version, EAGER, offline, and optional-feature
+compatibility claims without exact source confirmation.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

@@ -196,7 +196,7 @@ Use these first when selecting the right source:
 | Table, index, segment, undo, temporary, and direct-path internals | `V$MEMTBL_INFO`, `V$DISKTBL_INFO`, `V$INDEX`, `V$DISK_BTREE_HEADER`, `V$MEM_BTREE_HEADER`, `V$MEM_BTREE_NODEPOOL`, `V$SEGMENT`, `V$DB_FREEPAGELISTS`, `V$TSSEGS`, `V$TXSEGS`, `V$UDSEGS`, `V$DISK_UNDO_USAGE`, `V$DISK_TEMP_INFO`, `V$DISK_TEMP_STAT`, `V$DIRECT_PATH_INSERT` |
 | Statistics | `V$DBMS_STATS`, `V$LOCK_TABLE_STATS`, `V$USAGE` |
 | Replication definition | `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, `SYSTEM_.SYS_REPL_ITEMS_` |
-| Replication runtime | `V$REPEXEC`, `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSENDER`, `V$REPRECEIVER` |
+| Replication runtime | `V$REPEXEC`, `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSENDER`, `V$REPRECEIVER`, `V$REPSYNC` |
 | Database links | `SYSTEM_.SYS_DATABASE_LINKS_`, `V$DBLINK_*` |
 | Backup, archive, log, recovery | `V$LOG`, `V$LFG`, `V$ARCHIVE`, `V$BACKUP_INFO`, `V$OBSOLETE_BACKUP_INFO`, `V$DATAFILES` |
 | Disk file I/O hotspots | `V$FILESTAT`, `V$DATAFILES`, `V$TABLESPACES` |

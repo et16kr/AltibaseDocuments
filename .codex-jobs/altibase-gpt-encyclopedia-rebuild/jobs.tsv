@@ -29,7 +29,7 @@ J027	Done	docs	Installation platform startup and shutdown runbooks	Expand instal
 J028	Done	docs	Backup archive and incremental backup runbooks	Expand logical, offline, online, archive log, loganchor, and incremental backup runbooks.
 J029	Done	docs	Restore recovery and media failure runbooks	Expand complete, incomplete, incremental, tablespace, datafile, temp file, and media recovery runbooks.
 J030	Done	docs	Administration tablespace user and privilege runbooks	Expand admin, account, privilege, storage, tablespace lifecycle, and operational safety runbooks.
-J031	ToDo	docs	Replication topology state and compatibility	Expand replication topology, object restrictions, states, modes, and compatibility checks.
+J031	Done	docs	Replication topology state and compatibility	Expand replication topology, object restrictions, states, modes, and compatibility checks.
 J032	ToDo	docs	Replication operations CDC Log Analyzer and RepMgr	Expand replication operations, synchronization, CDC, Log Analyzer, and Replication Manager workflows.
 J033	ToDo	docs	Network checks SSL TLS and replication SSL	Expand network diagnostics, ordinary TLS, certificate handling, and replication SSL separation.
 J034	ToDo	docs	PSM stored and external procedures	Expand PSM, packages, triggers, VARRAY, external procedure, and library reference coverage.

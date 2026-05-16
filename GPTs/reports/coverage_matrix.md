@@ -245,8 +245,15 @@ for 8.1 customer-facing labels.
   backup follow-up, and tablespace access mismatch triage. Source-family traceability
   is recorded in `GPTs/reports/source_inventory.md` plus the `GAP-J002-018` update in
   `GPTs/reports/gap_register.md`.
-- J031-J033 should use replication, operations, networking, and TLS source families to
-  expand runbooks and keep unresolved compatibility limits explicit.
+- J031 expanded replication topology, target eligibility, Active-Active conflict
+  guardrails, mode/option compatibility, receive-only patch/meta-version checks, and
+  one-way LAZY backward-compatibility direction in `09_replication_ha_cdc.md`, with a
+  `V$REPSYNC` fast-map polish in `06_data_dictionary_performance_views.md`. Source
+  traceability and remaining compatibility limits are recorded in
+  `GPTs/reports/source_inventory.md` and `GPTs/reports/gap_register.md`.
+- J032-J033 should continue with replication operations, CDC/Log Analyzer, Replication
+  Manager, networking, and TLS source families and keep unresolved compatibility limits
+  explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.
 - J040 should run final retrieval and multilingual checks and verify that every open

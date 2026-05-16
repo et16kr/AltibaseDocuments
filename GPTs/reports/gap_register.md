@@ -54,8 +54,9 @@ recording or remediating gaps.
 - Status: `Guardrail`
 - Source family and version scope: `replication_manual`, `security_ssl_tls`,
   `technical_documents_support`; cross-version 7.1/7.3/8.1 replication.
-- Missing item or behavior: A selected source-backed compatibility matrix for 8.1
-  replication, especially 8.1 SSL replication with older peers.
+- Missing item or behavior: A selected source-backed compatibility matrix for
+  higher-version 8.1 Sender to older Receiver replication, especially 8.1 SSL
+  replication with older peers.
 - Affected attachments: `09_replication_ha_cdc.md`, `18_security_ssl_tls.md`.
 - Evidence: `review/reports/R16_replication_topology_state.md`;
   `review/reports/R18_replication_ssl_network.md`.
@@ -63,6 +64,11 @@ recording or remediating gaps.
   selected compatibility matrix, release note, or approved vendor/source confirmation is
   available. Until then, answers must request exact versions/builds, topology, transport,
   and vendor/source confirmation.
+- J031 update: `09_replication_ha_cdc.md` now distinguishes source-backed
+  lower-version Sender to higher-version Receiver LAZY backward compatibility from
+  unsupported 8.1 Sender to older Receiver, 8.1 SSL cross-version, EAGER, offline, and
+  optional-feature compatibility claims. This entry remains `Guardrail` for the missing
+  higher-version 8.1 Sender to older Receiver and replication SSL compatibility matrix.
 
 ### GAP-J002-003: Tablespace restore/recovery syntax diagrams source-audited by J011
 
@@ -356,19 +362,19 @@ recording or remediating gaps.
 
 ### GAP-J002-010: 7.1 receive-only replication option is patch/meta-version sensitive
 
-- Status: `Open`
+- Status: `Closed-trace`
 - Source family and version scope: `replication_manual`, `patch_notes`,
   `general_reference_2_dictionary_views`; Altibase 7.1 patch scope and cross-version
   replication checks.
-- Missing item or behavior: A concise patch-sensitive item block reconciling the 7.1
-  General Reference option list with the SQL Reference and 7.1.0.8.5 patch-note
-  `RECEIVE_ONLY` evidence.
+- Missing item or behavior: Closed by J031. The receive-only option now has a
+  patch-sensitive item block reconciling the 7.1 SQL Reference and 7.1.0.8.5 patch-note
+  `RECEIVE_ONLY` evidence with metadata checks.
 - Affected attachments: `09_replication_ha_cdc.md`,
   `06_data_dictionary_performance_views.md`.
 - Evidence: `review/reports/R16_replication_topology_state.md`.
-- Required remediation shape: Item block with exact patch/source evidence, option value,
-  check SQL, and answer pattern requiring exact patch or metadata check before stating
-  receive-only availability.
+- Required remediation shape: Completed for the scoped attachment set. Keep the
+  guardrail that 7.1 receive-only requires exact `product_version`, `meta_version`, and
+  observed `OPTIONS` evidence before decoding `512` or generating receive-only SQL.
 
 ### GAP-J002-011: Replication Manager package contents are installed-tool checks
 
@@ -534,6 +540,14 @@ recording or remediating gaps.
   attachment change was needed. Source paths and version scope are recorded in
   `GPTs/reports/source_inventory.md`. This gap remains `Open` for later replication,
   Kubernetes/AKU, and security/replication SSL high-risk procedure slices.
+- J031 update: the replication topology/state slice for `09_replication_ha_cdc.md` is
+  now represented by Mermaid topology and state diagrams plus searchable operational
+  blocks for Active-Active conflicts, target object/column eligibility, partition and
+  storage compatibility, mode and optional-feature compatibility, receive-only
+  patch/meta-version checks, and cross-version protocol validation. Source paths and
+  version scope are recorded in `GPTs/reports/source_inventory.md`. This gap remains
+  `Open` for later Kubernetes/AKU and security/replication SSL high-risk procedure
+  slices.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 
