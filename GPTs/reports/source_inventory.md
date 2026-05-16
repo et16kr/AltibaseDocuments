@@ -559,6 +559,54 @@ version cautions. No new manual/source-backed gap was discovered during J024;
 `GAP-J002-008` remains open for the later J025-J026 error slices and for exhaustive
 exact-code coverage outside the J023-J024 grouped blocks.
 
+## J025 Client Network Security Replication And Tool Error Addendum
+
+J025 uses the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source. Korean Error Message Reference manuals remain
+authoritative for exact code, decimal code, symbol, severity heading, message, cause,
+and action; matching English manuals were used only as extraction aids when consistent.
+Supporting source families for diagnostics and guardrails are `replication_manual`,
+`security_ssl_tls`, `general_reference_2_dictionary_views`, `isql_iloader`,
+`utilities_datacompj`, `c_cli_odbc_precompiler`, `dblink_hadoop_external_connectors`,
+and `log_analyzer`.
+
+Design note: J025 keeps the 20-file attachment boundary unchanged and expands
+`GPTs/attachments/07_error_messages_troubleshooting.md` in place with grouped
+exact-code maps. Runtime remediation remains routed to owner attachments:
+replication and Log Analyzer workflows to `09_replication_ha_cdc.md`, CLI/ODBC/APRE
+details to `12_c_cli_odbc_precompiler.md`, iSQL/iLoader and utility command syntax to
+`13_isql_iloader_basic_tools.md` and `14_utilities_operation_tools.md`, DB Link and
+`AltiLinker` procedures to `16_dblink_external_connectors.md`, and SSL/TLS setup to
+`18_security_ssl_tls.md`.
+
+Scoped source paths checked for J025:
+
+- `Manuals/Altibase_7.1/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.3/kor/Error Message Reference.md`
+- `Manuals/Altibase_trunk/kor/Error Message Reference.md`
+- `Manuals/Altibase_7.1/eng/Error Message Reference.md`
+- `Manuals/Altibase_7.3/eng/Error Message Reference.md`
+- `Manuals/Altibase_trunk/eng/Error Message Reference.md`
+- `Manuals/Altibase_7.1/kor/General Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md`
+- `Manuals/Altibase_trunk/kor/General_Reference-2.The Data Dictionary.md`
+- `GPTs/attachments/09_replication_ha_cdc.md`
+- `GPTs/attachments/12_c_cli_odbc_precompiler.md`
+- `GPTs/attachments/13_isql_iloader_basic_tools.md`
+- `GPTs/attachments/14_utilities_operation_tools.md`
+- `GPTs/attachments/16_dblink_external_connectors.md`
+- `GPTs/attachments/18_security_ssl_tls.md`
+
+J025 updated `GPTs/attachments/07_error_messages_troubleshooting.md` with grouped
+blocks for client session/protocol and alternate-server connection errors, replication
+startup/object-eligibility and metadata/conflict/log-buffer errors, DB Link/`AltiLinker`
+network and transaction errors, iSQL/iLoader/utility option and file errors, APRE
+source/connection/cursor errors, and Log Analyzer network/protocol/metadata/XLog-pool
+errors. It also expanded SSL/TLS evidence prompts and property checks around the
+existing client and server SSL error blocks. No new manual/source-backed gap was
+discovered during J025; `GAP-J002-008` remains open for J026 QA and for exhaustive
+exact-code coverage outside the J023-J025 grouped blocks.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

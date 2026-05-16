@@ -252,6 +252,16 @@ recording or remediating gaps.
   Altibase 8.1 verified source Error Message References, with supporting checks and
   version cautions. This gap remains `Open` for the J025-J026 error slices and for
   exhaustive exact-code coverage outside the J023-J024 grouped blocks.
+- J025 update: `GPTs/attachments/07_error_messages_troubleshooting.md` now contains
+  grouped exact-code maps for client session/protocol and alternate-server connection
+  errors, replication startup/object-eligibility and metadata/conflict/log-buffer
+  errors, SSL/TLS client and server certificate errors, DB Link/`AltiLinker` network
+  and transaction errors, iSQL/iLoader/utility option and file errors, APRE
+  source/connection/cursor errors, and Log Analyzer network/protocol/metadata/XLog-pool
+  errors from the selected Korean 7.1, 7.3, and Altibase 8.1 verified source Error
+  Message References, with component-specific evidence prompts and cross-references.
+  This gap remains `Open` for J026 QA and for exhaustive exact-code coverage outside
+  the J023-J025 grouped blocks.
 
 ### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
 

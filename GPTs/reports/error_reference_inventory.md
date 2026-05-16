@@ -297,3 +297,46 @@ Error Message References except the explicitly noted SQL-level LOB autocommit co
 LOB codes remain Altibase 8.1 verified source material. `GAP-J002-008` remains open
 for the later J025-J026 error slices and for exhaustive exact-code coverage outside the
 J023-J024 grouped blocks.
+
+## J025 Completion Addendum
+
+J025 used the `error_message_reference` source family for Altibase 7.1, Altibase 7.3,
+and the Altibase 8.1 verified source, with Korean Error Message Reference manuals
+checked first and matching English manuals used only for customer-facing extraction
+when consistent. Supporting source families for diagnostics and guardrails were
+`replication_manual`, `security_ssl_tls`, `general_reference_2_dictionary_views`,
+`isql_iloader`, `utilities_datacompj`, `c_cli_odbc_precompiler`,
+`dblink_hadoop_external_connectors`, and `log_analyzer`.
+
+Design note: J025 keeps the attachment boundary unchanged and expands
+`GPTs/attachments/07_error_messages_troubleshooting.md` in place. Replication,
+Log Analyzer, DB Link, CLI/ODBC, APRE, iSQL/iLoader, utility, and SSL/TLS procedures
+remain routed to their owning attachments; the error attachment carries grouped
+exact-code maps, first checks, required customer input, and version cautions for the
+J025 error slice.
+
+J025 expanded or confirmed customer-facing grouped coverage for:
+
+- client session, protocol, NLS, task/session capacity, connection-string, and
+  alternate-server errors from `MM`, `CM`, and `ODBC`;
+- replication startup, disabled/denied/not-started state, self-replication, object
+  eligibility, role/mode, metadata mismatch, conflict, timeout, and log-buffer errors
+  from `RP`;
+- client SSL and server/communication-module SSL certificate, private-key, CA,
+  handshake, read/write, connect, OpenSSL library, and unsupported-version errors from
+  `ODBC` and `CM`, including J025 evidence prompts and property checks;
+- DB Link and `AltiLinker` configuration, network, ADLP protocol, buffer, and
+  global-transaction errors from `DK`;
+- iSQL, iLoader, and utility environment, syntax, option, file, NLS, CSV, data-parse,
+  upload, and library-version errors from `Utilities`;
+- APRE source file, declare-section, host-variable, indicator, option, connection,
+  statement, and cursor errors from `APRE`;
+- Log Analyzer metadata, network, protocol, link, table/column metadata, environment,
+  and XLog-pool errors from `ULA`.
+
+No new source-drift gap was found in the scoped slice. The listed grouped-block codes
+are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error
+Message References, except that numeric `0x510xx` values are intentionally treated as
+component-sensitive because ODBC/CLI, APRE, and Log Analyzer entries can share numeric
+reference codes with different symbols and messages. `GAP-J002-008` remains open for
+J026 QA and for exhaustive exact-code coverage outside the J023-J025 grouped blocks.

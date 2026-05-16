@@ -95,6 +95,11 @@ Rules:
 - `ERR-31363` usually corresponds to reference code `0x31363`.
 - Keep leading zeroes in runtime codes such as `ERR-00000`.
 - Do not convert a decimal value unless the reference entry explicitly provides it.
+- Do not identify a module from a numeric code alone when families reuse the same
+  `0x510xx` reference space. For example, ODBC/CLI, APRE, and Log Analyzer entries can
+  share a numeric code while using different symbols and messages. Use the exact
+  symbol, message text, component, and trace context before choosing `ulERR_*`,
+  `ulpERR_*`, `utERR_*`, or `ulaERR_*`.
 - Search by message text when a utility wraps the original server error.
 - If the user supplies `SQLSTATE`, keep it in the answer, but do not infer `SQLSTATE` from an Altibase error code unless the driver reported it.
 
@@ -201,12 +206,27 @@ SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name IN (
   'PORT_NO',
+  'MAX_CLIENT',
   'REPLICATION_PORT_NO',
+  'REPLICATION_SSL_PORT_NO',
   'REPLICATION_RECEIVE_TIMEOUT',
+  'REPLICATION_MAX_COUNT',
+  'REPLICATION_MAX_LOGFILE',
+  'REPLICATION_LOG_BUFFER_SIZE',
+  'REPLICATION_RECOVERY_REQUEST_TIMEOUT',
+  'REPLICATION_SYNC_LOG',
+  'REPLICATION_DDL_ENABLE',
+  'REPLICATION_DDL_SYNC',
   'DDL_LOCK_TIMEOUT',
   'USER_LOCK_REQUEST_TIMEOUT',
   'REPLICATION_LOCK_TIMEOUT',
   'REPLICATION_SYNC_LOCK_TIMEOUT',
+  'SSL_ENABLE',
+  'SSL_PORT_NO',
+  'SSL_CERT',
+  'SSL_KEY',
+  'SSL_CA',
+  'SSL_CAPATH',
   'QUERY_TIMEOUT',
   'REGEXP_MODE',
   'TEMPORARY_LOB_ENABLE',
@@ -354,6 +374,22 @@ FROM V$REPGAP
 ORDER BY rep_name;
 ```
 
+Check DB Link and `AltiLinker`:
+
+```sql
+SELECT *
+FROM V$DBLINK_ALTILINKER_STATUS;
+
+SELECT *
+FROM V$DBLINK_DATABASE_LINK_INFO;
+
+SELECT *
+FROM V$DBLINK_GLOBAL_TRANSACTION_INFO;
+
+SELECT *
+FROM V$DBLINK_REMOTE_STATEMENT_INFO;
+```
+
 Check whether version-sensitive views exist before using them:
 
 ```sql
@@ -458,6 +494,66 @@ tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
 Version Cautions: Applies across 7.1, 7.3, and 8.1. On systems without `lsof`, use the OS-native socket inspection command.
 
 Related Document: Getting Started and Installation; Administration and Operations.
+
+### Error Block: Client Session, Protocol, and Alternate Server Connection Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: MM, CM, and ODBC/CLI / `ABORT`.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | First check |
+| --- | --- | --- | --- |
+| `ERR-4102C` / `0x4102C (266284)` | `mmERR_ABORT_IDN_MISMATCH_ERROR` | `Incompatible NLS between the client(<0%s>) and the server(<1%s>).` | Match client and server NLS settings. |
+| `ERR-41033` / `0x41033 (266291)` | `mmERR_ABORT_INVALID_ERROR` | `Invalid communication protocol` | Verify client library version against server version. |
+| `ERR-41059` / `0x41059 (266329)` | `mmERR_ABORT_NO_AVAILABLE_TASK` | `Task pool overflow. Check properties.` | Check `MAX_CLIENT` and current sessions. |
+| `ERR-41099` / `0x41099 (266393)` | `mmERR_ABORT_TOO_MANY_SESSION` | `There are too many sessions` | Disconnect unused sessions or increase `MAX_CLIENT` after impact review. |
+| `ERR-71004` / `0x71004 (462852)` | `cmERR_ABORT_INVALID_OPERATION` | `Invalid operation` | Check whether the client version is higher than the server version. |
+| `ERR-71013` / `0x71013 (462867)` | `cmERR_ABORT_TIMED_OUT` | `Timed out` | Check the network path and timeout context. |
+| `ERR-7101A` / `0x7101A (462874)` | `cmERR_ABORT_CONNECTION_CLOSED` | `Connection closed` | Check network failure or abnormal client termination. |
+| `ERR-71096` / `0x71096 (462998)` | `cmERR_ABORT_GETADDRINFO_ERROR` | `Failed to invoke the getaddrinfo() system function: <0%s>` | Check host name and resolver configuration. |
+| `ERR-71099` / `0x71099 (463001)` | `cmERR_ABORT_CONNECT_INVALIDARG` | `Invalid argument supplied for connect()` | Check IP address and host name. |
+| `ERR-5108D` / `0x5108D (331917)` | `ulERR_ABORT_INVALID_CONNECTION_STR_FORM` | `Invalid connection string format: <0%d> : [<1%c>]` | Check connection string syntax and length. |
+| `ERR-51191` / `0x51191 (332177)` | `ulERR_ABORT_INVALID_ALTERNATE_SERVER_HOST` | `The IP/Host value used in AlternateServers connection attribute is invalid: <0%s>` | Check `AlternateServers` host value. |
+| `ERR-51192` / `0x51192 (332178)` | `ulERR_ABORT_GETADDRINFO_ERROR` | `The call to getaddrinfo() failed. The host name or service may be unknown.` | Check host name or service name. |
+| `ERR-51193` / `0x51193 (332179)` | `ulERR_ABORT_CONNECT_INVALIDARG` | `Invalid connect() argument.` | Check IP and host name. |
+| `ERR-51194` / `0x51194 (332180)` | `ulERR_ABORT_INVALID_ALTERNATE_SERVER_FORMAT` | `The value of AlternateServers connection attribute is invalid: <0%s>` | Check `AlternateServers` syntax. |
+| `ERR-51195` / `0x51195 (332181)` | `ulERR_ABORT_INVALID_ALTERNATE_SERVER_PORT` | `The port values used in AlternateServers connection attribute are invalid: <0%s>` | Check numeric port range. |
+| `ERR-51196` / `0x51196 (332182)` | `ulERR_ABORT_ALTERNATE_SERVER_NOT_SET` | `The AlternateServers is not set.` | Set `AlternateServers` or remove failover-only logic. |
+
+Applies To: client login, ordinary client/server protocol, CLI/ODBC connection strings, failover alternate-server configuration, and server task/session capacity.
+
+Symptom: A client cannot connect, connects with the wrong NLS, reports invalid protocol, fails over incorrectly, or is rejected because session/task capacity is exhausted.
+
+Primary Causes: client/server NLS mismatch, client library newer than the server protocol, wrong host or port, malformed connection string, invalid `AlternateServers`, DNS/resolver failure, closed socket, network timeout, or too many active sessions.
+
+Immediate Action: Preserve the exact client error text. Check client library version, server `V$VERSION`, `MAX_CLIENT`, host/port, NLS variables, connection string, and whether failover attributes are present and syntactically valid. Do not recommend increasing `MAX_CLIENT` until current sessions and resource capacity are known.
+
+Check SQL or Command:
+
+```bash
+altibase -v
+echo "$ALTIBASE_NLS_USE"
+```
+
+```sql
+SELECT product_version, protocol_version
+FROM V$VERSION;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('MAX_CLIENT', 'PORT_NO');
+
+SELECT COUNT(*) AS session_count
+FROM V$SESSION;
+```
+
+Required Customer Input: exact Altibase server version, client library or driver version, full error line, connection string with secrets removed, host and port, NLS variables, failover `AlternateServers` value if used, and whether the failure occurs before or after authentication.
+
+Version Cautions: The listed codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Exact failover behavior still depends on the client driver version and connection attributes.
+
+Related Document: Getting Started and Installation; Java JDBC Spring; C CLI ODBC Precompiler; Security SSL TLS.
 
 ### Error Block: Insufficient Memory for Query Processor
 
@@ -1995,6 +2091,153 @@ Version Cautions: Applies across 7.1, 7.3, and 8.1.
 
 Related Document: Replication HA CDC; SQL DDL Generation.
 
+### Error Block: Replication Startup, Mode, and Object Eligibility Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: RP / `ABORT`.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | First check |
+| --- | --- | --- | --- |
+| `ERR-61023` / `0x61023 (397347)` | `rpERR_ABORT_RP_REPLICATION_DISABLED` | `Replication is disabled` | Check whether the replication port was configured correctly at startup. |
+| `ERR-61025` / `0x61025 (397349)` | `rpERR_ABORT_RP_REPLICATION_DENY` | `Replication denied (<0%s>)` | Check whether the peer server has started. |
+| `ERR-61027` / `0x61027 (397351)` | `rpERR_ABORT_RP_REPLICATION_NOT_STARTED` | `Replication did not start.` | Verify the sender or receiver actually started. |
+| `ERR-61028` / `0x61028 (397352)` | `rpERR_ABORT_RP_REPLICATION_SELF_REPLICATION` | `A case of self-replication has been detected. (Peer=<0%s>:<1%u>)` | Check local and peer IP/port values. |
+| `ERR-6107A` / `0x6107A (397434)` | `rpERR_ABORT_NOT_HAVE_HOST` | `Invalid Host [<0%s>, <1%d>]` | Check whether the host IP and port belong to this replication. |
+| `ERR-610C4` / `0x610C4 (397508)` | `rpERR_ABORT_NOT_EXIST_REPL_ITEM` | `Replication items not found.` | Check whether the table is included in the replication on both sides. |
+| `ERR-610FE` / `0x610FE (397566)` | `rpERR_ABORT_RPC_REPLICATION_ALREADY_STARTED` | `Replication has already started.` | Stop the current replication before starting it again. |
+| `ERR-610FF` / `0x610FF (397567)` | `rpERR_ABORT_RPC_NOT_SUPPORT_REPLICATION_DDL` | `This replication DDL is no longer supported.` | Use the supported Replication Manual syntax for the target version. |
+| `ERR-61102` / `0x61102 (397570)` | `rpERR_ABORT_RPC_MAX_REPLICATION_COUNT` | `No more replications may be created. A database cannot have more than the maximum number of replications.` | Check `REPLICATION_MAX_COUNT` and existing definitions. |
+| `ERR-6110B` / `0x6110B (397579)` | `rpERR_ABORT_RPC_INVALID_HOST_IP_PORT` | `The host IP address or port number is invalid.` | Validate peer endpoint syntax and port range. |
+| `ERR-61112` / `0x61112 (397586)` | `rpERR_ABORT_RPC_REPLICATE_TABLE_WITH_REFERENCE` | `Replication is not allowed on tables that have referential constraints. (<0%s>.<1%s>)` | Check table constraints before adding the table. |
+| `ERR-61113` / `0x61113 (397587)` | `rpERR_ABORT_RPC_NOT_EXISTS_PRIMARY_KEY` | `A replicated table must have a primary key. (<0%s>.<1%s>)` | Add or choose a table with a primary key before replication. |
+| `ERR-61116` / `0x61116 (397590)` | `rpERR_ABORT_RPC_CANNOT_USE_VOLATILE_TABLE` | `Replication not allowed on volatile tables.` | Choose a supported persistent table. |
+| `ERR-61117` / `0x61117 (397591)` | `rpERR_ABORT_RPC_CANNOT_USE_TEMPORARY_TABLE` | `Temporary tables cannot be replicated.` | Remove temporary tables from replication definitions. |
+| `ERR-61120` / `0x61120 (397600)` | `rpERR_ABORT_RPC_NOT_SUPPORT_AT_SN_CLAUSE` | `Replication cannot start from a specific SN unless it is used with the Log Analyzer.` | Use `AT SN` only for Log Analyzer-supported syntax. |
+| `ERR-61122` / `0x61122 (397602)` | `rpERR_ABORT_RPC_ROLE_NOT_SUPPORT_SYNC` | `Replication SYNC is not supported in this role.` | Check replication role before issuing `SYNC`. |
+
+Applies To: `CREATE REPLICATION`, `ALTER REPLICATION`, `START REPLICATION`, `STOP REPLICATION`, replication item maintenance, Log Analyzer `AT SN`, and role-sensitive replication operations.
+
+Symptom: Replication cannot be created, started, stopped, synchronized, or altered because the endpoint, role, object, mode, or table eligibility is invalid.
+
+Primary Causes: replication feature disabled by port configuration, peer not started, self-replication endpoint, invalid host/port, maximum replication count reached, unsupported DDL, role/mode mismatch, missing primary key, referential constraint, volatile table, temporary table, or table not present in the replication item list.
+
+Immediate Action: Query metadata before changing definitions. Confirm both nodes' versions, `REPLICATION_PORT_NO` or `REPLICATION_SSL_PORT_NO`, replication role, peer endpoints, table primary keys, referential constraints, and whether `FOR ANALYSIS` is involved. Do not advise dropping or recreating replication until the data consistency target is known.
+
+Check SQL or Command:
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('REPLICATION_PORT_NO',
+               'REPLICATION_SSL_PORT_NO',
+               'REPLICATION_MAX_COUNT');
+
+SELECT replication_name, is_started, repl_mode, role, item_count
+FROM SYSTEM_.SYS_REPLICATIONS_
+ORDER BY replication_name;
+
+SELECT replication_name, host_ip, port_no, conn_type
+FROM SYSTEM_.SYS_REPL_HOSTS_
+ORDER BY replication_name, host_ip, port_no;
+
+SELECT replication_name,
+       local_user_name,
+       local_table_name,
+       remote_user_name,
+       remote_table_name
+FROM SYSTEM_.SYS_REPL_ITEMS_
+WHERE replication_name = '<REPLICATION_NAME>'
+ORDER BY local_user_name, local_table_name;
+```
+
+Required Customer Input: exact local and remote versions, replication DDL, local and remote endpoint values, ordinary or SSL replication transport, table DDL including primary keys and referential constraints, and current `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, and `SYSTEM_.SYS_REPL_ITEMS_` rows for the replication.
+
+Version Cautions: The listed codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. `REPLICATION_SSL_PORT_NO` and `USING SSL` are Altibase 8.1 verified source material; do not apply SSL replication semantics to 7.1 or 7.3 without exact vendor/source evidence.
+
+Related Document: Replication HA CDC; SQL DDL Generation; Data Dictionary and Performance Views; Security SSL TLS.
+
+### Error Block: Replication Metadata Mismatch, Conflict, Timeout, and Log Buffer Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: RP / `ABORT` or `IGNORE` as listed.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Severity | Exact message | First check |
+| --- | --- | --- | --- | --- |
+| `ERR-61035` / `0x61035 (397365)` | `rpERR_ABORT_UPDATE_CONFLICT` | `ABORT` | `[Receiver] An update conflict occurred.` | Check receiver conflict rows and conflict policy. |
+| `ERR-61075` / `0x61075 (397429)` | `rpERR_ABORT_TIMEOUT_EXCEED` | `ABORT` | `Timeout exceed.` | Check replication sender/receiver communication timeout. |
+| `ERR-610A6` / `0x610A6 (397478)` | `rpERR_ABORT_LOGBUFFER_ALLOC` | `ABORT` | `Replication log buffer memory allocation failed.` | Check memory and replication log-buffer settings. |
+| `ERR-610C9` / `0x610C9 (397513)` | `rpERR_ABORT_RP_OVERFLOW` | `ABORT` | `Size of log record is greater than size of replication log buffer.` | Check replication delay and `REPLICATION_LOG_BUFFER_SIZE`. |
+| `ERR-610CB` / `0x610CB (397515)` | `rpERR_ABORT_REPLICATION_NAME_MISMATCH` | `ABORT` | `The replication name does not match [<0%s>:<1%s>].` | Compare replication names on both sides. |
+| `ERR-610CC` / `0x610CC (397516)` | `rpERR_ABORT_CONFLICT_RESOLUTION` | `ABORT` | `Master/Slave conflict resolution of the replication is not allowed [<0%d>:<1%d>].` | Check conflict-resolution mode. |
+| `ERR-610CD` / `0x610CD (397517)` | `rpERR_ABORT_REPLICATION_ITEM_COUNT_MISMATCH` | `ABORT` | `The replication's item count does not match [<0%d>:<1%d>].` | Compare replication item count. |
+| `ERR-610CE` / `0x610CE (397518)` | `rpERR_ABORT_ROLE_MISMATCH` | `ABORT` | `The replication's role does not match [<0%d>:<1%d>].` | Compare replication roles. |
+| `ERR-610D0` / `0x610D0 (397520)` | `rpERR_ABORT_OPTION_MISMATCH` | `ABORT` | `The replication's option does not match [<0%d>:<1%d>].` | Compare replication options. |
+| `ERR-610D1` / `0x610D1 (397521)` | `rpERR_ABORT_CHARACTER_SET_MISMATCH` | `ABORT` | `The character set of the database does not match. (DB=[<0%s>:<1%s>], National=[<2%s>:<3%s>]).` | Compare database and national character sets. |
+| `ERR-610D2` / `0x610D2 (397522)` | `rpERR_ABORT_PRIMARY_KEY_COUNT_MISMATCH` | `ABORT` | `The primary key column count of the replicated table does not match [<0%s>(<1%d>):<2%s>(<3%d>)].` | Compare primary-key columns. |
+| `ERR-610D3` / `0x610D3 (397523)` | `rpERR_ABORT_USER_NAME_MISMATCH` | `ABORT` | `The user name of the replicated table's owner does not match [<0%s>(<1%s>):<2%s>(<3%s>)].` | Compare table owners. |
+| `ERR-610D4` / `0x610D4 (397524)` | `rpERR_ABORT_TABLE_NAME_MISMATCH` | `ABORT` | `The replicated table name does not match [<0%s>:<1%s>].` | Compare table names. |
+| `ERR-610DA` / `0x610DA (397530)` | `rpERR_ABORT_COLUMN_TYPE_MISMATCH` | `ABORT` | `The column type of the replicated table does not match. [<0%s>.<1%s>(<2%u>):<3%s>.<4%s>(<5%u>)].` | Compare column definitions. |
+| `ERR-610ED` / `0x610ED (397549)` | `rpERR_ABORT_CANCEL_COMMIT_BY_REPL` | `ABORT` | `Transaction's commit was canceled by replication conflict.` | Check standby conflict evidence before retry. |
+| `ERR-620CA` / `0x620CA (401610)` | `rpERR_IGNORE_RP_NO_SPACE` | `IGNORE` | `There is not available space for replication log buffer.` | Increase `REPLICATION_LOG_BUFFER_SIZE` only after confirming delay cause. |
+
+Applies To: replication receiver apply, sync, eager/conflict handling, table metadata comparison, character-set comparison, and replication log-buffer processing.
+
+Symptom: Replication starts but stops, rejects commits, reports mismatch, cannot apply a row, or cannot allocate/log an XLog because the peer metadata, conflict policy, timeout, or buffer configuration is wrong.
+
+Primary Causes: replication definitions differ between peers, table owner/name/primary-key/column metadata differs, database character set differs, unsupported conflict resolution is configured, long network or receiver delay exceeds timeout, or the log buffer is too small for the generated XLog workload.
+
+Immediate Action: Compare both peer metadata before changing data. For conflicts, collect the exact row and key evidence if safe to share; for metadata mismatch, compare table DDL and replication item metadata; for buffer/timeout errors, check delay and receiver apply state before increasing memory or timeout settings.
+
+Check SQL or Command:
+
+```bash
+tail -200 "$ALTIBASE_HOME/trc/altibase_rp.log"
+```
+
+```sql
+SELECT rep_name, rep_gap, rep_gap_size
+FROM V$REPGAP
+ORDER BY rep_name;
+
+SELECT rep_name,
+       my_ip,
+       my_port,
+       peer_ip,
+       peer_port,
+       apply_xsn,
+       insert_failure_count,
+       update_failure_count,
+       delete_failure_count
+FROM V$REPRECEIVER
+ORDER BY rep_name;
+
+SELECT rep_name,
+       buffer_min_sn,
+       read_sn,
+       buffer_max_sn
+FROM V$REPLOGBUFFER
+ORDER BY rep_name;
+
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('REPLICATION_LOG_BUFFER_SIZE',
+               'REPLICATION_RECEIVE_TIMEOUT',
+               'REPLICATION_MAX_LOGFILE',
+               'REPLICATION_SYNC_LOG');
+```
+
+Required Customer Input: exact error line, local and remote versions, replication name, replication mode and role, local and remote table DDL, conflict-resolution setting, `altibase_rp.log` from both sides, gap/log-buffer view output, and whether an initial sync, failover, recovery, or DDL change happened recently.
+
+Version Cautions: The listed codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. A compatibility answer for 8.1-to-older replication or SSL replication still requires exact peer versions and source-backed confirmation.
+
+Related Document: Replication HA CDC; Data Dictionary and Performance Views; Data Types and Properties.
+
 ### Error Block: Client SSL Configuration Failure
 
 Error Code: `0x5120C (332300)`, `0x5120D (332301)`, `0x5120E (332302)`, `0x5121D (332317)`, `0x5121E (332318)`.
@@ -2027,6 +2270,8 @@ Check SQL or Command:
 echo "$ALTIBASE_SSL_PORT_NO"
 altibase -v
 ```
+
+Required Customer Input: exact client interface and version, full error line, connection string with secrets removed, `PORT_NO` or `ALTIBASE_SSL_PORT_NO`, client OpenSSL/library path when relevant, SSL certificate options supplied by the client, server version, and whether mutual authentication is enabled.
 
 Version Cautions: 7.1, 7.3, and 8.1 sources include SSL client errors. Confirm client library version matches server expectations.
 
@@ -2072,6 +2317,19 @@ Check SQL or Command:
 ```bash
 tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
 ```
+
+```sql
+SELECT name, value1
+FROM V$PROPERTY
+WHERE name IN ('SSL_ENABLE',
+               'SSL_PORT_NO',
+               'SSL_CERT',
+               'SSL_KEY',
+               'SSL_CA',
+               'SSL_CAPATH');
+```
+
+Required Customer Input: exact server version and patch level, OpenSSL version, platform, `SSL_ENABLE`, `SSL_PORT_NO`, certificate path, private key path, CA file or CA path, mutual-authentication setting, full SSL error text, and `altibase_boot.log` excerpt.
 
 Version Cautions: In 8.1 replication SSL cases, check both server SSL settings and replication SSL settings.
 
@@ -2140,34 +2398,237 @@ Version Cautions: `sdERR_*` coverage is confirmed in the 7.1 Error Message Refer
 
 Related Document: SQL DDL Generation; Data Dictionary and Performance Views.
 
-### Error Block: DB Link Configuration or Global Transaction Failure
+### Error Block: DB Link Configuration, AltiLinker, Network, and Transaction Errors
 
-Error Code: `0xC1005 (790533)`, `0xC1006 (790534)`, `0xC1007 (790535)`, `0xC1009 (790537)`, `0xC1030 (790576)`.
-
-Reference Symbol: `dkERR_ABORT_DK_PARSING_DBLINK_CONF_FAILED`, `dkERR_ABORT_DK_OPEN_DBLINK_CONF_FAILED`, `dkERR_ABORT_DK_NO_HOME_DIRECTORY`, `dkERR_ABORT_DKM_GTX_PREPARE_PHASE_FAILED`, `dkERR_ABORT_DKT_GLOBAL_TX_NOT_PREPARED`.
+Error Codes: listed individually in the exact code map below.
 
 Module / Severity: Database Link / `ABORT`.
 
-Message: Cannot parse or open `dblink.conf`, `ALTIBASE_HOME` is not set, remote atomic transaction prepare failed, or global transaction not prepared to commit.
+Exact code map:
 
-Applies To: DB Link and AltiLinker operations.
+| Runtime / reference code | Reference symbol | Exact message | First check |
+| --- | --- | --- | --- |
+| `ERR-C1005` / `0xC1005 (790533)` | `dkERR_ABORT_DK_PARSING_DBLINK_CONF_FAILED` | Cannot parse `dblink.conf`. | Check `dblink.conf` syntax. |
+| `ERR-C1006` / `0xC1006 (790534)` | `dkERR_ABORT_DK_OPEN_DBLINK_CONF_FAILED` | Cannot open `dblink.conf`. | Check file path and permissions. |
+| `ERR-C1007` / `0xC1007 (790535)` | `dkERR_ABORT_DK_NO_HOME_DIRECTORY` | `ALTIBASE_HOME` is not set. | Check `ALTIBASE_HOME`. |
+| `ERR-C1009` / `0xC1009 (790537)` | `dkERR_ABORT_DKM_GTX_PREPARE_PHASE_FAILED` | Remote atomic transaction prepare phase failed. | Check remote transaction and network state. |
+| `ERR-C1030` / `0xC1030 (790576)` | `dkERR_ABORT_DKT_GLOBAL_TX_NOT_PREPARED` | Global transaction is not prepared to commit. | Check global transaction state before commit. |
+| `ERR-C103E` / `0xC103E (790590)` | `dkERR_ABORT_DKT_REMOTE_SERVER_DISCONNECT` | `[Network] Unable to access a remote server` | Check remote server credentials, target, and connection. |
+| `ERR-C104C` / `0xC104C (790604)` | `dkERR_ABORT_DKM_START_ALTILINKER_PROCESS` | `Unable to fork AltiLinker process` | Check port, property file, Java, and OS process limits. |
+| `ERR-C104D` / `0xC104D (790605)` | `dkERR_ABORT_DKM_CREATE_CTRL_SESSION_FAILED` | `Failed to create linker control session` | Check port and property file. |
+| `ERR-C104E` / `0xC104E (790606)` | `dkERR_ABORT_DKM_DBLINK_PROPERTIES_LOAD_FAILED` | `Failed to load dblink.conf` | Check `dblink.conf` format and contents, then restart `AltiLinker`. |
+| `ERR-C1057` / `0xC1057 (790615)` | `dkERR_ABORT_ALTILINKER_DISCONNECTED` | `[FAILURE] Altilinker process disconnected` | Verify `AltiLinker` process and connection. |
+| `ERR-C105A` / `0xC105A (790618)` | `dkERR_ABORT_DKM_LINKER_DUMP_ERROR` | `Failed to dump altilinker information.` | Check `AltiLinker` status and `altibase_lk.log`. |
+| `ERR-C105B` / `0xC105B (790619)` | `dkERR_ABORT_DKD_INVALID_BUFFER_SIZE` | `The buffer size is not large enough to fetch the remote query results.` | Check DB Link buffer properties. |
+| `ERR-C105C` / `0xC105C (790620)` | `dkERR_ABORT_DKD_INTERNAL_BUFFER_FULL` | `Insufficient memory for the Database Link.` | Check remote query result size and memory. |
+| `ERR-C105E` / `0xC105E (790622)` | `dkERR_ABORT_DKN_GET_ADDR_INFO_ERROR` | `An error occurred while receiving address information over the network.` | Check network status and name resolution. |
+| `ERR-C105F` / `0xC105F (790623)` | `dkERR_ABORT_DKN_OPEN_SOCKET_ERROR` | `A network error occurred.` | Check socket creation and network. |
+| `ERR-C1060` / `0xC1060 (790624)` | `dkERR_ABORT_DKN_SELECT_SOCKET_ERROR` | `A network error occurred.` | Check socket select/poll path. |
+| `ERR-C1063` / `0xC1063 (790627)` | `dkERR_ABORT_DKN_SEND_SOCKET_ERROR` | `An error occurred while sending data over the network.` | Check network path to `AltiLinker` or remote server. |
+| `ERR-C1064` / `0xC1064 (790628)` | `dkERR_ABORT_DKN_RECV_SOCKET_ERROR` | `An error occurred while receiving data over the network.` | Check network path to `AltiLinker` or remote server. |
+| `ERR-C1065` / `0xC1065 (790629)` | `dkERR_ABORT_DKN_WRONG_HEADER_SIGN` | `The ADLP protocol header is wrong.` | Check network and product version. |
+| `ERR-C1068` / `0xC1068 (790632)` | `dkERR_ABORT_XA_APPLY_FAIL` | `Fail notifier application. Result type = <0%u>, Global tx id = <1%lu>.` | Check network and remote server status. |
 
-Symptom: DB Link setup, remote execution, or remote transaction processing fails.
+Applies To: DB Link startup, `AltiLinker`, `REMOTE_TABLE`, `REMOTE_EXECUTE_IMMEDIATE`, `REMOTE_*` PSM functions, remote statement fetch, remote transaction, and global transaction processing.
 
-Primary Causes: Invalid `dblink.conf`, missing `ALTIBASE_HOME`, network problem, protocol version inconsistency between Altibase and AltiLinker, or global transaction failure.
+Symptom: DB Link cannot start `AltiLinker`, cannot load `dblink.conf`, cannot connect to the remote server, cannot fetch remote query results, or fails during remote/global transaction handling.
 
-Immediate Action: Check `ALTIBASE_HOME`, `dblink.conf`, AltiLinker status, product versions, network, and trace log details.
+Primary Causes: missing `ALTIBASE_HOME`, invalid `dblink.conf`, `AltiLinker` not running or disconnected, Java/JRE or OS process problem, wrong remote target credentials or URL, DB Link buffer too small, ADLP protocol mismatch, network send/receive failure, or unsupported remote transaction state.
+
+Immediate Action: Check local server version, `DBLINK_ENABLE`, `dblink.conf`, `ALTILINKER_ENABLE`, `ALTILINKER_PORT_NO`, Java runtime, `AltiLinker` process status, DB Link performance views, and `altibase_lk.log`. Do not advise `STOP FORCE` until current remote statements and global transactions are known.
 
 Check SQL or Command:
 
 ```bash
 echo "$ALTIBASE_HOME"
+echo "$JAVA_HOME"
 altibase -v
+tail -200 "$ALTIBASE_HOME/trc/altibase_lk.log"
 ```
 
-Version Cautions: DB Link behavior and supported remote features can vary by version and connector setup.
+```sql
+SELECT *
+FROM V$DBLINK_ALTILINKER_STATUS;
 
-Related Document: DB Link and External Connectors.
+SELECT *
+FROM V$DBLINK_DATABASE_LINK_INFO;
+
+SELECT *
+FROM V$DBLINK_GLOBAL_TRANSACTION_INFO;
+
+SELECT *
+FROM V$DBLINK_REMOTE_STATEMENT_INFO;
+```
+
+Required Customer Input: exact local Altibase version, `AltiLinker` version if shown, DB Link DDL, sanitized `dblink.conf`, remote DBMS type/version, remote JDBC driver version, Java version, failed SQL or PSM function, full error line, `altibase_lk.log` excerpt, and DB Link view output.
+
+Version Cautions: The listed codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. DB Link runtime compatibility also depends on remote DBMS, JDBC driver, Java runtime, `AltiLinker` configuration, and transaction level.
+
+Related Document: DB Link and External Connectors; Data Dictionary and Performance Views.
+
+### Error Block: iSQL, iLoader, and Utility Option or File Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: Utilities / `ABORT`.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | First check |
+| --- | --- | --- | --- |
+| `ERR-91003` / `0x91003 (593923)` | `utERR_ABORT_env_not_exist` | `The environment (<0%s>) does not exist.` | Set the required Altibase environment variable. |
+| `ERR-91010` / `0x91010 (593936)` | `utERR_ABORT_Syntax_Error` | `Syntax Error` | Check utility command syntax. |
+| `ERR-91019` / `0x91019 (593945)` | `utERR_ABORT_command_buffer_Error` | `ISQL_BUFFER_SIZE must be greater than <0%d>.` | Increase `ISQL_BUFFER_SIZE`. |
+| `ERR-91020` / `0x91020 (593952)` | `utERR_ABORT_Not_Connected_Error` | `No Connection State` | Connect before running the command. |
+| `ERR-91126` / `0x91126 (594214)` | `utERR_ABORT_INVALID_CONN_ATTR` | `Invalid connection attribute pair: <0%s> = <1%s>` | Check the connection attribute key/value. |
+| `ERR-91147` / `0x91147 (594247)` | `utERR_ABORT_Option_No_Value_Error` | `No value specified for the option (<0%s>)` | Supply the missing option value. |
+| `ERR-91148` / `0x91148 (594248)` | `utERR_ABORT_Option_Invalid_Value_Error` | `Invalid option value specified (<0%s> <1%s>)` | Use a documented option value. |
+| `ERR-91027` / `0x91027 (593959)` | `utERR_ABORT_Dup_Option_Error` | `Option (<0%s>) is used more than once.` | Remove duplicate options. |
+| `ERR-91028` / `0x91028 (593960)` | `utERR_ABORT_Unknown_Option_Error` | `An unknown Option (<0%s>) was specified.` | Check the utility's option list for the installed version. |
+| `ERR-91032` / `0x91032 (593970)` | `utERR_ABORT_Field_Terminator_Error` | `Field, Row and Enclosingchar terminators must be different.` | Use distinct terminators in iLoader form/options. |
+| `ERR-9103D` / `0x9103D (593981)` | `utERR_ABORT_Parsing_Error` | `Data parsing error (Column : <0%s>)` | Check input data token and column mapping. |
+| `ERR-91123` / `0x91123 (594211)` | `utERR_ABORT_Port_Omit_Error` | `No port number was specified.` | Supply the port option. |
+| `ERR-91044` / `0x91044 (593988)` | `utERR_ABORT_Data_File_IO_Error` | `Error occurred during data file I/O.` | Check path, file size, free space, and permissions. |
+| `ERR-91046` / `0x91046 (593990)` | `utERR_ABORT_Nls_Use_Error` | `ALTIBASE_NLS_USE does not match DATA_NLS_USE` | Match utility NLS with data/form file NLS. |
+| `ERR-910FD` / `0x910FD (594173)` | `utERR_ABORT_Invalid_CSV_File_Format_Error` | `Invalid CSV file format token. Column=<0%s>, Value=<1%s>.` | Check CSV quoting, delimiter, and data value. |
+| `ERR-91108` / `0x91108 (594184)` | `utERR_ABORT_UPLOAD_Error` | `Could not upload the entire data file.` | Check data file validity and utility output. |
+| `ERR-91109` / `0x91109 (594185)` | `utERR_ABORT_LIB_VERSION_Error` | `An iLoader library version incompatibility error occurred.` | Check iLoader library version and client package. |
+
+Applies To: `isql`, `iLoader`, `aexport`, `altiComp`, dump/profile tools, and other Altibase utilities that use the Utilities Error Code chapter.
+
+Symptom: A tool command fails before or during connection, rejects an option, cannot parse input data, cannot read/write a data file, or reports iLoader library mismatch.
+
+Primary Causes: missing environment, malformed command or option, missing port, no connection, invalid utility connection attribute, duplicate/unknown option, insufficient `ISQL_BUFFER_SIZE`, terminator conflict, data token parse error, NLS mismatch, file path/permission/space problem, invalid CSV, corrupt data file, or library/client package mismatch.
+
+Immediate Action: Keep the exact utility command and output. Check environment variables, command options, current connection state, port, utility client package, input form/control file, data file encoding/NLS, and file permissions. When the utility wraps a server error, search by the wrapped server error text as well as the utility code.
+
+Check SQL or Command:
+
+```bash
+altibase -v
+echo "$ALTIBASE_HOME"
+echo "$ALTIBASE_NLS_USE"
+echo "$ISQL_BUFFER_SIZE"
+ls -l '<DATA_OR_FORM_FILE>'
+```
+
+Required Customer Input: exact utility name and version, full command with secrets removed, full error output, input form/control file, data file sample if safe, `ALTIBASE_NLS_USE`, port/host, client package path, and OS error number if present.
+
+Version Cautions: The listed codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Low-frequency utility options can vary by installed client package; confirm with the target tool manual or command help before giving final syntax.
+
+Related Document: iSQL iLoader Basic Tools; Utilities Operation Tools; C CLI ODBC Precompiler.
+
+### Error Block: APRE Precompiler Source, Option, Connection, Statement, and Cursor Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: APRE / `ABORT`.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | First check |
+| --- | --- | --- | --- |
+| `0x51000 (331776)` | `ulpERR_ABORT_FILE_OPEN_ERROR` | `Failed to open file: <0%s>, errno=<1%d>` | Check file path and privilege. |
+| `0x51002 (331778)` | `ulpERR_ABORT_FILE_NOT_FOUND` | `File not found: <0%s>` | Check file or directory path. |
+| `0x51018 (331800)` | `ulpERR_ABORT_COMP_Syntax_Error` | `Failed to compile with invalid syntax.` | Check `*.sc` syntax. |
+| `0x5101F (331807)` | `ulpERR_ABORT_COMP_No_End_Declare_Section_Error` | `EXEC SQL END DECLARE SECTION does not exist.` | Add or fix declare-section terminator. |
+| `0x51020 (331808)` | `ulpERR_ABORT_COMP_No_Begin_Declare_Section_Error` | `EXEC SQL BEGIN DECLARE SECTION does not exist.` | Add or fix declare-section start. |
+| `0x51028 (331816)` | `ulpERR_ABORT_COMP_Unknown_Hostvar_Error` | `The host variable [<0%s>] is unknown.` | Declare the host variable. |
+| `0x5102B (331819)` | `ulpERR_ABORT_COMP_Wrong_IndicatorType_Error` | `The indicator variable [<0%s>] should be of type SQLLEN or a compatible type.` | Use compatible indicator type. |
+| `0x51046 (331846)` | `ulpERR_ABORT_COMP_Option_Duplicated_Error` | `<0%s> option is repeated.` | Remove duplicate precompiler option. |
+| `0x51049 (331849)` | `ulpERR_ABORT_COMP_Invalid_Input_fileName_Error` | `Input file must be a form of '*.sc'.` | Use a valid `.sc` input file. |
+| `0x5105A (331866)` | `ulpERR_ABORT_Conn_Not_Exist_Error` | `The connection does not exist. (Name:<0%s>)` | Check embedded SQL connection name. |
+| `0x5105D (331869)` | `utERR_ABORT_Conn_First_Trial_Failed` | `Failed first connection attempt.` | Check server connection information. |
+| `0x5105E (331870)` | `ulpERR_ABORT_Conn_Second_Trial_Failed` | `Failed second connection attempt.` | Check server connection information. |
+| `0x51061 (331873)` | `ulpERR_ABORT_Stmt_Not_Exist_Error` | `The statement does not exist. (Name:<0%s>)` | Check statement name. |
+| `0x51062 (331874)` | `ulpERR_ABORT_Stmt_Need_Prepare_4Execute_Error` | `The statement must be prepared for execution. (Name:<0%s>)` | `PREPARE` before `EXECUTE`. |
+| `0x51063 (331875)` | `ulpERR_ABORT_Cursor_Not_Exist_Error` | `The cursor does not exist. (Name:<0%s>)` | Check cursor declaration. |
+| `0x51064 (331876)` | `ulpERR_ABORT_Cursor_Need_Declare_4Open_Error` | `The cursor must be declared to be opened. (Name:<0%s>)` | `DECLARE` before `OPEN`. |
+| `0x51067 (331879)` | `ulpERR_ABORT_Stmt_Query_Overflow` | `The query statement is too long. It must be less than 256k.` | Shorten the SQL text. |
+| `0x51069 (331881)` | `ulpERR_ABORT_Invalid_User_Error` | `Invalid user.` | Check user ID. |
+| `0x5106A (331882)` | `ulpERR_ABORT_Invalid_Passwd_Error` | `Invalid password.` | Check password. |
+| `0x5106B (331883)` | `ulpERR_ABORT_Stmt_Need_Execute_4Fetch_Error` | `The statement must be executed to fetch rows.` | `EXECUTE` before `FETCH`. |
+| `0x5106C (331884)` | `ulpERR_ABORT_Cursor_Need_Open_4Fetch_Error` | `The cursor must be opened to fetch rows.` | `OPEN` before `FETCH`. |
+
+Applies To: Altibase Precompiler source preprocessing, embedded SQL declaration sections, host variables, indicators, precompiler options, generated C/C++ build flow, embedded connections, dynamic statements, and cursors.
+
+Symptom: APRE fails to preprocess a `.sc` file, reports invalid embedded SQL syntax, cannot find a host variable or declare section, rejects an option, cannot connect, or rejects the statement/cursor call sequence.
+
+Primary Causes: source file not found, wrong input extension, invalid embedded SQL syntax, missing `EXEC SQL BEGIN/END DECLARE SECTION`, undeclared host variable, incompatible indicator type, duplicate option, invalid connection name or credentials, statement not prepared/executed, cursor not declared/opened, or SQL text longer than the precompiler limit.
+
+Immediate Action: Keep the exact APRE command and source location. Check file paths and permissions, preprocess only supported `.sc` input, inspect the nearby `EXEC SQL` section, verify host-variable declarations and indicator types, and trace the embedded SQL call sequence before changing application logic.
+
+Check SQL or Command:
+
+```bash
+altibase -v
+ls -l '<SOURCE_FILE.sc>'
+```
+
+Required Customer Input: exact APRE command, Altibase client/precompiler version, source excerpt around the failing line, generated file path if any, connection name, full error output, compiler output, and OS error number when present.
+
+Version Cautions: The listed APRE codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Numeric `0x510xx` codes overlap with ODBC/CLI and Log Analyzer families, so use `ulpERR_*` symbols or APRE context before treating a code as a Precompiler error.
+
+Related Document: C CLI ODBC Precompiler; SQL DML and Oracle Compatibility.
+
+### Error Block: Log Analyzer Network, Protocol, Metadata, and XLog Pool Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: Log Analyzer / `ABORT`.
+
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | First check |
+| --- | --- | --- | --- |
+| `0x51012 (331794)` | `ulaERR_ABORT_META_NOT_EXIST` | `The meta information does not exist.` | Check Log Analysis API call order and XLog Sender metadata. |
+| `0x51015 (331797)` | `ulaERR_ABORT_NET_TIMEOUT` | `Network timeout [<0%s>]` | Check network and Log Analysis API handshake. |
+| `0x51016 (331798)` | `ulaERR_ABORT_NET_READ` | `Network read failure [<0%s>, <1%u>]` | Check network and environment variables. |
+| `0x51018 (331800)` | `ulaERR_ABORT_NET_UNEXPECTED_PROTOCOL` | `Unexpected network protocol [<0%s>]` | Check replication protocol version. |
+| `0x5101B (331803)` | `ulaERR_ABORT_NET_WRITE` | `Network write failure [<0%s>, <1%u>]` | Check network and environment variables. |
+| `0x5101C (331804)` | `ulaERR_ABORT_NET_FLUSH` | `Network flush failure [<0%s>, <1%u>]` | Check network and environment variables. |
+| `0x51024 (331812)` | `ulaERR_ABORT_PROTOCOL_DIFF` | `Different protocol versions` | Check XLog Sender protocol version. |
+| `0x51027 (331815)` | `ulaERR_ABORT_LINK_ALLOC` | `Failed to allocate link` | Check available system resources. |
+| `0x51028 (331816)` | `ulaERR_ABORT_LINK_LISTEN` | `Failed to listen for link` | Check port status. |
+| `0x51029 (331817)` | `ulaERR_ABORT_LINK_WAIT` | `Failed to wait for link` | Check network status. |
+| `0x5102A (331818)` | `ulaERR_ABORT_LINK_ACCEPT` | `Failed to accept link` | Check network status. |
+| `0x5103F (331839)` | `ulaERR_ABORT_TABLE_NOT_FOUND` | `Table Not Found [<0%s>, <1%lu>]` | Check XLog Collector table metadata. |
+| `0x51040 (331840)` | `ulaERR_ABORT_COLUMN_NOT_FOUND` | `Column Not Found [<0%s>, <1%u>]` | Check XLog Collector column metadata. |
+| `0x51042 (331842)` | `ulaERR_ABORT_NO_ENV_VARIABLE` | `Environment variable <0%s> is not set` | Set the required environment variable. |
+| `0x5104B (331851)` | `ulaERR_ABORT_INSUFFICIENT_XLOG_POOL` | `ALA XLog Collector cannot receive allocable XLog because the XLog in XLog Pool is all consumed.` | Increase `ALA_XLOG_POOL_SIZE` only after checking collector pressure. |
+
+Applies To: Log Analyzer XLog Sender and Log Analysis API collectors using `ALA_Handshake()`, `ALA_ReceiveXLog()`, `ALA_SendACK()`, `ALA_GetXLog()`, `ALA_GetReplicationInfo()`, `ALA_GetTableInfo()`, and XLog pool APIs.
+
+Symptom: A CDC collector cannot handshake, times out, reports network read/write/flush failure, rejects protocol version, cannot find table/column metadata, or exhausts the XLog pool.
+
+Primary Causes: wrong XLog Sender or role, replication protocol mismatch, network problem, missing environment variable, collector called APIs in the wrong order, collector metadata does not match the XLog stream, or XLog pool size/consumer speed is insufficient.
+
+Immediate Action: Confirm the replication object was created `FOR ANALYSIS` or `FOR ANALYSIS PROPAGATION`, check the collector's API call order, compare protocol versions, verify network path and environment variables, inspect replication metadata, and check XLog pool pressure before changing pool size.
+
+Check SQL or Command:
+
+```sql
+SELECT replication_name, role, is_started, repl_mode
+FROM SYSTEM_.SYS_REPLICATIONS_
+WHERE role IN (1, 4)
+ORDER BY replication_name;
+
+SELECT replication_name, host_ip, port_no, conn_type
+FROM SYSTEM_.SYS_REPL_HOSTS_
+WHERE replication_name = '<XLOG_SENDER_NAME>'
+ORDER BY host_ip, port_no;
+
+SELECT rep_name, status, sender_ip, sender_port, peer_ip, peer_port
+FROM V$REPSENDER
+WHERE rep_name = '<XLOG_SENDER_NAME>'
+ORDER BY rep_name;
+```
+
+Required Customer Input: exact Log Analyzer API function that returned the error, XLog Sender name, local and collector versions, full error line and symbol if shown, collector environment variables, peer host/port, `SYSTEM_.SYS_REPLICATIONS_` and `V$REPSENDER` output, and recent collector restart or ACK history.
+
+Version Cautions: The listed Log Analyzer codes are present in the checked Korean 7.1, 7.3, and Altibase 8.1 verified source Error Message References. Numeric `0x510xx` values overlap with ODBC/CLI and APRE; use `ulaERR_*` symbols or Log Analyzer context before choosing this block. Log Analyzer does not use SSL or InfiniBand transport in the selected source guidance.
+
+Related Document: Replication HA CDC; Data Dictionary and Performance Views; C CLI ODBC Precompiler.
 
 ## Topic Response Patterns
 
@@ -2221,6 +2682,16 @@ Use this order:
 3. For replication SSL, check both peer servers and the replication definition.
 4. Include the detailed OpenSSL error text when present.
 
+### Client, Utility, APRE, DB Link, and Log Analyzer Errors
+
+Use this order:
+
+1. Identify the component first: CLI/ODBC, iSQL/iLoader/utility, APRE, DB Link/`AltiLinker`, or Log Analyzer. Do not route by numeric `0x510xx` code alone.
+2. Keep the exact command, connection string, APRE source line, DB Link SQL, or Log Analyzer API function name.
+3. Check environment variables, client/tool version, file paths, permissions, host, port, and relevant trace logs.
+4. For DB Link, check `AltiLinker`, `dblink.conf`, Java/JDBC driver, DB Link views, and global transaction state.
+5. For Log Analyzer, check `FOR ANALYSIS` metadata, `ALA_Handshake()` state, protocol version, network, and XLog pool pressure.
+
 ### JSON, Temporary LOB, and LOB Errors
 
 Use this order:
@@ -2243,11 +2714,16 @@ Use this order:
 - Use `06_data_dictionary_performance_views.md` for confirmation queries against objects, columns, constraints, privileges, sessions, locks, properties, and replication views.
 - Use `08_performance_tuning_monitoring.md` when the reported error is coupled with slow SQL, lock waits, hangs, memory pressure, or plan instability.
 - Use `09_replication_ha_cdc.md` for replication state, gap, conflict, failover, and Log Analyzer CDC troubleshooting after error normalization.
+- Use `12_c_cli_odbc_precompiler.md` when the normalized error is CLI/ODBC, APRE, host-variable, LOB API, or client-buffer related.
+- Use `13_isql_iloader_basic_tools.md` when the normalized error is an `isql` or `iLoader` command, option, file, NLS, or data-parsing issue.
+- Use `14_utilities_operation_tools.md` when the normalized error comes from `aexport`, `altiComp`, dump/profile utilities, or other operational tools.
+- Use `16_dblink_external_connectors.md` when the normalized error involves DB Link, `AltiLinker`, `dblink.conf`, remote SQL, or global transactions.
 - Use `18_security_ssl_tls.md` for SSL/TLS listener, certificate, cipher, FIPS, client handshake, and replication SSL configuration checks.
 
 ## Residual Scope
 
 - J023 expanded storage, backup, recovery, datafile, log, checkpoint, incremental backup, and tablespace exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps are still grouped troubleshooting blocks, not a replacement for the complete source manuals.
 - J024 expanded SQL parser, DDL, table/column/data type, constraint, regular-expression, JSON, LOB, Temporary LOB, and related client/utility LOB exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. JSON and Temporary LOB blocks remain 8.1-scoped.
+- J025 expanded client connection, network, SSL/TLS, replication, utility, DB Link, Log Analyzer, APRE, and CLI/ODBC grouped exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps preserve component-specific evidence prompts and avoid numeric-only routing for overlapping `0x510xx` families.
 - Add future error blocks only after source-backed review, and keep the standardized error format above.
 - The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here.

@@ -208,6 +208,13 @@ for 8.1 customer-facing labels.
   dictionary checks routed to `06`, and LOB API/tool workflows routed to `12`, `13`,
   and `14`; `GAP-J002-008` remains open for J025-J026 and non-scoped exact-code
   coverage.
+- J025 expanded the client, network, replication, utility, DB Link, Log Analyzer,
+  APRE, CLI/ODBC, and SSL/TLS evidence-checking error slice in
+  `07_error_messages_troubleshooting.md`. It keeps replication and Log Analyzer
+  workflows routed to `09`, CLI/ODBC/APRE details routed to `12`, iSQL/iLoader and
+  utility command syntax routed to `13` and `14`, DB Link/`AltiLinker` procedures
+  routed to `16`, and SSL/TLS setup routed to `18`; `GAP-J002-008` remains open for
+  J026 QA and non-scoped exact-code coverage.
 - J027-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide
