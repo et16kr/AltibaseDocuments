@@ -1,0 +1,45 @@
+{
+  "$schema": "../schemas/manifest.schema.json",
+  "manifest_id": "views_performance_monitoring_j007",
+  "description": "Offline J007 manifest for validating the source-backed dictionary, performance view, optimizer, plan, monitoring API, SNMP, and tuning question set without live model calls.",
+  "question_files": [
+    "evals/altibase_answerability/questions/views_performance_monitoring.jsonl"
+  ],
+  "run_metadata": {
+    "profile": "fixture",
+    "job_id": "J007",
+    "source_boundary": "repository-local selected sources only"
+  },
+  "answer_generation": {
+    "attachment_glob": "GPTs/attachments/*.md",
+    "allowlisted_question_fields": [
+      "id",
+      "question",
+      "version_scope",
+      "user_level",
+      "answer_type",
+      "answer_language",
+      "requested_language"
+    ],
+    "default_answer_language": "en",
+    "include_gpt_instruction_draft": false,
+    "provider": "offline",
+    "model": "fixture",
+    "mode": "offline_fixture"
+  },
+  "judge": {
+    "mode": "rule",
+    "threshold_policy": "evals/altibase_answerability/policy.json"
+  },
+  "reporting": {
+    "output_dir": "evals/altibase_answerability/reports/views_performance_monitoring_j007",
+    "aggregate_dimensions": [
+      "domain",
+      "subdomain",
+      "user_level",
+      "version_scope",
+      "answer_type",
+      "retrieval_risk"
+    ]
+  }
+}
