@@ -12,6 +12,7 @@
 - How do I install Altibase Server or Altibase Client from the package installer?
 - Which files and environment variables are created during installation?
 - How do I create the first database, start the server, connect with iSQL, and shut down safely?
+- Which customer inputs are required before giving final platform, package, startup, or shutdown guidance?
 - What version-specific installation differences matter for 7.1, 7.3, and 8.1?
 
 ## Source Documents
@@ -26,6 +27,8 @@
 - Keep commands, paths, file names, property names, user names, and error codes literal even when answering in another language.
 - Do not invent a package name. Ask for the exact version, operating system, and CPU architecture, or use a placeholder such as `altibase-server-<version>-<OS>-<CPU>-64bit-release.run`.
 - Installation answers should follow this order: platform check, OS account and limits, package installer, properties, license, environment, database creation, startup, iSQL verification, shutdown.
+- If the customer asks for copy-ready commands, first collect the exact Altibase version and patch, server or client package target, OS and CPU architecture, `ALTIBASE_HOME`, port, character sets, license state, and whether the installer generated database creation properties.
+- If a platform, package, startup failure, shutdown safety, patch rollback, or log interpretation depends on the customer's exact environment, ask for that input and give the safest next check instead of guessing.
 
 ## Installation Flow
 
@@ -48,10 +51,41 @@ flowchart TD
   N --> O[Use shutdown normal, server stop, or shutdown immediate when needed]
 ```
 
+## Runbook Input Checklist
+
+Use these inputs before producing a final installation, startup, shutdown, or first-run answer.
+
+Required inputs:
+
+- Altibase version and patch, for example `7.1.0.1.2`, `7.3.0.0.1`, or `8.1.0.0.1`.
+- Component target: server package, client package, both, or a tool-only host.
+- Operating system family and version, CPU architecture, 64-bit mode, and Linux glibc/libc range when platform support depends on it.
+- Installation account, `ALTIBASE_HOME`, shell profile file, and whether commands are run as the Altibase installation account or `root`.
+- Package file name or intended placeholder: `altibase-server-<version>-<OS>-<CPU>-64bit-release.run` or `altibase-client-<version>-<OS>-<CPU>-64bit-release.run`.
+- Server settings: database name, port, maximum memory database size, disk buffer size, archive log mode, database character set, national character set, disk database directory, memory database directory, archive log directory, transaction log directory, and log anchor directories.
+- License state: entered in the installer, copied later as `$ALTIBASE_HOME/conf/license`, missing, or expired.
+- Database creation path: installer-generated `$ALTIBASE_HOME/install/post_install.sh` with database creation properties, or manual `server create [DB Character Set] [National Character Set]`.
+
+Stop conditions:
+
+- Stop before installation if the package OS, CPU architecture, 64-bit mode, server/client target, or supported-platform block does not match the host.
+- Stop before startup if kernel parameters, `RemoveIPC`, Linux THP, user limits, license, or shell environment are not ready.
+- Stop before giving platform support guidance when the exact 7.1 or 7.3 patch level is missing and the target platform has a patch condition.
+- Stop before patch rollback or `server downgrade` unless product, data file, log file, configuration, and metadata rollback evidence is available.
+
 ## Pre-Installation Checklist
 
 Item: target package
 Use the package that matches the requested Altibase version, operating system, and CPU architecture. Altibase Server and Altibase Client are distributed as separate package installers, but the server package includes the client package.
+
+Item: host identity check
+Before choosing a package, collect the host OS and CPU identity. The Installation Guide shows `uname -a` as the pre-install OS check on Unix-like systems:
+
+```bash
+uname -a
+```
+
+If the host identity does not match the package target, the installer can stop during its pre-install environment check.
 
 Item: 64-bit support
 Altibase 7.1, 7.3, and 8.1 server and client packages are 64-bit. Windows is client-only for 7.1, 7.3, and 8.1 according to the supported platform and release-note sources.
@@ -79,6 +113,9 @@ For Linux, set Transparent Huge Pages to `never` for optimized Altibase operatio
 
 Item: disk layout
 Place redo logs and data files on separate physical disks when possible. This reduces disk I/O contention.
+
+Item: replication network planning
+If replication will be used, plan a dedicated network line where possible. The installation requirements recommend a dedicated line for replication.
 
 Item: license
 Have the license ready during installation, or place the license file later as `$ALTIBASE_HOME/conf/license`. If the license is missing or expired, Altibase services will not start.
@@ -120,6 +157,68 @@ flowchart TD
   K --> L
   L --> M[Refresh profile and verify commands]
 ```
+
+## Server Installation Runbook
+
+Goal and version scope: install an Altibase server package for 7.1, 7.3, or Altibase 8.1 verified source on a supported Unix-like server platform.
+
+Required inputs: exact Altibase version and patch, package file, OS and CPU architecture, `ALTIBASE_HOME`, `root` access for kernel settings, Altibase installation account, license file or key, database creation values, and shell profile path.
+
+Preconditions:
+
+- Confirm the platform and package with `00_version_release_platform.md`.
+- Confirm enough memory, CPU, and disk for software, tablespaces, transaction logs, and archive logs if used.
+- Confirm the account that will own and operate Altibase.
+- Decide whether this is `Full Installation` or `Patch Installation`.
+
+Steps:
+
+1. Check the host identity:
+
+```bash
+uname -a
+```
+
+2. Make the package executable and start it:
+
+```bash
+chmod +x altibase-server-<version>-<OS>-<CPU>-64bit-release.run
+./altibase-server-<version>-<OS>-<CPU>-64bit-release.run
+```
+
+3. If the installer reports an OS name, OS version, or 64-bit mode mismatch, stop and select the correct package or platform.
+4. Select `ALTIBASE_HOME` and `Full Installation` for a new server install. Use `Patch Installation` only over a compatible installed base.
+5. Review the kernel parameter panel. Apply required kernel settings with `root` privilege before startup. If they are deferred until after installation, use `$ALTIBASE_HOME/install/pre_install.sh` as the reference before starting Altibase.
+6. Enter basic database operation values: database name, port number, maximum memory database size, disk buffer area size, and whether to create a database creation script.
+7. If database creation properties are collected, enter initial database size, archive logging mode, database character set, and national character set.
+8. Enter database directories: disk database directory, memory database directory, archive log directory, transaction log directory, and log anchor directories.
+9. Confirm the displayed property values before proceeding. These values are written to `$ALTIBASE_HOME/conf/altibase.properties`.
+10. Register the license in the installer, select a license file, or postpone license registration and later copy the file as `$ALTIBASE_HOME/conf/license`.
+11. Review the quick setup guide. It identifies `$ALTIBASE_HOME/install/pre_install.sh`, `$ALTIBASE_HOME/install/post_install.sh`, `$ALTIBASE_HOME/packages/catproc.sql`, `$ALTIBASE_HOME/APatch/patchinfo`, and the startup and shutdown commands.
+12. Refresh the login shell for the Altibase account:
+
+```bash
+. ~/.bash_profile
+```
+
+or:
+
+```bash
+source ~/.bash_profile
+```
+
+Validation:
+
+- Confirm `$ALTIBASE_HOME/conf/altibase_user.env` exists for a server installation.
+- Confirm the login profile sources `altibase_user.env`.
+- Confirm `$ALTIBASE_HOME/conf/license` exists before startup.
+- Confirm `$ALTIBASE_HOME/APatch/patchinfo` records the installed package and patch metadata.
+
+Stop and fix:
+
+- If the selected installation directory already contains an Altibase product, choose another directory or uninstall the product in that directory first.
+- If the license is postponed, the installer does not ask the database creation question in the next step. Place the license and use the manual database creation path.
+- If root-only kernel settings are not applied, do not start Altibase yet.
 
 During server installation, collect these values:
 
@@ -180,7 +279,7 @@ This script installs scripts required for PSM use when they were not run during 
 Item: `$ALTIBASE_HOME/APatch`
 This directory stores patch metadata, uninstall scripts such as `uninstall-base`, and rollback material for patch packages. Data files and log files are not backed up by the package rollback mechanism.
 
-## First Database Creation
+## First Database Creation Runbook
 
 If database creation properties were selected during installation, create the database with:
 
@@ -202,6 +301,26 @@ server create [DB Character Set] [National Character Set]
 ```
 
 Choose the database character set before creating the database. The Getting Started Guide examples use values such as `UTF8`, `KSC5601`, and `UTF16`. The database character set affects client conversion, identifiers, stored SQL text, replication compatibility, and possible data loss from character conversion.
+
+Required inputs: `ALTIBASE_HOME`, database character set, national character set, archive log mode decision, initial database size if using generated properties, and the license file state.
+
+Preconditions:
+
+- Run database creation as the Altibase installation account.
+- Source the profile that sets `ALTIBASE_HOME`, `PATH`, library path, and `CLASSPATH`.
+- Apply kernel parameters before creating or starting the database.
+- Place the license as `$ALTIBASE_HOME/conf/license`; if the license is missing or expired, Altibase services do not start.
+
+Validation:
+
+- If using `post_install.sh`, confirm it came from the same installation and property selection.
+- If using `server create`, record the exact database character set and national character set used.
+- After creation, use the startup and first connection verification runbooks before opening the instance to applications.
+
+Stop and fix:
+
+- If the required character set is not known, do not create the database yet. Ask for the application language, client character set, national character set requirement, and replication compatibility requirement.
+- If a database already exists under the configured directories, do not run another create command until the customer confirms the intended rebuild or migration path.
 
 For multilingual clients, set the client character set with `ALTIBASE_NLS_USE` as needed:
 
@@ -225,7 +344,7 @@ isql -s 127.0.0.1 -u sys -p manager -silent -f ${ALTIBASE_HOME}/packages/catproc
 
 The manuals use `sys` and `manager` in examples. Replace the password with the site-specific `SYS` password if it was changed.
 
-## Startup Procedure
+## Startup and First-Run Verification Runbook
 
 Altibase can be started through iSQL in `SYSDBA` mode:
 
@@ -249,7 +368,16 @@ server start
 
 During startup, Altibase reads properties, checks system memory, initializes system data, signal handling, database memory space, the query processor, and service threads, then starts listeners such as TCP on the configured port and UNIX domain connection where supported.
 
-## First Connection Verification
+Expected startup markers:
+
+- `TRANSITION TO PHASE : PROCESS`
+- `TRANSITION TO PHASE : CONTROL`
+- `TRANSITION TO PHASE : META`
+- `TRANSITION TO PHASE : SERVICE`
+- `Listener started : TCP on port <port>`
+- `--- STARTUP Process SUCCESS ---`
+
+When using `server start`, the sample output can include `[ERR-910FB : Connected to idle instance]` before the startup transition. Do not treat that line alone as final status; validate the final startup success marker and the iSQL connection test.
 
 Connect locally with iSQL:
 
@@ -289,7 +417,21 @@ To load the sample schema supplied with the server package:
 isql -s localhost -u sys -p manager -f $ALTIBASE_HOME/sample/APRE/schema/schema.sql
 ```
 
-## Shutdown Procedure
+Runbook validation checklist:
+
+- `server start` or iSQL `startup` reaches `SERVICE`.
+- `V$VERSION` returns the expected `product_version`, `meta_version`, `protocol_version`, and `repl_protocol_version`.
+- `$ALTIBASE_HOME/APatch/patchinfo` matches the installed package and patch target.
+- `$ALTIBASE_HOME/trc` does not contain unresolved startup errors such as license, kernel, memory, recovery, listener, or PSM script failures.
+- Client tests use the expected host and port, not an unintended local default.
+
+Stop and fix:
+
+- Stop if `SERVICE` is not reached or `STARTUP Process SUCCESS` is absent.
+- Stop if `V$VERSION` does not match the planned major and patch version.
+- Ask for the exact startup output and relevant `$ALTIBASE_HOME/trc` log excerpt before diagnosing a startup failure.
+
+## Shutdown Decision Runbook
 
 Use normal shutdown when possible:
 
@@ -323,7 +465,23 @@ server kill
 
 Abort and kill terminate the server forcibly. The next startup may need database recovery because the database may not have closed cleanly.
 
-## Client-Only Installation
+Shutdown mode selection:
+
+| Mode | Command | Use when | Expected success marker |
+| --- | --- | --- | --- |
+| Normal | `shutdown normal;` | Planned stop and clients can disconnect cleanly. | `shutdown normal success.` |
+| Immediate | `shutdown immediate` or `server stop` | Planned or operational stop where active sessions must be disconnected and current transactions rolled back. | `shutdown immediate success.` |
+| Abort | `shutdown abort` | Emergency termination through iSQL when normal or immediate shutdown is not usable. | No clean close guarantee; next startup may recover. |
+| Kill | `server kill` | Emergency termination through the server script. | No clean close guarantee; next startup may recover. |
+
+Required inputs before recommending abort or kill: business impact, active transactions if known, backup/recovery state, startup recovery tolerance, and the reason `shutdown immediate` or `server stop` is not viable.
+
+Stop and fix:
+
+- Do not recommend `shutdown abort` or `server kill` as a routine stop method.
+- After abort or kill, do not assume the database closed cleanly. Require startup output and trace logs if recovery or startup fails.
+
+## Client-Only Installation Runbook
 
 Use a client package when the host only needs command-line tools, libraries, JDBC, or application connectivity and will not run an Altibase server.
 
@@ -342,6 +500,18 @@ After client installation, refresh the login shell and test:
 ```bash
 isql -s <server-host> -u <user> -p <password>
 ```
+
+Client validation:
+
+- Confirm the package is `altibase-client-<version>-<OS>-<CPU>-64bit-release.run`.
+- Confirm the client host platform is listed as client-supported for the target Altibase version and patch.
+- Confirm `ALTIBASE_PORT_NO` matches the server port when the client relies on the profile default.
+- Confirm `Altibase.jar`, shared libraries, and tool binaries are under the selected `ALTIBASE_HOME`.
+
+Stop and fix:
+
+- Windows is client-only in this attachment's 7.1, 7.3, and 8.1 platform guidance. Do not generate a Windows server installation procedure from these sources.
+- If the application uses JDBC, CLI, ODBC, Precompiler, SSL/TLS, or a tool package, cross-check the relevant connector or security attachment before finalizing the client setup.
 
 ## Patch Installation and Rollback Notes
 

@@ -646,6 +646,52 @@ Spatial `ST Error Code` exact-code itemization gap across the selected Korean 7.
 7.3, and Altibase 8.1 verified source Error Message Reference and Spatial SQL
 Reference sources.
 
+## J027 Installation Platform Startup And Shutdown Runbook Addendum
+
+J027 uses the `getting_started_installation`, `release_notes_platform`, and
+`technical_documents_support` source families for Altibase 7.1, Altibase 7.3, and the
+Altibase 8.1 verified source. Korean Getting Started Guides, Installation Guides,
+release notes, and supported-platform technical documents remain authoritative for
+installation flow, platform/package boundaries, database creation, startup, shutdown,
+first-run checks, and patch rollback cautions; matching English manuals are extraction
+aids only when consistent.
+
+Design note: J027 keeps the 20-file attachment boundary unchanged and does not create a
+new attachment. It expands `GPTs/attachments/01_getting_started_installation.md` with
+runbook-schema blocks for required inputs, stop conditions, server package
+installation, database creation, startup and first-run verification, shutdown mode
+selection, and client-only installation. The existing platform matrix remains in
+`GPTs/attachments/00_version_release_platform.md`; `01_getting_started_installation.md`
+now routes platform decisions there and preserves exact-version guardrails.
+
+Scoped source paths checked for J027:
+
+- `Manuals/Altibase_7.1/kor/Getting Started Guide.md`
+- `Manuals/Altibase_7.1/kor/Installation Guide.md`
+- `Manuals/Altibase_7.3/kor/Getting Started Guide.md`
+- `Manuals/Altibase_7.3/kor/Installation Guide.md`
+- `Manuals/Altibase_trunk/kor/Getting Started Guide.md`
+- `Manuals/Altibase_trunk/kor/Installation Guide.md`
+- `Manuals/Altibase_7.1/eng/Getting Started Guide.md`
+- `Manuals/Altibase_7.1/eng/Installation Guide.md`
+- `Manuals/Altibase_7.3/eng/Getting Started Guide.md`
+- `Manuals/Altibase_7.3/eng/Installation Guide.md`
+- `Manuals/Altibase_trunk/eng/Getting Started Guide.md`
+- `Manuals/Altibase_trunk/eng/Installation Guide.md`
+- `ReleaseNotes/kor/Altibase_7_1_0_1_2_Release_Notes.md`
+- `ReleaseNotes/kor/Altibase_7_3_0_0_1_Release_Notes.md`
+- `ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md`
+- `Technical Documents/kor/Supported Platforms.md`
+- `GPTs/reports/gap_register.md`
+- `GPTs/reports/coverage_matrix.md`
+- `GPTs/reports/catalog_schema_extraction_rules.md`
+
+J027 adds no new attachment filename, source family, or Korean/English source-drift
+case. It narrows `GAP-J002-018` for the installation/startup/shutdown slice by
+representing the high-risk installer and first-run procedure as procedural text,
+copy-ready command blocks, expected output markers, and stop conditions. `GAP-J002-007`
+remains a guardrail for exhaustive 7.1 and 7.3 minor patch platform review.
+
 ## Source Roots
 
 - Altibase 7.1 manuals: `Manuals/Altibase_7.1/kor` authoritative, `Manuals/Altibase_7.1/eng` English extraction/reference

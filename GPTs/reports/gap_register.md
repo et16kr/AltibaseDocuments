@@ -220,6 +220,12 @@ recording or remediating gaps.
 - Required remediation shape: Patch-level platform notes where selected sources support
   them; otherwise require exact version, patch, OS, CPU architecture, glibc/libc, Java,
   and client package before final support guidance.
+- J027 update: `GPTs/attachments/01_getting_started_installation.md` now requires exact
+  version/patch, server or client target, OS/CPU architecture, glibc/libc where
+  relevant, Java when relevant, package name, and license/database-creation context
+  before final installation or startup guidance. This gap remains `Guardrail` because
+  J027 did not exhaustively inspect every minor 7.1 and 7.3 patch note for platform
+  support-boundary changes.
 
 ### GAP-J002-008: Error reference expansion remains item-level work
 
@@ -487,6 +493,14 @@ recording or remediating gaps.
 - Required remediation shape: For each high-risk figure or screenshot, record whether
   it is represented by BNF-like text, procedural text, Mermaid, or an explicit accepted
   omission. Include source path, version scope, and retrieval-friendly cross-reference.
+- J027 update: the `getting_started_installation` slice for
+  `01_getting_started_installation.md` is now represented by a Mermaid installation
+  flow plus procedural runbook text for package installation, database creation,
+  startup/first-run verification, shutdown mode selection, client-only installation,
+  and patch rollback cautions. Source paths and version scope are recorded in
+  `GPTs/reports/source_inventory.md`. This gap remains `Open` for the later
+  backup/recovery, replication, Kubernetes/AKU, and security/replication SSL
+  high-risk procedure slices.
 
 ### GAP-J002-019: 8.1 Korean-source-only feature details must stay English-normalized
 

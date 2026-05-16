@@ -220,7 +220,12 @@ for 8.1 customer-facing labels.
   20-file attachment boundary unchanged, adds QA guardrails for uncovered exact codes,
   and splits Spatial `ST Error Code` exact-code itemization into `GAP-J026-001` for
   the later Spatial expansion.
-- J027-J033 should use operations, replication, networking, and TLS source families to
+- J027 expanded installation, platform-decision inputs, database creation, startup,
+  shutdown, first-run verification, client-only installation, and patch rollback
+  runbook guardrails in `01_getting_started_installation.md`, with source-family
+  traceability recorded in `GPTs/reports/source_inventory.md` and the relevant
+  `GAP-J002-007`/`GAP-J002-018` updates recorded in `GPTs/reports/gap_register.md`.
+- J028-J033 should use operations, replication, networking, and TLS source families to
   expand runbooks and keep unresolved compatibility limits explicit.
 - J034-J039 should use development, tool, connector, migration, and third-party guide
   source families to expand API/tool/integration coverage.
