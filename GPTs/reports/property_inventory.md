@@ -75,9 +75,26 @@ Korean source precedence was applied for J008 source drift and ambiguity:
   configuration before changing it.
 - The Altibase 8.1 verified source summary table references
   `REPLICATION_UPDATE_REPLACE`, but the detailed property heading is absent in the
-  selected 8.1 manual text; the attachment treats `REPLICATION_UPDATE_REPLACE` and
-  `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE` as selected 7.1/7.3 detailed-property
-  items until J009 property QA resolves or records the 8.1 source drift.
+  selected 8.1 Korean General Reference text; the attachment treats the 7.1/7.3
+  detailed property blocks as the source for default, range, and dynamic-change
+  details until J009 property QA records the 8.1 source drift.
+
+J009 validates property catalog coverage, dynamic-change wording, cross-references, and
+remaining gaps without changing the attachment boundary. The QA pass confirmed that all
+`484` property names in this inventory appear in the customer-facing property inventory
+baseline in `GPTs/attachments/05_data_types_properties.md`; every decomposed property
+section or group has an explicit dynamic-change, restart, recreation, or
+installed-version verification cue; and all attachment filename cross-references from
+the property attachment resolve to existing upload files. J009 also records the 8.1
+source drift for `REPLICATION_UPDATE_REPLACE` and
+`REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`: `REPLICATION_UPDATE_REPLACE` has 8.1 Korean
+Replication Manual behavior and an 8.1 Korean General Reference alter-level summary
+entry, while the selected 8.1 Korean General Reference detailed property block is
+absent; `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE` appears in the 8.1 Replication Manual
+environment-property list, while the selected 8.1 Korean General Reference detailed
+property block is absent. Customer-facing answers must verify `V$PROPERTY` and the
+exact installed 8.1 version before giving default, range, or change SQL for either
+source-drift case.
 
 ## Scoped Sources
 
@@ -437,7 +454,7 @@ Korean source precedence was applied for J008 source drift and ambiguity:
 | `REPLICATION_MAX_COUNT` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L11537 R | L11511 R | L11775 R | - |
 | `REPLICATION_MAX_LISTEN` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L11561 R | L11535 R | L11799 R | - |
 | `REPLICATION_MAX_LOGFILE` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L11583 R | L11557 R | L11821 R | - |
-| `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE` | 7.1, 7.3 | `R` Replication | L12300 R | L12295 R | - | - |
+| `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE` | 7.1, 7.3 | `R` Replication | L12300 R | L12295 R | - | 8.1 Replication Manual lists the property in the replication-environment property set, but selected 8.1 Korean General Reference detailed property block is absent. |
 | `REPLICATION_POOL_ELEMENT_COUNT` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L11611 R | L11585 R | L11849 R | - |
 | `REPLICATION_POOL_ELEMENT_SIZE` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L11635 R | L11609 R | L11873 R | - |
 | `REPLICATION_PORT_NO` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L11659 R | L11633 R | L11897 R | - |
@@ -465,7 +482,7 @@ Korean source precedence was applied for J008 source drift and ambiguity:
 | `REPLICATION_SYNC_TUPLE_COUNT` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L12192 R | L12187 R | L12474 R | - |
 | `REPLICATION_TIMESTAMP_RESOLUTION` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L12216 R | L12211 R | L12498 R | - |
 | `REPLICATION_TRANSACTION_POOL_SIZE` | 7.1, 7.3, Altibase 8.1 verified source | `R` Replication | L12246 R | L12241 R | L12528 R | - |
-| `REPLICATION_UPDATE_REPLACE` | 7.1, 7.3 | `R` Replication | L12276 R | L12271 R | - | - |
+| `REPLICATION_UPDATE_REPLACE` | 7.1, 7.3 | `R` Replication | L12276 R | L12271 R | - | 8.1 Korean Replication Manual describes behavior and 8.1 Korean General Reference summary lists `SYSTEM`, but selected 8.1 Korean General Reference detailed property block is absent. |
 | `IB_CONCHKSPIN` | 7.1, 7.3, Altibase 8.1 verified source | `NM` Network and security | L12327 NM | L12321 NM | L12582 NM | - |
 | `IB_ENABLE` | 7.1, 7.3, Altibase 8.1 verified source | `NM` Network and security | L12351 NM | L12345 NM | L12606 NM | - |
 | `IB_LATENCY` | 7.1, 7.3, Altibase 8.1 verified source | `NM` Network and security | L12377 NM | L12371 NM | L12632 NM | - |
@@ -633,8 +650,13 @@ Korean source precedence was applied for J008 source drift and ambiguity:
 
 ## Later-Job Handoff
 
-- Use this report as the canonical property-name/version baseline for J005-J009 property expansion work.
+- Use this report as the canonical property-name/version baseline for J005-J009 property expansion and QA work.
 - J005 has expanded the initialization/path/memory/disk/volatile/log/storage subset in `GPTs/attachments/05_data_types_properties.md`; later property jobs should avoid re-opening that subset unless exact-version source review finds a default, range, or alter-level drift.
 - When adding a customer-facing property block, keep the version scope from this inventory, then source the default, range, dynamic-change support, change method, and cautions from the target version manual section and `V$PROPERTY` check patterns.
 - If a later job finds a property name in a selected General Reference 1 source that is absent from this inventory, update this report and split or amend `GAP-J004-001` in `GPTs/reports/gap_register.md`.
 - For properties listed here but not yet decomposed in `GPTs/attachments/05_data_types_properties.md`, answer with the property-name/version availability, ask for the exact installed version when defaults or runtime behavior matter, and verify details through `V$PROPERTY` and the target version manual instead of inventing values.
+- After J009, unresolved property-detail work is not a missing-name problem: it is a
+  lower-retrieval detail-block gap for inventoried names that still lack full
+  source-backed defaults, ranges, dynamic-change methods, related views, and cautions
+  in the customer-facing attachment. Track those remaining details through
+  `GPTs/reports/gap_register.md`.

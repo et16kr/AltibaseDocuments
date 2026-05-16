@@ -1055,9 +1055,18 @@ Interpretation rules:
 
 - `LOCK_MGR_DETECTDEADLOCK_INTERVAL`, `LOCK_MGR_MAX_SLEEP`, `LOCK_MGR_MIN_SLEEP`, `LOCK_MGR_SPIN_COUNT`, `LOCK_MGR_TYPE`
 
-7.1 and 7.3 only in selected General Reference 1 sources:
+7.1 and 7.3 detailed property blocks in the selected General Reference 1 sources:
 
 - `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`, `REPLICATION_UPDATE_REPLACE`
+
+8.1 source-drift note: `REPLICATION_UPDATE_REPLACE` is still mentioned by the
+Altibase 8.1 verified source Replication Manual and the Altibase 8.1 verified source
+General Reference alter-level summary, but the Altibase 8.1 verified source detailed
+General Reference property block is absent. `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`
+is listed by the 8.1 Replication Manual environment-property list, but the Altibase 8.1
+verified source detailed General Reference property block is absent. For either
+property on 8.1, ask for the exact installed version and verify `V$PROPERTY` before
+giving default, range, or dynamic change SQL.
 
 7.3 and Altibase 8.1 verified source, not 7.1:
 
@@ -3142,8 +3151,8 @@ Properties:
 - `REPLICATION_SYNC_TUPLE_COUNT`: maximum records a sender thread reads and processes at once during parallel synchronization; default `500000`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`.
 - `REPLICATION_TIMESTAMP_RESOLUTION`: Active-Active conflict resolution using timestamp columns; default `1`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `1` uses Timestamp-based Scheme when the replication target table has a `TIMESTAMP` column; `0` uses the configured Conflict Resolution Scheme.
 - `REPLICATION_TRANSACTION_POOL_SIZE`: receiver transaction pool size; default `2`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`, but receiver threads initialize transaction pools when created, so restart replication for the changed value to apply. Effective maximum is bounded by `TRANSACTION_TABLE_SIZE`.
-- `REPLICATION_UPDATE_REPLACE`: documented in selected 7.1 and 7.3 detailed property sections, not in the selected Altibase 8.1 verified detailed property inventory. It controls UPDATE conflict handling; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` treats the conflict as an error; `1` ignores the conflict and commits the update.
-- `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`: documented in selected 7.1 and 7.3 detailed property sections, not in the selected Altibase 8.1 verified detailed property inventory. It permits Lazy replication `START` when Active and Standby partition meta item counts differ after `SPLIT PARTITION`, `MERGE PARTITION`, or `DROP PARTITION`; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`.
+- `REPLICATION_UPDATE_REPLACE`: selected 7.1 and 7.3 detailed property sections define default `0`, range `[0, 1]`, and read-write `ALTER SYSTEM` support. It controls UPDATE conflict handling: `0` treats the conflict as an error; `1` ignores the conflict and commits the update. Altibase 8.1 verified source Replication Manual content also describes the property as the update-conflict policy, and the Altibase 8.1 verified source General Reference alter-level summary lists it as `SYSTEM`, but the Altibase 8.1 verified source detailed property block is absent; verify `V$PROPERTY` on the installed 8.1 server before stating default, range, or change SQL.
+- `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`: selected 7.1 and 7.3 detailed property sections define default `0`, range `[0, 1]`, and read-write `ALTER SYSTEM` support. It permits Lazy replication `START` when Active and Standby partition meta item counts differ after `SPLIT PARTITION`, `MERGE PARTITION`, or `DROP PARTITION`. Altibase 8.1 verified source Replication Manual content lists the property in the replication-environment property set, but the Altibase 8.1 verified source detailed property block is absent; verify `V$PROPERTY` on the installed 8.1 server before stating default, range, or change SQL.
 
 Caution: replication properties can change data-consistency, failover, log-retention, or conflict-resolution behavior. Before recommending a change, ask for exact Altibase versions and patch levels on both peers, replication mode, object definition, current `V$REPGAP` or sender/receiver state, related log excerpt, and whether the customer can restart replication.
 
@@ -3482,8 +3491,10 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 - Use `04_sql_dml_oracle_compatibility.md` for DML, condition, function, and Oracle-conversion behavior affected by data type semantics.
 - Use `06_data_dictionary_performance_views.md` for `V$PROPERTY`, object-column, Temporary LOB, and version-availability verification SQL.
 - Use `08_performance_tuning_monitoring.md` when a property affects optimizer behavior, memory use, plan cache, result cache, statistics, or server tuning.
+- Use `09_replication_ha_cdc.md` when `REPLICATION_*`, replication SSL, conflict-policy, synchronization, receiver, sender, or gapless-replication properties affect operational decisions.
 - Use `10_psm_stored_external_procedures.md` when PSM default precision, `DBMS_SQL`, `NO_DATA_FOUND`, `VARRAY`, or Temporary LOB behavior appears inside stored code.
 - Use `12_c_cli_odbc_precompiler.md` for CLI, ODBC, Altibase C Interface, and APRE type conversion and LOB handling questions.
+- Use `16_dblink_external_connectors.md` when `DBLINK_*` properties, linker behavior, Hadoop Connector, or external connector setup affects the answer.
 - Use `18_security_ssl_tls.md` for SSL/TLS property names, ports, certificate paths, and security-facing property checks.
 - Use `19_spatial_nifi_tableau_misc.md` for `ST_OBJECT_BUFFER_SIZE`, `GEOMETRY`, and spatial object-size questions.
 
@@ -3503,3 +3514,5 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 ## Residual Scope
 
 - Data type and property blocks focus on high-retrieval items and version-sensitive differences. When a property, default, range, or dynamic-change rule is not listed here, verify it with the installed target version and `V$PROPERTY` instead of extrapolating from adjacent properties.
+- The property inventory baseline includes all `484` source-inventoried property names, and every decomposed property section or group carries a dynamic-change, restart, recreation, or installed-version verification cue.
+- Some lower-retrieval properties are inventoried by name but not decomposed into full default/range/change-method blocks here; verify those details with the installed target version and `V$PROPERTY`.

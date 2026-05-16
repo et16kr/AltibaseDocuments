@@ -392,3 +392,17 @@ recording or remediating gaps.
     properties, `IB_*`, `SNMP_*`, `TCP_ENABLE`, and `SSL_*` properties. This gap
     remains `Open` for J009 final property catalog QA, source-drift cleanup, and
     remaining low-retrieval property families.
+  - J009 completed final property catalog QA in
+    `GPTs/attachments/05_data_types_properties.md` and
+    `GPTs/reports/property_inventory.md`. It confirmed that all `484` inventoried
+    property names appear in the attachment inventory baseline, every decomposed
+    property section or group has a dynamic-change/restart/recreate/verify cue, and
+    the attachment's cross-reference filenames resolve. It also recorded 8.1
+    source-drift guardrails for `REPLICATION_UPDATE_REPLACE` and
+    `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE` because selected 8.1 Korean detailed
+    General Reference property blocks are absent even though related 8.1 replication
+    sources mention the properties. This gap remains `Open` after J009 for remaining
+    low-retrieval property families that are inventoried by name but still lack full
+    per-property default, range, dynamic-change, related-view, and caution blocks in
+    the customer-facing attachment; later jobs should split or close those details
+    only when their source-family scope requires them.
