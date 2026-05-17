@@ -23,7 +23,7 @@ FCA-J021	Done	docs	Error catalog SQL datatype JSON LOB and regular expression	Ex
 FCA-J022	Done	docs	Error catalog client network replication and tools	Extract client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
 FCA-J023	Done	docs	Error catalog Spatial and remaining grouped-code guardrails	Extract Spatial and remaining low-frequency grouped-code error items, including exact-code guardrails where sources are incomplete.
 FCA-J024	Done	docs	Performance tuning and optimizer catalog	Extract execution plan, hint, statistics, index, optimizer, wait, lock, session, monitoring, and tuning workflow items.
-FCA-J025	ToDo	docs	Monitoring API and SNMP catalog	Extract Monitoring API, SNMP object, metric, port, counter, mapping, output, and runtime-check items.
+FCA-J025	Done	docs	Monitoring API and SNMP catalog	Extract Monitoring API, SNMP object, metric, port, counter, mapping, output, and runtime-check items.
 FCA-J026	ToDo	docs	Replication and HA catalog	Extract topology, state, mode, DDL, compatibility, gap, conflict, protected state-change, and unsafe-operation items.
 FCA-J027	ToDo	docs	CDC Log Analyzer and RepMgr catalog	Extract CDC API, XLog, ACK/restart, Log Analyzer, Replication Manager, GUI-replacement, release, and diagnostic items.
 FCA-J028	ToDo	docs	Security SSL TLS and network catalog	Extract certificate, TLS, replication SSL, client/server, network property, port, access-list, and diagnostic items.
