@@ -32,3 +32,7 @@ Open `summary.txt` first, then `judge/aggregate_report.json` and
 
 The root-cause analysis for these two runs is saved at
 `full_benchmark/failure_root_cause_analysis_20260517.md`.
+
+The final remediation-workflow rerun plan is saved at
+`full_benchmark/rerun_plan_j022_20260517.md`. Use it for the next full live
+270-question run after J004-J022 validation.

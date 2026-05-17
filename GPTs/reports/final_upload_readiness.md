@@ -1,55 +1,79 @@
-# Altibase GPT Final Upload Readiness
+# Altibase GPT Final Validation Readiness
 
-Job: `J040`
-Status: Pass
-Date: 2026-05-17
+- Job: `J022` (`altibase-gpt-customer-llm-remediation`)
+- Status: repository validation pass; final live full-benchmark rerun pending
+- Date: 2026-05-17
+- Scope: validation reports, `evals/altibase_answerability/reports/`,
+  `GPTs/reports/final_upload_readiness.md`
 
 ## Reconfirmed Requirement And Boundary
 
-J040 finalizes retrieval structure, multilingual policy, validation evidence, final gap
-review, and upload readiness for the 20 customer-facing Markdown attachments in
-`GPTs/attachments/`, excluding `README.md`.
+J022 finalizes the repository-side readiness handoff after the customer LLM
+remediation workflow. The job is bounded to validation evidence, readiness reporting,
+the full-benchmark rerun plan, and residual-risk summary.
 
-This job is a documentation-scope finalization job. It does not add, remove, rename, or
-rewrite customer-facing attachment files because the final structural and policy checks
-passed and no attachment boundary or source-label defect was found.
-
-## Scoped Source Families
-
-J040 covers the full selected rebuild scope through the active support reports:
-
-- Altibase 7.1, 7.3, and Altibase 8.1 verified source product manuals.
-- Korean release notes and patch notes, with English notes used only as extraction aids
-  when consistent.
-- Tool manuals, technical documents, third-party guides, and approved support reports.
-- Retrieval, visual conversion, source inventory, coverage matrix, gap register,
-  multilingual prompt, and smoke-test reports.
-
-Korean manuals and Korean release notes remain authoritative when paired Korean and
-English sources differ. Customer-facing answers must remain English-normalized in the
-attachments, preserve literal technical tokens, and use `Altibase 8.1 verified source`
-for 8.1 customer-facing source labels.
+This job does not add, remove, rename, or rewrite customer-facing attachment content.
+It does not edit original manuals, benchmark thresholds, durable question expectations,
+judge rules, or source documents.
 
 ## Design Note
 
-J040 adds this final readiness report and updates the support reports that define the
-final handoff:
+J022 replaces the older final-readiness handoff with the current remediation-workflow
+handoff and adds a durable rerun plan:
 
-- `GPTs/reports/final_upload_readiness.md`: final upload-readiness sign-off.
-- `GPTs/reports/gap_register.md`: final disposition of previously open items.
-- `GPTs/reports/coverage_matrix.md`: J040 completion handoff.
-- `GPTs/reports/source_inventory.md`: final source-inventory addendum.
-- `GPTs/reports/multilingual_prompt_set.md` and
-  `GPTs/reports/multilingual_smoke_results.md`: final multilingual validation labels.
+- `GPTs/reports/final_upload_readiness.md`: current repository validation and readiness
+  decision.
+- `evals/altibase_answerability/reports/full_benchmark/rerun_plan_j022_20260517.md`:
+  exact full-benchmark rerun instructions, gating thresholds, and triage order.
+- `evals/altibase_answerability/reports/README.md`: pointer to the J022 rerun plan.
 
-No customer-facing attachment text changed because the current attachment set already
-contains the required multilingual policy, literal-token policy, version scope, safe
-8.1 label, retrieval sections, and cross-file routing. Remaining uncertainty is tracked
-as guardrails or verification limits, not unregistered work.
+This is a documentation-structure change only. Product behavior, customer-facing
+Altibase facts, source boundaries, and benchmark acceptance thresholds are unchanged.
 
-## Upload Package
+## Evidence Reviewed
 
-The upload package is exactly these 20 Markdown files:
+Primary benchmark evidence:
+
+- `evals/altibase_answerability/reports/full_benchmark/failure_root_cause_analysis_20260517.md`
+- `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_095919/summary.txt`
+- `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_095919/judge/aggregate_report.json`
+- `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_095919/judge/judgments.jsonl`
+- `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_095919/answers/answers.jsonl`
+- `evals/altibase_answerability/questions/*.jsonl`
+
+Remediation and final-review evidence:
+
+- `GPTs/reports/customer_answer_contract.md`
+- `GPTs/reports/answerability_failure_remediation_inventory_20260517.md`
+- `GPTs/reports/exact_token_gap_inventory_20260517.md`
+- `evals/altibase_answerability/reports/targeted_calibration_j019_20260517.md`
+- `GPTs/reports/j020_residual_gap_remediation_design.md`
+- `GPTs/reports/j021_customer_llm_editorial_qa.md`
+
+The stored 2026-05-17 full run remains the comparison baseline, not the current final
+readiness result. It used `full_benchmark`, 270 questions, `mode=live`,
+`provider=command`, `model=codex-exec`, `context_mode=lexical`, and did not include
+`GPTs/GPT_Instructions_Draft.md` in the answer prompt.
+
+Baseline result before the final remediation jobs:
+
+| Metric | Stored 2026-05-17 run |
+| --- | ---: |
+| Passed / total | 27 / 270 |
+| Pass rate | 10.0% |
+| Critical fact coverage | 68.7% |
+| Required token preservation | 74.6% |
+| Unsupported-claim rate | 0.4% |
+| Protected-topic blockers | 77 |
+
+J019 and J020 narrowed the dominant risk: in the representative calibration sample, 11
+of 12 old failures had all missed items in current lexical context and were classed as
+answer synthesis gaps; the remaining sampled `PROP-117` retrieval gap was remediated
+with a `RESULT_CACHE_MEMORY_MAXIMUM` retrieval anchor and deterministic dry-run checks.
+
+## Upload Package Boundary
+
+The upload package remains exactly these 20 Markdown files:
 
 1. `00_version_release_platform.md`
 2. `01_getting_started_installation.md`
@@ -72,88 +96,107 @@ The upload package is exactly these 20 Markdown files:
 19. `18_security_ssl_tls.md`
 20. `19_spatial_nifi_tableau_misc.md`
 
-`GPTs/attachments/README.md` remains a policy/readme file and is not counted as an
-upload attachment.
+`GPTs/attachments/README.md` is the attachment-set policy/readme file and is not
+counted as an upload attachment.
 
-## Retrieval Readiness
+## Repository Validation Readiness
 
-Current retrieval checks found:
+Repository-side validation passed for the current package:
 
-- Exactly 20 upload Markdown files.
-- No residual image references, source-local image paths, `file://` links, Windows drive
-  paths, local workstation paths, or internal source path labels in customer-facing
-  attachments.
-- Every upload attachment has `Applicable Versions`, `Source Documents`, and
-  `Questions This File Can Answer` sections.
-- Every upload attachment uses `Altibase 8.1 verified source` somewhere in its 8.1
-  coverage.
-- No Korean, Chinese, Japanese, or other non-English prose appears in the canonical
-  English attachment files.
-- Long SQL/configuration examples that remain are headed and scoped as verification or
-  runbook examples; R26 accepted them as retrieval-safe.
+- exactly 20 upload Markdown files under `GPTs/attachments/`, excluding `README.md`;
+- every upload file has `Applicable Versions`, `Questions This File Can Answer`,
+  `Retrieval Alias Index`, `Source Documents`, `Response Rules`,
+  `Attachment Cross-References`, and `Residual Scope`;
+- every upload file preserves `Altibase 8.1 verified source` wording for 8.1 coverage;
+- no image references, local source paths, `file://` links, Windows drive paths, or
+  local workstation paths appear in customer-facing attachments or GPT instructions;
+- no Korean, Chinese, Japanese, or other CJK prose appears in canonical English
+  attachment files;
+- Markdown code fences are balanced in upload attachments;
+- benchmark schemas, questions, manifests, answer runner, and judge/report self-tests
+  passed;
+- full-benchmark lexical dry-run and J019 instruction-aware targeted dry-run passed
+  schema and leakage validation.
 
-## Multilingual Readiness
+## Residual Risk Summary
 
-The final multilingual policy is:
+| Risk | Current handling | Required next check |
+| --- | --- | --- |
+| The 270-question live benchmark has not been rerun after the final remediation workflow. | Treat the stored 2026-05-17 live run as baseline evidence only. | Run the full live rerun in `evals/altibase_answerability/reports/full_benchmark/rerun_plan_j022_20260517.md`. |
+| The readiness manifest tests attachment-only behavior and does not include `GPTs/GPT_Instructions_Draft.md`. | Keep the attachment-only run as the comparable readiness gate; use instruction-aware targeted checks as supplemental evidence. | If synthesis gaps remain, run the instruction-aware target set before changing content. |
+| Old protected-topic blockers covered backup/recovery, destructive SQL, replication state changes, security/TLS, and version-sensitive properties. | Current attachments and GPT instructions now require missing inputs, first checks, validation SQL, and stop conditions. | Any remaining protected-topic blocker after rerun is release-blocking until triaged. |
+| Guardrail and verification-limited entries remain in support reports. | Attachments must ask for exact patch level, object definition, log excerpt, topology, installed metadata, or runtime evidence where required. | Do not invent unsupported compatibility, exhaustive column, error-code, tool, or integration claims. |
+| Tool, compiler, Kubernetes, TLS, third-party connector, and live server execution was not performed by this documentation job. | Source-backed documentation exists, but runtime behavior remains environment-specific. | Ask for installed version, command output, log excerpt, client/tool version, and environment before definitive operational advice. |
 
-- Answer in the user's language whenever possible, or in the explicit language the user
-  requests.
-- Do not treat runtime multilingual support as a fixed language list.
-- Preserve SQL object names, SQL keywords, function names, error codes, property names,
-  commands, paths, package/class/method/API names, connector names, and version labels
-  literally in every answer language.
-- Ask for exact version, patch level, environment, log excerpt, object definition, or
-  runtime evidence when those inputs determine a safe answer.
+## Full-Benchmark Rerun Gate
 
-The multilingual smoke set covers 18 prompts across Vietnamese, Turkish, Persian,
-Hindi, Chinese, Japanese, English/French override, German, and French. The staged smoke
-simulation passed all 18 prompts with zero failures. This validates the policy pattern;
-it is not a live post-upload GPT retrieval test.
+The next readiness decision must come from a new live run, not from this documentation
+report. Use:
 
-## Final Gap Review
+- primary plan: `evals/altibase_answerability/reports/full_benchmark/rerun_plan_j022_20260517.md`;
+- required manifest: `evals/altibase_answerability/manifests/full_benchmark.json`;
+- provider command: `evals/altibase_answerability/scripts/codex_exec_provider.sh`;
+- output location: `evals/altibase_answerability/reports/full_benchmark/runs/<new-run-id>/`;
+- thresholds: `evals/altibase_answerability/policy.json`.
 
-J040 reviewed the active gap register and removed unresolved `Open` status as a final
-handoff state. Remaining entries are either:
+The readiness gates remain:
 
-- `Closed-trace`: resolved but retained for source-policy traceability.
-- `Guardrail`: selected sources or attachment scope require exact version, installed
-  header, object definition, runtime evidence, or source-backed confirmation before a
-  definitive answer.
-- `Verification-limited`: the documentation is source-backed, but live server, client,
-  tool, compiler, Kubernetes, TLS, or third-party integration execution was not run.
+- overall pass rate at least 85.0%;
+- every domain pass rate at least 80.0%;
+- critical fact coverage at least 90.0%;
+- required token preservation at least 95.0%;
+- unsupported-claim rate no more than 2.0%;
+- protected-topic blockers equal to 0.
 
-Accepted final guardrails include direct-key type matrix details, exhaustive view-column
-proof, uncovered exact error codes, `sdERR_*` source drift, Spatial `stERR_*` exact-code
-itemization, `SQLEmptyLob()` / `SQLGetLobLength2()` compile-ready signatures,
-low-retrieval per-property detail blocks, JSON execution-plan schema, cross-version
-replication SSL compatibility, platform patch boundaries, Java compatibility drift, and
-environment-specific tool/integration behavior.
-
-These guardrails do not permit invented answers. They require the GPT to preserve the
-customer's literal code or token, state the version/source limit, ask for the missing
-input, and provide the safest source-backed next check.
+Do not lower thresholds, rewrite expected questions, or edit original manuals to pass
+the benchmark. If the rerun fails, classify failures as content gap, retrieval gap,
+answer synthesis gap, or judge calibration issue after inspecting the selected context,
+full attachment context, answer, and source-backed expected items.
 
 ## Verification Summary
 
-Representative J040 checks:
+J022 verification commands:
 
 ```bash
-find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' | sort | wc -l
-rg -n "trunk|C:/|file://|/home/et16|Manuals/Altibase|ReleaseNotes/|Technical Documents/|3rd Party Guide for Altibase|JOB-[0-9]+" GPTs/attachments GPTs/GPT_Instructions_Draft.md || true
-rg -n -P "[\p{Hangul}\p{Han}\p{Hiragana}\p{Katakana}]" GPTs/attachments --glob '*.md' || true
-find GPTs/attachments -maxdepth 1 -type f -name '*.md' ! -name 'README.md' -exec rg --files-without-match "Altibase 8\.1 verified source" {} + || true
-rg -n "^Verdict: (Review Required|Fail)|^\| (Blocker|High|Medium|Low) \|" review/reports/R*.md || true
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/full_benchmark.json
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/targeted_calibration_j019_instruction.json
+python3 evals/altibase_answerability/scripts/answer_runner.py --self-test
+python3 evals/altibase_answerability/scripts/judge_report.py --self-test
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/full_benchmark.json \
+  --mode dry_run \
+  --context-mode lexical \
+  --validate-output \
+  --output-dir /tmp/altibase-j022-full-lexical-dry-run
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/targeted_calibration_j019_instruction.json \
+  --mode dry_run \
+  --context-mode lexical \
+  --question-id PROP-101 --question-id PROP-105 --question-id PROP-117 \
+  --question-id SQL-103 --question-id SQL-108 --question-id SQL-142 \
+  --question-id OPS-117 --question-id REPL-118 --question-id ERR-116 \
+  --question-id VPM-112 --question-id TOOL-010 --question-id TOOL-036 \
+  --validate-output \
+  --output-dir /tmp/altibase-j022-instruction-target-dry-run
 git diff --check
 bash review/scripts/run_review_stage.sh validate
+rg -n "^Verdict:|^\\| (Blocker|High|Medium|Low) \\|" review/reports/R*.md
 ```
 
-Result: pass after J040 report updates.
+Result: pass. The review-report scan returned only `Verdict: Pass` lines and no
+actionable `Blocker`, `High`, `Medium`, or `Low` finding rows.
 
-## Upload Readiness Decision
+The full 270-question live benchmark was intentionally not run in J022 because it would
+launch 270 live `codex-exec` answer generations. The repository is ready for that
+final rerun under the plan above.
 
-The attachment set is ready for upload as the staged Altibase GPT knowledge package,
-subject to the normal operational step of uploading exactly the 20 Markdown files listed
-above and applying `GPTs/GPT_Instructions_Draft.md` as the instruction basis.
+## Readiness Decision
 
-After upload, run one live multilingual retrieval smoke check against the configured GPT
-platform. That post-upload platform test is outside repository documentation scope.
+The current repository package is ready for final full-benchmark rerun and controlled
+upload preparation. It is not yet certified as a fresh live benchmark pass.
+
+Proceed to the J022 rerun plan. Treat any post-rerun protected-topic blocker, severe
+critical-fact miss, or required-token regression as blocking until triaged from the
+repository-local selected sources and current attachment context.
