@@ -21,6 +21,17 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J035 DB Link And External Connector Guardrail
+
+FCA-J035 cataloged DB Link, Hadoop Connector, DBeaver, Hibernate, OpenLDAP, and
+Oracle GoldenGate source rows. Source-backed setup, syntax, configuration, and
+troubleshooting content is represented in attachment 16, but live connector success,
+compatibility conclusions, and root-cause claims remain environment-limited.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000245 | Guardrail | dblink_hadoop_external_connectors | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-012 and GAP-J002-014 > DB Link, Hadoop, and external connector live validation boundary | Requires exact Altibase version and patch, `DBLINK_*`/`ALTILINKER_*` values, `dblink.conf`, remote DBMS and JDBC driver versions, Java runtime, Hadoop/Sqoop/DBeaver/Hibernate/OpenLDAP/GoldenGate product versions, JDBC/ODBC URL or DSN, TLS/firewall topology, full error/log/output, and non-production validation evidence before asserting production connector success or root cause. | Ask for the exact Altibase version and patch, DB Link properties and `dblink.conf`, remote DBMS and JDBC driver versions, Java runtime, connector or product versions, JDBC/ODBC URL or DSN, TLS/firewall topology, full error/log/output, and non-production validation evidence before declaring connector compatibility, success, or root cause. | GPTs/attachments/16_dblink_external_connectors.md | FCA-J035 | `GAP-J002-012`; `GAP-J002-014`; catalog row `SRC-OTHER-XVER-000245`; attachment anchors `Response Rules`, `Troubleshooting Checklist`, and `Residual Scope`. |
+
 ### FCA-J034 Migration And Oracle Compatibility Guardrail
 
 FCA-J034 cataloged Migration Center and Adapter for Oracle source rows. The selected

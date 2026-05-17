@@ -842,3 +842,40 @@ Each entry should include:
   adapter guardrail remains intentional until the customer provides exact source/target
   versions, schemas, generated reports, configuration, logs, rollback plan, and
   non-production validation evidence.
+
+### FCA-J035
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged the DB Link and external connector source-family
+  slice for DB Link architecture, setup, SQL syntax, remote access methods, bind and
+  batch functions, object support, data type support, transaction levels, metadata and
+  monitoring views, AltiLinker and `TARGETS` properties, 8.1 encrypted password
+  release-note boundary, Hadoop Connector/Sqoop setup and import/export behavior,
+  DBeaver setup and troubleshooting, Hibernate dialect setup, OpenLDAP `back-sql`, and
+  Oracle GoldenGate for Big Data JDBC Handler setup and compatibility cautions. No
+  original manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 42 rows total; 40 `Covered`, 1
+  `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean DB Link and Hadoop Connector 7.3 manuals were used for DB
+  Link and Hadoop rows, Korean trunk DB Link manual and Korean 8.1 release note were
+  used for 8.1-only DB Link boundaries, and Korean Tools release/trunk third-party
+  connector guides were used for DBeaver, Hibernate, OpenLDAP, and GoldenGate rows.
+  Matching attachment evidence is in `16_dblink_external_connectors.md`.
+- Coverage status changes: existing answer-ready anchors in
+  `16_dblink_external_connectors.md` cover the scoped DB Link, Hadoop, and third-party
+  connector rows. `SRC-VIEW-XVER-000128` is `Covered-by-routing` through attachment 16
+  plus the dictionary/view cross-reference. `SRC-OTHER-XVER-000245` was registered as
+  a `Guardrail` for live connector validation, runtime success, compatibility
+  conclusions, and root-cause claims.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 2086 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 42
+  FCA-J035 rows with 40 `Covered`, 1 `Covered-by-routing`, and 1 `Guardrail` status.
+  Standard repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no customer-facing attachment text was changed. The live connector
+  guardrail remains intentional until the customer provides exact Altibase patch,
+  DB Link and connector configuration, Java/JDBC/ODBC/runtime versions, topology,
+  security settings, logs, and non-production or live output evidence.
