@@ -37,7 +37,7 @@ FCA-J035	Done	docs	DB Link and external connectors catalog	Extract DB Link, Hado
 FCA-J036	Done	docs	Kubernetes AKU and cloud catalog	Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
 FCA-J037	Done	docs	Spatial NiFi Tableau and miscellaneous integration catalog	Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
 FCA-J038	Done	docs	Technical documents and cross-family support catalog	Extract source-backed items from selected technical documents and cross-family support files that are not fully owned by earlier catalog jobs.
-FCA-J039	ToDo	docs	Catalog consolidation and QA	Validate source item catalog schema, stable IDs, duplicate rows, controlled vocabulary values, source-family completeness, and evidence fields before matrix mapping.
+FCA-J039	Done	docs	Catalog consolidation and QA	Validate source item catalog schema, stable IDs, duplicate rows, controlled vocabulary values, source-family completeness, and evidence fields before matrix mapping.
 FCA-J040	ToDo	docs	Source-to-attachment matrix build	Map every catalog row to an attachment owner, initial coverage disposition, attachment anchor, guardrail reason, and evidence command.
 FCA-J041	ToDo	docs	Content remediation SQL data types and properties	Fix missing source-backed items in SQL, data type, property, JSON, LOB, and Oracle-difference attachment areas.
 FCA-J042	ToDo	docs	Content remediation operations backup recovery and errors	Fix missing source-backed items in installation, administration, backup/recovery, destructive-operation, and error/troubleshooting attachment areas.
