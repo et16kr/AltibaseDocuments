@@ -1602,20 +1602,31 @@ WHERE NAME = 'LOGANCHOR_DIR';
 
 ### Property Item: `LOG_FILE_SIZE`
 
-Meaning: size in bytes of each log file. When an active log file fills, writing continues in a new log file.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source. For
+patch-specific 8.1 answers, preserve the 8.1.0.0.1 release-note change values exactly.
 
-Default: 7.1 uses `10 * 1024 * 1024`; 7.3 and the 8.1 baseline use `100 * 1024 * 1024`. The 8.1 release notes record this default as changed from `10485760` to `104857600`.
+Meaning: size in bytes of each log file. When an active log file fills to the configured size, writing continues in a new log file.
 
-Dynamic Change Support: read-only. Set only at database creation; create a new database to change it.
+Defaults and ranges:
 
-Range: 7.1 `[1024 * 1024, 2^64 - 1]`; 7.3 and the 8.1 baseline `[64 * 1024, 2^32 - 1]`. The 8.1 release notes record the maximum as changed to `4294967295`.
+| Version/source | Data type | Default | Range |
+| --- | --- | --- | --- |
+| 7.1 | `Unsigned long` | `10 * 1024 * 1024` bytes | `[1024 * 1024, 2^64 - 1]` |
+| 7.3 | `Unsigned long` | `100 * 1024 * 1024` bytes | `[64 * 1024, 2^32 - 1]` |
+| Altibase 8.1 verified source | `Unsigned Integer` | `100 * 1024 * 1024` bytes | `[64 * 1024, 2^32 - 1]` |
 
-Important note: for offline replication, set this property identically on local and remote servers.
+8.1 release-note compatibility facts: default changed from `10485760` to `104857600`; maximum changed from `18446744073709551615` to `4294967295`.
+
+Dynamic Change Support: read-only, single-value. Set it at database creation. Changing `LOG_FILE_SIZE` after database creation requires recreating the database; do not generate `ALTER SYSTEM` for an existing database.
+
+Offline replication caution: the local Active server and remote Standby server must use the same `LOG_FILE_SIZE` value.
+
+Ask for missing input before change guidance: exact Altibase version/patch, current `V$PROPERTY` value, replication/offline-replication use, and whether database recreation is acceptable.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'LOG_FILE_SIZE';
 ```
@@ -1643,20 +1654,24 @@ ORDER BY name;
 
 ### Property Item: `MEM_MAX_DB_SIZE`
 
-Meaning: maximum memory database size in bytes.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
 
-Default: `2^31` bytes.
+Meaning: maximum total size, in bytes, of all memory databases that can grow dynamically while service is running.
 
-Dynamic Change Support: read-only.
+Default: `2^31` bytes, described by the manual as `2G` regardless of 32-bit or 64-bit mode.
 
-Range: `32-bit [2097152, 2^32 + 1]`; `64-bit [2097152, 2^64]`.
+Dynamic Change Support: read-only, single-value. This is not a dynamic `ALTER SYSTEM` tuning knob.
+
+Range: 32-bit `[2097152, 2^32 + 1]`; 64-bit `[2097152, 2^64]`.
 
 Behavior: if the memory database expands beyond this value, the offending transaction errors, and later non-`SELECT` SQL also errors until the condition is resolved.
+
+Ask for missing input before change guidance: exact Altibase version/patch, 32-bit or 64-bit mode if applicable, current `VALUE1`, `MIN`, and `MAX`, current memory tablespace sizes, and available OS memory.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'MEM_MAX_DB_SIZE';
 ```
@@ -1699,20 +1714,24 @@ WHERE name = 'MEM_SIZE_CLASS_COUNT';
 
 ### Property Item: `DISK_MAX_DB_SIZE`
 
-Meaning: maximum disk database size in bytes.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum disk database size, in bytes, that can be configured in Altibase.
 
 Default: `2^64 - 1`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only, single-value. This is not a dynamic `ALTER SYSTEM` tuning knob.
 
 Range: 64-bit `[2097152, 2^64]`.
 
-Behavior: when the disk database exceeds the limit, the executing transaction fails and later non-`SELECT` SQL can fail.
+Behavior: when the disk database expands beyond this value, the executing transaction errors, and later SQL statements except `SELECT` also error until the condition is resolved.
+
+Ask for missing input before change guidance: exact version/patch, current `VALUE1`, `MIN`, and `MAX`, datafile inventory, tablespace growth settings, filesystem free space, and whether the operation is planned maintenance or incident response.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'DISK_MAX_DB_SIZE';
 ```
@@ -1778,20 +1797,24 @@ WHERE name = 'DRDB_FD_MAX_COUNT_PER_DATAFILE';
 
 ### Property Item: `VOLATILE_MAX_DB_SIZE`
 
-Meaning: maximum total size of all volatile tablespaces.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
+
+Meaning: maximum total size, in bytes, of all volatile tablespaces.
 
 Default: `2^32 + 1`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only, single-value. This is not a dynamic `ALTER SYSTEM` tuning knob.
 
-Range: `32-bit [2097152, 2^32 + 1]`; `64-bit [2097152, 2^64]`.
+Range: 32-bit `[2097152, 2^32 + 1]`; 64-bit `[2097152, 2^64]`.
 
-Caution: the configured volatile tablespace total cannot exceed memory capacity available from the operating system.
+Caution: the configured total volatile tablespace size cannot exceed memory space provided by the operating system.
+
+Ask for missing input before change guidance: exact version/patch, current `VALUE1`, `MIN`, and `MAX`, volatile tablespace inventory, and available OS memory.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'VOLATILE_MAX_DB_SIZE';
 ```
@@ -2475,7 +2498,7 @@ Properties:
 - `CHECKPOINT_INTERVAL_IN_LOG`: checkpoint request interval by generated log files; default 7.1 `100`, 7.3 and 8.1 `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`. If a checkpoint is already running when the interval requests one, the new request can be canceled.
 - `CHECKPOINT_INTERVAL_IN_SEC`: checkpoint request interval in seconds; default `6000`; range `[3, 2592000]`; read-write with `ALTER SYSTEM`.
 - `FAST_START_IO_TARGET`: target redo page count for restart recovery; default `10000`; range `[1, 2^64 - 1]`; read-write with `ALTER SYSTEM`. Lower values can reduce restart recovery time by flushing more dirty pages during runtime.
-- `FAST_START_LOGFILE_TARGET`: target log-file count for restart recovery; default 7.1 `100`, 7.3 and 8.1 `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
+- `FAST_START_LOGFILE_TARGET`: target log-file count to read during restart recovery; default 7.1 `100`, 7.3 `10`, and Altibase 8.1 verified source `10`; 8.1.0.0.1 release notes record the default as changed from `100` to `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`. During checkpoint flushing, if the difference between a dirty page's page LSN `LogFileNo` and the current log LSN `LogFileNo` is greater than this value, Altibase flushes that page. A smaller value flushes more pages during service and can reduce restart recovery time.
 - `CHECKPOINT_BULK_SYNC_PAGE_COUNT`: page count synced at once when aligning memory and disk during checkpoint; default `3200`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
 - `CHECKPOINT_BULK_WRITE_PAGE_COUNT`: dirty pages written per batch during checkpoint; default `0`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` writes all dirty pages at once.
 - `CHECKPOINT_BULK_WRITE_SLEEP_SEC`: seconds to sleep after each checkpoint bulk write when `CHECKPOINT_BULK_WRITE_PAGE_COUNT` is not `0`; default `0`; range `[0, 2592000]`; read-write with `ALTER SYSTEM`.
@@ -2512,23 +2535,27 @@ Operational caution: tune checkpoint properties from checkpoint trace timing, OS
 
 ### Property Item: `LOG_CREATE_METHOD`
 
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source. The 8.1.0.0.1 release notes also record a default-change note.
+
 Meaning: system call method used to create log files.
 
-Default: `1` on Linux in the 8.1 baseline; release notes record the default as changed from `0` to `1`.
+Default: 7.1 default `0`; 7.3 and Altibase 8.1 verified source defaults are OS-specific, with `0` on HP-UX and AIX and `1` on Linux. The 8.1.0.0.1 release notes record the default as changed from `0` to `1`.
 
-Dynamic Change Support: read-only.
+Dynamic Change Support: read-only, single-value.
 
 Range: `[0, 1]`.
 
 Values:
 
 - `0`: `write()` system call.
-- `1`: `fallocate()` system call on Linux.
+- `1`: `fallocate()` system call, available only on Linux.
+
+Ask for missing input before change guidance: exact Altibase version/patch, operating system, current `V$PROPERTY` value, filesystem/kernel support for `fallocate()`, and any startup error such as unsupported `fallocate()`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'LOG_CREATE_METHOD';
 ```
@@ -2611,7 +2638,7 @@ Properties:
 - `SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT`: initial execution contexts created when a plan is generated; default `1`; range `[0, 1024]`; read-write with `ALTER SYSTEM`. Raising it can help when one plan is executed concurrently, but otherwise mostly increases plan size.
 - `SQL_PLAN_CACHE_SIZE`: maximum SQL plan cache size; default `64M`; range `[0, 2^64 - 1]`; read-write with `ALTER SYSTEM`. `0` disables SQL plan cache.
 
-Related views and statements: `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT`, `ALTER SYSTEM COMPACT SQL_PLAN_CACHE`, and `ALTER SYSTEM RESET SQL_PLAN_CACHE`.
+Related views and statements: `V$SQL_PLAN_CACHE`, `V$SQL_PLAN_CACHE_PCO`, `V$SQL_PLAN_CACHE_SQLTEXT`, `ALTER SYSTEM COMPACT SQL_PLAN_CACHE`, and `ALTER SYSTEM RESET SQL_PLAN_CACHE`. Check `V$SQL_PLAN_CACHE.MAX_CACHE_SIZE` for the installed maximum cache size after any change.
 
 Check SQL:
 
@@ -2632,6 +2659,33 @@ SELECT max_cache_size,
        cache_hit_count,
        cache_miss_count
 FROM V$SQL_PLAN_CACHE;
+```
+
+### Property Item Group: Result Cache and Top Result Cache properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
+
+Meaning: enable or size Result Cache for reusable intermediate results and Top Result Cache for reusable final query results.
+
+Properties:
+
+- `RESULT_CACHE_ENABLE`: controls whether Result Cache stores intermediate-result execution plans; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` means Disabled and `1` means Enabled.
+- `RESULT_CACHE_MEMORY_MAXIMUM`: memory limit, in bytes, for Result Cache and Top Result Cache for one query; default `10M`; range `[4096, ULONG MAX]`; read-write with `ALTER SYSTEM`. If the cached item would exceed this value, it is not stored in memory and is freed. This property is a per-query constraint and does not provide a system-wide memory limit.
+- `TOP_RESULT_CACHE_MODE`: controls final-result cache use; default `0`; range `[0, 3]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` means Disabled, `1` means `MEMORY`, `2` means `DISK`, and `3` means `ALL`.
+
+Related hints and restrictions: `RESULT_CACHE` caches intermediate results and `TOP_RESULT_CACHE` caches final results. Use the detailed Result Cache block in `08_performance_tuning_monitoring.md` for hint examples, supported plan areas, commit-mode cautions, and restrictions.
+
+Check SQL:
+
+```sql
+SELECT name, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'RESULT_CACHE_ENABLE',
+  'RESULT_CACHE_MEMORY_MAXIMUM',
+  'TOP_RESULT_CACHE_MODE'
+)
+ORDER BY name;
 ```
 
 ### Property Item Group: Optimizer behavior and query transformation

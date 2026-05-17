@@ -2240,9 +2240,22 @@ ORDER BY i1;
 
 Properties:
 
-- `RESULT_CACHE_ENABLE`: enables Result Cache.
-- `RESULT_CACHE_MEMORY_MAXIMUM`: maximum memory for Result Cache and Top Result Cache.
-- `TOP_RESULT_CACHE_MODE`: controls final-result cache use.
+- `RESULT_CACHE_ENABLE`: controls whether Result Cache stores intermediate-result execution plans; default `0`; range `[0, 1]`; changeable with `ALTER SYSTEM` or `ALTER SESSION`. `0` means Disabled; `1` means Enabled.
+- `RESULT_CACHE_MEMORY_MAXIMUM`: memory limit, in bytes, for Result Cache and Top Result Cache for one query; default `10M`; range `[4096, ULONG MAX]`; changeable with `ALTER SYSTEM`. If the cache item would exceed this value, it is not stored in memory and is freed. This is a per-query constraint, not a system-wide memory limit.
+- `TOP_RESULT_CACHE_MODE`: controls final-result cache use; default `0`; range `[0, 3]`; changeable with `ALTER SYSTEM` or `ALTER SESSION`. `0` means Disabled, `1` means `MEMORY`, `2` means `DISK`, and `3` means `ALL`.
+
+Check SQL:
+
+```sql
+SELECT name, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'RESULT_CACHE_ENABLE',
+  'RESULT_CACHE_MEMORY_MAXIMUM',
+  'TOP_RESULT_CACHE_MODE'
+)
+ORDER BY name;
+```
 
 Restrictions:
 

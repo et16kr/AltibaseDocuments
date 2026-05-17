@@ -999,7 +999,9 @@ DDL rules:
 - For disk data files, emit explicit `SIZE`, `NEXT`, and `MAXSIZE`; when reviewing omitted-value scripts, inspect file-size properties such as `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE` for the target version.
 - Disk temporary file defaults are controlled by `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
 - Memory and volatile `SIZE` and `AUTOEXTEND NEXT` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`.
-- Memory growth is bounded by `MEM_MAX_DB_SIZE`; volatile growth is bounded by `VOLATILE_MAX_DB_SIZE`.
+- Memory growth is bounded by `MEM_MAX_DB_SIZE`; if memory database expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors until capacity is corrected.
+- Disk database growth is bounded by `DISK_MAX_DB_SIZE`; if expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors.
+- Volatile growth is bounded by `VOLATILE_MAX_DB_SIZE`, and that total volatile tablespace limit cannot exceed memory space provided by the operating system.
 - `CHECKPOINT PATH` operations apply only to memory tablespaces and require the DBA to create, move, or remove the underlying OS directories and checkpoint image files.
 - Temporary tablespaces are disk work space. `GLOBAL TEMPORARY TABLE` storage is specified with a volatile tablespace in the table `TABLESPACE` clause.
 
@@ -1021,11 +1023,12 @@ Decision points:
 Sizing and access checks:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
 WHERE name IN (
   'EXPAND_CHUNK_PAGE_COUNT',
   'MEM_MAX_DB_SIZE',
+  'DISK_MAX_DB_SIZE',
   'VOLATILE_MAX_DB_SIZE',
   'USER_DATA_FILE_INIT_SIZE',
   'USER_DATA_FILE_NEXT_SIZE',
