@@ -46,7 +46,7 @@ FCA-J044	Done	docs	Content remediation tools APIs clients and connectors	Fix mis
 FCA-J045	Done	docs	Content remediation migration cloud spatial and integrations	Fix missing source-backed items in migration, Oracle compatibility, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration attachment areas.
 FCA-J046	Done	docs	Retrieval remediation core reference attachments	Convert retrieval-weak rows for core reference attachments 00 through 09 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
 FCA-J047	Done	docs	Retrieval remediation developer tools and integrations	Convert retrieval-weak rows for attachments 10 through 19 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
-FCA-J048	ToDo	docs	Guardrail and out-of-scope audit	Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
+FCA-J048	Done	docs	Guardrail and out-of-scope audit	Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
 FCA-J049	ToDo	docs	Answer contract and prompt alignment	Update GPT instructions only where needed so exact tokens, item-block shapes, missing-input rules, and guardrails are used in answers.
 FCA-J050	ToDo	docs	Validation and targeted answerability	Run repository validation, source-to-attachment checks, targeted answerability for failed/protected/exact-token rows, and a selected full rerun if feasible.
 FCA-J051	ToDo	docs	Final full coverage audit report	Produce final sign-off with source scope, method, coverage totals, remaining guardrails, validation output, and no unresolved Missing or Retrieval-weak rows.
