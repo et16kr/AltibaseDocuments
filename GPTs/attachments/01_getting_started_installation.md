@@ -30,6 +30,85 @@
 - If the customer asks for copy-ready commands, first collect the exact Altibase version and patch, server or client package target, OS and CPU architecture, `ALTIBASE_HOME`, port, character sets, license state, and whether the installer generated database creation properties.
 - If a platform, package, startup failure, shutdown safety, patch rollback, or log interpretation depends on the customer's exact environment, ask for that input and give the safest next check instead of guessing.
 
+## Installation Administration Answer Anchors
+
+Use these compact anchors when the customer asks an installation, first-start, or patch-administration question and retrieval returns only a broad runbook. They preserve exact tokens that should appear in the final answer.
+
+Anchor: 7.3 server post-install completion
+
+- Version scope: 7.3 source-backed; 7.1 follows the same post-install decision shape where noted below.
+- The installer updates `$ALTIBASE_HOME/conf/altibase.properties`.
+- Server installation creates `$ALTIBASE_HOME/conf/altibase_user.env` and adds a command to source it from the installation account profile.
+- If the license was not registered in the installer, copy it as `$ALTIBASE_HOME/conf/license` before database creation and startup.
+- Use `$ALTIBASE_HOME/install/pre_install.sh` as the kernel-parameter reference if those settings were not completed during installation.
+- If database creation properties were entered during installation, run `$ALTIBASE_HOME/install/post_install.sh` or `sh post_install.sh dbcreate`.
+- If database creation properties were not entered, run `server create [DB Character Set] [National Character Set]`; the 7.1 example is `server create utf8 utf8`.
+- Start with `server start`.
+- Load PSM catalog objects by running `catproc.sql` through `isql`, not as an OS shell script:
+
+```bash
+isql -s 127.0.0.1 -u SYS -p MANAGER -silent -f $ALTIBASE_HOME/packages/catproc.sql
+```
+
+`SYS` and `MANAGER` are manual example credentials. Replace `MANAGER` with the site-specific `SYS` password in real work.
+
+Anchor: client-only installation
+
+- Version scope: 7.3 source-backed; use target-version manuals for exact package names.
+- Client installation writes environment variables directly into the login shell profile such as `.profile`; unlike server installation, it does not create `altibase_user.env`.
+- To apply client variables, open a new shell, source the profile, or export `ALTIBASE_HOME`, `ALTIBASE_PORT_NO`, `PATH`, `LD_LIBRARY_PATH`, and `CLASSPATH`.
+- The documented client example includes `ALTIBASE_PORT_NO=20300` and `CLASSPATH=$ALTIBASE_HOME/lib/Altibase.jar:${CLASSPATH}`.
+
+Anchor: startup phases and ordinary-user connection boundary
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source.
+- Preserve both spelling forms when useful for retrieval: `PRE-PROCESS` and `PRE_PROCESS`.
+- Startup moves forward through `PRE-PROCESS` or `PRE_PROCESS`, `PROCESS`, `CONTROL`, `META`, and `SERVICE`.
+- `STARTUP [PROCESS | CONTROL | META | SERVICE]` is the phase command shape.
+- `PROCESS`: `CREATE DATABASE`, `DROP DATABASE`, limited performance views, property changes, and transition to `CONTROL`.
+- `CONTROL`: media recovery and transition to `META`; if incomplete recovery was performed in `CONTROL`, online logs must be reset when moving to `META`.
+- `META`: dictionary or metadata upgrade work and transition to `SERVICE`.
+- `SERVICE`: normal service; only after `SERVICE` can ordinary users other than `SYS` connect.
+- Do not tell customers that startup phases can move backward without shutdown.
+
+Anchor: shutdown comparison
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source.
+- `SHUTDOWN NORMAL` and `SHUTDOWN IMMEDIATE` can be performed only when Altibase is in `SERVICE`.
+- `SHUTDOWN ABORT` can be performed in any phase, but it is emergency-only.
+- `SHUTDOWN NORMAL` waits for every client to disconnect.
+- `SHUTDOWN IMMEDIATE` disconnects current sessions, performs transaction `rollback` for executing work, and shuts down; `server stop` uses this immediate-style path in the manual examples.
+- `SHUTDOWN ABORT` or `server kill` forcibly terminates the server and can require restart recovery on the next startup.
+
+Anchor: 8.1 database creation file and property defaults
+
+- Version scope: Altibase 8.1 verified source; check 7.1 or 7.3 sources before backporting exact property defaults.
+- `CREATE DATABASE` creates checkpoint image files and data files under `$ALTIBASE_HOME/dbs` by default.
+- Values omitted from `CREATE DATABASE` are taken from `$ALTIBASE_HOME/conf/altibase.properties`.
+- Creation identity and path defaults include `DB_NAME=mydb`, `MEM_DB_DIR=$ALTIBASE_HOME/dbs`, `LOGANCHOR_DIR=$ALTIBASE_HOME/logs`, `LOG_DIR=$ALTIBASE_HOME/logs`, and `SERVER_MSGLOG_DIR=$ALTIBASE_HOME/trc`.
+- Creation-time file size properties shown with `100M` defaults include `SYS_DATA_FILE_INIT_SIZE`, `SYS_TEMP_FILE_INIT_SIZE`, `SYS_UNDO_FILE_INIT_SIZE`, `USER_DATA_FILE_INIT_SIZE`, and `USER_TEMP_FILE_INIT_SIZE`.
+- Ask for the exact target path, character sets, archive mode, and size policy before suggesting path or size changes because many creation-time choices become operationally expensive to change later.
+
+Anchor: 7.3 platform and pre-install checks
+
+- Version scope: 7.3 Installation Guide. If no exact 7.3 patch is supplied, the guide states the platform table applies to all Altibase 7.3 versions.
+- Altibase 7.3 server and client are both `64-bit`.
+- `Microsoft Windows` is supported only for the Altibase `client`, not the `server`, in the cited 7.3 platform table.
+- For Linux x86-64, the cited 7.3 table lists `Red Hat Enterprise Linux 6` and `Red Hat Enterprise Linux 7` for server and client with `GNU glibc 2.12 ~ 2.33`.
+- For RHEL minor versions or non-RHEL Linux, consult the repository supported-platform document instead of assuming every 64-bit Linux distribution is supported.
+- Before blaming startup on database files, check `ulimit`, avoid unlimited `core file size`, set `RemoveIPC=no` in `/etc/systemd/logind.conf` where required, and set Transparent Huge Pages to `never`.
+
+Anchor: APatch rollback and meta downgrade
+
+- Version scope: 7.3 Installation Guide patch-administration source; exact rollback availability can be platform-specific.
+- `$ALTIBASE_HOME/APatch` stores package metadata, patch uninstall executables, and rollback backup directories for installer-managed files.
+- `uninstall-base` removes the base product; `uninstall-p<patch_version>` removes a patch; `rollback-p<patch_version>` stores backup files for the corresponding patch.
+- Only the `latest patch` can be rolled back through this package-uninstaller path.
+- Package rollback does not back up post-install data files or log files. Back up product home, data files, log files, log anchors, and configuration before patch work.
+- Before `server downgrade`, stop Altibase with `server stop`; if it succeeds, the output transitions through `PROCESS`, `CONTROL`, `META`, and `DOWNGRADE`.
+- If meta downgrade fails, investigate `$ALTIBASE_HOME/trc/altibase_boot.log` and `$ALTIBASE_HOME/trc/altibase_qp.log`.
+- After successful `server downgrade`, delete the patch before starting the server again; otherwise the patched binary can run meta upgrade again.
+
 ## Installation Flow
 
 ```mermaid
@@ -257,7 +336,8 @@ SELECT NAME,
        VALUE7,
        VALUE8
 FROM V$PROPERTY
-WHERE NAME IN ('DB_NAME', 'DEFAULT_DISK_DB_DIR', 'MEM_DB_DIR', 'LOG_DIR', 'LOGANCHOR_DIR')
+WHERE NAME IN ('DB_NAME', 'DEFAULT_DISK_DB_DIR', 'MEM_DB_DIR',
+               'LOG_DIR', 'LOGANCHOR_DIR', 'SERVER_MSGLOG_DIR')
 ORDER BY NAME;
 ```
 

@@ -38,6 +38,112 @@
 - Do not recommend direct DML against `SYSTEM_.SYS_*` meta tables. Query meta tables and performance views with `SELECT`.
 - For destructive actions such as `DROP TABLESPACE`, `ALTER TABLESPACE ... DISCARD`, incomplete recovery, or `RESETLOGS`, state the impact and the required backup follow-up.
 
+## Administration Answer Anchors
+
+Use these compact anchors for customer answers that need exact account, privilege, tablespace, datafile, and log-anchor facts before the longer runbooks below.
+
+Anchor: built-in accounts and system tablespaces after `CREATE DATABASE`
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source.
+- Built-in accounts: `SYSTEM_` owns metadata; `SYS` is the DBA account for system-level operations.
+- `CREATE DATABASE` creates these system tablespaces:
+  - `SYS_TBS_MEM_DIC`: memory system dictionary tablespace.
+  - `SYS_TBS_MEM_DATA`: memory system data/default tablespace.
+  - `SYS_TBS_DISK_DATA`: disk system data/default tablespace.
+  - `SYS_TBS_DISK_UNDO`: disk system undo tablespace.
+  - `SYS_TBS_DISK_TEMP`: disk system temporary tablespace.
+- Users can add user-defined data tablespaces with `CREATE TABLESPACE`, but system tablespaces cannot be arbitrarily recreated by users.
+- Only `SYS` or a user with `CREATE TABLESPACE` privilege can create user-defined tablespaces.
+
+Anchor: 8.1 `CREATE USER` runtime account facts
+
+- Version scope: Altibase 8.1 verified source for `IF NOT EXISTS` and the cited `CREATE USER` wording; check 7.1 or 7.3 before using 8.1-only syntax.
+- Only `SYS` or a user with `CREATE USER system privilege` can create a user.
+- Altibase authenticates users with passwords. Maximum password length is `40 bytes`.
+- For case-sensitive passwords, set `CASE_SENSITIVE_PASSWORD=1` and use double quotes around the password in `CREATE USER`.
+- `DEFAULT TABLESPACE` is where the user's objects are stored; if omitted, the system memory default tablespace is used. A user can have only one default tablespace.
+- `TEMPORARY TABLESPACE` selects the default temporary tablespace; if omitted, the system temporary tablespace is used. A user can have only one temporary tablespace.
+- `ACCESS tablespace_name ON` grants access to a user-defined data tablespace; `ACCESS tablespace_name OFF` blocks access. This is not Oracle `QUOTA` syntax.
+- New users are automatically granted `CREATE SESSION`, `CREATE TABLE`, `CREATE SEQUENCE`, `CREATE SYNONYM`, `CREATE PROCEDURE`, `CREATE VIEW`, `CREATE TRIGGER`, `CREATE MATERIALIZED VIEW`, `CREATE DATABASE LINK`, and `CREATE LIBRARY`. For runtime-only accounts, audit and revoke unused DDL privileges.
+
+Anchor: tablespace `ONLINE`, `OFFLINE`, and `DISCARD`
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source.
+- `ALTER TABLESPACE ... ONLINE` and `ALTER TABLESPACE ... OFFLINE` can be performed only in `META` or `SERVICE`.
+- `ONLINE`: resources are allocated and available; DML and DDL can run on tables and indexes in the tablespace.
+- `OFFLINE`: DML and DDL on tables and indexes in that tablespace cannot run; `DROP TABLESPACE` and `ALTER TABLESPACE ... ONLINE` remain available.
+- `ALTER TABLESPACE ... DISCARD` can be executed only in `CONTROL`. Use it only when a damaged disk or memory data tablespace blocks startup and media recovery is impossible or rejected.
+- After `DISCARD`, objects in the tablespace are inaccessible and the tablespace can only be dropped. Require explicit confirmation that losing the affected tablespace is acceptable.
+
+Anchor: memory tablespace `CHECKPOINT PATH`
+
+- Version scope: Altibase 8.1 verified source for the cited checkpoint-path examples.
+- A relative checkpoint path such as `dbs1` is interpreted as `$ALTIBASE_HOME/dbs1`.
+- Before `CREATE MEMORY TABLESPACE ... CHECKPOINT PATH`, the DBA must create the filesystem paths and grant write and execute permissions to the Altibase OS account.
+- `ALTER TABLESPACE ... ADD CHECKPOINT PATH`, `RENAME CHECKPOINT PATH ... TO ...`, and `DROP CHECKPOINT PATH` are `CONTROL` phase operations.
+- In `CONTROL`, use `V$TABLESPACES` and `V$MEM_TABLESPACE_CHECKPOINT_PATHS` for metadata checks; `V$MEM_TABLESPACES` is available only after `META`.
+- Altibase does not move existing checkpoint image files for the DBA. Move or copy the files at the OS level when adding, renaming, or dropping paths.
+
+Anchor: destructive `DROP TABLESPACE` generation
+
+- Version scope: use target-version SQL Reference for exact syntax; `IF EXISTS` is Altibase 8.1 verified source only.
+- Only `SYS` or a user with `DROP TABLESPACE` system privilege can drop a tablespace.
+- If a tablespace contains objects, include `INCLUDING CONTENTS`; otherwise the drop fails.
+- `INCLUDING CONTENTS AND DATAFILES` deletes related disk datafiles or memory checkpoint image files. It does not remove checkpoint directories.
+- Do not use `AND DATAFILES` for volatile tablespaces.
+- Use `CASCADE CONSTRAINTS` when referential constraints in other tablespaces reference primary or unique keys in the target tablespace.
+- Do not drop system tablespaces: `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_UNDO`, and `SYS_TBS_DISK_TEMP`.
+
+Anchor: undo tablespace pressure
+
+- Version scope: 7.1 source-backed and operationally aligned with the selected administration model unless a target-version source differs.
+- The undo tablespace is `SYS_TBS_DISK_UNDO`, system-managed, and shared by disk tablespaces.
+- User operations are limited: `ADD DATAFILE`, `DROP DATAFILE`, `ALTER DATAFILE`, and online backup wrapping with `BEGIN BACKUP` and `END BACKUP`.
+- The default undo data file is `undo001.dbf`, with autoextend enabled in the cited manual.
+- Frequent update transactions, especially long transactions, can cause undo shortage. Add an appropriately sized datafile or increase an existing datafile; do not drop and recreate `SYS_TBS_DISK_UNDO`.
+
+Anchor: tablespace and datafile verification views
+
+- Version scope: 8.1 verified source for the cited expanded column set; for 7.1 or 7.3, query the installed view columns first if an uncommon column matters.
+- Use `V$TABLESPACES` before backup, recovery, resize, `ONLINE`, `OFFLINE`, `DISCARD`, or drop operations. Preserve columns such as `NAME`, `TYPE`, `STATE`, `DATAFILE_COUNT`, `TOTAL_PAGE_COUNT`, and `PAGE_SIZE`.
+- `V$TABLESPACES.TYPE` distinguishes memory system dictionary, memory system data, memory user data, disk system data, disk user data, disk system temporary, disk user temporary, disk system undo, and volatile user data.
+- `V$TABLESPACES.STATE` includes `OFFLINE`, `ONLINE`, backup-in-progress states, `DROPPED`, and `DISCARDED`.
+- Use `V$DATAFILES` for disk and temporary file state. Preserve columns such as `NAME`, `SPACEID`, `CREATE_LSN_FILENO`, `NEXTSIZE`, `MAXSIZE`, `INITSIZE`, `CURRSIZE`, `AUTOEXTEND`, `OPENED`, `MODIFIED`, and `STATE`.
+- `V$DATAFILES.AUTOEXTEND` uses `0` for disabled and `1` for enabled; `OPENED` uses `0` for closed and `1` for open.
+
+Anchor: datafile and temporary file recovery
+
+- Version scope: Altibase 8.1 verified source for the cited datafile runbooks; temporary-file exception is cross-checked against 7.3 and 8.1.
+- `ALTER DATABASE CREATE DATAFILE` is for disk datafiles in `CONTROL` and uses log anchor metadata; it is not a memory checkpoint image repair.
+- For an unbacked lost disk datafile, identify `CREATE_LSN_FILENO` from `V$DATAFILES`, inspect log anchor information with `dumpla`, confirm all needed logs exist in `ARCHIVE_DIR` or `LOG_DIR`, run `ALTER DATABASE CREATE DATAFILE`, then run `ALTER DATABASE RECOVER DATABASE`.
+- For backed-up disk datafiles restored to a new filesystem, copy files first, then in `CONTROL` run `ALTER DATABASE RENAME DATAFILE old_path TO new_path`. The `TO` path must be an `absolute path` that already exists.
+- For memory checkpoint image loss, choose the correct stable copy before recovery; in 8.1 check `V$LOG.CHECKPOINT_SCALE`, `V$MEM_STABLE`, `V$MEM_TABLESPACES`, `CURRENT_DB`, and `dumpla` output such as `Stable Checkpoint Image Num.` or `Stable Single Checkpoint Image Num.`.
+- If only `SYS_TBS_DISK_TEMP` datafile is lost in `NOARCHIVELOG` mode, recreate the temporary file in `CONTROL` with `ALTER DATABASE CREATE DATAFILE`, then move to service with `ALTER DATABASE dbname SERVICE` or the equivalent startup sequence. Do not generalize this exception to permanent datafiles or memory checkpoint image files.
+
+Anchor: log anchors and structure-change backups
+
+- Version scope: Altibase 8.1 verified source for current-versus-historical log-anchor recovery guidance.
+- For ordinary complete media recovery, use the `current loganchor` files whenever possible; restore only backup data files unless the recovery scenario requires historical metadata.
+- Use backed-up historical `loganchor*` files for special cases such as an accidental `DROP TABLESPACE`, where the `current loganchor` no longer contains the dropped tablespace metadata.
+- When a tablespace is added, dropped, or renamed, back up `SYS_TBS_MEM_DIC` or the whole database, and back up log anchors because they contain tablespace information.
+- Use `ALTER DATABASE BACKUP LOGANCHOR` when the runbook specifically calls for an SQL log-anchor backup.
+- After incomplete recovery in `CONTROL`, move to `META` with `ALTER DATABASE db_name META RESETLOGS`, then take a `full database backup` before relying on future media recovery. `RESETLOGS` initializes online logs after recovery to a past point.
+
+Anchor: online backup, checkpoint ordering, and completion markers
+
+- Version scope: Altibase 8.1 verified source for the cited backup-concurrency and completion examples.
+- Online backup and checkpoint are mutually exclusive.
+- During database backup, Altibase backs up memory tablespaces first and disk tablespaces second because it is a `hybrid database`.
+- While memory tablespaces are being backed up, checkpoint cannot run; during disk tablespace backup, memory checkpoint can run but disk tablespace checkpoint does not run.
+- For DBA-driven online tablespace backup, wrap OS copy with `ALTER TABLESPACE ... BEGIN BACKUP` and `ALTER TABLESPACE ... END BACKUP`, then run `ALTER SYSTEM SWITCH LOGFILE`.
+- Check completion in `altibase_sm.log`; the manual example includes `Database-Level Backup Completed [SUCCESS]`.
+
+Anchor: protected administration stop points
+
+- Do not run direct `DML` against a `SYSTEM_` `meta table` as routine repair. Direct meta-table changes can cause startup failure, object-information loss, or severe system damage; if unavoidable, take a `database backup` first and require expert approval.
+- When restoring a replicated database, ask for topology and whether the target host is the same host. Restoring backup files can resend based on `backup-time metadata`; set `REPLICATION_SENDER_AUTO_START` to `0` when the recovery plan requires preventing automatic replication startup.
+- Do not issue `DROP TABLESPACE`, `DISCARD`, incomplete recovery, historical log-anchor restore, or `RESETLOGS` without exact version, database mode, startup phase, backup evidence, object scope, and business approval.
+
 ## Operations Pattern
 
 Use this order for most DBA answers:

@@ -671,6 +671,21 @@ sequenceDiagram
 
 ## iLoader Standard Cookbook
 
+Answer anchor: table-level backup versus physical backup
+
+- Version scope: the standard iLoader workflow is shared by the selected 7.1, 7.3, and Altibase 8.1 verified source tool manuals; check the installed client manual for less common options.
+- `iLoader` is a logical table-level export/import path. It is not a physical database backup and does not restore datafiles, log anchors, online logs, archive logs, tablespace state, privileges, triggers, or complete schema dependencies.
+- Always create a FORM file with `formout` before export/import. The FORM file records table information such as column names and data types for iLoader mapping.
+- Canonical small-table example preserving the manual-style tokens:
+
+```text
+iLoader> formout -T t1 -f t1.fmt
+iLoader> out -f t1.fmt -d t1.dat
+iLoader> in -f t1.fmt -d t1.dat
+```
+
+- If target records already exist during restore, choose an explicit load mode. Without an explicit overwrite behavior, existing records are kept; use `-mode replace` or `-mode truncate` only after the target-impact review is approved.
+
 Cookbook: create a FORM file
 
 ```bash
