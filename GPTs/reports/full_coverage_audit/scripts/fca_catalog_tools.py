@@ -2,8 +2,9 @@
 """Utilities for the Altibase GPT full coverage audit catalog.
 
 The tools are intentionally conservative. They validate the machine-checkable
-TSV contract and provide extraction aids, but they do not write canonical audit
-rows. Catalog jobs remain responsible for source-backed judgment.
+TSV contract, provide extraction aids, and can initialize the source-to-attachment
+matrix from already reviewed catalog rows. Catalog jobs remain responsible for
+source-backed judgment.
 """
 
 from __future__ import annotations
@@ -127,6 +128,172 @@ ATTACHMENTS = {
     str(path.relative_to(REPO_ROOT))
     for path in (REPO_ROOT / "GPTs" / "attachments").glob("*.md")
     if path.name != "README.md"
+}
+
+ATTACHMENT_ALIAS_TERMS = {
+    "GPTs/attachments/00_version_release_platform.md": [
+        "release notes",
+        "patch notes",
+        "supported platforms",
+        "upgrade risk",
+        "Altibase 8.1 verified source",
+    ],
+    "GPTs/attachments/01_getting_started_installation.md": [
+        "install",
+        "startup",
+        "shutdown",
+        "database creation",
+        "first checks",
+    ],
+    "GPTs/attachments/02_administration_operations.md": [
+        "backup",
+        "recovery",
+        "tablespaces",
+        "accounts",
+        "privileges",
+    ],
+    "GPTs/attachments/03_sql_ddl_generation.md": [
+        "DDL",
+        "DCL",
+        "tablespace SQL",
+        "replication SQL",
+        "destructive SQL",
+    ],
+    "GPTs/attachments/04_sql_dml_oracle_compatibility.md": [
+        "DML",
+        "functions",
+        "predicates",
+        "Oracle compatibility",
+        "JSON SQL",
+    ],
+    "GPTs/attachments/05_data_types_properties.md": [
+        "data types",
+        "properties",
+        "property defaults",
+        "ALTER SYSTEM",
+        "V$PROPERTY",
+    ],
+    "GPTs/attachments/06_data_dictionary_performance_views.md": [
+        "dictionary",
+        "performance views",
+        "view columns",
+        "metadata checks",
+        "V$",
+    ],
+    "GPTs/attachments/07_error_messages_troubleshooting.md": [
+        "error codes",
+        "altierr",
+        "SQLCODE",
+        "cause action",
+        "troubleshooting",
+    ],
+    "GPTs/attachments/08_performance_tuning_monitoring.md": [
+        "performance tuning",
+        "execution plan",
+        "hints",
+        "statistics",
+        "Monitoring API",
+    ],
+    "GPTs/attachments/09_replication_ha_cdc.md": [
+        "replication",
+        "CDC",
+        "Log Analyzer",
+        "RepMgr",
+        "replication state",
+    ],
+    "GPTs/attachments/10_psm_stored_external_procedures.md": [
+        "PSM",
+        "stored procedures",
+        "packages",
+        "triggers",
+        "external procedures",
+    ],
+    "GPTs/attachments/11_java_jdbc_spring.md": [
+        "JDBC",
+        "Java compatibility",
+        "Spring",
+        "Hibernate",
+        "Adapter for JDBC",
+    ],
+    "GPTs/attachments/12_c_cli_odbc_precompiler.md": [
+        "CLI",
+        "ODBC",
+        "Altibase C Interface",
+        "APRE",
+        "diagnostics",
+    ],
+    "GPTs/attachments/13_isql_iloader_basic_tools.md": [
+        "iSQL",
+        "iLoader",
+        "host variables",
+        "FORM files",
+        "load export",
+    ],
+    "GPTs/attachments/14_utilities_operation_tools.md": [
+        "utilities",
+        "dataCompJ",
+        "aexport",
+        "altiComp",
+        "dump tools",
+    ],
+    "GPTs/attachments/15_migration_oracle_compatibility.md": [
+        "Migration Center",
+        "Adapter for Oracle",
+        "Oracle conversion",
+        "migration validation",
+        "oraAdapter",
+    ],
+    "GPTs/attachments/16_dblink_external_connectors.md": [
+        "DB Link",
+        "AltiLinker",
+        "Hadoop Connector",
+        "DBeaver",
+        "external connectors",
+    ],
+    "GPTs/attachments/17_kubernetes_aku_cloud.md": [
+        "Kubernetes",
+        "AKU",
+        "container",
+        "Pod",
+        "StatefulSet",
+    ],
+    "GPTs/attachments/18_security_ssl_tls.md": [
+        "SSL",
+        "TLS",
+        "certificates",
+        "FIPS",
+        "replication SSL",
+    ],
+    "GPTs/attachments/19_spatial_nifi_tableau_misc.md": [
+        "Spatial",
+        "GEOMETRY",
+        "altiShapeLoader",
+        "NiFi",
+        "Tableau",
+    ],
+    "N/A": ["out-of-scope", "source boundary", "selected corpus"],
+}
+
+ITEM_TYPE_ALIAS_TERMS = {
+    "property": ["default", "range", "dynamic change", "restart", "check SQL"],
+    "SQL syntax": ["syntax", "BNF", "privileges", "examples", "validation SQL"],
+    "command option": ["command option", "tool option", "help output"],
+    "view": ["view purpose", "key columns", "query timing", "check SQL"],
+    "column": ["column name", "installed metadata", "patch-sensitive columns"],
+    "error code": ["error code", "symbol", "message", "cause", "action"],
+    "API": ["API", "call order", "arguments", "return code", "diagnostics"],
+    "runbook step": ["prerequisites", "commands", "stop conditions", "validation"],
+    "compatibility rule": ["compatibility", "version boundary", "unsupported behavior"],
+    "version note": ["version note", "patch boundary", "release note"],
+    "warning": ["caution", "missing input", "safest next check"],
+    "example": ["example", "expected output", "validation"],
+    "data type": ["data type", "limits", "conversion", "LOB", "JSON"],
+    "function": ["function", "arguments", "return value", "examples"],
+    "tool command": ["tool command", "options", "output", "diagnostics"],
+    "connector setting": ["connector", "driver", "configuration", "runtime checks"],
+    "release note": ["release note", "BUG token", "changed behavior"],
+    "platform rule": ["platform", "OS", "hardware", "JDK", "support boundary"],
+    "other documented category": ["documented item", "source-backed", "answer block"],
 }
 
 SOURCE_ID_RE = re.compile(
@@ -334,6 +501,227 @@ def count_by(rows: list[dict[str, str]], field: str) -> dict[str, int]:
         value = row[field]
         counts[value] = counts.get(value, 0) + 1
     return dict(sorted(counts.items()))
+
+
+def clean_cell(value: str) -> str:
+    return " ".join((value or "").replace("\t", " ").split())
+
+
+def split_literal_tokens(value: str, limit: int = 12) -> list[str]:
+    tokens = []
+    for raw in (value or "").split(";"):
+        token = clean_cell(raw)
+        if token and token not in tokens:
+            tokens.append(token)
+        if len(tokens) >= limit:
+            break
+    return tokens
+
+
+def append_unique(values: list[str], additions: list[str]) -> None:
+    seen = {value.lower(): value for value in values}
+    for value in additions:
+        value = clean_cell(value)
+        if not value:
+            continue
+        key = value.lower()
+        if key not in seen:
+            seen[key] = value
+            values.append(value)
+
+
+def matrix_routing_aliases(row: dict[str, str]) -> str:
+    aliases: list[str] = []
+    append_unique(aliases, [row["source_family"].replace("_", " "), row["item_type"]])
+    append_unique(aliases, ATTACHMENT_ALIAS_TERMS.get(row["attachment_target"], []))
+    append_unique(aliases, ITEM_TYPE_ALIAS_TERMS.get(row["item_type"], []))
+    append_unique(aliases, split_literal_tokens(row.get("literal_tokens", "")))
+    return "; ".join(aliases)
+
+
+def matrix_status_note(row: dict[str, str]) -> str:
+    status = row["coverage_status"]
+    status_notes = {
+        "Covered": (
+            "Catalog maps this item to an answer-ready attachment block; preserve exact "
+            "literal tokens and version scope during later edits."
+        ),
+        "Covered-by-routing": (
+            "Catalog maps this item through attachment routing, cross-reference, alias, "
+            "or index coverage; strengthen routing if later lexical checks miss it."
+        ),
+        "Guardrail": (
+            "Guardrail row; a definitive customer answer requires the recorded missing "
+            "input or safest next check."
+        ),
+        "Out-of-scope": (
+            "Outside the locked selected upload corpus; do not add customer-facing "
+            "coverage unless the corpus boundary changes."
+        ),
+        "Missing": (
+            "Unresolved source-backed attachment gap; target attachment needs an "
+            "answer-ready block before final audit closure."
+        ),
+        "Retrieval-weak": (
+            "Represented but retrieval-weak; add or strengthen aliases, headings, "
+            "indexes, or cross-links before final audit closure."
+        ),
+    }
+    summary = clean_cell(row.get("source_summary", ""))
+    if len(summary) > 220:
+        summary = summary[:217].rstrip() + "..."
+    return f"{status_notes[status]} Source summary: {summary}"
+
+
+def matrix_evidence(row: dict[str, str], audit_job: str) -> str:
+    command = (
+        "python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py "
+        f"build-matrix --audit-job {audit_job}"
+    )
+    return clean_cell(f"matrix build: {command}; catalog evidence: {row['evidence']}")
+
+
+def build_matrix_rows(
+    catalog_rows: list[dict[str, str]], audit_job: str
+) -> list[dict[str, str]]:
+    matrix_rows: list[dict[str, str]] = []
+    for row in catalog_rows:
+        matrix_row = {
+            "source_item_id": row["source_item_id"],
+            "source_family": row["source_family"],
+            "version_scope": row["version_scope"],
+            "source_path": row["source_path"],
+            "source_heading": row["source_heading"],
+            "item_type": row["item_type"],
+            "attachment_target": row["attachment_target"],
+            "coverage_status": row["coverage_status"],
+            "attachment_anchor": row["attachment_anchor"],
+            "routing_aliases": matrix_routing_aliases(row),
+            "matrix_notes": matrix_status_note(row),
+            "guardrail_reason": row["guardrail_reason"],
+            "audit_job": audit_job,
+            "evidence": matrix_evidence(row, audit_job),
+        }
+        matrix_rows.append(
+            {field: clean_cell(matrix_row[field]) for field in MATRIX_REQUIRED_COLUMNS}
+        )
+    return matrix_rows
+
+
+def write_tsv(path: Path, fieldnames: list[str], rows: list[dict[str, str]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            delimiter="\t",
+            fieldnames=fieldnames,
+            lineterminator="\n",
+            extrasaction="raise",
+        )
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
+def cmd_build_matrix(args: argparse.Namespace) -> int:
+    catalog_path = Path(args.catalog)
+    matrix_path = Path(args.matrix)
+    catalog_rows = validate_catalog(catalog_path)
+    _, existing_rows = read_tsv(matrix_path)
+    if existing_rows and not args.force:
+        raise CheckError(
+            f"{repo_relative(matrix_path)} already has {len(existing_rows)} rows; "
+            "rerun with --force only when intentionally rebuilding the whole matrix"
+        )
+    matrix_rows = build_matrix_rows(catalog_rows, args.audit_job)
+    write_tsv(matrix_path, MATRIX_REQUIRED_COLUMNS, matrix_rows)
+    print(
+        f"OK: wrote {len(matrix_rows)} matrix rows to {repo_relative(matrix_path)} "
+        f"from {len(catalog_rows)} catalog rows"
+    )
+    return 0
+
+
+def check_matrix_qa(
+    catalog_path: Path, matrix_path: Path
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    catalog_fieldnames, catalog_rows = read_tsv(catalog_path)
+    matrix_fieldnames, matrix_rows = read_tsv(matrix_path)
+    require_exact_columns(catalog_path, catalog_fieldnames, CATALOG_REQUIRED_COLUMNS)
+    require_exact_columns(matrix_path, matrix_fieldnames, MATRIX_REQUIRED_COLUMNS)
+
+    catalog_rows = validate_catalog(catalog_path)
+    matrix_rows = validate_matrix(matrix_path, catalog_rows)
+    if not matrix_rows:
+        raise CheckError(f"{repo_relative(matrix_path)} has no matrix rows")
+
+    catalog_by_id = {row["source_item_id"]: row for row in catalog_rows}
+    matrix_by_pair = {
+        (row["source_item_id"], row["attachment_target"]): row for row in matrix_rows
+    }
+    missing_ids = sorted(
+        source_item_id
+        for source_item_id in catalog_by_id
+        if not any(row["source_item_id"] == source_item_id for row in matrix_rows)
+    )
+    if missing_ids:
+        raise CheckError(
+            "matrix is missing catalog source_item_id rows: "
+            + ", ".join(missing_ids[:20])
+            + (" ..." if len(missing_ids) > 20 else "")
+        )
+
+    for catalog_row in catalog_rows:
+        key = (catalog_row["source_item_id"], catalog_row["attachment_target"])
+        matrix_row = matrix_by_pair.get(key)
+        if not matrix_row:
+            raise CheckError(
+                "matrix is missing the catalog attachment mapping for "
+                f"{catalog_row['source_item_id']} -> {catalog_row['attachment_target']}"
+            )
+        for field in (
+            "source_family",
+            "version_scope",
+            "source_path",
+            "source_heading",
+            "item_type",
+            "coverage_status",
+            "attachment_anchor",
+            "guardrail_reason",
+        ):
+            if clean_cell(matrix_row[field]) != clean_cell(catalog_row[field]):
+                raise CheckError(
+                    f"matrix field mismatch for {catalog_row['source_item_id']} "
+                    f"field {field}: {matrix_row[field]!r} != {catalog_row[field]!r}"
+                )
+        for field in ("routing_aliases", "matrix_notes", "audit_job", "evidence"):
+            if not matrix_row[field].strip():
+                raise CheckError(
+                    f"matrix row {catalog_row['source_item_id']} has empty {field}"
+                )
+        if (
+            matrix_row["coverage_status"] in {"Covered-by-routing", "Retrieval-weak"}
+            and "alias" not in matrix_row["matrix_notes"].lower()
+            and "routing" not in matrix_row["matrix_notes"].lower()
+        ):
+            raise CheckError(
+                f"matrix row {catalog_row['source_item_id']} lacks retrieval/routing note"
+            )
+
+    return catalog_rows, matrix_rows
+
+
+def cmd_matrix_qa(args: argparse.Namespace) -> int:
+    catalog_rows, matrix_rows = check_matrix_qa(Path(args.catalog), Path(args.matrix))
+    print("OK: matrix QA passed")
+    print(f"Catalog rows: {len(catalog_rows)}")
+    print(f"Matrix rows: {len(matrix_rows)}")
+    print("Coverage statuses:")
+    for status, count in count_by(matrix_rows, "coverage_status").items():
+        print(f"  {status}: {count}")
+    print("Attachment targets:")
+    for attachment, count in count_by(matrix_rows, "attachment_target").items():
+        print(f"  {attachment}: {count}")
+    return 0
 
 
 def namespace_sequence_gap_count(rows: list[dict[str, str]]) -> int:
@@ -571,6 +959,26 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--matrix", default=str(DEFAULT_MATRIX))
     check.add_argument("--require-registers", action="store_true")
     check.set_defaults(func=cmd_check)
+
+    build_matrix = subparsers.add_parser(
+        "build-matrix", help="initialize source_to_attachment_matrix.tsv from catalog rows"
+    )
+    build_matrix.add_argument("--catalog", default=str(DEFAULT_CATALOG))
+    build_matrix.add_argument("--matrix", default=str(DEFAULT_MATRIX))
+    build_matrix.add_argument("--audit-job", default="FCA-J040")
+    build_matrix.add_argument(
+        "--force",
+        action="store_true",
+        help="overwrite an already populated matrix intentionally",
+    )
+    build_matrix.set_defaults(func=cmd_build_matrix)
+
+    matrix_qa = subparsers.add_parser(
+        "matrix-qa", help="verify matrix coverage of every catalog row"
+    )
+    matrix_qa.add_argument("--catalog", default=str(DEFAULT_CATALOG))
+    matrix_qa.add_argument("--matrix", default=str(DEFAULT_MATRIX))
+    matrix_qa.set_defaults(func=cmd_matrix_qa)
 
     catalog_qa = subparsers.add_parser(
         "catalog-qa", help="run stricter catalog consolidation QA checks"

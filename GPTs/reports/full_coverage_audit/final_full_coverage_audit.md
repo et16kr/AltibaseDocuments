@@ -7,8 +7,11 @@
 ## Current State
 
 The selected source corpus is locked in `source_corpus_lock.md`, and the machine-
-checkable catalog, matrix, register, and script schema are initialized by `FCA-J003`.
-No item-level source coverage totals are final yet.
+checkable catalog, register, and script schema are initialized by `FCA-J003`.
+`FCA-J040` populated the initial source-to-attachment matrix from the QA-passed catalog
+with one mapping row per catalog row. No item-level source coverage totals are final
+yet because unresolved `Missing` and `Retrieval-weak` rows remain assigned to later
+remediation and routing jobs.
 
 ## Final Report Requirements
 
@@ -25,6 +28,6 @@ No item-level source coverage totals are final yet.
 
 ## Placeholder Decision
 
-Current decision: not ready for final sign-off. Catalog extraction, matrix mapping,
-remediation, retrieval routing, guardrail audit, answer contract alignment, and final
-validation remain assigned to later FCA jobs.
+Current decision: not ready for final sign-off. Catalog extraction and initial matrix
+mapping are complete, but remediation, retrieval routing, guardrail audit, answer
+contract alignment, and final validation remain assigned to later FCA jobs.

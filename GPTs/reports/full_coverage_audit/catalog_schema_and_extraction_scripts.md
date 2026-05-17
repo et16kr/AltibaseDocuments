@@ -233,7 +233,9 @@ Script:
 
 `GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py`
 
-The script uses only the Python standard library and does not write canonical rows.
+The script uses only the Python standard library. It does not write canonical catalog
+rows; `build-matrix` is the explicit exception for initializing
+`source_to_attachment_matrix.tsv` from already reviewed catalog rows.
 
 Validate initialized or populated TSVs:
 
@@ -245,6 +247,19 @@ Run stricter catalog consolidation QA before matrix mapping:
 
 ```bash
 python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py catalog-qa
+```
+
+Initialize the source-to-attachment matrix from the validated catalog:
+
+```bash
+python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py build-matrix \
+  --audit-job FCA-J040
+```
+
+Validate that every catalog row has a matrix mapping and that copied fields still match:
+
+```bash
+python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py matrix-qa
 ```
 
 Generate a source heading outline as extraction aid:
@@ -275,6 +290,15 @@ The checker enforces:
 - non-empty `source_path`, `audit_job`, and `evidence` in matrix rows;
 - required `guardrail_reason` for `Guardrail` and `Out-of-scope` rows;
 - presence of the initialized register/report files when `--require-registers` is used.
+
+The `matrix-qa` command also checks:
+
+- canonical catalog and matrix column order;
+- at least one matrix row for every catalog `source_item_id`;
+- the initial catalog `source_item_id` plus `attachment_target` mapping is present;
+- copied matrix fields match the catalog for source family, version scope, source path,
+  source heading, item type, coverage status, attachment anchor, and guardrail reason;
+- non-empty `routing_aliases`, `matrix_notes`, `audit_job`, and `evidence` fields.
 
 The stricter `catalog-qa` command also checks:
 

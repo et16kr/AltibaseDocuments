@@ -986,3 +986,48 @@ Each entry should include:
 - Residual risk: source-to-attachment matrix rows remain assigned to `FCA-J040`.
   Existing unresolved `Missing` and `Retrieval-weak` rows remain intentional handoff
   work for later remediation and routing jobs.
+
+### FCA-J040
+
+- Changed files: `source_to_attachment_matrix.tsv`,
+  `catalog_schema_and_extraction_scripts.md`, `final_full_coverage_audit.md`,
+  `scripts/fca_catalog_tools.py`, and this remediation log.
+- Product coverage changes: none. This job did not change customer-facing
+  attachments, GPT instructions, catalog rows, registers, or original source
+  documents.
+- Matrix build result: `source_to_attachment_matrix.tsv` now has 2153 rows, one
+  initial mapping for every QA-passed catalog row. Every matrix row has
+  `audit_job=FCA-J040`, a copied attachment target, coverage disposition, attachment
+  anchor, guardrail reason where applicable, generated routing aliases, matrix notes,
+  and an evidence command that preserves the original catalog evidence.
+- Disposition totals in the initial matrix: 1035 `Covered`, 840
+  `Covered-by-routing`, 232 `Missing`, 33 `Guardrail`, 3 `Out-of-scope`, and 10
+  `Retrieval-weak`.
+- Attachment target totals in the initial matrix: `00` 145, `01` 34, `02` 46, `03`
+  57, `04` 54, `05` 369, `06` 227, `07` 644, `08` 134, `09` 78, `10` 46, `11` 40,
+  `12` 36, `13` 33, `14` 44, `15` 43, `16` 54, `17` 20, `18` 14, `19` 32, and
+  `N/A` 3.
+- Benchmark evidence used for routing priority: the locked latest full benchmark run
+  `altibase_answerability_20260517_205641` remains `blocking_gaps` with `101/270`
+  passed, `169` failed, `37.4%` pass rate, `85.1%` critical fact coverage, `90.1%`
+  required token preservation, and `32` protected-topic blockers. The workflow
+  priority notes also record that high retrieval risk dominated the failed-question
+  set, so generated aliases intentionally use the coverage-matrix retrieval routes,
+  attachment owner terms, item-type answer shapes, and exact literal tokens from the
+  catalog.
+- Tooling changes: `fca_catalog_tools.py` now provides `build-matrix` for the explicit
+  catalog-to-matrix initialization and `matrix-qa` for required-column, duplicate-pair,
+  catalog-row coverage, copied-field, routing-alias, matrix-note, and evidence checks.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py matrix-qa`
+  passed with 2153 catalog rows and 2153 matrix rows; `python3
+  GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check
+  --require-registers` passed with 2153 catalog rows and 2153 matrix rows;
+  `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate`
+  passed with 20 upload attachments; the review-report severity scan showed
+  `Verdict: Pass` for R00-R27 and no actionable `Blocker`, `High`, `Medium`, or `Low`
+  finding rows.
+- Residual risk: this job preserves existing unresolved rows rather than remediating
+  them. The 232 `Missing` rows remain assigned to later content remediation jobs, the
+  10 `Retrieval-weak` rows remain assigned to later retrieval-routing jobs, and the 33
+  `Guardrail` plus 3 `Out-of-scope` rows must keep their missing-input or
+  source-boundary reasons during later audit work.
