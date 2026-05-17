@@ -241,6 +241,12 @@ Validate initialized or populated TSVs:
 python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers
 ```
 
+Run stricter catalog consolidation QA before matrix mapping:
+
+```bash
+python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py catalog-qa
+```
+
 Generate a source heading outline as extraction aid:
 
 ```bash
@@ -269,6 +275,20 @@ The checker enforces:
 - non-empty `source_path`, `audit_job`, and `evidence` in matrix rows;
 - required `guardrail_reason` for `Guardrail` and `Out-of-scope` rows;
 - presence of the initialized register/report files when `--require-registers` is used.
+
+The stricter `catalog-qa` command also checks:
+
+- canonical catalog and matrix column order;
+- `source_item_id` version-code consistency with `version_scope`;
+- non-empty `source_heading`, `literal_tokens`, and `source_summary`;
+- existing repository-relative `source_path` files;
+- non-empty `attachment_anchor` for represented `Covered`, `Covered-by-routing`,
+  `Guardrail`, and `Retrieval-weak` rows;
+- all controlled source families have at least one catalog row;
+- ID namespace sequence-gap count for stable-ID review; sequence gaps are not fatal
+  because retired IDs must not be reused;
+- every unresolved `Missing`, `Guardrail`, `Out-of-scope`, and `Retrieval-weak`
+  catalog row is mentioned in the matching register.
 
 ## Register Update Rules
 

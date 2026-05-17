@@ -167,6 +167,14 @@ def require_columns(path: Path, fieldnames: list[str], required: list[str]) -> N
         )
 
 
+def require_exact_columns(path: Path, fieldnames: list[str], required: list[str]) -> None:
+    if fieldnames != required:
+        raise CheckError(
+            f"{repo_relative(path)} has non-canonical column order: "
+            f"{', '.join(fieldnames)}"
+        )
+
+
 def validate_repo_path(value: str, field: str, path: Path, row_number: int) -> None:
     if not value:
         return
@@ -311,6 +319,140 @@ def cmd_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def version_scope_from_id(source_item_id: str) -> str:
+    version_code = source_item_id.split("-")[2]
+    if version_code == "XVER":
+        return "cross-version"
+    if version_code == "PATCH":
+        return "patch-specific"
+    return version_code
+
+
+def count_by(rows: list[dict[str, str]], field: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for row in rows:
+        value = row[field]
+        counts[value] = counts.get(value, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def namespace_sequence_gap_count(rows: list[dict[str, str]]) -> int:
+    seen_by_namespace: dict[str, set[int]] = {}
+    for row in rows:
+        parts = row["source_item_id"].split("-")
+        namespace = "-".join(parts[:3])
+        sequence = int(parts[3])
+        seen_by_namespace.setdefault(namespace, set()).add(sequence)
+
+    gap_count = 0
+    for sequences in seen_by_namespace.values():
+        expected = set(range(1, max(sequences) + 1))
+        gap_count += len(expected - sequences)
+    return gap_count
+
+
+def register_text(name: str) -> str:
+    path = AUDIT_DIR / name
+    if not path.exists():
+        raise CheckError(f"missing audit register/report: {repo_relative(path)}")
+    return path.read_text(encoding="utf-8")
+
+
+def check_catalog_qa(catalog_path: Path, matrix_path: Path) -> tuple[
+    list[dict[str, str]], list[dict[str, str]]
+]:
+    catalog_fieldnames, catalog_rows = read_tsv(catalog_path)
+    matrix_fieldnames, matrix_rows = read_tsv(matrix_path)
+    require_exact_columns(catalog_path, catalog_fieldnames, CATALOG_REQUIRED_COLUMNS)
+    require_exact_columns(matrix_path, matrix_fieldnames, MATRIX_REQUIRED_COLUMNS)
+
+    catalog_rows = validate_catalog(catalog_path)
+    matrix_rows = validate_matrix(matrix_path, catalog_rows)
+
+    missing_register = register_text("missing_item_register.md")
+    guardrail_register = register_text("guardrail_register.md")
+    retrieval_register = register_text("retrieval_weakness_register.md")
+
+    for index, row in enumerate(catalog_rows, start=2):
+        source_item_id = row["source_item_id"]
+        expected_scope = version_scope_from_id(source_item_id)
+        if row["version_scope"] != expected_scope:
+            raise CheckError(
+                f"{repo_relative(catalog_path)} row {index}: ID version code does not "
+                f"match version_scope for {source_item_id}"
+            )
+        for field in ("source_heading", "literal_tokens", "source_summary"):
+            if not row[field].strip():
+                raise CheckError(
+                    f"{repo_relative(catalog_path)} row {index}: {field} is required "
+                    "for catalog QA"
+                )
+        source_path = REPO_ROOT / row["source_path"]
+        if not source_path.exists():
+            raise CheckError(
+                f"{repo_relative(catalog_path)} row {index}: source_path does not exist: "
+                f"{row['source_path']}"
+            )
+        status = row["coverage_status"]
+        if status in {"Covered", "Covered-by-routing", "Guardrail", "Retrieval-weak"}:
+            if not row["attachment_anchor"].strip():
+                raise CheckError(
+                    f"{repo_relative(catalog_path)} row {index}: attachment_anchor is "
+                    f"required for {status}"
+                )
+        if status == "Missing" and source_item_id not in missing_register:
+            raise CheckError(
+                f"{source_item_id} is Missing in catalog but absent from "
+                "missing_item_register.md"
+            )
+        if (
+            status in {"Guardrail", "Out-of-scope"}
+            and source_item_id not in guardrail_register
+        ):
+            raise CheckError(
+                f"{source_item_id} is {status} in catalog but absent from "
+                "guardrail_register.md"
+            )
+        if status == "Retrieval-weak" and source_item_id not in retrieval_register:
+            raise CheckError(
+                f"{source_item_id} is Retrieval-weak in catalog but absent from "
+                "retrieval_weakness_register.md"
+            )
+
+    missing_families = sorted(
+        SOURCE_FAMILIES - {row["source_family"] for row in catalog_rows}
+    )
+    if missing_families:
+        raise CheckError(
+            "catalog has no rows for source families: " + ", ".join(missing_families)
+        )
+
+    return catalog_rows, matrix_rows
+
+
+def cmd_catalog_qa(args: argparse.Namespace) -> int:
+    catalog_path = Path(args.catalog)
+    matrix_path = Path(args.matrix)
+    catalog_rows, matrix_rows = check_catalog_qa(catalog_path, matrix_path)
+    print("OK: catalog QA passed")
+    print(f"Catalog rows: {len(catalog_rows)}")
+    print(f"Matrix rows: {len(matrix_rows)}")
+    print(f"ID namespace sequence gaps: {namespace_sequence_gap_count(catalog_rows)}")
+    print("Coverage statuses:")
+    for status, count in count_by(catalog_rows, "coverage_status").items():
+        print(f"  {status}: {count}")
+    print("Version scopes:")
+    for scope, count in count_by(catalog_rows, "version_scope").items():
+        print(f"  {scope}: {count}")
+    print("Source families:")
+    for family, count in count_by(catalog_rows, "source_family").items():
+        print(f"  {family}: {count}")
+    print("Audit jobs:")
+    for job, count in count_by(catalog_rows, "audit_job").items():
+        print(f"  {job}: {count}")
+    return 0
+
+
 def infer_version_scope(path: Path) -> str:
     value = str(path)
     if "Altibase_7.1" in value or "PatchNotes/Altibase_7.1" in value:
@@ -429,6 +571,13 @@ def build_parser() -> argparse.ArgumentParser:
     check.add_argument("--matrix", default=str(DEFAULT_MATRIX))
     check.add_argument("--require-registers", action="store_true")
     check.set_defaults(func=cmd_check)
+
+    catalog_qa = subparsers.add_parser(
+        "catalog-qa", help="run stricter catalog consolidation QA checks"
+    )
+    catalog_qa.add_argument("--catalog", default=str(DEFAULT_CATALOG))
+    catalog_qa.add_argument("--matrix", default=str(DEFAULT_MATRIX))
+    catalog_qa.set_defaults(func=cmd_catalog_qa)
 
     outline = subparsers.add_parser(
         "outline", help="emit a heading outline TSV for source extraction"

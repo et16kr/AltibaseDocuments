@@ -954,3 +954,35 @@ Each entry should include:
   blocks before final audit closure; the two 6.x out-of-scope rows remain intentional
   unless a later source-family update explicitly expands customer-facing historical
   scope.
+
+### FCA-J039
+
+- Changed files: `catalog_consolidation_qa.md`,
+  `catalog_schema_and_extraction_scripts.md`,
+  `scripts/fca_catalog_tools.py`, and this remediation log.
+- Product coverage changes: none. This job preserved all existing catalog rows,
+  catalog dispositions, registers, customer-facing attachments, GPT instructions, and
+  original source documents.
+- Catalog QA result: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py catalog-qa`
+  passed with 2153 catalog rows, 0 matrix rows, all 25 controlled source families
+  present, 0 duplicate IDs, 0 ID/version mismatches, 0 observed ID namespace sequence
+  gaps, 0 invalid controlled-vocabulary values, 0 missing source paths, and 0
+  unregistered unresolved dispositions.
+- Disposition totals at QA handoff: 1035 `Covered`, 840 `Covered-by-routing`, 232
+  `Missing`, 33 `Guardrail`, 3 `Out-of-scope`, and 10 `Retrieval-weak`.
+- Register reconciliation: every `Missing` row appears in
+  `missing_item_register.md`, every `Guardrail` and `Out-of-scope` row appears in
+  `guardrail_register.md`, and every `Retrieval-weak` row appears in
+  `retrieval_weakness_register.md`.
+- Narrative-log completeness note: the catalog contains rows for `FCA-J013`,
+  `FCA-J014`, `FCA-J025`, `FCA-J029`, `FCA-J031`, and `FCA-J036`, but this log did not
+  contain individual `###` sections for those jobs before `FCA-J039`. This is recorded
+  as a QA note, not a catalog blocker, because their catalog rows, evidence fields, and
+  required register entries passed validation.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py catalog-qa`
+  passed; `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed; standard repository verification is recorded in the `FCA-J039` final job
+  output.
+- Residual risk: source-to-attachment matrix rows remain assigned to `FCA-J040`.
+  Existing unresolved `Missing` and `Retrieval-weak` rows remain intentional handoff
+  work for later remediation and routing jobs.
