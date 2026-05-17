@@ -56,6 +56,29 @@ If any stage is `Reviewing`, `Remediating`, or `ReReviewing`, inspect the releva
 report, target files, and worktree before continuing. If any stage is `Fail`, inspect
 the failure context before resetting or rerunning it.
 
+## Answerability Test Result Locations
+
+When asked to compare "1st test before GPTs update" and "2nd test after GPTs
+upgrade", do not rediscover the files. Go directly to the full benchmark runs:
+
+- 1st test, before GPTs update:
+  `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260516_145452/`
+- 2nd test, after GPTs upgrade:
+  `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_095919/`
+
+Within each run, use:
+
+- `summary.txt` for the compact result summary.
+- `judge/report.md` for the human-readable readiness report.
+- `judge/aggregate_report.json` for structured totals, metrics, domain aggregates,
+  protected-topic blockers, and top remediation targets.
+- `judge/judgments.jsonl` for per-question pass/fail, severity, findings, and scores.
+- `answers/answers.jsonl` for generated answers.
+- `answers/run.json` and `run-test.log` for run metadata and execution logs.
+
+Both comparison runs used `full_benchmark`, 270 questions, `mode=live`,
+`provider=command`, `model=codex-exec`, and `context_mode=lexical`.
+
 ## Review Report Phase
 
 Review reports live in `review/reports/R*.md`.

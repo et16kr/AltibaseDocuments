@@ -16,3 +16,19 @@ level, version scope, answer type, and retrieval risk.
 
 Large per-run outputs should stay under ignored `runs/` directories or outside the
 repository, for example `/tmp/altibase-judge-report-fixture`.
+
+## Current Comparison Baselines
+
+For the saved comparison between the 1st test before GPTs update and the 2nd test
+after GPTs upgrade, use these run directories directly:
+
+- 1st test, before GPTs update:
+  `full_benchmark/runs/altibase_answerability_20260516_145452/`
+- 2nd test, after GPTs upgrade:
+  `full_benchmark/runs/altibase_answerability_20260517_095919/`
+
+Open `summary.txt` first, then `judge/aggregate_report.json` and
+`judge/judgments.jsonl` for structured comparison.
+
+The root-cause analysis for these two runs is saved at
+`full_benchmark/failure_root_cause_analysis_20260517.md`.
