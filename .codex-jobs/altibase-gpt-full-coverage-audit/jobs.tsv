@@ -11,7 +11,7 @@ FCA-J009	Done	docs	SQL Reference DCL admin replication destructive catalog	Extra
 FCA-J010	Done	docs	SQL Reference DML expression and function catalog	Extract DML, predicates, expressions, built-in functions, regular expression, object-name, and syntax restriction items.
 FCA-J011	Done	docs	SQL Reference JSON LOB and Oracle-difference catalog	Extract JSON SQL, LOB SQL, data-type syntax restrictions, Oracle-difference, migration-risk, and compatibility items.
 FCA-J012	Done	docs	General Reference data type catalog	Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
-FCA-J013	ToDo	docs	Property catalog core path and storage	Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
+FCA-J013	Done	docs	Property catalog core path and storage	Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
 FCA-J014	ToDo	docs	Property catalog memory log cache and capacity	Extract memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit property items.
 FCA-J015	ToDo	docs	Property catalog optimizer session locale and timeout	Extract optimizer, normalization, lock, timeout, autocommit, session, locale, and performance property items.
 FCA-J016	ToDo	docs	Property catalog security replication network and DB Link	Extract account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link property items.
