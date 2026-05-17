@@ -96,7 +96,9 @@ Generation notes:
 - A `FROM` clause can reference at most 32 tables or views. Aliases in the same `FROM` clause must be unique.
 - `ORDER BY` cannot be used in a subquery. With set operators, `ORDER BY` can use only output positions or aliases.
 - `LIMIT` can be used in top-level queries and subqueries. Use `TOP (n)` only when a leading row-count expression fits the request.
-- `FOR UPDATE` is only for the main query. It cannot be combined with `DISTINCT`, `GROUP BY`, aggregate functions, or set operators.
+- `FOR UPDATE` locks selected rows so other users cannot lock or modify them until the current transaction ends.
+- `FOR UPDATE` is only for the top-level `SELECT`, not subqueries. It cannot be combined with `DISTINCT`, `GROUP BY`, aggregate functions, or set operators such as `UNION`, `INTERSECT`, or `MINUS`.
+- `WAIT integer [SEC | MSEC | USEC]` sets the lock wait duration; if the unit is omitted, seconds are used. `NOWAIT` returns immediately when the target row or table is already locked.
 
 ### SELECT Subclause Syntax
 
@@ -169,6 +171,7 @@ Generation notes:
 
 - `LATERAL (subquery)` lets the subquery reference preceding `FROM` items.
 - `APPLY` joins a table reference to a single-table expression. Use `CROSS APPLY` for inner-apply behavior and `OUTER APPLY` when unmatched left rows must be retained.
+- `APPLY` joins do not use an `ON` clause. If the rewrite needs an `ON` join condition, generate ordinary `JOIN ... ON ...` instead.
 - `PIVOT` and `UNPIVOT` are not generic Oracle pass-through clauses. Preserve their Altibase syntax and test aliases, null handling, and expression lists.
 - `ORDER SIBLINGS BY` is for hierarchical queries; do not use it as a replacement for top-level `ORDER BY`.
 
@@ -201,7 +204,7 @@ Generation notes:
 - Column count and value count must match, and corresponding data types must be compatible.
 - If omitted columns have no default, Altibase inserts `NULL`; for a `TIMESTAMP` column, the default system time is inserted.
 - `DEFAULT` inserts the column default. `DEFAULT VALUES` inserts defaults for all columns.
-- `INSERT ... SELECT` requires the inserted column count to match the selected column count.
+- `INSERT SELECT` / `INSERT ... SELECT` requires the inserted column count to match the selected column count.
 - `INSERT /*+ APPEND */ INTO target SELECT ...` requests direct-path insert. The target must be a disk table and cannot have LOB columns, indexes, triggers, referential constraints, replication target status, or `CHECK` constraints.
 - If an expression in a multi-table insert source query must be referenced in a `VALUES` clause, give it an alias in the source `SELECT`.
 
@@ -216,6 +219,11 @@ update ::=
   [WHERE condition]
   [LIMIT [row_offset,] row_count]
   [{RETURN | RETURNING} expr [, ...] INTO variable [, ...]]
+
+multiple_update ::=
+  UPDATE table_reference [, table_reference ...]
+  SET column_name = expr [, column_name = expr ...]
+  WHERE join_condition [AND condition ...]
 ```
 
 Generation notes:
@@ -224,6 +232,7 @@ Generation notes:
 - A subquery in `SET` must return one row for each updated row. If it returns no row, Altibase updates the target column to `NULL`.
 - Updating a partition key so the row moves to another partition requires `ENABLE ROW MOVEMENT`.
 - Updating a `TIMESTAMP` column with no explicit value, or with `DEFAULT`, stores the system time.
+- `multiple_update` updates rows that satisfy a join condition. It cannot use `LIMIT`, `RETURNING`, dictionary tables, or `full outer join`.
 - `UPDATE` can fail on `NOT NULL` or `CHECK` constraints.
 
 ### DELETE Pattern
@@ -244,7 +253,7 @@ multiple_delete ::=
 Generation notes:
 
 - Omitting `WHERE` deletes all rows from the target. Use `TRUNCATE TABLE` only when DDL semantics and non-rollback behavior are acceptable.
-- Multiple-table `DELETE` can delete rows from aliases listed after `DELETE`. It cannot use `LIMIT`, cannot use `RETURN`, cannot use dictionary tables, and cannot use full outer join.
+- `multiple_delete` / multiple-table `DELETE` can delete rows from aliases listed after `DELETE`. It cannot use `LIMIT`, cannot use `RETURN` or `RETURNING`, cannot use dictionary tables, and cannot use `full outer join`.
 - `DELETE FROM table PARTITION (partition_name)` deletes only rows in the named partition.
 
 ### MOVE Pattern
@@ -284,6 +293,8 @@ Generation notes:
 - A column referenced in the `ON` condition cannot be updated by the `WHEN MATCHED` update clause.
 - Each of `WHEN MATCHED`, `WHEN NOT MATCHED`, and `WHEN NO ROWS` can appear once and can be ordered flexibly.
 - `WHEN NO ROWS` is an Altibase extension for inserting when the source has no row.
+- Literal grammar names to preserve in reference answers: `matched_update_clause`, `not_matched_insert_clause`, and `no_rows_insert_clause`.
+- In `matched_update_clause`, `UPDATE` is required when the clause is used. `DELETE` is optional, but if present it must follow `UPDATE`.
 
 ### LOCK and Transaction Pattern
 
@@ -305,6 +316,36 @@ Generation notes:
 - `COMMIT`, `ROLLBACK`, `SAVEPOINT`, and `SET TRANSACTION` are for non-autocommit work. `COMMIT` and `ROLLBACK` cannot be executed in `AUTOCOMMIT` mode.
 - `READ COMMITTED` is the default Altibase transaction isolation level.
 - `SET TRANSACTION` cannot be used in `AUTOCOMMIT` mode and cannot be used after a transaction is already active.
+
+## Replication DDL Literal Anchor
+
+Use this compact anchor only when a SQL-generation question asks for
+`CREATE REPLICATION` endpoint syntax or transport values. Use the replication
+attachment for topology, state changes, gap handling, rebuild, CDC, TLS setup, or
+operational runbooks.
+
+```text
+create_replication_endpoint ::=
+  CREATE REPLICATION replication_name
+  [AS {MASTER | SLAVE}]
+  WITH 'replication_host_ip', replication_host_port_no
+  [USING {TCP | SSL | IB} [ib_latency]]
+  FROM local_user.local_table TO remote_user.remote_table
+```
+
+Reference facts:
+
+- Only `SYS` can create a replication object with `CREATE REPLICATION`.
+- `CREATE REPLICATION` creates a local-to-remote replication connection. Replication is 1:1 between tables: one local table matches only one table on the other side.
+- The local and remote `replication_name` must be the same and must follow Altibase object-name rules.
+- `AS MASTER` or `AS SLAVE` can be specified for the Master-Slave conflict-resolution scheme. Conflict details belong to the `Replication Manual`.
+- `replication_host_ip` is the remote server IP address.
+- `replication_host_port_no` is the remote receiver thread port for the selected transport.
+- For `TCP`, use the remote server's `REPLICATION_PORT_NO`.
+- For `SSL`, use the remote server's `REPLICATION_SSL_PORT_NO` and confirm replication SSL setup on each replication target server.
+- For `IB`, use the remote server's `REPLICATION_IB_PORT_NO` and confirm InfiniBand support.
+- If `using_conntype_clause` is omitted, Altibase uses `TCP`.
+- `FOR ANALYSIS` and `FOR ANALYSIS PROPAGATION` for Log Analyzer do not support `IB` or `SSL` communication methods.
 
 ## DML Privilege Blocks
 
@@ -421,6 +462,10 @@ LIMIT 10;
 - ANSI outer join syntax is supported.
 - Oracle-style outer join marker `(+)` is also shown in the SQL Reference examples.
 - LOB columns cannot be used as join conditions.
+- Preserve exact join terms in migration answers: `Cross Join`, `Inner Join`, `Outer Join`, `Semi Join`, and `Anti Join`.
+- For `LEFT OUTER JOIN`, all rows from the left table are returned; if the right side has no match, right-side columns are `NULL`. The Oracle-style equivalent example is `A.c1 = B.c1(+)`.
+- For `RIGHT OUTER JOIN`, all rows from the right table are returned; if the left side has no match, left-side columns are `NULL`. The Oracle-style equivalent example is `A.c1(+) = B.c1`.
+- `FULL OUTER JOIN` is documented as an ANSI outer join form; do not invent a `(+)` rewrite for full outer join.
 
 Example:
 
@@ -432,6 +477,19 @@ SELECT d.dno, e.e_lastname
 FROM departments d, employees e
 WHERE d.dno = e.dno(+);
 ```
+
+### SELECT Item: Object-Name Rules for Oracle Conversion
+
+Use this block when converting quoted, mixed-case, or special-character Oracle object names to Altibase 7.3-compatible SQL.
+
+- Maximum object-name length is `40 bytes`.
+- Object names may be unquoted or wrapped in `double quotes`. If an object is created with a quoted name, later references must also use the double-quoted name.
+- Unquoted names are case-insensitive and are internally converted to `uppercase`.
+- Unquoted names can contain `A-Z`, `a-z`, `0-9`, `_`, `$`, and `#`.
+- The first character of an unquoted name must be a letter or `_`.
+- Unquoted names cannot begin with `V$`, `X$`, or `D$`.
+- Reserved words cannot be used as unquoted object names, and duplicate names cannot exist in the same namespace.
+- Quoted names can contain characters, punctuation, or spaces, but cannot contain the `double quotes` character itself.
 
 ### SELECT Item: LATERAL and APPLY
 
@@ -457,8 +515,10 @@ FROM departments d,
 - Altibase supports Oracle-style hierarchical query clauses: `START WITH`, `CONNECT BY`, `PRIOR`, `LEVEL`, `CONNECT_BY_ROOT`, `CONNECT_BY_ISLEAF`, and `ORDER SIBLINGS BY`.
 - `START WITH` identifies root rows. If omitted, Altibase treats every row as a root row.
 - `CONNECT BY` defines parent-child relationships. It cannot include subqueries and cannot be used with a join.
+- `PRIOR` can be used only in the `SELECT` list, `WHERE` clause, or `CONNECT BY` clause of a query that includes `CONNECT BY`.
 - `ROWNUM` cannot be used in `START WITH`.
 - `IGNORE LOOP` removes loop-forming rows from the result instead of raising an error.
+- `ORDER SIBLINGS BY` preserves the hierarchy while ordering child rows at the same level. Ordinary `ORDER BY` or `GROUP BY` can disturb the `CONNECT BY` hierarchy order.
 
 Example:
 
@@ -545,7 +605,7 @@ Restrictions:
 - Supported with `INSERT`, `UPDATE`, and `DELETE` on tables.
 - Aggregate functions are not allowed in returned expressions.
 - LOB types cannot be returned with this clause.
-- Aliases, subqueries, and sequences are not allowed in returned expressions.
+- Aliases, subqueries, and `sequence` expressions are not allowed in returned expressions.
 - The number of variables must match the number of returned expressions unless a record type variable is used.
 - In iSQL, prefix host variables with `:`.
 - Multiple rows can be returned as collection variables with `BULK COLLECT` inside PSM.
@@ -972,7 +1032,18 @@ Generation notes:
 - Ranking functions require `ORDER BY` in the `OVER` clause. Aggregate window functions may omit `ORDER BY`.
 - If `ROWS` or `RANGE` is omitted for a window function that supports frames, the SQL Reference default is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
 
-#### LISTAGG Syntax
+#### GROUP_CONCAT and LISTAGG Syntax
+
+```text
+group_concat ::=
+  GROUP_CONCAT (expr1 [, arg1])
+```
+
+Generation notes:
+
+- `GROUP_CONCAT` returns a string that concatenates non-`NULL` `expr1` values in each group.
+- `arg1` is the delimiter character. If `arg1` is omitted, no delimiter is inserted.
+- `GROUP_CONCAT` is source-listed as an aggregate function and an aggregate window function; do not rewrite it mechanically to `LISTAGG`.
 
 ```text
 listagg ::=
@@ -982,6 +1053,44 @@ listagg ::=
 ```
 
 Generation note: `LISTAGG` uses `WITHIN GROUP`; add `OVER (...)` only when generating analytic form.
+
+#### Conditional Function Syntax
+
+```text
+decode ::=
+  DECODE (expr, comparison_expr1, ret_expr1[, comparison_expr2, ret_expr2,..][, default])
+
+nvl2 ::=
+  NVL2 (expr1, expr2, expr3)
+```
+
+Generation notes:
+
+- `DECODE` is equivalent to `CASE WHEN` using `simple_case_expr`: it compares `expr` to `comparison_expr` values in order using equality.
+- `DECODE` returns the matching `ret_expr`; if no comparison is true, it returns `default`; if `default` is omitted, it returns `NULL`.
+- `NVL2` returns `expr2` when `expr1` is not `NULL`; it returns `expr3` when `expr1` is `NULL`.
+- Check implicit conversion and return-type compatibility instead of assuming every Oracle `DECODE` or `NVL2` edge case is identical.
+
+#### Regular Expression Function Syntax
+
+```text
+regexp_replace ::=
+  REGEXP_REPLACE (expr, pattern_expr [, replace_string [, start [, occurrence]]])
+
+regexp_substr ::=
+  REGEXP_SUBSTR (expr, pattern_expr [, start [, occurrence]])
+
+regexp_like_condition ::=
+  [NOT] REGEXP_LIKE(source_expr, pattern_expr)
+```
+
+Generation notes:
+
+- `REGEXP_REPLACE` replaces matching text with `replace_string`; if `replace_string` is omitted or `NULL`, the matching text is removed.
+- `REGEXP_SUBSTR` returns the substring in `expr` that matches `pattern_expr`.
+- For `REGEXP_REPLACE` and `REGEXP_SUBSTR`, `pattern_expr` can be up to `1024` bytes.
+- `REGEXP_LIKE` is like `LIKE` but performs regular-expression matching. In the selected 7.3 and 8.1 SQL Reference sources, the condition supports `POSIX Basic Regular Expression`.
+- Also check `REGEXP_MODE` before treating Oracle regular-expression syntax as compatible.
 
 #### NTILE and RATIO_TO_REPORT Syntax
 
@@ -1028,8 +1137,8 @@ These functions are commonly useful when converting Oracle DML:
 
 - `NVL (expr1, expr2)` supports `DATE`, `CHAR`, and `NUMBER`; `expr2` must be the same data type as `expr1`.
 - `DECODE` compares `expr` to each comparison expression in order and returns the first matching return expression; if no match and no default exist, it returns `NULL`. The SQL Reference example shows `DECODE(i, NULL, 'NULL', ...)`.
-- `ROWNUM` returns a pseudo row number as `BIGINT`. Row numbers are assigned in table or view appearance order, and can be reordered by `ORDER BY`, `GROUP BY`, or `HAVING`.
-- `NEXTVAL` must be accessed before `CURRVAL` can be read for a newly created sequence.
+- `ROWNUM` returns a pseudo row number as `BIGINT`. Values range from `1` through the maximum `BIGINT` value. Row numbers are assigned in table or view appearance order, can be reordered by `ORDER BY`, `GROUP BY`, or `HAVING`, and are not stored key columns.
+- `sequence_name.NEXTVAL` must be accessed before `sequence_name.CURRVAL` can be read for a newly created sequence.
 - `CURRVAL` and `NEXTVAL` cannot be used in the `SELECT` statement that defines a view.
 - Altibase attempts implicit conversion for many function arguments, but conversion edge cases should be checked rather than assuming Oracle behavior.
 
@@ -1088,6 +1197,9 @@ Generation notes:
 ### JSON Item: Native JSON Column DML Cautions
 
 - Native `JSON` columns are 8.1 baseline features. For 7.1 or 7.3, do not generate native `JSON` column DML unless the customer provides version-specific confirmation.
+- Native `JSON` type syntax is `JSON [IN ROW size]`, and the maximum document size is `2GB (2,147,483,648 bytes)`.
+- The JSON document definition follows `RFC 8259`; JSON path expressions and JSON functions follow `ISO/IEC 19075-6(2021)`.
+- The maximum JSON document depth is `256`.
 - JSON processing uses Temporary LOB internally, so check `TEMPORARY_LOB_ENABLE` when a JSON workload fails or when memory use is being reviewed.
 - Treat JSON columns as LOB-like for DML and object restrictions; check the data type guidance before assuming they can be used like ordinary scalar columns.
 - Do not generate `SELECT FOR UPDATE` against `JSON` columns.
@@ -1223,6 +1335,8 @@ JSON_QUERY(json_data, json_path
 Defaults:
 
 - Return type is `VARCHAR` with precision automatically calculated from input size if `RETURNING` is omitted.
+- Valid `RETURNING` targets are `CHAR[(n)]`, `VARCHAR[(n)]`, `JSON`, and `CLOB`. Unsupported return types raise an error.
+- If `CHAR` or `VARCHAR` is specified without precision, precision defaults to `1`.
 - `WITHOUT WRAPPER` if the wrapper clause is omitted.
 - `NULL ON ERROR` if the error clause is omitted.
 - `NULL ON EMPTY` if the empty clause is omitted.
@@ -1252,6 +1366,8 @@ JSON_VALUE(json_data, json_path
 Defaults:
 
 - Return type is `VARCHAR` with precision automatically calculated from input size if `RETURNING` is omitted.
+- Valid `RETURNING` targets are `CHAR[(n)]`, `VARCHAR[(n)]`, `CLOB`, `SMALLINT`, `INT`, `BIGINT`, `FLOAT`, `DOUBLE`, `DECIMAL`, `NUMBER`, and `NUMERIC`.
+- If `CHAR` or `VARCHAR` is specified without precision, precision defaults to `1`.
 - `NULL ON ERROR` if the error clause is omitted.
 - `NULL ON EMPTY` if the empty clause is omitted.
 - A `DEFAULT expr` value must fit in the declared return type and precision.

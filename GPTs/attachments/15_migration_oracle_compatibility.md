@@ -438,6 +438,22 @@ Difference block: identifiers
 - Use the Reconcile `Unacceptable Name` step to find them.
 - Enable `Use Double-quoted Identifier` only when the application can tolerate quoted identifier behavior.
 - Reserved-word conflicts can be handled by the configured postfix, default `_POC`.
+- Altibase object names are limited to `40 bytes`.
+- `double quotes` can wrap object names. If an object is created with a quoted name, later SQL must also reference that exact double-quoted name.
+- Unquoted object names are case-insensitive and internally converted to `uppercase`.
+- Unquoted names can contain `A-Z`, `a-z`, `0-9`, `_`, `$`, and `#`.
+- The first unquoted character must be a letter or `_`.
+- Unquoted names cannot begin with `V$`, `X$`, or `D$`.
+- Quoted names can include punctuation or spaces, but not the `double quotes` character itself.
+- Migration answer pattern: ask for the Oracle object definitions and the Migration Center `Reconcile` / `DbObj_Create.sql` output before deciding whether to quote, rename, postfix, or redesign object references.
+
+Difference block: Oracle outer join operator `(+)`
+
+- Altibase 7.3 documents `Cross Join`, `Inner Join`, `Outer Join`, `Semi Join`, and `Anti Join`.
+- For `LEFT OUTER JOIN`, the documented Oracle-style equivalent is `A.c1 = B.c1(+)`; rows from the left table are preserved and right-side columns are `NULL` when there is no match.
+- For `RIGHT OUTER JOIN`, the documented Oracle-style equivalent is `A.c1(+) = B.c1`; rows from the right table are preserved and left-side columns are `NULL` when there is no match.
+- `FULL OUTER JOIN` is documented in ANSI syntax. Do not invent a `(+)` rewrite for full outer join.
+- During migration, prefer explicit ANSI `LEFT OUTER JOIN`, `RIGHT OUTER JOIN`, or `FULL OUTER JOIN` in reviewed application SQL, and check that LOB columns are not used as join conditions.
 
 Difference block: default values
 
@@ -572,6 +588,13 @@ Data type block: `JSON`
 - Source: `JSON`
 - Destination: `CLOB` or `JSON`
 - Notice: Altibase 7.3 and earlier use `CLOB`; Altibase 8.1 verified source and later JSON-capable targets use `JSON`.
+
+Migration-risk note: Oracle SQL/JSON syntax is not automatically portable. For Altibase
+8.1 target SQL, use only source-listed functions and predicates such as
+`JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`,
+`JSON_VALID`, `IS JSON`, and `IS NOT JSON`. For 7.3 and earlier targets, route
+JSON storage to `CLOB` or a manual design unless the customer provides exact
+target-version proof.
 
 ## Default Value Conversion Blocks
 
@@ -1147,6 +1170,10 @@ Constraint block: LOB
 
 ## Adapter for Oracle Data Type Mapping
 
+Scope: this mapping is for `Adapter for Oracle` applying Altibase-originated
+changes to Oracle. It is not a general claim that every Oracle DDL or Oracle
+SQL construct can run unchanged in Altibase.
+
 Data type block: numeric
 
 - Altibase `FLOAT`, `NUMERIC`, `BIGINT`, `INTEGER`, and `SMALLINT` apply to Oracle `NUMBER`.
@@ -1163,6 +1190,12 @@ Data type block: character
 - Altibase `VARCHAR` applies to Oracle `VARCHAR2`.
 - Altibase `NCHAR` applies to Oracle `NCHAR`.
 - Altibase `NVARCHAR` applies to Oracle `NVARCHAR2`.
+
+Data type block: LOB
+
+- Altibase `CLOB` applies to Oracle `CLOB`.
+- Altibase `BLOB` applies to Oracle `BLOB`.
+- For Adapter for Oracle LOB apply, also confirm `ADAPTER_LOB_TYPE_SUPPORT=1`, Oracle 11g-or-later OCI compatibility, and LOB retry/skip behavior.
 
 Example:
 

@@ -156,6 +156,7 @@ Limits and storage:
 - Default size is `1` byte.
 - Maximum size is `32000` bytes.
 - Values shorter than the declared size are padded with blanks.
+- Preserve the storage tokens `FIXED`, `VARIABLE`, and `IN ROW` when explaining Oracle string conversion or memory-table storage behavior.
 
 Use when: the value has a stable fixed length, such as fixed-format codes.
 
@@ -174,6 +175,7 @@ Limits and storage:
 - Default size is `1` byte.
 - Maximum size is `32000` bytes.
 - Stores only the actual input length plus length metadata, unless fixed-area storage applies.
+- Preserve the storage tokens `FIXED`, `VARIABLE`, and `IN ROW` when explaining Oracle `VARCHAR2` conversion, because Altibase `VARCHAR` syntax is byte-based: `VARCHAR[(size)] [FIXED | VARIABLE [IN ROW size]]`.
 
 Use when: ordinary text length varies and does not require the national character set.
 
@@ -194,6 +196,7 @@ Limits and storage:
 - Maximum length is `16000` characters for UTF16 national character set.
 - Maximum length is `10666` characters for UTF8 national character set.
 - UTF16 uses 2 bytes per character; UTF8 varies from 1 to 3 bytes per character.
+- Preserve the storage tokens `FIXED`, `VARIABLE`, and `IN ROW` when explaining national-character storage.
 
 Use when: fixed-length national character data is required.
 
@@ -212,6 +215,7 @@ Limits and storage:
 - Maximum length is `16000` characters for UTF16 national character set.
 - Maximum length is `10666` characters for UTF8 national character set.
 - Like `VARCHAR`, it stores the actual input length plus metadata unless fixed-area storage applies.
+- For Oracle `NVARCHAR2` conversion, recheck character-set byte sizing instead of copying lengths blindly. Altibase `NVARCHAR` syntax is `NVARCHAR[(size)] [FIXED | VARIABLE [IN ROW size]]`.
 
 Use when: variable-length Unicode text is required.
 
@@ -477,8 +481,10 @@ Restrictions:
 
 - LOB columns cannot be used in volatile tables or disk temporary tablespaces.
 - LOB columns cannot be used in cursors.
+- LOB columns in a discarded tablespace cannot be accessed.
 - LOB columns cannot be partition key columns.
 - Indexes cannot be created on LOB columns.
+- LOB columns cannot be used in join conditions.
 - Avoid `NOT NULL` on LOB columns unless the application and driver behavior are tested.
 
 Related properties and checks:
@@ -593,9 +599,9 @@ JSON [IN ROW size]
 
 Limits and standards:
 
-- Maximum JSON document size is `2GB`.
-- JSON definition follows RFC 8259.
-- JSON path expressions and JSON functions follow ISO/IEC 19075-6:2021.
+- Maximum JSON document size is `2GB (2,147,483,648 bytes)`.
+- JSON definition follows `RFC 8259`.
+- JSON path expressions and JSON functions follow `ISO/IEC 19075-6(2021)`.
 - Maximum JSON document depth is `256`.
 
 Restrictions and prerequisites:
