@@ -175,3 +175,40 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route the four new SQL DDL
   `Missing` rows before final full-coverage readiness can have no unresolved
   `Missing` dispositions.
+
+### FCA-J009
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged SQL Reference DCL/admin/destructive SQL,
+  replication SQL, Log Analyzer SQL, and privilege safety-boundary rows only; no
+  customer-facing attachment text was changed and no original source documents were
+  edited. Existing `FCA-J007` rows remain the owner for base `CREATE USER`,
+  `ALTER USER`, `DROP USER`, `CREATE ROLE`, `DROP ROLE`, `GRANT`, `REVOKE`, and
+  complete system-privilege catalog coverage.
+- Catalog totals added by this job: 21 rows total; 18 `Covered`, 2
+  `Covered-by-routing`, 1 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.3 SQL Reference DDL/DCL statement
+  classification, `ALTER SYSTEM`, `ALTER SESSION`, transaction control, audit
+  control, `CREATE/ALTER/DROP REPLICATION`, destructive SQL, and privilege sections;
+  Korean Altibase 7.3 Replication Manual lifecycle, receive-only, DDL replication, and
+  SQL Apply Mode sections; Korean Altibase 7.3 Log Analyzer manual XLog Sender SQL;
+  and Altibase 8.1 verified-source Korean SQL Reference syntax for replication
+  idempotency, SSL replication, and `ALTER SESSION SET FREE TEMPORARY LOB`.
+- Coverage status changes: DCL classification, system/session/transaction controls,
+  audit-control syntax, destructive operation routing, replication create/alter/drop
+  syntax, DDL replication and SQL Apply Mode runbook items, receive-only and host
+  maintenance boundaries, Log Analyzer XLog Sender SQL, and 8.1-only replication and
+  Temporary LOB session syntax were mapped to existing answer-ready attachment
+  anchors. One new `Missing` row was registered for the exact audit operation and
+  object-audit support matrix, because the attachment has generic audit placeholders
+  and examples but not the complete source-backed matrix.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 316 catalog rows and 0 matrix rows; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: later remediation jobs must close or route
+  `SRC-SQL-XVER-000043` before final full-coverage readiness can have no unresolved
+  `Missing` dispositions.

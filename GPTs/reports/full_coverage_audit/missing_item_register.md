@@ -22,6 +22,15 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J009 SQL Reference DCL Admin Replication Missing Rows
+
+FCA-J009 cataloged 1 unresolved `Missing` row for a source-backed audit-control
+detail that is not yet answer-ready in `03_sql_ddl_generation.md`.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-SQL-XVER-000043 | sql_reference | cross-version | Manuals/Altibase_7.3/kor/SQL Reference.md | SQL Reference > AUDIT > operation and object audit matrix | Exact audit operation list and object-audit support matrix preserving `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MOVE`, `MERGE`, `ENQUEUE`, `DEQUEUE`, `LOCK`, `EXEC`, `EXECUTE`, `COMMIT`, `ROLLBACK`, `SAVEPOINT`, `CONNECT`, `DISCONNECT`, `ALTER SESSION`, `ALTER SYSTEM`, `TABLE`, `QUEUE`, `PROCEDURE`, and `DDL`, plus the `BY ACCESS`/`BY SESSION` default and unsupported cases for `CONNECT`, `DISCONNECT`, and `DDL`. | GPTs/attachments/03_sql_ddl_generation.md | Replace the generic audit placeholders with a compact answer-ready matrix or routing block that lists supported statement/object operations, default `BY SESSION`, unsupported `BY ACCESS\|SESSION` cases, `WHENEVER [NOT] SUCCESSFUL`, and runtime reload/stop-start requirements. | FCA-J009 | source locator: Manuals/Altibase_7.3/kor/SQL Reference.md lines 16230-16325; attachment grep finds audit grammar and examples but not the complete operation/object matrix |
+
 ### FCA-J008 SQL Reference DDL Storage Table Index Missing Rows
 
 FCA-J008 cataloged 4 unresolved `Missing` rows for source-backed SQL Reference DDL
