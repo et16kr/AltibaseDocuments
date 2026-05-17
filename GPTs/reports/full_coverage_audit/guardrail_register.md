@@ -21,6 +21,19 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J031 C CLI ODBC And Precompiler Guardrails
+
+FCA-J031 cataloged the C-facing CLI, ODBC, Altibase C Interface, and APRE
+precompiler source rows. Most source-backed items route to attachment 12, but runtime
+success, 8.1 Empty LOB compile-ready calls, and ACI long-data streaming remain guarded
+by source or customer-evidence limits.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-API-8.1-000002 | Guardrail | c_cli_odbc_precompiler | 8.1 | ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md | Altibase 8.1.0.0.1 Release Notes > Empty LOB CLI function names | Selected 8.1 release notes name `SQLEmptyLob()` and `SQLGetLobLength2()`, but the selected manual corpus does not provide complete callable signatures or argument semantics. | Ask for the installed 8.1 client header or exact client manual page, client package version, OS/compiler, and intended LOB sequence before generating compile-ready calls; otherwise preserve only the function names and state the source limit. | GPTs/attachments/12_c_cli_odbc_precompiler.md | FCA-J031 | Korean 8.1 release note line 179; `GAP-J002-015`; catalog row `SRC-API-8.1-000002`; attachment residual scope and LOB API blocks. |
+| SRC-API-XVER-000082 | Guardrail | c_cli_odbc_precompiler | cross-version | Manuals/Altibase_7.3/kor/Altibase C Interface Manual.md | Altibase C Interface Manual > altibase_stmt_send_long_data() boundary | Selected ACI source exposes `ALTIBASE_NEED_DATA` and `altibase_stmt_send_long_data()`, but does not support recommending that function as a customer-ready streaming LOB implementation. | Ask for the exact installed client package, `alticapi.h` header, source/manual page, return-code path, and full diagnostics before suggesting any ACI streaming LOB implementation; otherwise use covered locator or result-retrieval guidance. | GPTs/attachments/12_c_cli_odbc_precompiler.md | FCA-J031 | Korean ACI 7.3 lines 2959 and 3607; catalog row `SRC-API-XVER-000082`; attachment `ACI LOB caution block`. |
+| SRC-OTHER-XVER-000226 | Guardrail | c_cli_odbc_precompiler | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-012 > CLI/ODBC/ACI/APRE live execution validation boundary | Runtime success or root cause depends on exact Altibase version and patch, client package, OS/compiler, Driver Manager and SQLLEN width, DSN or connection string, SSL/TLS settings, autocommit and LOB sequence, source code, diagnostics, logs, and live output. | Ask for the exact server/client versions, client package, OS/compiler, Driver Manager and SQLLEN width, DSN or connection string, SSL/TLS settings, C or APRE source, full `SQLGetDiagRec`/ACI/APRE diagnostics, logs, and observed output before asserting runtime success or failure cause. | GPTs/attachments/12_c_cli_odbc_precompiler.md | FCA-J031 | `GAP-J002-012`; source inventory J036 note; catalog row `SRC-OTHER-XVER-000226`; attachment `Residual Scope`. |
+
 ### FCA-J030 JDBC Java Spring And Hibernate Runtime Guardrail
 
 FCA-J030 cataloged one JDBC/Java/Spring/Hibernate guardrail row. The selected manuals

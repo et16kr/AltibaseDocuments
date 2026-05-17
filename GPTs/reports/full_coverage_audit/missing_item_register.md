@@ -22,6 +22,17 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J031 C CLI ODBC And Precompiler Missing Rows
+
+FCA-J031 cataloged the C-facing client source rows. The rows below are source-backed
+and in scope, but attachment 12 does not yet expose dedicated compile-ready blocks for
+the exact CLI and ACI header/library/link flags.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000227 | c_cli_odbc_precompiler | cross-version | Manuals/Altibase_7.3/kor/CLI User's Manual.md | CLI User's Manual > Altibase CLI application build > headers and libraries | Exact CLI compile/link block preserving `$ALTIBASE_HOME/include/sqlcli.h`, `$ALTIBASE_HOME/lib/libodbccli.a`, `-I$ALTIBASE_HOME/include`, and `-L$ALTIBASE_HOME/lib -lodbccli`. | GPTs/attachments/12_c_cli_odbc_precompiler.md | Add a compact CLI build block with header, library, include path, library path, and Unix-like link flags; until then ask for exact client package, OS/compiler, and installed `$ALTIBASE_HOME/include` and `lib` layout before producing compile-ready commands. | FCA-J031 | source locator: Korean CLI 7.3 lines 683-710; catalog row `SRC-OTHER-XVER-000227`. |
+| SRC-OTHER-XVER-000228 | c_cli_odbc_precompiler | cross-version | Manuals/Altibase_7.3/kor/Altibase C Interface Manual.md | Altibase C Interface Manual > ACI application build > headers and libraries | Exact ACI compile/link block preserving `alticapi.h`, `libalticapi.a`, `libodbccli.a`, `-I$ALTIBASE_HOME/include`, `-L$ALTIBASE_HOME/lib`, `-lalticapi`, and `-lodbccli`. | GPTs/attachments/12_c_cli_odbc_precompiler.md | Add a compact ACI build block with header, libraries, include path, library path, and Unix-like link flags; until then ask for exact client package, OS/compiler, and installed `$ALTIBASE_HOME/include` and `lib` layout before producing compile-ready commands. | FCA-J031 | source locator: Korean ACI 7.3 lines 479-509; catalog row `SRC-OTHER-XVER-000228`. |
+
 ### FCA-J024 Performance Tuning And Optimizer Missing Rows
 
 FCA-J024 cataloged two source-backed Performance Tuning Guide items whose exact
