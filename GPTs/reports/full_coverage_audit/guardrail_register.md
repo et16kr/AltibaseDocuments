@@ -21,6 +21,18 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J036 Kubernetes AKU And Cloud Guardrail
+
+FCA-J036 cataloged Kubernetes object examples, AKU sample object sets, AKU configuration
+and lifecycle behavior, release-note AKU changes, and cloud/container operational
+caveats. The selected sources support generic Kubernetes and AKU guidance, but
+production cloud execution, TLS behavior, storage, secret handling, and runtime success
+remain environment-limited.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000261 | Guardrail | kubernetes_aku | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-012 and GAP-J002-018 > Kubernetes, AKU, TLS, and cloud live validation boundary | Requires exact Altibase version and patch, Kubernetes provider/version, node OS, image build, storage class/PV/PVC design, hostname-license basis, Service/DNS/network policy, secret and TLS/certificate design, ports, replication target tables, backup/recovery plan, full logs/output, and non-production validation evidence before asserting production cloud, TLS, or AKU runtime success. | Ask for the exact Altibase version and patch, Kubernetes provider/version, node OS, image build, storage class and PV/PVC design, hostname-license basis, Service/DNS/network policy, secret and TLS/certificate design, ports `20300` and `20301`, replication target tables, backup/recovery plan, full logs/output, and non-production validation evidence before declaring cloud deployment, TLS handshake, or AKU runtime success. | GPTs/attachments/17_kubernetes_aku_cloud.md | FCA-J036 | `GAP-J002-012`; `GAP-J002-018`; catalog row `SRC-OTHER-XVER-000261`; attachment anchors `Response Rules`, `Troubleshooting And Cautions`, and `Residual Scope`. |
+
 ### FCA-J035 DB Link And External Connector Guardrail
 
 FCA-J035 cataloged DB Link, Hadoop Connector, DBeaver, Hibernate, OpenLDAP, and
