@@ -1317,3 +1317,37 @@ Each entry should include:
 - Skipped checks: no full 270-question live benchmark was launched because this job
   audited source-limited dispositions and did not change answer content or retrieval
   routing.
+
+### FCA-J049
+
+- Changed files: `GPTs/GPT_Instructions_Draft.md` and this remediation log.
+- Product coverage changes: none. No customer-facing attachment item block, catalog
+  row, matrix row, register disposition, or original source document was changed.
+- Prompt alignment scope: strengthened the customer answer contract so answers must
+  choose the most specific attached source block before responding, treat
+  `Retrieval Alias Index` as routing rather than product evidence, preserve item-block
+  labels/table fields and exact tokens through a final token pass, and apply
+  `Response Rules`, `Residual Scope`, source-limit, unsupported-boundary, and
+  out-of-scope wording as guardrails.
+- Benchmark and audit evidence: used the locked latest full benchmark run
+  `altibase_answerability_20260517_205641`, which remains `blocking_gaps` with
+  `101/270` passed, `85.1%` critical fact coverage, `90.1%` required token
+  preservation, and `32` protected-topic blockers. The scoped failure pattern still
+  includes `missing_critical_facts`, `missing_required_tokens`, protected-topic
+  blockers, and a small number of `missing_input_handling` findings, so the prompt
+  change is limited to answer synthesis, exact-token preservation, and guardrail
+  application.
+- Guardrail alignment: the prompt now tells answers to state what attached sources
+  support, list the missing customer inputs, and provide only the safest
+  source-backed next check when a question depends on exact version, patch level,
+  environment, topology, object definition, log excerpt, installed tool behavior, live
+  runtime evidence, or unsupported compatibility.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers` passed; `catalog-qa`, `matrix-qa`, and
+  `guardrail-audit` passed; `git diff --check` passed; `bash
+  review/scripts/run_review_stage.sh validate` passed with 20 upload attachments;
+  review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable
+  `Blocker`, `High`, `Medium`, or `Low` rows.
+- Skipped checks: no full 270-question live benchmark was launched because this job
+  changed only the GPT instruction layer and did not change attachment product
+  content, retrieval aliases, catalog dispositions, or benchmark expectations.
