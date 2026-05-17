@@ -1188,3 +1188,50 @@ Each entry should include:
 - Skipped checks: no full 270-question live benchmark was launched for this scoped
   remediation job; the locked latest benchmark run remains priority evidence, not the
   completion scope for this item-level audit job.
+
+### FCA-J046
+
+- Changed files: `GPTs/attachments/00_version_release_platform.md`,
+  `GPTs/attachments/01_getting_started_installation.md`,
+  `GPTs/attachments/02_administration_operations.md`,
+  `GPTs/attachments/03_sql_ddl_generation.md`,
+  `GPTs/attachments/04_sql_dml_oracle_compatibility.md`,
+  `GPTs/attachments/05_data_types_properties.md`,
+  `GPTs/attachments/06_data_dictionary_performance_views.md`,
+  `GPTs/attachments/07_error_messages_troubleshooting.md`,
+  `GPTs/attachments/08_performance_tuning_monitoring.md`,
+  `GPTs/attachments/09_replication_ha_cdc.md`,
+  `retrieval_weakness_register.md`, and this remediation log.
+- Product coverage changes: no new Altibase behavior was added and no original source
+  documents were edited. The job strengthened retrieval routing for the core
+  reference attachment group by adding focused routing-anchor bullets to the
+  `Retrieval Alias Index` in attachments `00` through `09`.
+- Disposition changes: scoped unresolved-row checks found `0` active
+  `Retrieval-weak` rows in both `source_item_catalog.tsv` and
+  `source_to_attachment_matrix.tsv` for attachments `00` through `09`; therefore no
+  catalog or matrix row required a status transition. The register now records this
+  zero-active-row result and the routing-hardening proof.
+- Source and benchmark evidence: used repository-local selected attachment content and
+  the locked benchmark evidence in
+  `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_205641/`.
+  The latest run remained `blocking_gaps` with high-risk targets concentrated in
+  properties, SQL, views/performance monitoring, errors, operations, and replication;
+  the new aliases route those customer wordings to existing source-backed sections.
+- Exact routing tokens reinforced: `$ALTIBASE_HOME/conf/altibase.properties`,
+  `ALTER SYSTEM`, `ALTER SESSION`, `ALTIBASE_property_name`, `V$TABLE`,
+  `V$ALLCOLUMN`, `NAME`, `COLUMNCOUNT`, `TABLENAME`, `COLNAME`,
+  `idERR_FATAL_idc_SVC_INET_BIND_ERROR`, `errno`, `Active-Active`, `Conflict`,
+  `User-Oriented Scheme`, `Master-Slave Scheme`, and `Timestamp-based Scheme`, plus
+  storage, DDL, DML, JSON, tuning, CDC, and replication routing tokens already
+  represented in the scoped attachments.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers` passed; `catalog-qa` and `matrix-qa` passed; scoped
+  unresolved-row checks for attachments `00` through `09` returned zero
+  `Retrieval-weak` rows in both catalog and matrix; scoped exact-token checks against
+  the edited attachments passed; `git diff --check` passed; `bash
+  review/scripts/run_review_stage.sh validate` passed with 20 upload attachments;
+  review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable
+  `Blocker`, `High`, `Medium`, or `Low` rows.
+- Skipped checks: no full 270-question live benchmark was launched for this scoped
+  routing-remediation job; the locked latest benchmark run remains priority evidence,
+  not the completion scope for `FCA-J046`.

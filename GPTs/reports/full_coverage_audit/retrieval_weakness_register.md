@@ -23,6 +23,43 @@ Each entry should record:
 
 ## Active Retrieval Weaknesses
 
+### FCA-J046 Core Reference Attachments 00-09
+
+`FCA-J046` found no active `Retrieval-weak` catalog or matrix rows for
+`GPTs/attachments/00_version_release_platform.md` through
+`GPTs/attachments/09_replication_ha_cdc.md` at job start. The scoped audit still
+strengthened the core attachment routing layer because the latest locked benchmark
+run records high retrieval risk across release/platform, installation, operations,
+SQL, data type/property, dictionary/view, error, tuning, and replication domains.
+
+Remediation applied by `FCA-J046`:
+
+- Added focused routing-anchor bullets to the `Retrieval Alias Index` in attachments
+  `00` through `09`.
+- Repeated exact tokens needed for customer retrieval and answer preservation, such as
+  `$ALTIBASE_HOME/conf/altibase.properties`, `ALTIBASE_property_name`, `V$TABLE`,
+  `V$ALLCOLUMN`, `NAME`, `COLUMNCOUNT`, `TABLENAME`, `COLNAME`,
+  `idERR_FATAL_idc_SVC_INET_BIND_ERROR`, `errno`, `Active-Active`, `Conflict`,
+  `User-Oriented Scheme`, `Master-Slave Scheme`, and `Timestamp-based Scheme`.
+- Linked broad customer wording to the already answer-ready section headings in each
+  scoped attachment, including property configuration, performance-view availability,
+  protected backup/recovery, DDL syntax, JSON/DML, exact error blocks, plan-node
+  reference, and replication conflict/CDC/network sections.
+
+Disposition note: no catalog or matrix rows required a `Retrieval-weak` to
+`Covered-by-routing` status transition because the scoped unresolved-row count was
+already zero. This entry records the routing-hardening proof and regression guard for
+the core attachment group.
+
+Validation evidence:
+
+```bash
+awk -F '\t' 'NR==1{for(i=1;i<=NF;i++) h[$i]=i; next} $h["coverage_status"]=="Retrieval-weak" && $h["attachment_target"] ~ /^GPTs\/attachments\/(0[0-9])_/ {print $h["source_item_id"]}' GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv | wc -l
+awk -F '\t' 'NR==1{for(i=1;i<=NF;i++) h[$i]=i; next} $h["coverage_status"]=="Retrieval-weak" && $h["attachment_target"] ~ /^GPTs\/attachments\/(0[0-9])_/ {print $h["source_item_id"]}' GPTs/reports/full_coverage_audit/source_item_catalog.tsv | wc -l
+```
+
+Both commands returned `0`.
+
 ### FCA-J029 PSM System Package Retrieval Weaknesses
 
 Resolved by `FCA-J044`. `SRC-API-XVER-000038` through `SRC-API-XVER-000044` are no
@@ -40,6 +77,18 @@ Resolved by `FCA-J043`. `SRC-OTHER-XVER-000149`, `SRC-OTHER-XVER-000150`, and
 `Covered` with `audit_job=FCA-J043`.
 
 ## Resolved Retrieval Weaknesses
+
+### FCA-J046 Retrieval Remediation Core Reference Attachments
+
+- Scope: attachments `00` through `09`.
+- Active row result: no active scoped `Retrieval-weak` catalog or matrix rows existed
+  at job start, so no source item IDs changed disposition in the TSV artifacts.
+- Routing remediation: the job strengthened `Retrieval Alias Index` blocks with
+  focused section routes, exact-token anchors, and cross-file routing cues for the
+  high-risk core-reference domains evidenced by
+  `altibase_answerability_20260517_205641`.
+- Evidence: attachment grep checks and the zero scoped unresolved-row checks are
+  recorded in `remediation_log.md`.
 
 ### FCA-J044 Content Remediation Tools APIs Clients And Connectors
 

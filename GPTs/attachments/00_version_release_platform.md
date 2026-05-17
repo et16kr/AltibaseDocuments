@@ -20,6 +20,7 @@ Use this compact index before scanning the long release and platform sections. I
 
 - Aliases and customer wording: version comparison, release notes, supported platforms, OS and CPU matrix, server support, client support, Windows client-only, database binary version, metadata version, communication protocol, replication protocol, upgrade risk, migration risk, patch caveat.
 - Exact-token anchors: `V$VERSION`, `product_version`, `meta_version`, `protocol_version`, `repl_protocol_version`, `JSON`, `Temporary LOB`, `KADA`, `Kafka`, `ABM`, `abm`, `OpenSSL 3.0.8`, `TLS 1.3`, `JDBC 4.2`, `AKU`, `REPLICATION_SSL_PORT_NO`.
+- Focused routing anchors: release identity and feature-introduction answers route to `Quick Version Difference Summary`; platform and OS questions route to `Platform Support Blocks`; binary, metadata, client-protocol, and replication-protocol questions route to `Upgrade Risk Blocks`; patch-specific support boundaries route to `Minor Patch & Release Notes Caveats`.
 - Answer route: start here for release identity, supported platform, protocol, and feature-introduction questions, then route implementation details to the attachment that owns the feature.
 - Cross-file routing: installation and patch rollback use `01_getting_started_installation.md`; property defaults and ranges use `05_data_types_properties.md`; replication compatibility uses `09_replication_ha_cdc.md`; TLS details use `18_security_ssl_tls.md`; connector and tool procedures use `11_java_jdbc_spring.md` through `19_spatial_nifi_tableau_misc.md`.
 
