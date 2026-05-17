@@ -10,6 +10,8 @@ set -Eeuo pipefail
 #   REQUIRE_PROJECT_COMMIT_AFTER_JOB=0 ./run-all.sh # allow workflow-only job commits
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 JOBS_FILE="${JOBS_FILE:-$SCRIPT_DIR/jobs.tsv}"
 PROMPT_DIR="${PROMPT_DIR:-$SCRIPT_DIR/prompts}"
 LOG_DIR="${LOG_DIR:-$SCRIPT_DIR/logs}"
