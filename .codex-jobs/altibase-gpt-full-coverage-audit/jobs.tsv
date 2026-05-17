@@ -13,7 +13,7 @@ FCA-J011	Done	docs	SQL Reference JSON LOB and Oracle-difference catalog	Extract 
 FCA-J012	Done	docs	General Reference data type catalog	Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
 FCA-J013	Done	docs	Property catalog core path and storage	Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
 FCA-J014	Done	docs	Property catalog memory log cache and capacity	Extract memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit property items.
-FCA-J015	ToDo	docs	Property catalog optimizer session locale and timeout	Extract optimizer, normalization, lock, timeout, autocommit, session, locale, and performance property items.
+FCA-J015	Done	docs	Property catalog optimizer session locale and timeout	Extract optimizer, normalization, lock, timeout, autocommit, session, locale, and performance property items.
 FCA-J016	ToDo	docs	Property catalog security replication network and DB Link	Extract account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link property items.
 FCA-J017	ToDo	docs	Dictionary and meta table catalog	Extract dictionary table, meta table, object metadata, privilege, PSM, trigger, job, and schema lookup items.
 FCA-J018	ToDo	docs	Performance view operational catalog	Extract performance view names, purposes, version availability, operational grouping, query timing, and safe check SQL items.
