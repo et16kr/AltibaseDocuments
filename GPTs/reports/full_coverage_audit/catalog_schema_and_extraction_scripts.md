@@ -262,6 +262,13 @@ Validate that every catalog row has a matrix mapping and that copied fields stil
 python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py matrix-qa
 ```
 
+Audit all `Guardrail` and `Out-of-scope` rows for register coverage, source-boundary
+language, and missing-input or safest-next-check patterns:
+
+```bash
+python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py guardrail-audit
+```
+
 Generate a source heading outline as extraction aid:
 
 ```bash
@@ -313,6 +320,20 @@ The stricter `catalog-qa` command also checks:
   because retired IDs must not be reused;
 - every unresolved `Missing`, `Guardrail`, `Out-of-scope`, and `Retrieval-weak`
   catalog row is mentioned in the matching register.
+
+The `guardrail-audit` command also checks:
+
+- every `Guardrail` and `Out-of-scope` catalog row has the same disposition in the
+  source-to-attachment matrix;
+- every guarded or out-of-scope row appears exactly once in `guardrail_register.md`;
+- register rows preserve source family, version scope, source path, source heading,
+  attachment target, and disposition;
+- catalog and register guardrail reasons are not truncated and contain a source,
+  version, patch, installed-environment, runtime-output, or scope boundary;
+- every register row has a concrete customer-facing missing-input or safest-next-check
+  action such as asking for exact version/patch, querying installed metadata, running a
+  source-backed check, validating non-production output, or routing out-of-scope
+  requests away from the upload package.
 
 ## Register Update Rules
 

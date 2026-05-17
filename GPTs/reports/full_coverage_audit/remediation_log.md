@@ -1286,3 +1286,34 @@ Each entry should include:
 - Skipped checks: no full 270-question live benchmark was launched for this scoped
   routing-remediation job; the locked latest benchmark run remains priority evidence,
   not the completion scope for `FCA-J047`.
+
+### FCA-J048
+
+- Changed files: `guardrail_register.md`,
+  `catalog_schema_and_extraction_scripts.md`, `scripts/fca_catalog_tools.py`, and this
+  remediation log.
+- Product coverage changes: none. No customer-facing attachment text changed, no
+  original source documents were edited, and no catalog or matrix disposition changed.
+- Guardrail audit scope: all `36` active `Guardrail` or `Out-of-scope` rows in
+  `source_item_catalog.tsv` and `source_to_attachment_matrix.tsv`, comprising `33`
+  `Guardrail` rows and `3` `Out-of-scope` rows.
+- Register changes: expanded the six `FCA-J004` register rows whose catalog/matrix
+  reasons were complete but whose register prose was truncated. The corrected rows now
+  include explicit missing-input and safest-next-check patterns for release-note-only
+  8.1 feature procedures, unlisted platform support, Altibase 6.5.1 platform
+  out-of-scope routing, and ShardManager/Sharding/Windows2026 release-note-owner
+  boundaries.
+- Tooling changes: added `guardrail-audit` to `fca_catalog_tools.py` and documented it
+  in `catalog_schema_and_extraction_scripts.md`. The command reconciles catalog,
+  matrix, and register guarded-row IDs; checks core copied fields; rejects truncated
+  guardrail text; requires explicit source/scope boundary terms; and requires a
+  customer-facing missing-input or safest-next-check action.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  guardrail-audit` passed with `36` register rows; `check --require-registers`,
+  `catalog-qa`, and `matrix-qa` passed; `git diff --check` passed; `bash
+  review/scripts/run_review_stage.sh validate` passed with 20 upload attachments;
+  review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable
+  `Blocker`, `High`, `Medium`, or `Low` rows.
+- Skipped checks: no full 270-question live benchmark was launched because this job
+  audited source-limited dispositions and did not change answer content or retrieval
+  routing.

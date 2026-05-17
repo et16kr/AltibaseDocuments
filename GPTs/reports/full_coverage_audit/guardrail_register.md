@@ -19,6 +19,60 @@ Accepted guardrail reasons include:
   operational claim;
 - the item is outside the locked selected source corpus.
 
+## FCA-J048 Guardrail Audit Result
+
+`FCA-J048` audited every `Guardrail` and `Out-of-scope` row in
+`source_item_catalog.tsv`, `source_to_attachment_matrix.tsv`, and this register.
+
+Result: pass. The audit found `36` guarded rows: `33` `Guardrail` rows and `3`
+`Out-of-scope` rows. Every row is traceable from catalog to matrix to this register,
+has a specific source limitation or customer-evidence dependency, and has a
+customer-facing missing-input or safest-next-check pattern. No catalog or matrix
+disposition changed in this job.
+
+This job corrected the six `FCA-J004` register rows that had complete catalog/matrix
+reasons but truncated register prose. The corrected rows now name their exact boundary:
+release-note-only 8.1 feature procedures, unlisted platform support, Altibase 6.5.1
+platform rows outside upload scope, and three ShardManager/Sharding/Windows2026
+release-note-owner boundaries.
+
+Audit command:
+
+```bash
+python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py guardrail-audit
+```
+
+Audit checks performed:
+
+- catalog/matrix/register ID reconciliation for all guarded rows;
+- status, source family, version scope, source path, source heading, and attachment
+  target consistency;
+- non-empty, non-truncated guardrail reasons;
+- explicit `Out-of-scope` scope wording for the three excluded older-version rows;
+- missing-input or safest-next-check actions such as asking for exact
+  version/patch, querying installed metadata, collecting runtime logs/output,
+  validating in non-production, using `V$VERSION`, `V$TABLE`, `V$ALLCOLUMN`, or
+  `SYSTEM_.SYS_COLUMNS_` where applicable, or routing unsupported older-version
+  requests away from the upload package.
+
+Standard answer patterns after this audit:
+
+- Version, patch, platform, and release-note-only boundaries: ask for exact
+  Altibase version/patch, component, OS/CPU/glibc or package/API state, and a
+  source-backed manual/tool page before giving copy-ready steps.
+- Installed metadata boundaries: ask for target version/patch and query
+  `V$TABLE`, `V$ALLCOLUMN`, `SYSTEM_.SYS_TABLES_`, or `SYSTEM_.SYS_COLUMNS_` before
+  asserting uncommon tables, views, or columns.
+- Runtime and live-tool boundaries: ask for package version, command line,
+  configuration, full errors/logs/output, and non-production validation before
+  declaring success, root cause, compatibility, or performance.
+- Replication compatibility boundaries: ask for both nodes' `V$VERSION` output,
+  Sender/Receiver direction, mode, protocol/version fields, options, and feature use
+  before declaring compatibility.
+- Out-of-scope older-version rows: ask whether the target is in-scope Altibase 7.1,
+  7.3, or 8.1; otherwise state that the upload package does not support a definitive
+  customer answer for standalone older-version behavior.
+
 ## Active Guardrails
 
 ### FCA-J038 Technical Documents Support Out-Of-Scope Rows
@@ -229,9 +283,9 @@ FCA-J004 cataloged 6 `Guardrail` or `Out-of-scope` rows. These rows remain accep
 
 | source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-REL-8.1-000006 | Guardrail | release_notes_platform | 8.1 | ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md | Altibase 8.1.0.0.1 Release Notes > release-note-only feature procedure boundary | Selected release notes confirm availability, but implementation procedures depend on exact feature family, installed package/API, and a dedicated source-backed manual or tool bl... | Ask for exact version/patch, component, OS/CPU/glibc or installed tool/API state as applicable; use only selected source rows or run a dedicated source-backed audit before givin... | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'KADA/Kafka/ABM/MindsDB/\.NET 8/node-odbc-altibase/Release-note-only feature scope/Residual Scope' ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md GPTs/attachments/00... |
-| SRC-PLAT-XVER-000002 | Guardrail | release_notes_platform | cross-version | Technical Documents/kor/Supported Platforms.md | Supported Platforms > overview > unlisted OS support | The supported-platform source explicitly sends unlisted OS compatibility to Altibase Support; ask for exact Altibase version/patch, component, OS/version, CPU architecture, glib... | Ask for exact version/patch, component, OS/CPU/glibc or installed tool/API state as applicable; use only selected source rows or run a dedicated source-backed audit before givin... | GPTs/attachments/00_version_release_platform.md | FCA-J004 | source locator: Technical Documents/kor/Supported Platforms.md lines 29-34; rg -n 'Altibase Support/Platform Answer Checklist/direct the customer to Altibase Support' GPTs/attac... |
-| SRC-PLAT-XVER-000003 | Out-of-scope | release_notes_platform | cross-version | Technical Documents/kor/Supported Platforms.md | Supported Platforms > Altibase 6.5.1 | Altibase 6.5.1 platform support is outside the locked customer-facing upload scope of Altibase 7.1, 7.3, and 8.1; do not use 6.5.1 platform rows to answer 7.x or 8.1 support que... | Ask for exact version/patch, component, OS/CPU/glibc or installed tool/API state as applicable; use only selected source rows or run a dedicated source-backed audit before givin... | N/A | FCA-J004 | source locator: Technical Documents/kor/Supported Platforms.md lines 167-254; rg -n 'Altibase 6.5.1/Do not use 6.5.1 platform support' GPTs/attachments/00_version_release_platfo... |
-| SRC-REL-PATCH-000015 | Guardrail | release_notes_platform | patch-specific | ReleaseNotes/kor/Altibase_ShardManager_v.3.2_Release_Notes.md | Altibase Shard Manager Release Notes > release-note document boundary | The locked release-note root contains this product/tool release note, but the 20-file attachment/source-family map has no dedicated answer-ready owner for ShardManager/Sharding/... | Ask for exact version/patch, component, OS/CPU/glibc or installed tool/API state as applicable; use only selected source rows or run a dedicated source-backed audit before givin... | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'Release Notes/BUG-' ReleaseNotes/kor/Altibase_ShardManager_v.3.2_Release_Notes.md |
-| SRC-REL-PATCH-000016 | Guardrail | release_notes_platform | patch-specific | ReleaseNotes/kor/Altibase_Sharding3_3_2_0_0_1_Release_Notes.md | Altibase Sharding 3 Release Notes > release-note document boundary | The locked release-note root contains this product/tool release note, but the 20-file attachment/source-family map has no dedicated answer-ready owner for ShardManager/Sharding/... | Ask for exact version/patch, component, OS/CPU/glibc or installed tool/API state as applicable; use only selected source rows or run a dedicated source-backed audit before givin... | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'Release Notes/BUG-' ReleaseNotes/kor/Altibase_Sharding3_3_2_0_0_1_Release_Notes.md |
-| SRC-REL-PATCH-000017 | Guardrail | release_notes_platform | patch-specific | ReleaseNotes/kor/Altibase_Windows2026_2_6_0_0_1_Release_Notes.md | Altibase Windows 2026 Release Notes > release-note document boundary | The locked release-note root contains this product/tool release note, but the 20-file attachment/source-family map has no dedicated answer-ready owner for ShardManager/Sharding/... | Ask for exact version/patch, component, OS/CPU/glibc or installed tool/API state as applicable; use only selected source rows or run a dedicated source-backed audit before givin... | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'Release Notes/BUG-' ReleaseNotes/kor/Altibase_Windows2026_2_6_0_0_1_Release_Notes.md |
+| SRC-REL-8.1-000006 | Guardrail | release_notes_platform | 8.1 | ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md | Altibase 8.1.0.0.1 Release Notes > release-note-only feature procedure boundary | Selected release notes confirm availability, but implementation procedures depend on exact feature family, installed package/API, and a dedicated source-backed manual or tool block; ask for the exact feature, package version, and desired operation before giving steps. | Ask for exact Altibase 8.1 patch, feature/component, installed package or API state, target OS/CPU/glibc or tool state, intended operation, and a source-backed manual or tool page; use only release-note availability unless a dedicated audited source block exists. | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'KADA\|Kafka\|ABM\|MindsDB\|\.NET 8\|node-odbc-altibase\|Release-note-only feature scope\|Residual Scope' ReleaseNotes/kor/Altibase_8_1_0_0_1_Release_Notes.md GPTs/attachments/00_version_release_platform.md |
+| SRC-PLAT-XVER-000002 | Guardrail | release_notes_platform | cross-version | Technical Documents/kor/Supported Platforms.md | Supported Platforms > overview > unlisted OS support | The supported-platform source explicitly sends unlisted OS compatibility to Altibase Support; ask for exact Altibase version/patch, component, OS/version, CPU architecture, glibc/libc where relevant, and Java/tool package version before giving final support guidance. | Ask for exact Altibase version/patch, component, OS/version, CPU architecture, glibc/libc where relevant, virtualization or container context, and Java/tool package version; if the platform is not listed, direct the customer to Altibase Support rather than declaring support. | GPTs/attachments/00_version_release_platform.md | FCA-J004 | source locator: Technical Documents/kor/Supported Platforms.md lines 29-34; rg -n 'Altibase Support\|Platform Answer Checklist\|direct the customer to Altibase Support' GPTs/attachments/00_version_release_platform.md |
+| SRC-PLAT-XVER-000003 | Out-of-scope | release_notes_platform | cross-version | Technical Documents/kor/Supported Platforms.md | Supported Platforms > Altibase 6.5.1 | Altibase 6.5.1 platform support is outside the locked customer-facing upload scope of Altibase 7.1, 7.3, and 8.1; do not use 6.5.1 platform rows to answer 7.x or 8.1 support questions. | Ask whether the target is actually Altibase 6.5.1 or an in-scope 7.1, 7.3, or 8.1 system. For 7.x or 8.1 support questions, do not use 6.5.1 platform rows; route to in-scope supported-platform rows and Altibase Support for unlisted OS claims. | N/A | FCA-J004 | source locator: Technical Documents/kor/Supported Platforms.md lines 167-254; rg -n 'Altibase 6.5.1\|Do not use 6.5.1 platform support' GPTs/attachments/00_version_release_platform.md |
+| SRC-REL-PATCH-000015 | Guardrail | release_notes_platform | patch-specific | ReleaseNotes/kor/Altibase_ShardManager_v.3.2_Release_Notes.md | Altibase Shard Manager Release Notes > release-note document boundary | The locked release-note root contains this product/tool release note, but the 20-file attachment/source-family map has no dedicated answer-ready owner for ShardManager/Sharding/Windows2026 procedures; ask for the exact product, release, task, and selected source owner before giving customer steps. | Ask for the exact ShardManager product/release, target task, package state, and selected source owner. Do not give procedural customer steps from the 20-file upload package until a dedicated source-backed ShardManager owner is audited. | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'Release Notes\|BUG-' ReleaseNotes/kor/Altibase_ShardManager_v.3.2_Release_Notes.md |
+| SRC-REL-PATCH-000016 | Guardrail | release_notes_platform | patch-specific | ReleaseNotes/kor/Altibase_Sharding3_3_2_0_0_1_Release_Notes.md | Altibase Sharding 3 Release Notes > release-note document boundary | The locked release-note root contains this product/tool release note, but the 20-file attachment/source-family map has no dedicated answer-ready owner for ShardManager/Sharding/Windows2026 procedures; ask for the exact product, release, task, and selected source owner before giving customer steps. | Ask for the exact Sharding product/release, target task, package state, and selected source owner. Do not give procedural customer steps from the 20-file upload package until a dedicated source-backed Sharding owner is audited. | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'Release Notes\|BUG-' ReleaseNotes/kor/Altibase_Sharding3_3_2_0_0_1_Release_Notes.md |
+| SRC-REL-PATCH-000017 | Guardrail | release_notes_platform | patch-specific | ReleaseNotes/kor/Altibase_Windows2026_2_6_0_0_1_Release_Notes.md | Altibase Windows 2026 Release Notes > release-note document boundary | The locked release-note root contains this product/tool release note, but the 20-file attachment/source-family map has no dedicated answer-ready owner for ShardManager/Sharding/Windows2026 procedures; ask for the exact product, release, task, and selected source owner before giving customer steps. | Ask for the exact Windows2026 release, target task, package state, OS/CPU context, and selected source owner. Do not give procedural customer steps from the 20-file upload package until a dedicated source-backed Windows2026 owner is audited. | GPTs/attachments/00_version_release_platform.md | FCA-J004 | rg -n 'Release Notes\|BUG-' ReleaseNotes/kor/Altibase_Windows2026_2_6_0_0_1_Release_Notes.md |

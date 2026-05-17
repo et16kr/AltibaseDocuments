@@ -841,6 +841,209 @@ def cmd_catalog_qa(args: argparse.Namespace) -> int:
     return 0
 
 
+def split_markdown_row(line: str) -> list[str]:
+    stripped = line.strip()
+    if not stripped.startswith("|") or not stripped.endswith("|"):
+        return []
+    return [cell.strip() for cell in stripped[1:-1].split(" | ")]
+
+
+def guardrail_register_rows() -> dict[str, dict[str, str]]:
+    text = register_text("guardrail_register.md")
+    rows: dict[str, dict[str, str]] = {}
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if not line.startswith("| SRC-"):
+            continue
+        cells = split_markdown_row(line)
+        if len(cells) != 11:
+            raise CheckError(
+                "guardrail_register.md row could not be parsed at line "
+                f"{line_number}: expected 11 cells, found {len(cells)}"
+            )
+        source_item_id = cells[0]
+        if source_item_id in rows:
+            raise CheckError(
+                f"guardrail_register.md has duplicate row for {source_item_id}"
+            )
+        rows[source_item_id] = {
+            "source_item_id": cells[0],
+            "coverage_status": cells[1],
+            "source_family": cells[2],
+            "version_scope": cells[3],
+            "source_path": cells[4],
+            "source_heading": cells[5],
+            "guardrail_reason": cells[6],
+            "safest_next_check": cells[7],
+            "attachment_target": cells[8],
+            "audit_job": cells[9],
+            "evidence": cells[10],
+        }
+    return rows
+
+
+def contains_any(value: str, needles: tuple[str, ...]) -> bool:
+    lowered = value.lower()
+    return any(needle in lowered for needle in needles)
+
+
+def check_guardrail_text(source_item_id: str, status: str, reason: str, check: str) -> None:
+    for field_name, value in (
+        ("guardrail_reason", reason),
+        ("safest_next_check", check),
+    ):
+        if not value.strip():
+            raise CheckError(f"{source_item_id}: {field_name} is empty")
+        if "..." in value:
+            raise CheckError(f"{source_item_id}: {field_name} contains ellipsis")
+
+    if status == "Out-of-scope":
+        if not contains_any(reason, ("outside", "out-of-scope")) or "scope" not in reason.lower():
+            raise CheckError(
+                f"{source_item_id}: Out-of-scope reason must explicitly name scope"
+            )
+        if not contains_any(check, ("ask", "do not", "route", "otherwise")):
+            raise CheckError(
+                f"{source_item_id}: Out-of-scope safest_next_check lacks action pattern"
+            )
+        return
+
+    boundary_terms = (
+        "exact",
+        "patch",
+        "version",
+        "installed",
+        "runtime",
+        "live",
+        "source",
+        "selected",
+        "depends",
+        "requires",
+        "does not",
+        "cannot",
+        "conflict",
+        "boundary",
+        "package",
+        "environment",
+        "topology",
+        "output",
+        "logs",
+        "diagnostics",
+    )
+    action_terms = (
+        "ask",
+        "query",
+        "run ",
+        "validate",
+        "consult",
+        "state only",
+        "answer only",
+        "preserve only",
+        "route",
+        "direct",
+    )
+    if not contains_any(reason, boundary_terms):
+        raise CheckError(
+            f"{source_item_id}: Guardrail reason lacks a source/customer boundary term"
+        )
+    if not contains_any(check, action_terms):
+        raise CheckError(
+            f"{source_item_id}: safest_next_check lacks missing-input or next-check action"
+        )
+
+
+def check_guardrail_audit(
+    catalog_path: Path, matrix_path: Path
+) -> tuple[list[dict[str, str]], list[dict[str, str]], dict[str, dict[str, str]]]:
+    catalog_rows, matrix_rows = check_matrix_qa(catalog_path, matrix_path)
+    register_rows = guardrail_register_rows()
+
+    guarded_catalog = {
+        row["source_item_id"]: row
+        for row in catalog_rows
+        if row["coverage_status"] in {"Guardrail", "Out-of-scope"}
+    }
+    guarded_matrix = {
+        row["source_item_id"]: row
+        for row in matrix_rows
+        if row["coverage_status"] in {"Guardrail", "Out-of-scope"}
+    }
+    if set(guarded_catalog) != set(guarded_matrix):
+        missing_in_matrix = sorted(set(guarded_catalog) - set(guarded_matrix))
+        extra_in_matrix = sorted(set(guarded_matrix) - set(guarded_catalog))
+        raise CheckError(
+            "guardrail matrix/catalog ID mismatch; missing in matrix: "
+            f"{missing_in_matrix}; extra in matrix: {extra_in_matrix}"
+        )
+    if set(guarded_catalog) != set(register_rows):
+        missing_in_register = sorted(set(guarded_catalog) - set(register_rows))
+        extra_in_register = sorted(set(register_rows) - set(guarded_catalog))
+        raise CheckError(
+            "guardrail register/catalog ID mismatch; missing in register: "
+            f"{missing_in_register}; extra in register: {extra_in_register}"
+        )
+
+    for source_item_id, catalog_row in guarded_catalog.items():
+        matrix_row = guarded_matrix[source_item_id]
+        register_row = register_rows[source_item_id]
+        for field in (
+            "coverage_status",
+            "source_family",
+            "version_scope",
+            "source_path",
+            "source_heading",
+            "attachment_target",
+        ):
+            if clean_cell(register_row[field]) != clean_cell(catalog_row[field]):
+                raise CheckError(
+                    f"guardrail register mismatch for {source_item_id} field {field}: "
+                    f"{register_row[field]!r} != {catalog_row[field]!r}"
+                )
+            if clean_cell(matrix_row[field]) != clean_cell(catalog_row[field]):
+                raise CheckError(
+                    f"guardrail matrix mismatch for {source_item_id} field {field}: "
+                    f"{matrix_row[field]!r} != {catalog_row[field]!r}"
+                )
+        check_guardrail_text(
+            source_item_id,
+            catalog_row["coverage_status"],
+            catalog_row["guardrail_reason"],
+            register_row["safest_next_check"],
+        )
+        if clean_cell(register_row["guardrail_reason"]) != clean_cell(
+            catalog_row["guardrail_reason"]
+        ):
+            check_guardrail_text(
+                source_item_id,
+                catalog_row["coverage_status"],
+                register_row["guardrail_reason"],
+                register_row["safest_next_check"],
+            )
+
+    return catalog_rows, matrix_rows, register_rows
+
+
+def cmd_guardrail_audit(args: argparse.Namespace) -> int:
+    catalog_rows, matrix_rows, register_rows = check_guardrail_audit(
+        Path(args.catalog), Path(args.matrix)
+    )
+    guarded_catalog = [
+        row
+        for row in catalog_rows
+        if row["coverage_status"] in {"Guardrail", "Out-of-scope"}
+    ]
+    print("OK: guardrail audit passed")
+    print(f"Catalog rows: {len(catalog_rows)}")
+    print(f"Matrix rows: {len(matrix_rows)}")
+    print(f"Guardrail register rows: {len(register_rows)}")
+    print("Guardrail dispositions:")
+    for status, count in count_by(guarded_catalog, "coverage_status").items():
+        print(f"  {status}: {count}")
+    print("Guardrail source families:")
+    for family, count in count_by(guarded_catalog, "source_family").items():
+        print(f"  {family}: {count}")
+    return 0
+
+
 def infer_version_scope(path: Path) -> str:
     value = str(path)
     if "Altibase_7.1" in value or "PatchNotes/Altibase_7.1" in value:
@@ -986,6 +1189,14 @@ def build_parser() -> argparse.ArgumentParser:
     catalog_qa.add_argument("--catalog", default=str(DEFAULT_CATALOG))
     catalog_qa.add_argument("--matrix", default=str(DEFAULT_MATRIX))
     catalog_qa.set_defaults(func=cmd_catalog_qa)
+
+    guardrail_audit = subparsers.add_parser(
+        "guardrail-audit",
+        help="verify Guardrail and Out-of-scope rows have actionable next-check patterns",
+    )
+    guardrail_audit.add_argument("--catalog", default=str(DEFAULT_CATALOG))
+    guardrail_audit.add_argument("--matrix", default=str(DEFAULT_MATRIX))
+    guardrail_audit.set_defaults(func=cmd_guardrail_audit)
 
     outline = subparsers.add_parser(
         "outline", help="emit a heading outline TSV for source extraction"
