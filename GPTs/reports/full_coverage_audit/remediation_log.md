@@ -443,3 +443,38 @@ Each entry should include:
   rows were added by FCA-J020. Exact production recovery or destructive tablespace
   actions still require the customer inputs and stop conditions already recorded in
   `07_error_messages_troubleshooting.md`.
+
+### FCA-J021
+
+- Changed files: `source_item_catalog.tsv` and this remediation log.
+- Product coverage changes: cataloged SQL parser, DDL/table/column/data type,
+  object-resolution, privilege, constraint, conversion/literal/date, regular-expression,
+  LOB, JSON, and Temporary LOB exact-code rows from the selected Error Message
+  Reference family only; no customer-facing attachment text or original source
+  documents were edited.
+- Catalog rows touched by this job: 155 rows total; 154 added and 1 updated. Status split: 3 `Covered`, 152 `Covered-by-routing`, 0 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0 `Retrieval-weak`.
+- Version scope: 139 cross-version rows and 16 Altibase 8.1 verified source rows. The `0x314B4` SQL LOB autocommit row is recorded as cross-version with source summary noting its 7.3 and 8.1 evidence.
+- Source evidence: selected Korean Altibase 7.1, Altibase 7.3, and Altibase 8.1
+  verified-source Error Message Reference entries were matched by exact reference code
+  and symbol. The representative `source_path` is the 7.3 Korean manual for
+  cross-version rows and the trunk Korean manual for 8.1-only JSON/Temporary LOB rows;
+  each row records line locators and the `07_error_messages_troubleshooting.md` block
+  line used for attachment evidence.
+- Coverage status changes: single-code answer-ready blocks for object-name collision,
+  DDL blocked by active temporary table use, and JSON blocked by disabled
+  `TEMPORARY_LOB_ENABLE` were marked `Covered`; grouped exact-code maps for parser,
+  DDL, object lookup, privilege, constraint, conversion, regex, LOB/client utility, and
+  JSON function/path errors were marked `Covered-by-routing`. Existing row
+  `SRC-ERR-XVER-000192` for `0x31458` was updated from the broader tablespace route to
+  the scoped temporary-table/LOB DDL route.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1319 catalog rows and 0 matrix rows; scoped TSV counts confirmed 155
+  FCA-J021 rows with 3 `Covered` and 152 `Covered-by-routing` statuses. Standard
+  repository verification passed: `git diff --check`, `bash review/scripts/run_review_stage.sh validate`,
+  and the review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: no new `Missing`, `Guardrail`, `Out-of-scope`, or `Retrieval-weak`
+  rows were added by FCA-J021. Customer answers for exact SQL, JSON, Temporary LOB,
+  LOB, and regex errors still require the version, full error line, SQL/API/tool
+  command, object definition, property values, and log/client evidence requested by
+  `07_error_messages_troubleshooting.md`.
