@@ -35,6 +35,66 @@
 - For compile-ready C involving `SQLEmptyLob()` or `SQLGetLobLength2()`, ask for the exact 8.1 client header or manual because the selected sources name the functions but do not provide complete callable signatures.
 - If the question is primarily SSL/TLS, use this attachment for ODBC/CLI connection keys and the SSL/TLS attachment for certificate and server setup.
 
+## Exact C API And LOB Answer Blocks
+
+Use these compact blocks when answering C-facing client, ODBC, ACI, APRE, or LOB
+questions. Preserve the literal function names, constants, connection keys, and file
+names shown here.
+
+Exact block: CLI core call order
+
+- Version scope: Altibase 8.1 verified source; broad flow is also used by the selected 7.1 and 7.3 CLI sources.
+- Allocate the environment handle first with `SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env)`.
+- Allocate the connection handle with `SQLAllocHandle(SQL_HANDLE_DBC, env, &dbc)`.
+- Connect with `SQLDriverConnect()` when a connection string is needed, or `SQLConnect()` when DSN, user, and password are enough.
+- Allocate a statement handle with `SQLAllocHandle(SQL_HANDLE_STMT, dbc, &stmt)` before prepare or execute.
+- Include explicit `SQLEndTran()` transaction control and handle cleanup; do not rely on disconnect side effects for transactional clarity.
+
+Exact block: `DEFER_PREPARES=ON`
+
+- Version scope: Altibase 8.1 verified source.
+- `DEFER_PREPARES=ON` can be set in the connection string handled by `SQLDriverConnect`.
+- With `DEFER_PREPARES` set to `ON`, `SQLPrepare()` can return before the server-side prepare request is sent.
+- If a function called after `SQLPrepare` needs prepare metadata, the driver sends the prepare request before `SQLExecute`.
+- Metadata or prepare-result functions that force communication include `SQLExecute`, `SQLColAttribute`, `SQLDescribeCol`, `SQLDescribeParam`, `SQLNumParams`, and `SQLNumResultCols`.
+- Do not promise that `SQLPrepare()` always stays client-only until `SQLExecute()`.
+
+Exact block: ODBC `LongDataCompat` for `BLOB` and `CLOB`
+
+- Version scope: Altibase 8.1 verified source; selected 7.1 and 7.3 ODBC sources use the same ordinary LOB compatibility concept.
+- `LongDataCompat` can be `ON` or `OFF`; documented default is `OFF`.
+- For `BLOB` or `CLOB` through an ODBC Driver Manager path, set `LongDataCompat=ON` so `SQL_BLOB` is exposed as `SQL_LONGVARBINARY` and `SQL_CLOB` as `SQL_LONGVARCHAR`.
+
+```text
+DSN=ALTIBASE;LongDataCompat=ON
+DRIVER=ALTIBASE_HDB_ODBC_64bit;User=SYS;Password=<password>;Server=127.0.0.1;PORT=20300;NLS_USE=US7ASCII;LongDataCompat=ON
+```
+
+Exact block: JSON LOB locator cleanup after `SQLPutLob`
+
+- Version scope: Altibase 8.1 verified source.
+- If `SQLPutLob()` updates `JSON` data through a `LOB locator`, release the related locator resources with `SQLFreeLob2(stmt, locator)`.
+- `SQLFreeLob2()` does not commit or roll back the LOB changes.
+- Commit or roll back separately with `SQLEndTran()`.
+
+Exact block: ACI result retrieval choice
+
+- Version scope: Altibase 8.1 verified source.
+- `altibase_store_result()` retrieves the whole result set on the client side.
+- If `altibase_store_result()` returns `NULL`, result-set retrieval failed; when a query returns no rows, it returns an empty result set rather than `NULL`.
+- `altibase_use_result()` does not retrieve the entire result set from the server at once.
+- For large result sets, `LOB` columns, or `GEOMETRY` data, avoid casually recommending store-result patterns that can consume excessive client memory.
+
+Exact block: APRE build and error handling
+
+- Version scope: Altibase 8.1 verified source.
+- `APRE` or `apre` precompiles C or C++ source containing embedded `EXEC SQL`.
+- Input source extension is `.sc`; default generated output is `.c`; use `-t cpp` for `.cpp`.
+- Required Unix-like libraries include `libapre.a` and `libodbccli.a` under `$ALTIBASE_HOME/lib`; typical link options include `-lapre` and `-lodbccli`.
+- Error handling tokens to preserve: `WHENEVER`, `SQLCA`, `SQLCODE`, `SQLSTATE`, `sqlcode`, `sqlerrm.sqlerrmc`, `sqlerrm.sqlerrml`, `sqlerrd[2]`, and `sqlwarn`.
+- `WHENEVER` applies by source-file scope, must be declared before affected embedded SQL statements, and is independent of connection.
+- Altibase `SQLCA` supports `sqlcode`, `sqlerrm.sqlerrmc`, `sqlerrm.sqlerrml`, and `sqlerrd[2]`; Oracle-only `SQLCA` members such as `sqlwarn` are not supported.
+
 ## Fast Decision Map
 
 ```mermaid

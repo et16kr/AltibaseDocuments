@@ -33,6 +33,94 @@
 - Do not generate external procedures unless the user accepts native code deployment into `$ALTIBASE_HOME/lib` and the operational risk of the selected external procedure mode.
 - Prefer examples that compile in iSQL: end PSM object creation with `END;` and then `/` on the next line.
 
+## Exact PSM Answer Blocks
+
+Use these compact blocks when a customer asks for syntax generation or version-sensitive
+stored logic behavior. Preserve the literal tokens shown here in answers.
+
+Exact block: stored procedure parameters and iSQL execution
+
+- Version scope: Altibase 8.1 verified source for `IF NOT EXISTS`; core parameter rules also apply to the selected 7.1 and 7.3 PSM sources unless an installed patch proves otherwise.
+- Parameter modes: `IN`, `OUT`, and `IN OUT`; `IN` is the default.
+- Default-value rule: `OUT` and `IN OUT` parameters cannot have `DEFAULT` or `:=` default values.
+- `NOCOPY`: supported for `ASSOCIATIVE ARRAY` parameter cases and for collection subarray access patterns. Use it deliberately because the effect is pass-by-reference-style behavior, not a generic scalar speed switch.
+- Privilege model: `AUTHID DEFINER` is the default; `AUTHID CURRENT_USER` uses the invoking user's privileges and object resolution.
+- iSQL execution rule: after a PSM object body, enter `/` on the line after `END;`.
+
+```sql
+CREATE OR REPLACE PROCEDURE p_demo(
+  p_id IN INTEGER,
+  p_out OUT INTEGER,
+  p_arr IN NOCOPY arr_types.arr_type
+)
+AUTHID DEFINER
+AS
+BEGIN
+  p_out := p_id;
+END;
+/
+```
+
+Exact block: stored function return and side effects
+
+- Version scope: Altibase 8.1 verified source.
+- Syntax tokens to preserve: `CREATE FUNCTION`, `RETURN data_type`, `RETURN expression`, `DETERMINISTIC`, `SELECT`, `INSERT`, `UPDATE`, `DELETE`.
+- A function declaration specifies `RETURN data_type`; the body must return a value with `RETURN expression`.
+- A stored procedure errors if its `RETURN` statement specifies a value; a stored function must specify a value.
+- Use `DETERMINISTIC` only for a function whose same input always gives the same result, especially when check constraints or function-based indexes depend on it.
+- A function called from a `SELECT` statement cannot execute `INSERT`, `UPDATE`, `DELETE`, or transaction-control statements.
+- A function called from `INSERT`, `UPDATE`, or `DELETE` cannot execute transaction-control statements.
+
+Exact block: anonymous block and bind variables
+
+- Version scope: 7.3 release-note wording and 8.1 PSM baseline.
+- Anonymous block shape: `DECLARE ... BEGIN ... END;`.
+- It does not create or store a PSM database object.
+- It does not return a value through a `RETURN` clause.
+- Unlike a stored procedure, it can use iSQL bind variables for `INPUT`, `OUTPUT`, and `INOUTPUT` use.
+
+Exact block: `VARRAY`, `VARRAY_MEMORY_MAXIMUM`, and `NOCOPY`
+
+- Version scope: Altibase 7.3 release notes add PSM `VARRAY`; do not backport `VARRAY` to a 7.1 baseline without exact patch evidence.
+- `VARRAY` is a user-defined array type for storing consecutive values of the same data type.
+- `VARRAY_MEMORY_MAXIMUM` is the property tied to the 7.3+ `VARRAY` feature area.
+- `NOCOPY` is relevant when accessing lower arrays in `ASSOCIATIVE ARRAY` or `VARRAY` structures.
+- For a generated answer, keep the tokens `VARRAY`, `VARRAY_MEMORY_MAXIMUM`, `NOCOPY`, `ASSOCIATIVE ARRAY`, `7.3`, and `7.1` together.
+
+Exact block: `REF CURSOR` return-through-parameter pattern
+
+- Version scope: Altibase 8.1 verified source.
+- Use `OPEN FOR` to open the cursor variable and execute the query before returning it through an `OUT` or `IN OUT` procedure parameter.
+- Cursor variables can be passed only as `OUT` or `IN OUT` parameters of stored procedures.
+- A cursor variable cannot be returned from a stored function with a `RETURN` statement.
+- Generation rule: expose a cursor to callers through a procedure parameter, not an Oracle-style function return.
+
+```sql
+CREATE TYPESET emp_types AS
+  TYPE emp_cur IS REF CURSOR;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE open_emps(
+  p_result OUT emp_types.emp_cur
+)
+AS
+BEGIN
+  OPEN p_result FOR SELECT eno, e_lastname FROM employees;
+END;
+/
+```
+
+Exact block: external procedure and function registration
+
+- Version scope: Altibase 8.1 verified source.
+- Deployment sequence: build a shared library, place it where the server-side external procedure facility can load it, create the `CREATE LIBRARY` object, then create the external `CREATE PROCEDURE` or `CREATE FUNCTION`.
+- External declarations use `LANGUAGE C` and name the user function, library object, and `PARAMETERS` mapping.
+- The call spec can choose `EXTERNAL` or `INTERNAL`; if neither is specified, the documented behavior is `EXTERNAL` mode.
+- For an external function, `RETURN` in the `PARAMETERS` list identifies the parameter that receives the external function return value.
+- `RETURN` must appear after all function argument parameters, at the end of the parameter list.
+- If no attribute parameter follows `RETURN`, specifying `RETURN` alone is equivalent to omitting `RETURN`.
+
 ## Version Differences
 
 | Area | 7.1 | 7.3 | 8.1 verified source |
