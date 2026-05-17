@@ -406,15 +406,31 @@ Property and system-view matrix:
 ### Check Whether a Performance View or Column Exists
 
 ```sql
-SELECT name, columncount
+SELECT name AS NAME,
+       columncount AS COLUMNCOUNT
 FROM V$TABLE
 WHERE name = '<VIEW_NAME>';
 
-SELECT tablename, colname
+SELECT tablename AS TABLENAME,
+       colname AS COLNAME
 FROM V$ALLCOLUMN
 WHERE tablename = '<VIEW_NAME>'
 ORDER BY colname;
 ```
+
+Exact-token rule for portable answers: preserve `V$TABLE.NAME`, `V$TABLE.COLUMNCOUNT`, `V$ALLCOLUMN.TABLENAME`, and `V$ALLCOLUMN.COLNAME` when explaining view availability. Query performance views with `SELECT`; do not generate direct `INSERT`, `UPDATE`, or `DELETE` against `V$` performance views.
+
+### Patch-Specific Performance-View Client Workaround
+
+Altibase 7.1.0.7.9 patch notes describe `BUG-49796`: an `Altibase 6.5.1` or earlier `JDBC` client can raise `That had return update result` when executing an Altibase 7.1 performance-view query made only from `x$` and `v$` views.
+
+Source-backed workaround:
+
+```sql
+ALTER SYSTEM SET OPTIMIZER_PERFORMANCE_VIEW = 0;
+```
+
+Ask for the exact Altibase 7.1 server patch level, client driver version, full error text, and failing `x$`/`v$` query before recommending this patch-specific workaround. The patch note cautions that changing `OPTIMIZER_PERFORMANCE_VIEW` can degrade performance-view query performance.
 
 ## Cookbook: Objects, Columns, Comments, and Sequences
 
@@ -438,7 +454,9 @@ WHERE t.user_id = u.user_id
 ORDER BY t.table_type, t.table_name;
 ```
 
-`TABLE_TYPE` common values: `T` table, `S` sequence, `V` view, `Q` queue, `M` materialized-view maintenance table, `A` materialized-view maintenance view, `G` global-index internal table, `D` compressed-column dictionary table.
+`TABLE_TYPE` common values: `T` table, `S` sequence, `V` view, `Q` queue, `M` materialized-view maintenance table, `A` materialized-view maintenance view, `G` global-index internal table, `D` compressed-column dictionary table, and `R` dropped table in the recycle bin.
+
+`TEMPORARY` values: `D` transaction temporary table, `P` session temporary table, and `N` non-temporary table. `ACCESS` values: `R` read-only, `W` read/write, and `A` read/append, where data change and delete are not allowed.
 
 ### Check One Table, View, Sequence, or Queue
 
@@ -647,7 +665,7 @@ WHERE i.user_id = t.user_id
 ORDER BY i.index_name;
 ```
 
-`INDEX_TYPE` values include `1` for B-tree and `2` for R-tree. `IS_UNIQUE`, `IS_RANGE`, `IS_DIRECTKEY`, and `IS_PARTITIONED` are flags.
+`INDEX_TYPE` values include `1` for `B-TREE` and `2` for `R-TREE`. `IS_UNIQUE`, `IS_RANGE`, `IS_DIRECTKEY`, and `IS_PARTITIONED` are flags.
 
 ### List Index Columns
 
@@ -675,7 +693,7 @@ WHERE i.user_id = ic.user_id
 ORDER BY i.index_name, ic.index_col_order;
 ```
 
-`SORT_ORDER` values are `A` ascending and `D` descending.
+Use `INDEX_COL_ORDER` to preserve composite-index column order. `SORT_ORDER` values are `A` ascending and `D` descending.
 
 ### List Constraints on a Table
 
@@ -769,6 +787,7 @@ SELECT p.partition_name,
        p.partition_order,
        p.tbs_id,
        p.partition_access,
+       p.partition_usable,
        p.replication_count,
        p.replication_recovery_count,
        p.created,
@@ -784,7 +803,7 @@ WHERE p.user_id = t.user_id
 ORDER BY p.partition_order, p.partition_name;
 ```
 
-`PARTITION_ACCESS` values: `R` read-only, `W` read/write, `A` read/append.
+Use `PARTITION_MIN_VALUE`, `PARTITION_MAX_VALUE`, `PARTITION_ORDER`, `PARTITION_ACCESS`, and `PARTITION_USABLE` before answering partition pruning or access-mode questions. For hash partitions, `PARTITION_MIN_VALUE` and `PARTITION_MAX_VALUE` are `NULL`; use `PARTITION_ORDER` and `SYS_PART_KEY_COLUMNS_` instead of treating missing min/max values as range bounds. `PARTITION_ACCESS` values: `R` read-only, `W` read/write, `A` read/append.
 
 ### List Partition Keys
 
@@ -1529,6 +1548,8 @@ ORDER BY st.total_time DESC;
 
 `V$STATEMENT.EXECUTE_FLAG = 1` means the statement is currently executing. `V$STATEMENT.TOTAL_TIME`, `PARSE_TIME`, `VALIDATE_TIME`, `OPTIMIZE_TIME`, `EXECUTE_TIME`, and `FETCH_TIME` are in microseconds.
 
+For session SQL triage, preserve these exact `V$STATEMENT` tokens: `SESSION_ID`, `TX_ID`, `QUERY`, `EXECUTE_FLAG`, `BEGIN_FLAG`, `EXECUTE_STATE`, `FETCH_STATE`, `TOTAL_TIME`, `SOFT_PREPARE_TIME`, `SQL_CACHE_TEXT_ID`, and `SQL_CACHE_PCO_ID`.
+
 For SQL text fragments:
 
 ```sql
@@ -1621,6 +1642,8 @@ ORDER BY time_waited DESC, total_waits DESC;
 
 `V$WAIT_CLASS_NAME` maps wait class IDs to class names. Documented classes are `Other`, `Administrative`, `Configuration`, `Concurrency`, `Commit`, `Idle`, `User I/O`, `System I/O`, and `Replication`.
 
+Current wait answers should name `V$SESSION_WAIT.SID`, `EVENT`, `WAIT_CLASS`, `WAIT_TIME`, and `SECOND_IN_WAIT`. Use `V$SESSION_EVENT` or `V$SESSION_WAIT_CLASS` when cumulative per-session waits or wait-class totals are needed.
+
 ### Check Lock Wait Chains
 
 ```sql
@@ -1667,6 +1690,8 @@ ORDER BY l.is_grant, u.user_name, t.table_name;
 ```
 
 `IS_GRANT` indicates whether the lock is granted or waiting.
+
+Lock-chain answers should preserve `V$LOCK_WAIT.TRANS_ID` as the waiting transaction and `V$LOCK_WAIT.WAIT_FOR_TRANS_ID` as the transaction being waited for. Use `V$LOCK_STATEMENT.SESSION_ID`, `ID`, `TX_ID`, `QUERY`, `LOCK_ITEM_TYPE`, `LOCK_DESC`, `LOCK_CNT`, and `IS_GRANT` to connect lock evidence back to SQL text.
 
 Map waiting and holder transactions back to sessions:
 
@@ -3158,6 +3183,8 @@ Purpose: stores meta tables, user tables, sequences, views, queues, and internal
 
 Key columns: `USER_ID`, `TABLE_ID`, `TABLE_OID`, `TABLE_NAME`, `TABLE_TYPE`, `TBS_ID`, `TBS_NAME`, `IS_PARTITIONED`, `TEMPORARY`, `ACCESS`, `CREATED`, `LAST_DDL_TIME`.
 
+Value notes: `TABLE_TYPE` includes `T`, `S`, `V`, `Q`, `M`, `A`, `G`, `D`, and `R`; `TEMPORARY` uses `D`, `P`, and `N`; `ACCESS` uses `R`, `W`, and `A`.
+
 Representative SQL:
 
 ```sql
@@ -3188,6 +3215,8 @@ ORDER BY column_order;
 Purpose: store index definitions and index column order.
 
 Key columns: `INDEX_ID`, `INDEX_NAME`, `INDEX_TYPE`, `IS_UNIQUE`, `COLUMN_CNT`, `IS_RANGE`, `IS_DIRECTKEY`, `IS_PARTITIONED`, `INDEX_COL_ORDER`, `SORT_ORDER`.
+
+Value notes: `INDEX_TYPE = 1` means `B-TREE`; `INDEX_TYPE = 2` means `R-TREE`. `SORT_ORDER` uses `A` for ascending and `D` for descending.
 
 Representative SQL:
 
@@ -4775,7 +4804,7 @@ Purpose: `V$LOG` shows log-anchor checkpoint positions, server status, archive l
 
 Version scope: common log-anchor columns are in 7.1, 7.3, and the Altibase 8.1 verified source. `V$LOG.CHECKPOINT_SCALE` is Altibase 8.1 verified source.
 
-Key columns: `BEGIN_CHKPT_FILE_NO`, `BEGIN_CHKPT_FILE_OFFSET`, `END_CHKPT_FILE_NO`, `END_CHKPT_FILE_OFFSET`, `SERVER_STATUS`, `ARCHIVELOG_MODE`, `TRANSACTION_SEGMENT_COUNT`, `OLDEST_LOGFILE_NO`, `OLDEST_LOGFILE_OFFSET`, `CHECKPOINT_SCALE`, `CUR_WRITE_LF_NO`, `CUR_WRITE_LF_OFFSET`, `LF_PREPARE_COUNT`, `LF_PREPARE_WAIT_COUNT`, `END_LSN_FILE_NO`, `END_LSN_OFFSET`, `FIRST_DELETED_LOGFILE`, `LAST_DELETED_LOGFILE`, `GC_WAIT_COUNT`, `GC_REAL_SYNC_COUNT`.
+Key columns: `BEGIN_CHKPT_FILE_NO`, `BEGIN_CHKPT_FILE_OFFSET`, `END_CHKPT_FILE_NO`, `END_CHKPT_FILE_OFFSET`, `SERVER_STATUS`, `ARCHIVELOG_MODE`, `TRANSACTION_SEGMENT_COUNT`, `OLDEST_LOGFILE_NO`, `OLDEST_LOGFILE_OFFSET`, `CHECKPOINT_SCALE`, `LFG_ID`, `CUR_WRITE_LF_NO`, `CUR_WRITE_LF_OFFSET`, `LF_OPEN_COUNT`, `LF_PREPARE_COUNT`, `LF_PREPARE_WAIT_COUNT`, `END_LSN_FILE_NO`, `END_LSN_OFFSET`, `FIRST_DELETED_LOGFILE`, `LAST_DELETED_LOGFILE`, `UPDATE_TX_COUNT`, `GC_WAIT_COUNT`, `GC_ALREADY_SYNC_COUNT`, `GC_REAL_SYNC_COUNT`.
 
 Representative SQL:
 
@@ -4783,20 +4812,29 @@ Representative SQL:
 SELECT server_status,
        archivelog_mode,
        begin_chkpt_file_no,
+       begin_chkpt_file_offset,
        end_chkpt_file_no,
+       end_chkpt_file_offset,
        oldest_logfile_no,
+       oldest_logfile_offset,
        transaction_segment_count
 FROM V$LOG;
 
 SELECT lfg_id,
        cur_write_lf_no,
        cur_write_lf_offset,
+       lf_open_count,
+       lf_prepare_count,
        lf_prepare_wait_count,
+       update_tx_count,
        gc_wait_count,
+       gc_already_sync_count,
        gc_real_sync_count
 FROM V$LFG
 ORDER BY lfg_id;
 ```
+
+Value notes: `SERVER_STATUS` values include `SERVER SHUTDOWN` and `SERVER STARTED`. `ARCHIVELOG_MODE` values include `ARCHIVE` and `NOARCHIVE`. `OLDEST_LOGFILE_NO` and `OLDEST_LOGFILE_OFFSET` mark where disk-related redo starts during restart recovery. `UPDATE_TX_COUNT`, `GC_WAIT_COUNT`, `GC_ALREADY_SYNC_COUNT`, and `GC_REAL_SYNC_COUNT` are group-commit statistics, not generic session counters.
 
 Caution: Do not include `CHECKPOINT_SCALE` in portable 7.1/7.3 SQL unless `V$ALLCOLUMN` proves the target exposes it.
 

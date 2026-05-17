@@ -305,6 +305,8 @@ Factors that can change the plan:
 - SQL hints.
 - Optimizer-related properties.
 
+Before recommending a hint or index, preserve the optimizer structure names `Query Rewriter`, `Logical Plan Generator`, and `Physical Plan Generator`, and ask for SQL text, predicates, indexes and constraints, statistics, `SQL hints`, and optimizer-related properties that can affect the plan tree.
+
 Optimizer normalization property block: `NORMALFORM_MAXIMUM`
 
 - `NORMALFORM_MAXIMUM` defaults to `2048`, ranges `[1, 2^32 - 1]`, and is changeable with `ALTER SYSTEM` or `ALTER SESSION`.
@@ -338,7 +340,7 @@ Item block: `Disk table`
 Practical rule:
 
 - For memory tables, an index that reduces record access usually improves SQL performance.
-- For disk tables, create or force an index only when selectivity is low enough to avoid excessive random I/O. The Performance Tuning Guide recommends disk-table indexes mainly when the search returns a very small number of rows, or less than about 10% of table rows.
+- For disk tables, an `index scan` is not always faster than a `full table scan`; create or force an index only when selectivity is low enough to avoid excessive random I/O. The Performance Tuning Guide recommends disk-table indexes mainly when the search returns a very small number of rows, or less than about 10% of table rows.
 
 ## EXPLAIN PLAN
 
@@ -376,9 +378,10 @@ Predicate detail:
 ALTER SYSTEM SET TRCLOG_DETAIL_PREDICATE = 1;
 ```
 
-- Shows how predicates are processed, such as fixed key range, variable key range, and filter processing.
+- Shows how predicates are processed in `EXPLAIN PLAN`, including `FIXED KEY RANGE`, `VARIABLE KEY RANGE`, and `FILTER`.
 - Useful when a query has complex `WHERE` clauses and the user needs to know which predicates are handled by index access.
 - Predicate detail may not appear when the optimizer has transformed the query.
+- Confirm actual plan evidence from `EXPLAIN PLAN = ON` or `EXPLAIN PLAN = ONLY`; do not claim an `INDEX` was used only because the index exists.
 
 Example plan with predicate detail:
 
@@ -1902,6 +1905,8 @@ DELETE /*+ hint [hint ...] */ ...
 INSERT /*+ hint [hint ...] */ ...
 ```
 
+Literal hint marker: `/*+ hint */`. The `+` must immediately follow `/*`; `/* +` is not the documented form.
+
 Hint argument patterns:
 
 ```text
@@ -1957,7 +1962,7 @@ Hint processing rules:
 - If hint syntax is invalid or impossible to execute, the hint is ignored.
 - The plus sign must immediately follow `/*` with no intervening space: `/*+`.
 - Hints can be specified in simple `SELECT`, `UPDATE`, `DELETE`, and `INSERT` statements.
-- In compound statements, use hints in the main query, subquery, or first query combined by set operators as appropriate.
+- In compound statements, use hints in the main query, subquery, or first query combined by a `set operator` as appropriate.
 - Altibase also accepts an `ALTI_`-prefixed form for hints. For a multi-keyword hint, replace spaces with underscores after the prefix, for example `ALTI_FULL_SCAN`, `ALTI_INDEX_ASC`, `ALTI_NO_INDEX`, and `ALTI_HASH_BUCKET_COUNT`.
 - Table arguments should use the query block's table name or alias as it appears in the SQL.
 - Index arguments should use existing index names from `SYSTEM_.SYS_INDICES_`; verify the leading columns with `SYSTEM_.SYS_INDEX_COLUMNS_` before forcing `INDEX` or `INDEX ASC`.
@@ -2221,6 +2226,7 @@ Interpretation:
 - High cache-miss reason, such as `CREATE_BY_CACHE_MISS` or the target server's equivalent spelling: SQL plan cache may be too small or literal SQL may be overused.
 - High plan-invalidation reason, such as `CREATE_BY_PLAN_INVALIDATION` or the target server's equivalent spelling: referenced objects such as tables or indexes may be changing frequently.
 - High `CHILD_PCO_COUNT`: check whether SQL text is the same but object owners differ, or whether referenced objects are frequently changed.
+- DDL, DCL, and statements using the `NO_PLAN_CACHE` hint are not registered in SQL Plan Cache.
 
 ## Result Cache
 
@@ -2303,11 +2309,19 @@ Server issue block: `Log file wait`
 - Check SQL or Command:
 
 ```sql
-SELECT lf_prepare_wait_count
+SELECT lfg_id,
+       cur_write_lf_no,
+       lf_open_count,
+       lf_prepare_count,
+       lf_prepare_wait_count,
+       update_tx_count,
+       gc_wait_count,
+       gc_already_sync_count,
+       gc_real_sync_count
 FROM V$LFG;
 ```
 
-- Immediate Action: Compare two snapshots in the same workload window. If `LF_PREPARE_WAIT_COUNT` rises and log disk I/O is not already saturated, consider a small increase to `PREPARE_LOG_FILE_COUNT`; keep the prior value and avoid excessive settings because server memory usage increases.
+- Immediate Action: Compare two snapshots in the same workload window. If `LF_PREPARE_WAIT_COUNT` rises and log disk I/O is not already saturated, consider a small increase to `PREPARE_LOG_FILE_COUNT`; keep the prior value and avoid excessive settings because server memory usage increases. Interpret `UPDATE_TX_COUNT`, `GC_WAIT_COUNT`, `GC_ALREADY_SYNC_COUNT`, and `GC_REAL_SYNC_COUNT` as group-commit counters, not generic session counters.
 - Verification: Re-run the `V$LFG` snapshot after the workload or change. The wait-count increase should slow or stop, and transaction latency during log-heavy work should improve.
 - Version Cautions: Check that `V$LFG.LF_PREPARE_WAIT_COUNT` and `PREPARE_LOG_FILE_COUNT` are available on the target server before relying on them.
 - Escalation: If waits continue after bounded tuning or log I/O is saturated, collect Altibase version, two `V$LFG` snapshots, log file layout, OS I/O samples, property values, and trace log excerpts before escalating.
@@ -2542,11 +2556,12 @@ Check OS thread CPU by platform:
 Purpose:
 
 - Altibase Monitoring API lets a local application monitor Altibase.
-- It is intended for remote monitoring tool developers and can retrieve data also available through performance views.
+- It is intended for external monitoring tool developers and can retrieve data also available through performance views.
+- The manuals state that Monitoring API is supported from `Altibase 5.5.1` onward; still verify the installed library and target server version.
 
 Important constraints:
 
-- The Monitoring API application connects to Altibase through a Unix domain socket. The application and Altibase must run on the same server.
+- The Monitoring API application connects to Altibase through a `Unix Domain Socket`. The application and Altibase must run on the same server.
 - Memory allocated internally by Monitoring API functions is shared by the library and is not thread-safe.
 - If multiple threads call the API, synchronize calls with a mutex.
 - Do not allocate or free result-structure memory directly.
@@ -2557,7 +2572,7 @@ Important constraints:
 Build essentials:
 
 - Header: `altibaseMonitor.h` under `$ALTIBASE_HOME/include`.
-- Libraries: `libaltibaseMonitor.a` or `libaltibaseMonitor_sl.so`, plus `libodbccli`.
+- Libraries: `libaltibaseMonitor.a` or `libaltibaseMonitor_sl.so`, plus `libodbccli.a`.
 - Library path: `$ALTIBASE_HOME/lib`.
 
 Example compile pattern:
