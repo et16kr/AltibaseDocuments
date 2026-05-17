@@ -736,3 +736,37 @@ Each entry should include:
   guardrail remains intentional and requires exact version, driver, framework,
   topology, target-driver, SSL/TLS, and live-output evidence before definitive
   customer answers about production runtime success.
+
+### FCA-J032
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`,
+  `guardrail_register.md`, and this remediation log.
+- Product coverage changes: cataloged the `isql_iloader` source-family slice for iSQL
+  session commands, connection and startup/shutdown workflows, file/script commands,
+  host variables, output formatting, login files, iLoader command syntax, FORM files,
+  batch and interactive load/export workflows, LOB handling, diagnostics,
+  low-frequency options, and version-sensitive iLoader behavior. No original manuals
+  or customer-facing attachments were edited.
+- Catalog rows added by this job: 31 rows total; 29 `Covered`, 0
+  `Covered-by-routing`, 1 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean iSQL and iLoader 7.3 manuals are the representative
+  cross-version sources, with Korean iLoader 7.1 for `-stmt_prefix` and the Korean
+  Altibase 8.1.0.0.1 release note for iLoader Empty LOB behavior.
+- Coverage status changes: existing answer-ready anchors in
+  `13_isql_iloader_basic_tools.md` cover the scoped session, command, workflow, FORM,
+  LOB, diagnostic, and version-sensitive rows. `SRC-ISQL-XVER-000013` was registered
+  as `Missing` for the source-backed `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE` NCHAR
+  literal behavior that is not yet answer-ready in attachment 13. `SRC-ILOAD-XVER-000016`
+  was registered as a `Guardrail` because selected sources list `-dry-run` but do not
+  define exact production-precheck effects or diagnostics.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1974 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 31
+  FCA-J032 rows with 29 `Covered`, 1 `Missing`, and 1 `Guardrail` status. Standard
+  repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no customer-facing attachment text was changed. The iSQL NCHAR
+  literal `Missing` row should be remediated with a compact answer-ready block before
+  final audit closure; the `-dry-run` guardrail remains intentional until installed
+  client behavior is verified or fuller selected-source semantics are added.

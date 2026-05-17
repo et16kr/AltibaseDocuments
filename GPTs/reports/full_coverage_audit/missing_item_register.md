@@ -22,6 +22,17 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J032 iSQL And iLoader Missing Rows
+
+FCA-J032 cataloged the iSQL and iLoader source rows. The row below is source-backed
+and in scope, but attachment 13 currently preserves the command-line token without an
+answer-ready explanation of the environment-variable behavior, NCHAR literal boundary,
+and cost caution from the Korean iSQL manual.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-ISQL-XVER-000013 | isql_iloader | cross-version | Manuals/Altibase_7.3/kor/iSQL User's Manual.md | iSQL User's Manual > ALTIBASE_NLS_NCHAR_LITERAL_REPLACE and national character literals | Answer-ready block for `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE`, including values `0` and `1`, `N`-prefixed NCHAR literal handling, NCHAR/NVARCHAR use case, client conversion behavior, cost caution, and safest national-character setup pattern. | GPTs/attachments/13_isql_iloader_basic_tools.md | Add a compact iSQL NCHAR literal block that preserves the environment variable, command-line option relationship, values, conversion behavior, export example, and caution; until then ask for exact client NLS settings and avoid inferring national-character behavior from generic database rules. | FCA-J032 | source locators: Korean iSQL 7.3 lines 844-864 and 3604-3612; catalog row `SRC-ISQL-XVER-000013`. |
+
 ### FCA-J031 C CLI ODBC And Precompiler Missing Rows
 
 FCA-J031 cataloged the C-facing client source rows. The rows below are source-backed

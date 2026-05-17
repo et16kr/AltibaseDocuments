@@ -21,6 +21,17 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J032 iSQL And iLoader Guardrails
+
+FCA-J032 cataloged the iSQL and iLoader source rows. Most source-backed tool behavior
+is represented in attachment 13, but `-dry-run` remains guarded because selected
+manuals list the option without a full semantic block that would support production
+precheck guarantees.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-ILOAD-XVER-000016 | Guardrail | isql_iloader | cross-version | Manuals/Altibase_7.3/kor/iLoader User's Manual.md | iLoader User's Manual > -dry-run syntax boundary | Selected 7.1, 7.3, and Altibase 8.1 verified source syntax lists `-dry-run`, but the selected manuals do not define exact effects, guarantees, output, or failure diagnostics. | Ask for the exact installed iLoader client package and version, run `iloader help`, consult the installed client manual, or validate behavior with a non-production run before relying on `-dry-run` as a production precheck. | GPTs/attachments/13_isql_iloader_basic_tools.md | FCA-J032 | Korean iLoader 7.3 lines 505, 1645, and 1694; Korean iLoader 7.1 lines 503, 1616, and 1665; catalog row `SRC-ILOAD-XVER-000016`. |
+
 ### FCA-J031 C CLI ODBC And Precompiler Guardrails
 
 FCA-J031 cataloged the C-facing CLI, ODBC, Altibase C Interface, and APRE
