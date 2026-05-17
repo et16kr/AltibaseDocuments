@@ -414,6 +414,11 @@ Property and system-view matrix:
 
 ### Check Whether a Performance View or Column Exists
 
+The General Reference shows `SELECT * FROM V$TAB` in iSQL to retrieve the performance
+view list, and says to use `DESC` in iSQL to inspect a performance view schema. For
+portable generated SQL, prefer `V$TABLE` and `V$ALLCOLUMN` so the answer can preserve
+view and column evidence in a queryable form.
+
 ```sql
 SELECT name AS NAME,
        columncount AS COLUMNCOUNT
