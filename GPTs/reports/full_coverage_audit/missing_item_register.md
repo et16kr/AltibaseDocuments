@@ -22,6 +22,17 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J007 Administrator Tablespace Account Privilege Missing Rows
+
+FCA-J007 cataloged 2 unresolved `Missing` rows for source-backed Administrator and SQL
+Reference account/schema/privilege details that are not yet answer-ready in the target
+attachments.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000071 | administrator_operations | cross-version | Manuals/Altibase_7.3/kor/Administrator's Manual.md | Administrator's Manual > Database objects and privileges > database object overview | Complete schema versus non-schema object taxonomy preserving `schema object`, `non-schema object`, and source-listed object families including `Table`, `Partitioned Table`, `Queue Table`, `Directory`, `Replication`, `Tablespace`, `User`, and `Job`. | GPTs/attachments/03_sql_ddl_generation.md | Add or route a compact schema-administration taxonomy block that distinguishes user-owned schema objects from database-level non-schema objects and cross-links to syntax and metadata owners. | FCA-J007 | source locator: Manuals/Altibase_7.3/kor/Administrator's Manual.md lines 1414-1556; attachment grep finds schema-object syntax but not the complete schema/non-schema taxonomy |
+| SRC-SQL-XVER-000007 | sql_reference | cross-version | Manuals/Altibase_7.3/kor/SQL Reference.md | SQL Reference > GRANT > system privilege catalog | Complete system privilege list preserving exact privilege names, privilege families, and source cautions, especially SYS-only `ALTER DATABASE`, `DROP DATABASE`, `MANAGE TABLESPACE`, and `SYSDBA`. | GPTs/attachments/02_administration_operations.md | Add a privilege-catalog block or routing table with the complete source-backed system privilege names and caution notes, plus `SYSTEM_.SYS_PRIVILEGES_` validation SQL. | FCA-J007 | source locator: Manuals/Altibase_7.3/kor/SQL Reference.md lines 10950-11220; target attachments contain common privilege blocks and a `SYS_PRIVILEGES_` query but not the full exact system privilege catalog |
+
 ### FCA-J006 Administrator Operations Missing Rows
 
 FCA-J006 cataloged 2 unresolved `Missing` rows for source-backed Administrator manual

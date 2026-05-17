@@ -110,3 +110,36 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route the two new Administrator
   storage-structure `Missing` rows before final full-coverage readiness can have no
   unresolved `Missing` dispositions.
+
+### FCA-J007
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged Administrator and SQL Reference rows for
+  tablespaces, datafiles, users, roles, privileges, accounts, schema administration,
+  and validation checks only; no customer-facing attachment text was changed and no
+  original source documents were edited.
+- Catalog totals added by this job: 29 rows total; 27 `Covered`, 0
+  `Covered-by-routing`, 2 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.3 Administrator manual, Korean Altibase 7.3 SQL
+  Reference, and Altibase 8.1 verified-source Korean SQL Reference for idempotent
+  user and tablespace syntax, checked against existing anchors in
+  `02_administration_operations.md`, `03_sql_ddl_generation.md`, and
+  `06_data_dictionary_performance_views.md`.
+- Coverage status changes: system-created accounts, user DDL workflow, role and
+  grant/revoke syntax, object privilege support, tablespace classification, disk and
+  undo space management, planned tablespace state changes, checkpoint-path
+  operations, volatile tablespace lifecycle, tablespace monitoring views, tablespace
+  DDL, file-size cautions, and 8.1-only `IF EXISTS`/`IF NOT EXISTS` boundaries were
+  mapped to answer-ready attachment anchors. Missing rows were registered for the
+  complete schema versus non-schema object taxonomy and the complete system privilege
+  catalog.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 268 catalog rows and 0 matrix rows; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: later remediation jobs must close or route the two new Administrator
+  privilege and schema-taxonomy `Missing` rows before final full-coverage readiness
+  can have no unresolved `Missing` dispositions.
