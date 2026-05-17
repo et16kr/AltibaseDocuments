@@ -29,7 +29,7 @@ Use this compact index before scanning DML and function families. It is intentio
 - 7.3: Altibase 7.3 SQL Reference; General Reference 1 for `REGEXP_MODE`.
 - 8.1: Altibase 8.1 verified source SQL Reference; General Reference 1 for `REGEXP_MODE`, native `JSON`, JSON path, and Temporary LOB prerequisites.
 
-## Core Guidance
+## Response Rules
 
 - Answer in the user's language, but keep SQL object names, function names, error codes, property names, commands, and file paths literal.
 - Do not answer "Oracle SQL is fully compatible." Say that common DML is intentionally similar, then check Altibase-specific syntax, data types, functions, limits, and object privileges.

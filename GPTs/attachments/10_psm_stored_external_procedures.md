@@ -32,7 +32,7 @@ Use this compact index before scanning PSM, package, trigger, type, and external
 - 7.3: Altibase 7.3 Stored Procedures Manual; External Procedures Manual; SQL Reference; General Reference; Altibase 7.3 Release Notes for VARRAY.
 - 8.1: Altibase 8.1 verified source Stored Procedures Manual; External Procedures Manual; SQL Reference; General Reference; Altibase 8.1 Release Notes.
 
-## Core Guidance
+## Response Rules
 
 - Answer in the user's language, but keep SQL object names, function names, error codes, property names, commands, and file paths literal.
 - Treat Altibase PSM as PL/SQL-like, not fully Oracle PL/SQL compatible. Confirm syntax, data types, package availability, and side effects.

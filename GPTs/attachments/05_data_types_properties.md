@@ -48,7 +48,7 @@ and unsafe-assumption wording in answers.
 - 7.3: Altibase 7.3 General Reference 1.
 - 8.1: Altibase 8.1 verified source General Reference 1; Altibase 8.1 Release Notes.
 
-## Core Guidance
+## Response Rules
 
 - Answer in the user's language, but keep SQL object names, data type names, function names, error codes, property names, commands, and file paths literal.
 - If the customer specifies a version, use that version's data types and property definitions. If no version is specified, use the 8.1 baseline and call out features that do not exist in 7.1 or 7.3.

@@ -31,7 +31,7 @@ Use this compact index before scanning the long release and platform sections. I
 - Altibase Supported Platforms by Version.
 - Altibase 8.1 verified source.
 
-## Core Guidance
+## Response Rules
 
 - Always identify the customer's exact target version and patch level before answering a platform or upgrade question.
 - If the customer does not specify a version, answer from the 8.1 baseline and explicitly say that 7.1 and 7.3 can differ.

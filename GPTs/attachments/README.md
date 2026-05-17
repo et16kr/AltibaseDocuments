@@ -76,16 +76,19 @@ syntax ambiguous, keep that portion in English and explain it in the user's lang
 
 ## Attachment Structure
 
-Until final cleanup, each attachment should keep these sections:
+Each upload attachment should keep these customer-answer sections:
 
 - `Applicable Versions`
 - `Questions This File Can Answer`
 - `Retrieval Alias Index`
 - `Source Documents`
-- `Core Guidance`
+- `Response Rules`
 - `Attachment Cross-References`
-- `Version Differences`
-- `Residual Scope Notes`
+- `Residual Scope`
+
+Use `Version Differences` when the attachment has version-specific behavior to
+summarize. Keep file-specific answer blocks, runbooks, syntax patterns, inventories,
+or tool blocks under descriptive headings after `Response Rules`.
 
 Use compact, searchable item blocks for large reference tables. Use BNF-like text for
 SQL syntax diagrams. Use Mermaid only when it helps explain graphs, flows, states,
@@ -97,6 +100,22 @@ attachment. It should repeat customer wording, exact literal tokens, owning answ
 routes, cross-file routes, and missing-input triggers without adding new product
 behavior. Keep these blocks short; the goal is to point retrieval to the precise
 answer section, not to duplicate the full reference content.
+
+## Customer LLM Editorial QA Checklist
+
+- A first-time user should be able to find the task purpose, prerequisites, safe
+  defaults, and first checks before any risky command or SQL.
+- A veteran user should be able to extract exact property names, SQL syntax, view and
+  column names, error codes, command options, defaults, ranges, units, version labels,
+  and operational caveats without relying on generic database assumptions.
+- Protected topics such as backup/recovery, destructive SQL, replication state changes,
+  TLS/security changes, and version-sensitive property changes should ask for missing
+  patch, environment, topology, log, object-definition, or current-state inputs before
+  giving state-changing guidance.
+- If a source-backed answer path exists in the attachment set, the answer should use
+  the closest consolidated block instead of saying only that the detail is absent.
+- If selected sources do not establish the claim, the answer should say what input or
+  installed evidence is missing and give the safest source-backed next check.
 
 ## Mermaid And Visual Conversion Policy
 

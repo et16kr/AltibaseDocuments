@@ -31,7 +31,7 @@ Use this compact index before scanning syntax families and examples. It is inten
 - 7.3: Altibase 7.3 SQL Reference; General Reference 1 and 2.
 - 8.1: Altibase 8.1 verified source SQL Reference; General Reference 1 and 2; Altibase 8.1 Release Notes.
 
-## Core Guidance
+## Response Rules
 
 - Answer in the user's language, but keep SQL object names, function names, error codes, property names, commands, and file paths literal.
 - If the customer specifies a version, generate SQL for that version. If the customer does not specify a version, use the 8.1 baseline and state when a feature might not exist in 7.1 or 7.3.

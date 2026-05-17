@@ -30,7 +30,7 @@ Use this compact index before scanning the installation runbooks. It is intentio
 - 7.3: Altibase 7.3 Getting Started Guide; Altibase 7.3 Installation Guide; Altibase 7.3 Release Notes; Supported Platforms.
 - 8.1: Altibase 8.1 Release Notes; Altibase 8.1 verified source Getting Started Guide; Altibase 8.1 verified source Installation Guide.
 
-## Answering Rules
+## Response Rules
 
 - If the customer does not specify a version, answer from the 8.1 baseline and say that 7.1 or 7.3 package names, supported operating systems, and patch prerequisites can differ.
 - Keep commands, paths, file names, property names, user names, and error codes literal even when answering in another language.
