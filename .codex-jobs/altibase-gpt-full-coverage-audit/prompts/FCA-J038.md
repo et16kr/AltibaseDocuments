@@ -1,30 +1,29 @@
-# Job FCA-J038: Content remediation SQL data types and properties
+# Job FCA-J038: Technical documents and cross-family support catalog
 
 ## Goal
 
-Fix missing source-backed items in SQL, data type, property, JSON, LOB, and Oracle-difference attachment areas.
+Extract source-backed items from selected technical documents and cross-family support files that are not fully owned by earlier catalog jobs.
 
 ## Job Focus
 
-Content remediation: SQL/data types/properties
+Technical documents and cross-family support catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `GPTs/attachments/03_sql_ddl_generation.md`
-- `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
-- `GPTs/attachments/05_data_types_properties.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Fix missing source-backed rows in SQL, data type, property, JSON, LOB, and Oracle-difference areas.
-- Update remediation_log.md and matrix dispositions.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
-## Remediation Guidance
+## Catalog Guidance
 
-- Start from `source_to_attachment_matrix.tsv` and the relevant register, not from broad manual spot checks.
-- Keep edits bounded to the scoped attachment group and directly required support reports.
-- Update matrix/register dispositions after remediation and record evidence in `remediation_log.md`.
+- Preserve existing `source_item_catalog.tsv` rows from earlier jobs.
+- Use stable IDs and set `audit_job` to this job ID for rows this job creates or last reviews.
+- Fill `literal_tokens`, `source_summary`, `attachment_target`, and `evidence` with enough detail for later matrix checks.
+- Use `Guardrail` only when the source or customer-evidence limitation is explicit.
 
 ## Scope
 
@@ -33,7 +32,7 @@ Content remediation: SQL/data types/properties
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

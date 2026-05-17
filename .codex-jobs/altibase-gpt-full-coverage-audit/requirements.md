@@ -206,6 +206,10 @@ Each successful job must:
 - update only its scoped files;
 - preserve unrelated user changes;
 - commit a focused result;
+- commit scoped project files outside `.codex-jobs` unless
+  `REQUIRE_PROJECT_COMMIT_AFTER_JOB=0` is explicitly set;
+- let `run-all.sh` commit the `jobs.tsv` status transition unless
+  `COMMIT_STATUS_AFTER_JOB=0` is explicitly set;
 - leave project files clean after the commit;
 - record skipped checks or residual risk explicitly in the relevant report.
 

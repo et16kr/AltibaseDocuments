@@ -1,22 +1,23 @@
-# Job FCA-J043: Retrieval remediation core reference attachments
+# Job FCA-J043: Content remediation views performance replication and security
 
 ## Goal
 
-Convert retrieval-weak rows for core reference attachments 00 through 09 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
+Fix missing source-backed items in dictionary/performance views, tuning, monitoring, replication, CDC, SSL/TLS, and network attachment areas.
 
 ## Job Focus
 
-Retrieval remediation: core reference attachments
+Content remediation views performance replication and security
 
 ## Primary Inputs
 
+- `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
 - `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
-- GPTs/attachments/00_version_release_platform.md through GPTs/attachments/09_replication_ha_cdc.md
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Convert retrieval-weak rows for attachments 00 through 09 into Covered-by-routing where source-backed.
-- Add headings, aliases, compact indexes, cross-links, and routing notes without duplicating large content.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
 
 ## Remediation Guidance
 
@@ -31,7 +32,7 @@ Retrieval remediation: core reference attachments
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

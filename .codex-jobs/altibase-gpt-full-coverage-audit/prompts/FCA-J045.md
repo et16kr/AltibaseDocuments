@@ -1,23 +1,29 @@
-# Job FCA-J045: Guardrail and out-of-scope audit
+# Job FCA-J045: Content remediation migration cloud spatial and integrations
 
 ## Goal
 
-Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
+Fix missing source-backed items in migration, Oracle compatibility, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration attachment areas.
 
 ## Job Focus
 
-Guardrail and out-of-scope audit
+Content remediation migration cloud spatial and integrations
 
 ## Primary Inputs
 
-- `GPTs/reports/full_coverage_audit/guardrail_register.md`
 - `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `GPTs/reports/gap_register.md`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
+- `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Verify every Guardrail and Out-of-scope row has a specific source-limited reason and customer-facing missing-input or safest-next-check pattern.
-- Convert any disguised Missing row back to Missing for remediation.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
+
+## Remediation Guidance
+
+- Start from `source_to_attachment_matrix.tsv` and the relevant register, not from broad manual spot checks.
+- Keep edits bounded to the scoped attachment group and directly required support reports.
+- Update matrix/register dispositions after remediation and record evidence in `remediation_log.md`.
 
 ## Scope
 
@@ -26,7 +32,7 @@ Guardrail and out-of-scope audit
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

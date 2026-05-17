@@ -1,24 +1,29 @@
-# Job FCA-J046: Answer contract and prompt alignment
+# Job FCA-J046: Retrieval remediation core reference attachments
 
 ## Goal
 
-Update GPT instructions only where needed so exact tokens, item-block shapes, missing-input rules, and guardrails are used in answers.
+Convert retrieval-weak rows for core reference attachments 00 through 09 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
 
 ## Job Focus
 
-Answer contract and prompt alignment
+Retrieval remediation core reference attachments
 
 ## Primary Inputs
 
-- `GPTs/GPT_Instructions_Draft.md`
-- `GPTs/attachments/README.md`
-- `GPTs/reports/customer_answer_contract.md`
 - `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
+- `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Update GPT instructions only if needed for exact tokens, item-block shapes, missing-input rules, and guardrails.
-- Avoid lowering benchmark expectations or hiding gaps.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
+
+## Remediation Guidance
+
+- Start from `source_to_attachment_matrix.tsv` and the relevant register, not from broad manual spot checks.
+- Keep edits bounded to the scoped attachment group and directly required support reports.
+- Update matrix/register dispositions after remediation and record evidence in `remediation_log.md`.
 
 ## Scope
 
@@ -27,7 +32,7 @@ Answer contract and prompt alignment
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

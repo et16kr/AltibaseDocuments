@@ -6,19 +6,17 @@ Extract installation, environment setup, database creation, startup, shutdown, l
 
 ## Job Focus
 
-Installation catalog extraction
+Installation and getting-started catalog
 
 ## Primary Inputs
 
-- `Manuals/Altibase_7.1/kor/Getting Started Guide.md`
-- `Manuals/Altibase_7.1/kor/Installation Guide.md`
-- `Manuals/Altibase_7.3/kor`
-- `Manuals/Altibase_trunk/kor`
-- `GPTs/attachments/01_getting_started_installation.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for installation, database creation, startup/shutdown, licensing, env vars, and first checks.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -34,7 +32,7 @@ Installation catalog extraction
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

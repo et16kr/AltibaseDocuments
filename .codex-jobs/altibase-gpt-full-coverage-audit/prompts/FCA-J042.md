@@ -1,24 +1,23 @@
-# Job FCA-J042: Content remediation migration cloud spatial and integrations
+# Job FCA-J042: Content remediation operations backup recovery and errors
 
 ## Goal
 
-Fix missing source-backed items in migration, Oracle compatibility, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration attachment areas.
+Fix missing source-backed items in installation, administration, backup/recovery, destructive-operation, and error/troubleshooting attachment areas.
 
 ## Job Focus
 
-Content remediation: migration/cloud/spatial/integrations
+Content remediation operations backup recovery and errors
 
 ## Primary Inputs
 
 - `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `GPTs/attachments/15_migration_oracle_compatibility.md`
-- `GPTs/attachments/17_kubernetes_aku_cloud.md`
-- `GPTs/attachments/19_spatial_nifi_tableau_misc.md`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
+- `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Fix missing source-backed rows in migration, Oracle compatibility, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration areas.
-- Update remediation_log.md and matrix dispositions.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
 
 ## Remediation Guidance
 
@@ -33,7 +32,7 @@ Content remediation: migration/cloud/spatial/integrations
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

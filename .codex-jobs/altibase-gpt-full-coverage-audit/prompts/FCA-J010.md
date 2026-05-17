@@ -1,22 +1,21 @@
-# Job FCA-J010: Property catalog core path and storage
+# Job FCA-J010: SQL Reference DML expression and function catalog
 
 ## Goal
 
-Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
+Extract DML, predicates, expressions, built-in functions, regular expression, object-name, and syntax restriction items.
 
 ## Job Focus
 
-Property catalog: core/path/storage
+SQL Reference DML expression and function catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/property_inventory.md`
-- General Reference 1 Korean property sections
-- `GPTs/attachments/05_data_types_properties.md`
+- Korean SQL References
+- `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
 
 ## Expected Durable Output
 
-- Append or update property catalog rows for core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart properties.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +31,7 @@ Property catalog: core/path/storage
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

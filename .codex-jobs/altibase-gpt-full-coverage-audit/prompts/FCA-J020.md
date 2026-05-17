@@ -1,24 +1,22 @@
-# Job FCA-J020: Error catalog Spatial and remaining grouped-code guardrails
+# Job FCA-J020: Error catalog storage backup recovery and tablespace
 
 ## Goal
 
-Extract Spatial and remaining low-frequency grouped-code error items, including exact-code guardrails where sources are incomplete.
+Extract storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
 
 ## Job Focus
 
-Error catalog: Spatial and remaining grouped-code guardrails
+Error catalog storage backup recovery and tablespace
 
 ## Primary Inputs
 
 - `GPTs/reports/error_reference_inventory.md`
 - Korean Error Message Reference manuals
 - `GPTs/attachments/07_error_messages_troubleshooting.md`
-- `GPTs/attachments/19_spatial_nifi_tableau_misc.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for Spatial and remaining grouped-code errors.
-- Use Guardrail rows where exact-code source coverage is incomplete.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -34,7 +32,7 @@ Error catalog: Spatial and remaining grouped-code guardrails
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

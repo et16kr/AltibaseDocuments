@@ -1,22 +1,22 @@
-# Job FCA-J017: Error catalog storage backup recovery and tablespace
+# Job FCA-J017: Dictionary and meta table catalog
 
 ## Goal
 
-Extract storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
+Extract dictionary table, meta table, object metadata, privilege, PSM, trigger, job, and schema lookup items.
 
 ## Job Focus
 
-Error catalog: storage/backup/recovery/tablespace
+Dictionary and meta table catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/error_reference_inventory.md`
-- Korean Error Message Reference manuals
-- `GPTs/attachments/07_error_messages_troubleshooting.md`
+- `GPTs/reports/dictionary_view_inventory.md`
+- Korean General Reference 2 manuals
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ Error catalog: storage/backup/recovery/tablespace
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

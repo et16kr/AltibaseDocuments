@@ -6,6 +6,8 @@ set -Eeuo pipefail
 #   RUN_ONE=1 ./run-all.sh          # stop after one completed ToDo job
 #   FAIL_ON_NONZERO=1 ./run-all.sh  # mark nonzero codex exits as terminal Fail
 #   CODEX_WORKDIR=/path ./run-all.sh # override the codex execution directory
+#   COMMIT_STATUS_AFTER_JOB=0 ./run-all.sh # leave jobs.tsv status changes uncommitted
+#   REQUIRE_PROJECT_COMMIT_AFTER_JOB=0 ./run-all.sh # allow workflow-only job commits
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 JOBS_FILE="${JOBS_FILE:-$SCRIPT_DIR/jobs.tsv}"
@@ -24,6 +26,8 @@ FAIL_ON_NONZERO="${FAIL_ON_NONZERO:-0}"
 REQUIRE_CLEAN_START="${REQUIRE_CLEAN_START:-1}"
 REQUIRE_CLEAN_AFTER_JOB="${REQUIRE_CLEAN_AFTER_JOB:-1}"
 REQUIRE_COMMIT_AFTER_JOB="${REQUIRE_COMMIT_AFTER_JOB:-1}"
+COMMIT_STATUS_AFTER_JOB="${COMMIT_STATUS_AFTER_JOB:-1}"
+REQUIRE_PROJECT_COMMIT_AFTER_JOB="${REQUIRE_PROJECT_COMMIT_AFTER_JOB:-1}"
 
 mkdir -p "$LOG_DIR" "$ROLLBACK_DIR" "$RUNTIME_DIR"
 
@@ -79,6 +83,18 @@ workflow_rel_path() {
 
 git_head() {
   git rev-parse --verify HEAD 2>/dev/null || printf '%s\n' "__NO_HEAD__"
+}
+
+path_rel_to_root() {
+  local root="$1"
+  local path="$2"
+  local abs
+  abs="$(cd "$(dirname "$path")" && pwd)/$(basename "$path")"
+  case "$abs" in
+    "$root"/*) printf '%s\n' "${abs#$root/}" ;;
+    "$root") printf '.\n' ;;
+    *) return 1 ;;
+  esac
 }
 
 git_blocking_status() {
@@ -197,6 +213,48 @@ ensure_commit_after_job() {
   fi
 }
 
+ensure_project_commit_after_job() {
+  local id="$1"
+  local before_head="$2"
+
+  if [[ "$REQUIRE_PROJECT_COMMIT_AFTER_JOB" != "1" ]]; then
+    return 0
+  fi
+
+  inside_git_repo || return 0
+
+  local root changed
+  root="$(git_repo_root)"
+  changed="$(git -C "$root" diff --name-only "$before_head"..HEAD -- . ":(exclude).codex-jobs" ":(exclude).codex-jobs/**")"
+  if [[ -z "$changed" ]]; then
+    set_status "$id" "Fail"
+    die "Job $id advanced HEAD but did not commit project files outside .codex-jobs. Commit the scoped audit output, then rerun."
+  fi
+}
+
+commit_workflow_status() {
+  local id="$1"
+
+  if [[ "$COMMIT_STATUS_AFTER_JOB" != "1" ]]; then
+    return 0
+  fi
+
+  inside_git_repo || return 0
+
+  local root rel status
+  root="$(git_repo_root)"
+  rel="$(path_rel_to_root "$root" "$JOBS_FILE" || true)"
+  [[ -n "$rel" ]] || return 0
+
+  status="$(git -C "$root" status --porcelain -- "$rel")"
+  if [[ -z "$status" ]]; then
+    return 0
+  fi
+
+  git -C "$root" add -- "$rel"
+  git -C "$root" commit -m "Mark $id done" >/dev/null
+}
+
 build_runtime_prompt() {
   local id="$1"
   local prompt_file="$PROMPT_DIR/$id.md"
@@ -258,7 +316,9 @@ run_job() {
 
   ensure_clean_after_job "$id"
   ensure_commit_after_job "$id" "$before_head"
+  ensure_project_commit_after_job "$id" "$before_head"
   set_status "$id" "Done"
+  commit_workflow_status "$id"
   printf 'Done: %s\n' "$id"
 }
 

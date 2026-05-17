@@ -1,31 +1,29 @@
-# Job FCA-J040: Content remediation views performance replication and security
+# Job FCA-J040: Source-to-attachment matrix build
 
 ## Goal
 
-Fix missing source-backed items in dictionary/performance views, tuning, monitoring, replication, CDC, SSL/TLS, and network attachment areas.
+Map every catalog row to an attachment owner, initial coverage disposition, attachment anchor, guardrail reason, and evidence command.
 
 ## Job Focus
 
-Content remediation: views/performance/replication/security
+Source-to-attachment matrix build
 
 ## Primary Inputs
 
-- `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `GPTs/attachments/06_data_dictionary_performance_views.md`
-- `GPTs/attachments/08_performance_tuning_monitoring.md`
-- `GPTs/attachments/09_replication_ha_cdc.md`
-- `GPTs/attachments/18_security_ssl_tls.md`
+- `GPTs/reports/full_coverage_audit/`
+- `GPTs/reports/coverage_matrix.md`
+- latest benchmark artifacts as needed
 
 ## Expected Durable Output
 
-- Fix missing source-backed rows in views, tuning, monitoring, replication, CDC, TLS, and network areas.
-- Update remediation_log.md and matrix dispositions.
+- Initial `source_to_attachment_matrix.tsv` with dispositions and evidence.
 
-## Remediation Guidance
+## Catalog Guidance
 
-- Start from `source_to_attachment_matrix.tsv` and the relevant register, not from broad manual spot checks.
-- Keep edits bounded to the scoped attachment group and directly required support reports.
-- Update matrix/register dispositions after remediation and record evidence in `remediation_log.md`.
+- Preserve existing `source_item_catalog.tsv` rows from earlier jobs.
+- Use stable IDs and set `audit_job` to this job ID for rows this job creates or last reviews.
+- Fill `literal_tokens`, `source_summary`, `attachment_target`, and `evidence` with enough detail for later matrix checks.
+- Use `Guardrail` only when the source or customer-evidence limitation is explicit.
 
 ## Scope
 
@@ -34,7 +32,7 @@ Content remediation: views/performance/replication/security
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

@@ -1,22 +1,22 @@
-# Job FCA-J026: PSM and external procedure catalog
+# Job FCA-J026: Replication and HA catalog
 
 ## Goal
 
-Extract PSM, package, trigger, library, external procedure, type mapping, deployment, compile, and runtime-evidence items.
+Extract topology, state, mode, DDL, compatibility, gap, conflict, protected state-change, and unsafe-operation items.
 
 ## Job Focus
 
-PSM and external procedure catalog
+Replication and HA catalog
 
 ## Primary Inputs
 
-- Korean Stored Procedures Manuals
-- Korean External Procedures Manuals
-- `GPTs/attachments/10_psm_stored_external_procedures.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for PSM, packages, triggers, libraries, external procedures, type mapping, deployment, compile, and runtime evidence.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ PSM and external procedure catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

@@ -1,23 +1,22 @@
-# Job FCA-J032: DB Link and external connectors catalog
+# Job FCA-J032: iSQL and iLoader catalog
 
 ## Goal
 
-Extract DB Link, Hadoop, linker, connector setup, DB Link views/properties, third-party procedure, and validation items.
+Extract iSQL session commands, host variables, load/export workflows, iLoader options, files, examples, and diagnostics.
 
 ## Job Focus
 
-DB Link and external connectors catalog
+iSQL and iLoader catalog
 
 ## Primary Inputs
 
-- Korean DB Link manuals
-- Korean Hadoop Connector manuals
-- Korean third-party connector guides
-- `GPTs/attachments/16_dblink_external_connectors.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for DB Link, linker, Hadoop, connector setup, views, properties, and validation checks.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ DB Link and external connectors catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

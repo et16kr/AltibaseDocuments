@@ -6,19 +6,17 @@ Define the source item catalog schema, controlled vocabularies, stable ID rules,
 
 ## Job Focus
 
-Catalog schema and extraction/check tooling
+Catalog schema and extraction scripts
 
 ## Primary Inputs
 
-- `GPTs/reports/catalog_schema_extraction_rules.md`
-- `GPTs/reports/coverage_matrix.md`
-- `GPTs/reports/full_coverage_audit/source_corpus_lock.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Create or update source_item_catalog.tsv with header/schema if it does not exist.
-- Add reusable extraction/check scripts only when they reduce real manual risk.
-- Document controlled vocabularies and stable ID rules.
+- Catalog schema, stable ID rules, and reusable script/check plan.
 
 ## Catalog Guidance
 
@@ -34,7 +32,7 @@ Catalog schema and extraction/check tooling
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

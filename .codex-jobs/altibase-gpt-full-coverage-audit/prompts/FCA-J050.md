@@ -1,29 +1,22 @@
-# Job FCA-J036: Kubernetes AKU and cloud catalog
+# Job FCA-J050: Validation and targeted answerability
 
 ## Goal
 
-Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
+Run repository validation, source-to-attachment checks, targeted answerability for failed/protected/exact-token rows, and a selected full rerun if feasible.
 
 ## Job Focus
 
-Kubernetes AKU and cloud catalog
+Validation and targeted answerability
 
 ## Primary Inputs
 
-- Job-relevant source roots from GPTs/reports/source_inventory.md
-- source family ownership from GPTs/reports/coverage_matrix.md
-- scoped attachments/support reports from jobs.md
+- `GPTs/reports/full_coverage_audit/`
+- `GPTs/reports/coverage_matrix.md`
+- latest benchmark artifacts as needed
 
 ## Expected Durable Output
 
-- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
-
-## Catalog Guidance
-
-- Preserve existing `source_item_catalog.tsv` rows from earlier jobs.
-- Use stable IDs and set `audit_job` to this job ID for rows this job creates or last reviews.
-- Fill `literal_tokens`, `source_summary`, `attachment_target`, and `evidence` with enough detail for later matrix checks.
-- Use `Guardrail` only when the source or customer-evidence limitation is explicit.
+- Validation output and targeted answerability results for remediated/high-risk rows.
 
 ## Scope
 

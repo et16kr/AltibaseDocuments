@@ -1,22 +1,22 @@
-# Job FCA-J018: Error catalog SQL datatype JSON LOB and regular expression
+# Job FCA-J018: Performance view operational catalog
 
 ## Goal
 
-Extract SQL parser, DDL, constraint, datatype, conversion, JSON, Temporary LOB, LOB, and regular-expression error items.
+Extract performance view names, purposes, version availability, operational grouping, query timing, and safe check SQL items.
 
 ## Job Focus
 
-Error catalog: SQL/datatype/JSON/LOB/regex
+Performance view operational catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/error_reference_inventory.md`
-- Korean Error Message Reference manuals
-- `GPTs/attachments/07_error_messages_troubleshooting.md`
+- `GPTs/reports/dictionary_view_inventory.md`
+- Korean General Reference 2 manuals
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for parser, DDL, constraint, datatype, conversion, JSON, Temporary LOB, LOB, and regular expression error items.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ Error catalog: SQL/datatype/JSON/LOB/regex
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

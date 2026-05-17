@@ -6,7 +6,7 @@ Confirm the current review/remediation cycle is complete, the worktree is clean,
 
 ## Job Focus
 
-Preflight and evidence locking
+Preflight and benchmark evidence lock
 
 ## Primary Inputs
 
@@ -17,8 +17,7 @@ Preflight and evidence locking
 
 ## Expected Durable Output
 
-- Update or create the preflight section in GPTs/reports/full_coverage_audit/remediation_log.md or source_corpus_lock.md as appropriate.
-- Record exact commands and results proving the current workflow handoff is clean.
+- Preflight evidence section and locked latest-run baseline.
 
 ## Scope
 
@@ -27,7 +26,7 @@ Preflight and evidence locking
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

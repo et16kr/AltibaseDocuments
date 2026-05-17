@@ -1,23 +1,22 @@
-# Job FCA-J034: Spatial NiFi Tableau and miscellaneous integration catalog
+# Job FCA-J034: Migration and Oracle compatibility catalog
 
 ## Goal
 
-Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
+Extract Migration Center, Adapter for Oracle, conversion, unsupported objects, report, PSM review, validation, and Oracle-difference items.
 
 ## Job Focus
 
-Spatial, NiFi, Tableau, and misc integration catalog
+Migration and Oracle compatibility catalog
 
 ## Primary Inputs
 
-- Korean Spatial SQL Reference
-- Korean altiShapeLoader manual
-- Korean NiFi/Tableau guides
-- `GPTs/attachments/19_spatial_nifi_tableau_misc.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC settings, third-party procedures, and validation.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Spatial, NiFi, Tableau, and misc integration catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

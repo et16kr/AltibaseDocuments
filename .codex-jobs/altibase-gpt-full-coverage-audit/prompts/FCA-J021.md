@@ -1,22 +1,22 @@
-# Job FCA-J021: Performance tuning and optimizer catalog
+# Job FCA-J021: Error catalog SQL datatype JSON LOB and regular expression
 
 ## Goal
 
-Extract execution plan, hint, statistics, index, optimizer, wait, lock, session, monitoring, and tuning workflow items.
+Extract SQL parser, DDL, constraint, datatype, conversion, JSON, Temporary LOB, LOB, and regular-expression error items.
 
 ## Job Focus
 
-Performance tuning and optimizer catalog
+Error catalog SQL datatype JSON LOB and regular expression
 
 ## Primary Inputs
 
-- Korean Performance Tuning Guides
-- `GPTs/attachments/08_performance_tuning_monitoring.md`
-- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/error_reference_inventory.md`
+- Korean Error Message Reference manuals
+- `GPTs/attachments/07_error_messages_troubleshooting.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for execution plans, hints, statistics, indexes, optimizer behavior, waits, locks, sessions, and tuning workflows.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ Performance tuning and optimizer catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

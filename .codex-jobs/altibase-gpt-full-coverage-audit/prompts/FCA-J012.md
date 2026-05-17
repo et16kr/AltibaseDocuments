@@ -1,23 +1,22 @@
-# Job FCA-J012: Property catalog optimizer session locale and timeout
+# Job FCA-J012: General Reference data type catalog
 
 ## Goal
 
-Extract optimizer, normalization, lock, timeout, autocommit, session, locale, and performance property items.
+Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
 
 ## Job Focus
 
-Property catalog: optimizer/session/locale/timeout
+General Reference data type catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/property_inventory.md`
-- General Reference 1 Korean property sections
-- `GPTs/attachments/05_data_types_properties.md`
-- `GPTs/attachments/08_performance_tuning_monitoring.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update property catalog rows for optimizer, normalization, lock, timeout, autocommit, session, locale, and performance properties.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Property catalog: optimizer/session/locale/timeout
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

@@ -16,8 +16,7 @@ Source corpus lock
 
 ## Expected Durable Output
 
-- Create or update GPTs/reports/full_coverage_audit/source_corpus_lock.md.
-- List included source roots, authoritative Korean roots, extraction aids, exclusions, and scope boundaries.
+- `source_corpus_lock.md`.
 
 ## Scope
 
@@ -26,7 +25,7 @@ Source corpus lock
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

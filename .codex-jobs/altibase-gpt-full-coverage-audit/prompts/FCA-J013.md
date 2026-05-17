@@ -1,25 +1,22 @@
-# Job FCA-J013: Property catalog security replication network and DB Link
+# Job FCA-J013: Property catalog core path and storage
 
 ## Goal
 
-Extract account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link property items.
+Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
 
 ## Job Focus
 
-Property catalog: security/replication/network/DB Link
+Property catalog core path and storage
 
 ## Primary Inputs
 
 - `GPTs/reports/property_inventory.md`
-- General Reference 1 Korean property sections
+- Korean General Reference 1 property sections
 - `GPTs/attachments/05_data_types_properties.md`
-- `GPTs/attachments/09_replication_ha_cdc.md`
-- `GPTs/attachments/18_security_ssl_tls.md`
-- `GPTs/attachments/16_dblink_external_connectors.md`
 
 ## Expected Durable Output
 
-- Append or update property catalog rows for account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link properties.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -35,7 +32,7 @@ Property catalog: security/replication/network/DB Link
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

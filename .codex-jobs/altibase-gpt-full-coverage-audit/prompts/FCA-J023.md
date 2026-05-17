@@ -1,23 +1,22 @@
-# Job FCA-J023: Replication and HA catalog
+# Job FCA-J023: Error catalog Spatial and remaining grouped-code guardrails
 
 ## Goal
 
-Extract topology, state, mode, DDL, compatibility, gap, conflict, protected state-change, and unsafe-operation items.
+Extract Spatial and remaining low-frequency grouped-code error items, including exact-code guardrails where sources are incomplete.
 
 ## Job Focus
 
-Replication and HA catalog
+Error catalog Spatial and remaining grouped-code guardrails
 
 ## Primary Inputs
 
-- Korean Replication Manuals
-- Korean SQL References
-- `Technical Documents/kor/ReplicationCompatibility.md`
-- `GPTs/attachments/09_replication_ha_cdc.md`
+- `GPTs/reports/error_reference_inventory.md`
+- Korean Error Message Reference manuals
+- `GPTs/attachments/07_error_messages_troubleshooting.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for topology, states, modes, DDL, compatibility, gap, conflict, protected state changes, and unsafe operations.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Replication and HA catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

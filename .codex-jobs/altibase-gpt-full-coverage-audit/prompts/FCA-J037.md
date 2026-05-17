@@ -1,23 +1,22 @@
-# Job FCA-J037: Source-to-attachment matrix build
+# Job FCA-J037: Spatial NiFi Tableau and miscellaneous integration catalog
 
 ## Goal
 
-Map every catalog row to an attachment owner, initial coverage disposition, attachment anchor, guardrail reason, and evidence command.
+Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
 
 ## Job Focus
 
-Source-to-attachment matrix build
+Spatial NiFi Tableau and miscellaneous integration catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/full_coverage_audit/source_item_catalog.tsv`
-- `GPTs/reports/coverage_matrix.md`
-- `GPTs/attachments/*.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Create or update source_to_attachment_matrix.tsv with owner, status, anchor, guardrail reason, and evidence.
-- Create missing, guardrail, and retrieval weakness registers from the matrix.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Source-to-attachment matrix build
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

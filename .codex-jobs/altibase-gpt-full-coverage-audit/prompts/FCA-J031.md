@@ -1,23 +1,22 @@
-# Job FCA-J031: Migration and Oracle compatibility catalog
+# Job FCA-J031: C CLI ODBC and Precompiler catalog
 
 ## Goal
 
-Extract Migration Center, Adapter for Oracle, conversion, unsupported objects, report, PSM review, validation, and Oracle-difference items.
+Extract CLI, ODBC, Altibase C Interface, Precompiler, DSN, diagnostics, LOB, JSON LOB, compile, and runtime items.
 
 ## Job Focus
 
-Migration and Oracle compatibility catalog
+C CLI ODBC and Precompiler catalog
 
 ## Primary Inputs
 
-- Korean Migration Center manuals
-- Korean Adapter for Oracle manuals
-- Korean release notes
-- `GPTs/attachments/15_migration_oracle_compatibility.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for conversion, unsupported objects, reports, PSM review, Adapter for Oracle, validation, and Oracle differences.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Migration and Oracle compatibility catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

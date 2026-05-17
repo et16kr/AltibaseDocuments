@@ -1,23 +1,22 @@
-# Job FCA-J009: General Reference data type catalog
+# Job FCA-J009: SQL Reference DCL admin replication destructive catalog
 
 ## Goal
 
-Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
+Extract DCL, user/privilege SQL, administrative SQL, replication SQL, Log Analyzer SQL, destructive SQL, privileges, and safety-boundary items.
 
 ## Job Focus
 
-Data type catalog extraction
+SQL Reference DCL admin replication destructive catalog
 
 ## Primary Inputs
 
-- `Manuals/Altibase_7.1/kor/General Reference-1.Data Types & Altibase Properties.md`
-- `Manuals/Altibase_7.3/kor/General_Reference-1.Data Types & Altibase Properties.md`
-- `Manuals/Altibase_trunk/kor/General_Reference-1.Data Types & Altibase Properties.md`
-- `GPTs/attachments/05_data_types_properties.md`
+- Korean SQL References
+- Korean Replication Manuals where SQL is needed
+- `GPTs/attachments/03_sql_ddl_generation.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for data types, LOB, JSON, Temporary LOB, direct key, conversion, and compatibility items.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Data type catalog extraction
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

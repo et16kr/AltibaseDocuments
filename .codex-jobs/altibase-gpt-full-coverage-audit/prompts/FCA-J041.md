@@ -1,27 +1,23 @@
-# Job FCA-J041: Content remediation tools APIs clients and connectors
+# Job FCA-J041: Content remediation SQL data types and properties
 
 ## Goal
 
-Fix missing source-backed items in PSM, Java/JDBC, C/CLI/ODBC, iSQL, iLoader, utilities, DB Link, and external connector attachment areas.
+Fix missing source-backed items in SQL, data type, property, JSON, LOB, and Oracle-difference attachment areas.
 
 ## Job Focus
 
-Content remediation: tools/APIs/clients/connectors
+Content remediation SQL data types and properties
 
 ## Primary Inputs
 
 - `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `GPTs/attachments/10_psm_stored_external_procedures.md`
-- `GPTs/attachments/11_java_jdbc_spring.md`
-- `GPTs/attachments/12_c_cli_odbc_precompiler.md`
-- `GPTs/attachments/13_isql_iloader_basic_tools.md`
-- `GPTs/attachments/14_utilities_operation_tools.md`
-- `GPTs/attachments/16_dblink_external_connectors.md`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
+- `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Fix missing source-backed rows in PSM, Java/JDBC, C/CLI/ODBC, iSQL, iLoader, utilities, DB Link, and external connector areas.
-- Update remediation_log.md and matrix dispositions.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
 
 ## Remediation Guidance
 
@@ -36,7 +32,7 @@ Content remediation: tools/APIs/clients/connectors
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

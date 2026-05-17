@@ -1,23 +1,22 @@
-# Job FCA-J033: Kubernetes AKU and cloud catalog
+# Job FCA-J033: Utilities and operation tools catalog
 
 ## Goal
 
-Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
+Extract utility commands, options, outputs, diagnostics, dataCompJ, dump tools, AKU-related utility, and installed-tool guardrail items.
 
 ## Job Focus
 
-Kubernetes, AKU, and cloud catalog
+Utilities and operation tools catalog
 
 ## Primary Inputs
 
-- Korean Kubernetes guide
-- Korean AKU sample guide
-- Korean release notes
-- `GPTs/attachments/17_kubernetes_aku_cloud.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for Kubernetes, AKU, image/env/lifecycle, replication/TLS caution, and operational caveats.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Kubernetes, AKU, and cloud catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

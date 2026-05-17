@@ -1,30 +1,29 @@
-# Job FCA-J039: Content remediation operations backup recovery and errors
+# Job FCA-J039: Catalog consolidation and QA
 
 ## Goal
 
-Fix missing source-backed items in installation, administration, backup/recovery, destructive-operation, and error/troubleshooting attachment areas.
+Validate source item catalog schema, stable IDs, duplicate rows, controlled vocabulary values, source-family completeness, and evidence fields before matrix mapping.
 
 ## Job Focus
 
-Content remediation: operations/errors
+Catalog consolidation and QA
 
 ## Primary Inputs
 
-- `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `GPTs/attachments/01_getting_started_installation.md`
-- `GPTs/attachments/02_administration_operations.md`
-- `GPTs/attachments/07_error_messages_troubleshooting.md`
+- `GPTs/reports/full_coverage_audit/`
+- `GPTs/reports/coverage_matrix.md`
+- latest benchmark artifacts as needed
 
 ## Expected Durable Output
 
-- Fix missing source-backed rows in installation, administration, backup/recovery, destructive operations, and error/troubleshooting areas.
-- Update remediation_log.md and matrix dispositions.
+- Validated `source_item_catalog.tsv`, duplicate/ID report, vocabulary checks, and source-family completeness notes.
 
-## Remediation Guidance
+## Catalog Guidance
 
-- Start from `source_to_attachment_matrix.tsv` and the relevant register, not from broad manual spot checks.
-- Keep edits bounded to the scoped attachment group and directly required support reports.
-- Update matrix/register dispositions after remediation and record evidence in `remediation_log.md`.
+- Preserve existing `source_item_catalog.tsv` rows from earlier jobs.
+- Use stable IDs and set `audit_job` to this job ID for rows this job creates or last reviews.
+- Fill `literal_tokens`, `source_summary`, `attachment_target`, and `evidence` with enough detail for later matrix checks.
+- Use `Guardrail` only when the source or customer-evidence limitation is explicit.
 
 ## Scope
 
@@ -33,7 +32,7 @@ Content remediation: operations/errors
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

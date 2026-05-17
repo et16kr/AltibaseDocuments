@@ -1,24 +1,22 @@
-# Job FCA-J028: C CLI ODBC and Precompiler catalog
+# Job FCA-J028: Security SSL TLS and network catalog
 
 ## Goal
 
-Extract CLI, ODBC, Altibase C Interface, Precompiler, DSN, diagnostics, LOB, JSON LOB, compile, and runtime items.
+Extract certificate, TLS, replication SSL, client/server, network property, port, access-list, and diagnostic items.
 
 ## Job Focus
 
-C, CLI, ODBC, and Precompiler catalog
+Security SSL TLS and network catalog
 
 ## Primary Inputs
 
-- Korean CLI manuals
-- Korean ODBC manuals
-- Korean Altibase C Interface manuals
-- Korean Precompiler manuals
-- `GPTs/attachments/12_c_cli_odbc_precompiler.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for APIs, DSN, diagnostics, LOB, JSON LOB, compile, and runtime items.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -34,7 +32,7 @@ C, CLI, ODBC, and Precompiler catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

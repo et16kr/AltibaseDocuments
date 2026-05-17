@@ -1,22 +1,22 @@
-# Job FCA-J029: iSQL and iLoader catalog
+# Job FCA-J029: PSM and external procedure catalog
 
 ## Goal
 
-Extract iSQL session commands, host variables, load/export workflows, iLoader options, files, examples, and diagnostics.
+Extract PSM, package, trigger, library, external procedure, type mapping, deployment, compile, and runtime-evidence items.
 
 ## Job Focus
 
-iSQL and iLoader catalog
+PSM and external procedure catalog
 
 ## Primary Inputs
 
-- Korean iSQL manuals
-- Korean iLoader manuals
-- `GPTs/attachments/13_isql_iloader_basic_tools.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for session commands, host variables, load/export workflows, options, files, examples, and diagnostics.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ iSQL and iLoader catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

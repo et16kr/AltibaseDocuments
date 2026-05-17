@@ -4,46 +4,49 @@ FCA-J002	ToDo	docs	Source corpus lock	Freeze the exact selected source roots, so
 FCA-J003	ToDo	docs	Catalog schema and extraction scripts	Define the source item catalog schema, controlled vocabularies, stable ID rules, and reusable extraction and coverage-check scripts where practical.
 FCA-J004	ToDo	docs	Release notes patch notes and platform catalog	Extract release, patch, feature, platform, upgrade, and exact version-boundary items into the source item catalog.
 FCA-J005	ToDo	docs	Installation and getting-started catalog	Extract installation, environment setup, database creation, startup, shutdown, licensing, and first-check items.
-FCA-J006	ToDo	docs	Administrator operations catalog	Extract backup, recovery, archive log, tablespace, user, privilege, storage, server-mode, and protected-operation items.
-FCA-J007	ToDo	docs	SQL Reference DDL catalog	Extract DDL, DCL, administrative SQL, replication SQL, Log Analyzer SQL, destructive SQL, privileges, and grammar items.
-FCA-J008	ToDo	docs	SQL Reference DML function and catalog syntax	Extract DML, expressions, functions, JSON, LOB, object-name, syntax restriction, and Oracle-difference items.
-FCA-J009	ToDo	docs	General Reference data type catalog	Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
-FCA-J010	ToDo	docs	Property catalog core path and storage	Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
-FCA-J011	ToDo	docs	Property catalog memory log cache and capacity	Extract memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit property items.
-FCA-J012	ToDo	docs	Property catalog optimizer session locale and timeout	Extract optimizer, normalization, lock, timeout, autocommit, session, locale, and performance property items.
-FCA-J013	ToDo	docs	Property catalog security replication network and DB Link	Extract account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link property items.
-FCA-J014	ToDo	docs	Dictionary and meta table catalog	Extract dictionary table, meta table, object metadata, privilege, PSM, trigger, job, and schema lookup items.
-FCA-J015	ToDo	docs	Performance view operational catalog	Extract performance view names, purposes, version availability, operational grouping, query timing, and safe check SQL items.
-FCA-J016	ToDo	docs	View column and metadata guardrail catalog	Extract key column coverage, patch-sensitive column limits, installed-metadata checks, and view-column guardrail rows.
-FCA-J017	ToDo	docs	Error catalog storage backup recovery and tablespace	Extract storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
-FCA-J018	ToDo	docs	Error catalog SQL datatype JSON LOB and regular expression	Extract SQL parser, DDL, constraint, datatype, conversion, JSON, Temporary LOB, LOB, and regular-expression error items.
-FCA-J019	ToDo	docs	Error catalog client network replication and tools	Extract client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
-FCA-J020	ToDo	docs	Error catalog Spatial and remaining grouped-code guardrails	Extract Spatial and remaining low-frequency grouped-code error items, including exact-code guardrails where sources are incomplete.
-FCA-J021	ToDo	docs	Performance tuning and optimizer catalog	Extract execution plan, hint, statistics, index, optimizer, wait, lock, session, monitoring, and tuning workflow items.
-FCA-J022	ToDo	docs	Monitoring API and SNMP catalog	Extract Monitoring API, SNMP object, metric, port, counter, mapping, output, and runtime-check items.
-FCA-J023	ToDo	docs	Replication and HA catalog	Extract topology, state, mode, DDL, compatibility, gap, conflict, protected state-change, and unsafe-operation items.
-FCA-J024	ToDo	docs	CDC Log Analyzer and RepMgr catalog	Extract CDC API, XLog, ACK/restart, Log Analyzer, Replication Manager, GUI-replacement, release, and diagnostic items.
-FCA-J025	ToDo	docs	Security SSL TLS and network catalog	Extract certificate, TLS, replication SSL, client/server, network property, port, access-list, and diagnostic items.
-FCA-J026	ToDo	docs	PSM and external procedure catalog	Extract PSM, package, trigger, library, external procedure, type mapping, deployment, compile, and runtime-evidence items.
-FCA-J027	ToDo	docs	JDBC Java Spring and Hibernate catalog	Extract JDBC URLs, driver classes, Java compatibility, Adapter for JDBC, Spring, Hibernate, failover, property, and API items.
-FCA-J028	ToDo	docs	C CLI ODBC and Precompiler catalog	Extract CLI, ODBC, Altibase C Interface, Precompiler, DSN, diagnostics, LOB, JSON LOB, compile, and runtime items.
-FCA-J029	ToDo	docs	iSQL and iLoader catalog	Extract iSQL session commands, host variables, load/export workflows, iLoader options, files, examples, and diagnostics.
-FCA-J030	ToDo	docs	Utilities and operation tools catalog	Extract utility commands, options, outputs, diagnostics, dataCompJ, dump tools, AKU-related utility, and installed-tool guardrail items.
-FCA-J031	ToDo	docs	Migration and Oracle compatibility catalog	Extract Migration Center, Adapter for Oracle, conversion, unsupported objects, report, PSM review, validation, and Oracle-difference items.
-FCA-J032	ToDo	docs	DB Link and external connectors catalog	Extract DB Link, Hadoop, linker, connector setup, DB Link views/properties, third-party procedure, and validation items.
-FCA-J033	ToDo	docs	Kubernetes AKU and cloud catalog	Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
-FCA-J034	ToDo	docs	Spatial NiFi Tableau and miscellaneous integration catalog	Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
-FCA-J035	ToDo	docs	Technical documents and cross-family support catalog	Extract source-backed items from selected technical documents and cross-family support files that are not fully owned by earlier catalog jobs.
-FCA-J036	ToDo	docs	Catalog consolidation and QA	Validate source item catalog schema, stable IDs, duplicate rows, controlled vocabulary values, source-family completeness, and evidence fields before matrix mapping.
-FCA-J037	ToDo	docs	Source-to-attachment matrix build	Map every catalog row to an attachment owner, initial coverage disposition, attachment anchor, guardrail reason, and evidence command.
-FCA-J038	ToDo	docs	Content remediation SQL data types and properties	Fix missing source-backed items in SQL, data type, property, JSON, LOB, and Oracle-difference attachment areas.
-FCA-J039	ToDo	docs	Content remediation operations backup recovery and errors	Fix missing source-backed items in installation, administration, backup/recovery, destructive-operation, and error/troubleshooting attachment areas.
-FCA-J040	ToDo	docs	Content remediation views performance replication and security	Fix missing source-backed items in dictionary/performance views, tuning, monitoring, replication, CDC, SSL/TLS, and network attachment areas.
-FCA-J041	ToDo	docs	Content remediation tools APIs clients and connectors	Fix missing source-backed items in PSM, Java/JDBC, C/CLI/ODBC, iSQL, iLoader, utilities, DB Link, and external connector attachment areas.
-FCA-J042	ToDo	docs	Content remediation migration cloud spatial and integrations	Fix missing source-backed items in migration, Oracle compatibility, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration attachment areas.
-FCA-J043	ToDo	docs	Retrieval remediation core reference attachments	Convert retrieval-weak rows for core reference attachments 00 through 09 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
-FCA-J044	ToDo	docs	Retrieval remediation developer tools and integrations	Convert retrieval-weak rows for attachments 10 through 19 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
-FCA-J045	ToDo	docs	Guardrail and out-of-scope audit	Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
-FCA-J046	ToDo	docs	Answer contract and prompt alignment	Update GPT instructions only where needed so exact tokens, item-block shapes, missing-input rules, and guardrails are used in answers.
-FCA-J047	ToDo	docs	Validation and targeted answerability	Run repository validation, source-to-attachment checks, targeted answerability for failed/protected/exact-token rows, and a selected full rerun if feasible.
-FCA-J048	ToDo	docs	Final full coverage audit report	Produce final sign-off with source scope, method, coverage totals, remaining guardrails, validation output, and no unresolved Missing or Retrieval-weak rows.
+FCA-J006	ToDo	docs	Administrator backup recovery archive and storage catalog	Extract backup, recovery, archive log, storage, server-mode, media-failure, and protected-operation items.
+FCA-J007	ToDo	docs	Administrator tablespace account privilege catalog	Extract tablespace, datafile, user, role, privilege, account, schema administration, and validation-check items.
+FCA-J008	ToDo	docs	SQL Reference DDL storage table index catalog	Extract tablespace, datafile, table, partition, index, constraint, LOB storage, queue, and related DDL grammar items.
+FCA-J009	ToDo	docs	SQL Reference DCL admin replication destructive catalog	Extract DCL, user/privilege SQL, administrative SQL, replication SQL, Log Analyzer SQL, destructive SQL, privileges, and safety-boundary items.
+FCA-J010	ToDo	docs	SQL Reference DML expression and function catalog	Extract DML, predicates, expressions, built-in functions, regular expression, object-name, and syntax restriction items.
+FCA-J011	ToDo	docs	SQL Reference JSON LOB and Oracle-difference catalog	Extract JSON SQL, LOB SQL, data-type syntax restrictions, Oracle-difference, migration-risk, and compatibility items.
+FCA-J012	ToDo	docs	General Reference data type catalog	Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
+FCA-J013	ToDo	docs	Property catalog core path and storage	Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
+FCA-J014	ToDo	docs	Property catalog memory log cache and capacity	Extract memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit property items.
+FCA-J015	ToDo	docs	Property catalog optimizer session locale and timeout	Extract optimizer, normalization, lock, timeout, autocommit, session, locale, and performance property items.
+FCA-J016	ToDo	docs	Property catalog security replication network and DB Link	Extract account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link property items.
+FCA-J017	ToDo	docs	Dictionary and meta table catalog	Extract dictionary table, meta table, object metadata, privilege, PSM, trigger, job, and schema lookup items.
+FCA-J018	ToDo	docs	Performance view operational catalog	Extract performance view names, purposes, version availability, operational grouping, query timing, and safe check SQL items.
+FCA-J019	ToDo	docs	View column and metadata guardrail catalog	Extract key column coverage, patch-sensitive column limits, installed-metadata checks, and view-column guardrail rows.
+FCA-J020	ToDo	docs	Error catalog storage backup recovery and tablespace	Extract storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
+FCA-J021	ToDo	docs	Error catalog SQL datatype JSON LOB and regular expression	Extract SQL parser, DDL, constraint, datatype, conversion, JSON, Temporary LOB, LOB, and regular-expression error items.
+FCA-J022	ToDo	docs	Error catalog client network replication and tools	Extract client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
+FCA-J023	ToDo	docs	Error catalog Spatial and remaining grouped-code guardrails	Extract Spatial and remaining low-frequency grouped-code error items, including exact-code guardrails where sources are incomplete.
+FCA-J024	ToDo	docs	Performance tuning and optimizer catalog	Extract execution plan, hint, statistics, index, optimizer, wait, lock, session, monitoring, and tuning workflow items.
+FCA-J025	ToDo	docs	Monitoring API and SNMP catalog	Extract Monitoring API, SNMP object, metric, port, counter, mapping, output, and runtime-check items.
+FCA-J026	ToDo	docs	Replication and HA catalog	Extract topology, state, mode, DDL, compatibility, gap, conflict, protected state-change, and unsafe-operation items.
+FCA-J027	ToDo	docs	CDC Log Analyzer and RepMgr catalog	Extract CDC API, XLog, ACK/restart, Log Analyzer, Replication Manager, GUI-replacement, release, and diagnostic items.
+FCA-J028	ToDo	docs	Security SSL TLS and network catalog	Extract certificate, TLS, replication SSL, client/server, network property, port, access-list, and diagnostic items.
+FCA-J029	ToDo	docs	PSM and external procedure catalog	Extract PSM, package, trigger, library, external procedure, type mapping, deployment, compile, and runtime-evidence items.
+FCA-J030	ToDo	docs	JDBC Java Spring and Hibernate catalog	Extract JDBC URLs, driver classes, Java compatibility, Adapter for JDBC, Spring, Hibernate, failover, property, and API items.
+FCA-J031	ToDo	docs	C CLI ODBC and Precompiler catalog	Extract CLI, ODBC, Altibase C Interface, Precompiler, DSN, diagnostics, LOB, JSON LOB, compile, and runtime items.
+FCA-J032	ToDo	docs	iSQL and iLoader catalog	Extract iSQL session commands, host variables, load/export workflows, iLoader options, files, examples, and diagnostics.
+FCA-J033	ToDo	docs	Utilities and operation tools catalog	Extract utility commands, options, outputs, diagnostics, dataCompJ, dump tools, AKU-related utility, and installed-tool guardrail items.
+FCA-J034	ToDo	docs	Migration and Oracle compatibility catalog	Extract Migration Center, Adapter for Oracle, conversion, unsupported objects, report, PSM review, validation, and Oracle-difference items.
+FCA-J035	ToDo	docs	DB Link and external connectors catalog	Extract DB Link, Hadoop, linker, connector setup, DB Link views/properties, third-party procedure, and validation items.
+FCA-J036	ToDo	docs	Kubernetes AKU and cloud catalog	Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
+FCA-J037	ToDo	docs	Spatial NiFi Tableau and miscellaneous integration catalog	Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
+FCA-J038	ToDo	docs	Technical documents and cross-family support catalog	Extract source-backed items from selected technical documents and cross-family support files that are not fully owned by earlier catalog jobs.
+FCA-J039	ToDo	docs	Catalog consolidation and QA	Validate source item catalog schema, stable IDs, duplicate rows, controlled vocabulary values, source-family completeness, and evidence fields before matrix mapping.
+FCA-J040	ToDo	docs	Source-to-attachment matrix build	Map every catalog row to an attachment owner, initial coverage disposition, attachment anchor, guardrail reason, and evidence command.
+FCA-J041	ToDo	docs	Content remediation SQL data types and properties	Fix missing source-backed items in SQL, data type, property, JSON, LOB, and Oracle-difference attachment areas.
+FCA-J042	ToDo	docs	Content remediation operations backup recovery and errors	Fix missing source-backed items in installation, administration, backup/recovery, destructive-operation, and error/troubleshooting attachment areas.
+FCA-J043	ToDo	docs	Content remediation views performance replication and security	Fix missing source-backed items in dictionary/performance views, tuning, monitoring, replication, CDC, SSL/TLS, and network attachment areas.
+FCA-J044	ToDo	docs	Content remediation tools APIs clients and connectors	Fix missing source-backed items in PSM, Java/JDBC, C/CLI/ODBC, iSQL, iLoader, utilities, DB Link, and external connector attachment areas.
+FCA-J045	ToDo	docs	Content remediation migration cloud spatial and integrations	Fix missing source-backed items in migration, Oracle compatibility, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration attachment areas.
+FCA-J046	ToDo	docs	Retrieval remediation core reference attachments	Convert retrieval-weak rows for core reference attachments 00 through 09 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
+FCA-J047	ToDo	docs	Retrieval remediation developer tools and integrations	Convert retrieval-weak rows for attachments 10 through 19 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
+FCA-J048	ToDo	docs	Guardrail and out-of-scope audit	Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
+FCA-J049	ToDo	docs	Answer contract and prompt alignment	Update GPT instructions only where needed so exact tokens, item-block shapes, missing-input rules, and guardrails are used in answers.
+FCA-J050	ToDo	docs	Validation and targeted answerability	Run repository validation, source-to-attachment checks, targeted answerability for failed/protected/exact-token rows, and a selected full rerun if feasible.
+FCA-J051	ToDo	docs	Final full coverage audit report	Produce final sign-off with source scope, method, coverage totals, remaining guardrails, validation output, and no unresolved Missing or Retrieval-weak rows.

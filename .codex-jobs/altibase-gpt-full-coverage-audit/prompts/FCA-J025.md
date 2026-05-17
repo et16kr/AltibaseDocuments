@@ -1,23 +1,22 @@
-# Job FCA-J025: Security SSL TLS and network catalog
+# Job FCA-J025: Monitoring API and SNMP catalog
 
 ## Goal
 
-Extract certificate, TLS, replication SSL, client/server, network property, port, access-list, and diagnostic items.
+Extract Monitoring API, SNMP object, metric, port, counter, mapping, output, and runtime-check items.
 
 ## Job Focus
 
-Security SSL/TLS and network catalog
+Monitoring API and SNMP catalog
 
 ## Primary Inputs
 
-- Korean SSL TLS guides
-- Korean Replication Manuals
-- `Technical Documents/kor/Replication network check.md`
-- `GPTs/attachments/18_security_ssl_tls.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for certificate, TLS, replication SSL, client/server network properties, ports, access lists, and diagnostics.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ Security SSL/TLS and network catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

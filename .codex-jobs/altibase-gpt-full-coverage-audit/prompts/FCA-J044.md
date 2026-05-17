@@ -1,22 +1,23 @@
-# Job FCA-J044: Retrieval remediation developer tools and integrations
+# Job FCA-J044: Content remediation tools APIs clients and connectors
 
 ## Goal
 
-Convert retrieval-weak rows for attachments 10 through 19 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
+Fix missing source-backed items in PSM, Java/JDBC, C/CLI/ODBC, iSQL, iLoader, utilities, DB Link, and external connector attachment areas.
 
 ## Job Focus
 
-Retrieval remediation: developer tools and integrations
+Content remediation tools APIs clients and connectors
 
 ## Primary Inputs
 
+- `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
 - `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
-- GPTs/attachments/10_psm_stored_external_procedures.md through GPTs/attachments/19_spatial_nifi_tableau_misc.md
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Convert retrieval-weak rows for attachments 10 through 19 into Covered-by-routing where source-backed.
-- Add headings, aliases, compact indexes, cross-links, and routing notes without duplicating large content.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
 
 ## Remediation Guidance
 
@@ -31,7 +32,7 @@ Retrieval remediation: developer tools and integrations
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

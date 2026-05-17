@@ -1,23 +1,29 @@
-# Job FCA-J047: Validation and targeted answerability
+# Job FCA-J047: Retrieval remediation developer tools and integrations
 
 ## Goal
 
-Run repository validation, source-to-attachment checks, targeted answerability for failed/protected/exact-token rows, and a selected full rerun if feasible.
+Convert retrieval-weak rows for attachments 10 through 19 into covered-by-routing rows with headings, aliases, indexes, and cross-links.
 
 ## Job Focus
 
-Validation and targeted answerability
+Retrieval remediation developer tools and integrations
 
 ## Primary Inputs
 
 - `GPTs/reports/full_coverage_audit/source_to_attachment_matrix.tsv`
-- `evals/altibase_answerability`
-- `review/scripts`
+- `GPTs/reports/full_coverage_audit/missing_item_register.md`
+- `GPTs/reports/full_coverage_audit/retrieval_weakness_register.md`
+- scoped GPTs/attachments files from jobs.md
 
 ## Expected Durable Output
 
-- Run repository validation, catalog-to-attachment checks, targeted answerability for failed/protected/exact-token/retrieval-weak rows, and a selected full rerun if feasible.
-- Record validation output and residual risk.
+- Remediated scoped attachment gaps with updated matrix/register dispositions and remediation log evidence.
+
+## Remediation Guidance
+
+- Start from `source_to_attachment_matrix.tsv` and the relevant register, not from broad manual spot checks.
+- Keep edits bounded to the scoped attachment group and directly required support reports.
+- Update matrix/register dispositions after remediation and record evidence in `remediation_log.md`.
 
 ## Scope
 
@@ -26,7 +32,7 @@ Validation and targeted answerability
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

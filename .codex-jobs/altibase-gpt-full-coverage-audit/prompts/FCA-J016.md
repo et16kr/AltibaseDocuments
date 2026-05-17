@@ -1,24 +1,22 @@
-# Job FCA-J016: View column and metadata guardrail catalog
+# Job FCA-J016: Property catalog security replication network and DB Link
 
 ## Goal
 
-Extract key column coverage, patch-sensitive column limits, installed-metadata checks, and view-column guardrail rows.
+Extract account, access-list, SSL/TLS, replication, network, port, SQL-apply, and DB Link property items.
 
 ## Job Focus
 
-View column and metadata guardrail catalog
+Property catalog security replication network and DB Link
 
 ## Primary Inputs
 
-- `GPTs/reports/dictionary_view_inventory.md`
-- `GPTs/reports/gap_register.md`
-- General Reference 2 Korean manuals
-- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/property_inventory.md`
+- Korean General Reference 1 property sections
+- `GPTs/attachments/05_data_types_properties.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for key columns where source-backed.
-- Create guardrail rows for patch-sensitive or exhaustive column proof limits and installed metadata checks.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -34,7 +32,7 @@ View column and metadata guardrail catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

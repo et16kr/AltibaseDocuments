@@ -1,24 +1,23 @@
-# Job FCA-J007: SQL Reference DDL catalog
+# Job FCA-J007: Administrator tablespace account privilege catalog
 
 ## Goal
 
-Extract DDL, DCL, administrative SQL, replication SQL, Log Analyzer SQL, destructive SQL, privileges, and grammar items.
+Extract tablespace, datafile, user, role, privilege, account, schema administration, and validation-check items.
 
 ## Job Focus
 
-DDL/DCL/admin SQL catalog extraction
+Administrator tablespace account privilege catalog
 
 ## Primary Inputs
 
-- `Manuals/Altibase_7.1/kor/SQL Reference.md`
-- `Manuals/Altibase_7.3/kor/SQL Reference.md`
-- `Manuals/Altibase_trunk/kor/SQL Reference.md`
-- `GPTs/reports/sql_syntax_inventory.md`
+- Korean Administrator manuals
+- Korean SQL References where administrative SQL is needed
+- `GPTs/attachments/02_administration_operations.md`
 - `GPTs/attachments/03_sql_ddl_generation.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for DDL, DCL, admin SQL, replication SQL, destructive SQL, privileges, syntax, examples, and validation SQL.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -34,7 +33,7 @@ DDL/DCL/admin SQL catalog extraction
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

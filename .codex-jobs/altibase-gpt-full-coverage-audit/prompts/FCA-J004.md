@@ -6,21 +6,17 @@ Extract release, patch, feature, platform, upgrade, and exact version-boundary i
 
 ## Job Focus
 
-Release/platform catalog extraction
+Release notes patch notes and platform catalog
 
 ## Primary Inputs
 
-- `ReleaseNotes/kor`
-- `ReleaseNotes/eng`
-- `PatchNotes`
-- `Technical Documents/kor/Supported Platforms.md`
-- `Technical Documents/eng/Supported Platforms.md`
-- `GPTs/attachments/00_version_release_platform.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for release, patch, platform, upgrade, and feature-boundary items.
-- Preserve Korean-source precedence for version-sensitive claims.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -36,7 +32,7 @@ Release/platform catalog extraction
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

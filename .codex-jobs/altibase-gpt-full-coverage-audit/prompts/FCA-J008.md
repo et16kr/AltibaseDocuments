@@ -1,23 +1,22 @@
-# Job FCA-J008: SQL Reference DML function and catalog syntax
+# Job FCA-J008: SQL Reference DDL storage table index catalog
 
 ## Goal
 
-Extract DML, expressions, functions, JSON, LOB, object-name, syntax restriction, and Oracle-difference items.
+Extract tablespace, datafile, table, partition, index, constraint, LOB storage, queue, and related DDL grammar items.
 
 ## Job Focus
 
-DML/functions/catalog syntax extraction
+SQL Reference DDL storage table index catalog
 
 ## Primary Inputs
 
-- `Manuals/Altibase_7.1/kor/SQL Reference.md`
-- `Manuals/Altibase_7.3/kor/SQL Reference.md`
-- `Manuals/Altibase_trunk/kor/SQL Reference.md`
-- `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
+- Korean SQL References
+- `GPTs/reports/sql_syntax_inventory.md`
+- `GPTs/attachments/03_sql_ddl_generation.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for DML, expressions, functions, JSON, LOB, object names, restrictions, and Oracle differences.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -33,7 +32,7 @@ DML/functions/catalog syntax extraction
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

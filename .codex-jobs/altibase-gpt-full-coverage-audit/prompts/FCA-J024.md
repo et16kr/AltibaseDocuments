@@ -1,22 +1,22 @@
-# Job FCA-J024: CDC Log Analyzer and RepMgr catalog
+# Job FCA-J024: Performance tuning and optimizer catalog
 
 ## Goal
 
-Extract CDC API, XLog, ACK/restart, Log Analyzer, Replication Manager, GUI-replacement, release, and diagnostic items.
+Extract execution plan, hint, statistics, index, optimizer, wait, lock, session, monitoring, and tuning workflow items.
 
 ## Job Focus
 
-CDC, Log Analyzer, and RepMgr catalog
+Performance tuning and optimizer catalog
 
 ## Primary Inputs
 
-- Korean Log Analyzer User's Manuals
-- Korean Replication Manager manuals/release notes
-- `GPTs/attachments/09_replication_ha_cdc.md`
+- Job-relevant source roots from GPTs/reports/source_inventory.md
+- source family ownership from GPTs/reports/coverage_matrix.md
+- scoped attachments/support reports from jobs.md
 
 ## Expected Durable Output
 
-- Append or update catalog rows for CDC API, XLog, ACK/restart, Log Analyzer, RepMgr, release boundaries, and diagnostics.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ CDC, Log Analyzer, and RepMgr catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

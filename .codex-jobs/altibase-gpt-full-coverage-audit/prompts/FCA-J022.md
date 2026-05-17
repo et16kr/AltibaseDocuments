@@ -1,22 +1,22 @@
-# Job FCA-J022: Monitoring API and SNMP catalog
+# Job FCA-J022: Error catalog client network replication and tools
 
 ## Goal
 
-Extract Monitoring API, SNMP object, metric, port, counter, mapping, output, and runtime-check items.
+Extract client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
 
 ## Job Focus
 
-Monitoring API and SNMP catalog
+Error catalog client network replication and tools
 
 ## Primary Inputs
 
-- Korean Monitoring API Developer's Guide
-- Korean SNMP Agent Guide
-- `GPTs/attachments/08_performance_tuning_monitoring.md`
+- `GPTs/reports/error_reference_inventory.md`
+- Korean Error Message Reference manuals
+- `GPTs/attachments/07_error_messages_troubleshooting.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for Monitoring API, SNMP objects, metrics, counters, ports, mappings, outputs, and runtime checks.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ Monitoring API and SNMP catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

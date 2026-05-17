@@ -1,23 +1,22 @@
-# Job FCA-J048: Final full coverage audit report
+# Job FCA-J048: Guardrail and out-of-scope audit
 
 ## Goal
 
-Produce final sign-off with source scope, method, coverage totals, remaining guardrails, validation output, and no unresolved Missing or Retrieval-weak rows.
+Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
 
 ## Job Focus
 
-Final full coverage audit report
+Guardrail and out-of-scope audit
 
 ## Primary Inputs
 
-- `GPTs/reports/full_coverage_audit/*.md`
-- `GPTs/reports/full_coverage_audit/*.tsv`
-- `GPTs/reports/final_upload_readiness.md`
+- `GPTs/reports/full_coverage_audit/`
+- `GPTs/reports/coverage_matrix.md`
+- latest benchmark artifacts as needed
 
 ## Expected Durable Output
 
-- Produce final_full_coverage_audit.md with source scope, method, coverage totals, remaining guardrails, validation output, and upload-readiness decision.
-- Confirm no unresolved Missing or Retrieval-weak rows remain.
+- Audited guardrail register with required missing-input and safest-next-check patterns.
 
 ## Scope
 
@@ -26,7 +25,7 @@ Final full coverage audit report
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

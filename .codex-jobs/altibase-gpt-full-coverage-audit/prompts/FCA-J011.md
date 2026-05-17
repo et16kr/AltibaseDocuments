@@ -1,22 +1,23 @@
-# Job FCA-J011: Property catalog memory log cache and capacity
+# Job FCA-J011: SQL Reference JSON LOB and Oracle-difference catalog
 
 ## Goal
 
-Extract memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit property items.
+Extract JSON SQL, LOB SQL, data-type syntax restrictions, Oracle-difference, migration-risk, and compatibility items.
 
 ## Job Focus
 
-Property catalog: memory/log/cache/capacity
+SQL Reference JSON LOB and Oracle-difference catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/property_inventory.md`
-- General Reference 1 Korean property sections
+- Korean SQL References
+- General Reference 1 Korean manuals
+- `GPTs/attachments/04_sql_dml_oracle_compatibility.md`
 - `GPTs/attachments/05_data_types_properties.md`
 
 ## Expected Durable Output
 
-- Append or update property catalog rows for memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit properties.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +33,7 @@ Property catalog: memory/log/cache/capacity
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

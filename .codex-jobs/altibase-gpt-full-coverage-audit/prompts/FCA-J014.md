@@ -1,22 +1,22 @@
-# Job FCA-J014: Dictionary and meta table catalog
+# Job FCA-J014: Property catalog memory log cache and capacity
 
 ## Goal
 
-Extract dictionary table, meta table, object metadata, privilege, PSM, trigger, job, and schema lookup items.
+Extract memory, disk, volatile, log-size, checkpoint, cache, result-cache, plan-cache, and capacity-limit property items.
 
 ## Job Focus
 
-Dictionary and meta table catalog
+Property catalog memory log cache and capacity
 
 ## Primary Inputs
 
-- `GPTs/reports/dictionary_view_inventory.md`
-- General Reference 2 Korean manuals
-- `GPTs/attachments/06_data_dictionary_performance_views.md`
+- `GPTs/reports/property_inventory.md`
+- Korean General Reference 1 property sections
+- `GPTs/attachments/05_data_types_properties.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for dictionary tables, meta tables, object metadata, privilege, PSM, trigger, job, and schema lookup items.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ Dictionary and meta table catalog
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

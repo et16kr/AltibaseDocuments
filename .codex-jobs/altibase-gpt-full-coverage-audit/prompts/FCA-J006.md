@@ -1,24 +1,22 @@
-# Job FCA-J006: Administrator operations catalog
+# Job FCA-J006: Administrator backup recovery archive and storage catalog
 
 ## Goal
 
-Extract backup, recovery, archive log, tablespace, user, privilege, storage, server-mode, and protected-operation items.
+Extract backup, recovery, archive log, storage, server-mode, media-failure, and protected-operation items.
 
 ## Job Focus
 
-Administrator operations catalog extraction
+Administrator backup recovery archive and storage catalog
 
 ## Primary Inputs
 
-- `Manuals/Altibase_7.1/kor/Administrator's Manual.md`
-- `Manuals/Altibase_7.3/kor/Administrator's Manual.md`
-- `Manuals/Altibase_trunk/kor/Administrator's Manual.md`
+- Korean Administrator manuals
 - `GPTs/attachments/02_administration_operations.md`
-- `GPTs/attachments/03_sql_ddl_generation.md`
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for backup/recovery, archive log, tablespaces, accounts, privileges, storage, server modes, and protected operations.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -34,7 +32,7 @@ Administrator operations catalog extraction
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 

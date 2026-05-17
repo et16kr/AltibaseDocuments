@@ -1,22 +1,22 @@
-# Job FCA-J019: Error catalog client network replication and tools
+# Job FCA-J019: View column and metadata guardrail catalog
 
 ## Goal
 
-Extract client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
+Extract key column coverage, patch-sensitive column limits, installed-metadata checks, and view-column guardrail rows.
 
 ## Job Focus
 
-Error catalog: client/network/replication/tools
+View column and metadata guardrail catalog
 
 ## Primary Inputs
 
-- `GPTs/reports/error_reference_inventory.md`
-- Korean Error Message Reference manuals
-- `GPTs/attachments/07_error_messages_troubleshooting.md`
+- `GPTs/reports/dictionary_view_inventory.md`
+- Korean General Reference 2 manuals
+- `GPTs/attachments/06_data_dictionary_performance_views.md`
 
 ## Expected Durable Output
 
-- Append or update catalog rows for client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
+- Catalog rows for the scoped source family with source evidence, literal tokens, expected attachment owner, and initial disposition.
 
 ## Catalog Guidance
 
@@ -32,7 +32,7 @@ Error catalog: client/network/replication/tools
 - Preserve unrelated user changes and do not edit original manuals or source documents.
 - Do not browse the web or use non-repository Altibase facts.
 - Keep customer-facing attachment text in English and source-backed.
-- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.
+- Before editing, stop if uncommitted project files exist outside `.codex-jobs` workflow runtime/status files.
 
 ## Required Steps
 
