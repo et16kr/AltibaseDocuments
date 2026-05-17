@@ -23,6 +23,4 @@ Each entry should record:
 
 ## Active Retrieval Weaknesses
 
-No full coverage audit `Retrieval-weak` rows have been cataloged yet. The locked latest
-benchmark run remains priority evidence for later retrieval jobs, especially high-risk
-properties, SQL, view, error, replication, operation, and tool/API tokens.
+No full coverage audit `Retrieval-weak` rows have been cataloged yet. FCA-J004 did not create `Retrieval-weak` rows; exact patch change sets absent from attachments were cataloged as `Missing`, and customer-evidence/source-boundary cases were cataloged as `Guardrail` or `Out-of-scope`.
