@@ -1386,6 +1386,20 @@ Option block: `-errors`
 - `-errors 0` continues regardless of the number of errors.
 - With `-parallel`, if one worker exceeds the error limit, all worker threads terminate.
 
+Failed upload evidence to preserve before retry:
+
+- Full `iloader in` command with secrets removed, including `-bad`, `-log`,
+  `-errors`, `-verbose`, and `-parallel` if used.
+- FORM file header and table block, especially `DATA_NLS_USE`, `DATEFORM`, LOB
+  options, delimiter settings, and `DOWNLOAD CONDITION`.
+- The `.bad` file rows, `.log` file summary, target row count, processed row
+  count, erroneous row count, and first error detail.
+- Effective character set inputs: `DATA_NLS_USE`, `-NLS_USE`, and
+  `ALTIBASE_NLS_USE`. If multilingual rows fail, match these to the real data
+  file character set before reloading into a clean target state.
+- Target table definition, load mode, replication impact, and whether a retry
+  will append, replace, or truncate rows.
+
 Troubleshooting block: duplicate key or unique index
 
 - Symptom: duplicate rows fail during upload.

@@ -41,6 +41,57 @@ Expanded block routing:
 - Client, network, SSL/TLS, replication, utility, DB Link, Log Analyzer, APRE, and CLI/ODBC errors: use client/tool/replication error blocks when present.
 - Unresolved exact-code gaps and source-drift cases: preserve the supplied code and ask for exact version, patch level, and evidence before a definitive answer.
 
+## J010 Answer-Ready Troubleshooting Index
+
+Use this compact index when a customer supplies an error code, tool failure, driver
+message, or symptom and the answer must preserve exact code forms. Prefer the detailed
+block later in this attachment for full SQL and escalation steps, but include the
+literal code, symbol, message, cause/action focus, and first check from the matching row.
+
+Tool and evidence collection rows:
+
+| Customer symptom | Exact tokens to preserve | First answer action | Missing input to ask for |
+| --- | --- | --- | --- |
+| Error lookup by code, `SQLCODE`, ODBC return code, or message keyword | `altierr {-w keyword pattern | [-n] error number}`, `altierr -266286`, `altierr 266286`, `altierr 0x4102E`, `SQLCODE`, `ODBC`, `-w`, `-n` | Explain that `altierr` searches by error number or message keyword and prints error code number, code string, description, cause, and action. Keyword searches can return multiple records, so ask for the exact code when available. | Altibase version, exact error line, negative `SQLCODE` or ODBC return code, and whether the user searched by keyword or exact number. |
+| Abnormal shutdown or crash trace collection | `dumptrc`, `$ALTIBASE_HOME/trc`, `dumptrc -i server -i error`, `dumptrc -e error`, `dumptrc -c -i error -i server -i sm -n 20`, `-x` | Collect readable trace and call-stack evidence. For normal call-stack conversion, the `dumptrc` version and Altibase executable version should match. Treat `-x` as a forced support diagnostic when versions differ. | Altibase version, executable path, trace directory, timestamp, abnormal-shutdown symptom, and whether call stacks need conversion. |
+| Failed iLoader upload | `iLoader`, `-bad`, `-log`, `-errors`, `-verbose`, `-parallel`, `ALTIBASE_NLS_USE`, `DATA_NLS_USE` | Preserve failed rows with `-bad`, execution and error detail with `-log`; use `-verbose` only with `-log`; remember `-errors` default `50`, `-errors 0` continues regardless of count, and one parallel worker exceeding the limit terminates all workers. | Version, command, FORM file, data file character set, effective `ALTIBASE_NLS_USE` or `DATA_NLS_USE`, `-bad` and `-log` contents, load mode, and whether `-parallel` was used. |
+| LOB operation fails in autocommit mode | `0x314B4`, `qpERR_ABORT_QMX_LOB_AUTOCOMMIT_MODE`, `0x5112C`, `ulERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR`, `0x91101`, `utERR_ABORT_LOB_AUTOCOMMIT_MODE_ERR`, `COMMIT`, `ROLLBACK` | Keep the LOB work inside an explicit transaction with autocommit off, then `COMMIT` or `ROLLBACK` as appropriate. | SQL/API/tool command, client/tool version, autocommit state, LOB locator lifecycle, transaction boundary, and full error line. |
+
+SQL, property, object, and data error rows:
+
+| Runtime / reference code | Reference symbol | Exact message or family | Cause / action focus | First check |
+| --- | --- | --- | --- | --- |
+| `ERR-00000` / `0x910FB (594171)` | `utERR_ABORT_Connected_Idle_Instance_Error` | `Connected to idle instance` | SYSDBA utility connected to an idle instance; this is not by itself corruption. Continue the intended startup, creation, or recovery workflow, or start to the required phase. | Confirm `isql -sysdba` context and intended startup phase. |
+| `ERR-91015` / `0x91015 (593941)` | `utERR_ABORT_Comm_Failure_Error` | `Communication failure.` | Communication with the DBMS server failed; source action is to connect again, after checking host, port, server phase, and trace context. | Check server process, listener port, `altibase_boot.log`, and exact command. |
+| `0x0001F (31)` | `idERR_FATAL_idc_SVC_INET_BIND_ERROR` | `Unable to bind the INET socket.(<0%d>)` | `bind()` failed on the `INET` service socket because the port was already in use. Check the substituted OS error or `errno`, then close the process using the port or choose another port. | `netstat` or `lsof` on `PORT_NO`, `altibase_boot.log`, configured listener port, OS error number. |
+| `0x311D6 (201174)` | `qpERR_ABORT_MEMORY_ALLOCATION` | `Insufficient memory for Query Processor` | Not enough memory was available for Query Processor allocation. Verify system memory before changing properties. | Memory pressure, query shape, concurrent workload, and memory properties. |
+| `0x11041 (69697)` | `smERR_ABORT_Aborted` | `A deadlock situation has been detected.` | Deadlock resolution stopped the victim transaction; the transaction was rolled back and should be re-executed. | `V$LOCK_WAIT`, `V$LOCK_STATEMENT`, conflicting transaction pattern. |
+| `0x11075 (69749)` | `smERR_ABORT_smcExceedLockTimeWait` | Transaction exceeded user-specified lock timeout. | The transaction failed to lock the object; increase the transaction lock timeout only after checking whether another transaction has a `long-term lock`. | Blocked SQL, lock holder, `DDL_LOCK_TIMEOUT`, `USER_LOCK_REQUEST_TIMEOUT`, and lock views. |
+| `0x11123 (69923)` | `smERR_ABORT_NOT_ENOUGH_SPACE` | `The tablespace does not have enough free space ( TBS Name :<0%s> ).` | Not enough space in the tablespace; documented action is to add a new `data file`, but ask for tablespace type and autoextend state before generating DDL. | `V$TABLESPACES`, `V$DATAFILES`, tablespace type, backup/impact constraints. |
+| `0x110EF (69871)` | `smERR_ABORT_UNABLE_TO_EXTEND_CHUNK_WHEN_AUTO_EXTEND_OFF` | Unable to extend the tablespace when `AUTOEXTEND` is off. | The `data file` cannot extend because autoextend is off. Choose between enabling `AUTOEXTEND`, adding space, or freeing space after metadata checks. | Datafile `AUTOEXTEND`, `MAXSIZE`, current size, tablespace type. |
+| `0x311D8 (201176)` | `qpERR_ABORT_QDT_NOT_EXIST_TBS` | `Tablespace not found. The name of the specified tablespace was not found in the database.` | Named tablespace was not found; verify the literal tablespace name and exact DDL. | `V$TABLESPACES` and target DDL. |
+| `0x311DD (201181)` | `qpERR_ABORT_QDT_OBJECT_EXIST` | `The tablespace has objects.` | Objects still exist in the tablespace; first drop or move related objects. Confirm object inventory, backup/recovery posture, and explicit intent before `INCLUDING CONTENTS`. | Tablespace object inventory and destructive-operation approval. |
+| `ERR-31001` / `0x31001 (200705)` | `qpERR_ABORT_QCP_SYNTAX` | `SQL syntax error <0%s>` | Statement is not syntactically valid for Altibase; rewrite using correct Altibase syntax for the target version. | Exact SQL text and target version. |
+| `0x31003 (200707)` | `qpERR_ABORT_QCP_NOT_SUPPORTED_SYNTAX` | `Unsupported syntax` | Statement uses syntax unsupported by Altibase; rewrite using Altibase-supported syntax and check version differences. | Exact SQL text, source DBMS, and target version. |
+| `0x31010`, `0x31011`, `0x31012`, `0x31013`, `0x31014`, `0x31017` | `qpERR_ABORT_QCM_NOT_EXIST_USER`, `qpERR_ABORT_QCM_NOT_EXIST_TABLE`, `qpERR_ABORT_QCM_NOT_EXIST_COLUMN`, `qpERR_ABORT_QCM_NOT_EXIST_SEQUENCE`, `qpERR_ABORT_QCM_NOT_EXISTS_INDEX`, `qpERR_ABORT_QCM_REPL_NOT_FOUND` | `User not found`, `Table not found`, `Column not found`, `Sequence not found`, `Index not found`, `Replication not found` | Preserve the exact identifier and verify owner, object name, quoted-case, target database, and replication definition context. | Dictionary object checks and replication metadata checks. |
+| `0x311B1 (201137)`, `0x31293 (201363)`, `0x4107C (266364)` | `qpERR_ABORT_QDP_INSUFFICIENT_PRIVILEGES`, `qpERR_ABORT_QCI_NotPermittedUser`, `mmERR_ABORT_INSUFFICIENT_PRIV` | Ordinary SQL privilege failure, unauthorized user, or SYSDBA-required operation. | Connect with the correct user, use `SYSDBA` where required, or grant the needed privilege. Do not recommend direct DML on Altibase meta tables. | Current user, intended operation, required privilege, SYSDBA context. |
+| `0x11058 (69720)` | `smERR_ABORT_smnUniqueViolation` | Row already exists in a `unique index`. | Check the record with the unique key value before changing sequences or deleting duplicates. | Unique index/constraint columns and offending key value. |
+| `0x2100C`, `0x21010`, `0x21011`, `0x21048` | `mtERR_ABORT_CONVERSION_NOT_APPLICABLE`, `mtERR_ABORT_VALUE_OVERFLOW`, `mtERR_ABORT_INVALID_LITERAL`, `mtERR_ABORT_OVERFLOW` | `Conversion not applicable`, `Value overflow`, `Invalid literal`, out-of-range type value. | Check source value, target data type, precision, scale, literal format, and bind type using Altibase rules, not Oracle assumptions. | Column definition, sanitized input value, SQL or bind metadata. |
+| `0x2106B`, `0x2106C` | `mtERR_ABORT_PCRE2_NOT_SUPPORTED_ENCODING`, `mtERR_ABORT_PCRE2_UNEXPECTED_ERROR` | PCRE2 character-set or unexpected error when `REGEXP_MODE=1`. | Preserve `REGEXP_MODE`, server character set, pattern, SQL text, and PCRE2 detail. `0x2106B` points to unsupported PCRE2 encoding; `0x2106C` requires detail text before escalation. | `REGEXP_MODE`, server character set, pattern, input sample, detail error text. |
+| `ERR-31363` / `0x31363 (201571)` | `qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE` | `Cannot execute DDL when a temporary table is in use.` | DDL cannot execute while temporary tables based on the target table are in use. Truncate all related temporary tables and retry; do not jump to session termination. | Target table, related temporary tables, owning sessions, exact DDL. |
+| `0x2106D (135277)` | `mtERR_ABORT_JSON_WITHOUT_TEMPLOB` | `JSON type cannot be used when the TEMPORARY_LOB_ENABLE property is disabled.` | Altibase 8.1 verified source JSON behavior; check whether `TEMPORARY_LOB_ENABLE` is enabled. | Version, property value, JSON SQL, and proof if target is not 8.1. |
+| `0x314C5`, `0x314C8`, `0x314CA` | `qpERR_ABORT_JSON_INVALID_JSON_PATH`, `qpERR_ABORT_JSON_MULTIPLE_RESULTS`, `qpERR_ABORT_JSON_RETURNS_NON_SCALAR_VALUE` | JSON path syntax error, multiple results, or non-scalar values. | Distinguish path syntax, result cardinality, and scalar-return shape. Check JSON path expression, wrapper option, and `RETURNING` clause. | JSON data, literal JSON path, function name, `RETURNING`, wrapper option. |
+
+Replication and SSL high-risk rows:
+
+| Runtime / reference code | Reference symbol | Exact message or family | Cause / action focus | First check |
+| --- | --- | --- | --- | --- |
+| `0x61003 (397315)`, `0x61004 (397316)` | `rpERR_ABORT_RP_READ_SOCKET`, `rpERR_ABORT_RP_WRITE_SOCKET` | Unable to read from or write to a socket. | Check network path, peer server status, local and remote `altibase_rp.log`, and replication runtime state before rebuild/reset/resync advice. | `altibase_rp.log`, `V$REPSENDER`, `V$REPRECEIVER`, `V$REPGAP`. |
+| `0x6100D`, `0x61010`, `0x6102D` | `rpERR_ABORT_RP_SENDER_HANDSHAKE`, `rpERR_ABORT_RP_SENDER_START`, `rpERR_ABORT_LISTEN` | Sender handshake failed, sender thread failed to start, or receiver failed to listen to replication socket `(Port No:<0%d>)`. | Check network, server, replication definition, peer status, exact `IP address` and port number, and listener port ownership before changing `REPLICATION_PORT_NO`. | Peer definitions, peer server status, `altibase_rp.log`, port ownership. |
+| `0x61100 (397568)` | `rpERR_ABORT_RPC_DUPLICATE_REPLICATION` | `Duplicate replication names. The replication name already exists in the database.` | Replication name, `IP address`, or port number is not unique. Use a different name after checking whether the existing object is active or intentionally part of topology. | `SYSTEM_.SYS_REPLICATIONS_`, `SYSTEM_.SYS_REPL_HOSTS_`, active status, topology owner. |
+| `0x5120C`, `0x5120D`, `0x5120E`, `0x5121D`, `0x5121E` | `ulERR_ABORT_SSL_OPERATION_FAILURE`, `ulERR_ABORT_SSL_LIBRARY_ERROR`, `ulERR_ABORT_SSL_LINK_FAILURE`, `ulERR_ABORT_INVALID_ALTIBASE_SSL_PORT_NO`, `ulERR_ABORT_PORT_NO_ALTIBASE_SSL_PORT_NO_NOT_SET` | Client SSL operation/library/link failure or missing/invalid SSL port. | Check `PORT_NO`, `ALTIBASE_SSL_PORT_NO`, OpenSSL library loading, detailed client SSL text, and redact credentials while preserving keys. | Client version, connection string keys, OpenSSL library path, SSL options. |
+| `0x710A0`, `0x710A3`, `0x710CB` | `cmERR_ABORT_INVALID_CERTIFICATE`, `cmERR_ABORT_SSL_HANDSHAKE`, `cmERR_ABORT_UNSUPPORTED_OPENSSL_VERSION` | Server certificate load failure, SSL handshake failure, or unsupported OpenSSL version. | Check certificate path, private key, CA configuration, `altibase_boot.log`, Altibase patch level, platform, and OpenSSL version before changing TLS files or libraries. | Server properties, file paths, log excerpt, OpenSSL version, platform. |
+
 ## Response Rules
 
 - Answer explanations in the user's language.
@@ -456,9 +507,14 @@ Applies To: `isql`, utilities, client/server communication.
 
 Symptom: The client loses communication with the DBMS server.
 
-Primary Causes: The network connection was closed, the server is not running, the server is in the wrong phase, a port is wrong, or the client was disconnected.
+Primary Causes: The documented cause is failed communication with the DBMS
+server. Common evidence to check includes a closed network connection, stopped
+server, wrong server phase, wrong port, or disconnected client.
 
-Immediate Action: Check server status and startup phase. Verify host, port, listener availability, and `altibase_boot.log`.
+Immediate Action: The documented action is to connect again to the DBMS server.
+Before choosing a single environmental root cause, check server status and
+startup phase, then verify host, port, listener availability, and
+`altibase_boot.log`.
 
 Check SQL or Command:
 
@@ -489,9 +545,13 @@ Applies To: Server startup and listener binding.
 
 Symptom: Altibase cannot bind the configured TCP listener port.
 
-Primary Causes: The port is already in use by another process, not yet released, or the configured port is wrong.
+Primary Causes: The documented cause is that Altibase failed to invoke `bind()`
+on the `INET` socket because the port was already in use by another process. A
+wrong or not-yet-released listener port can lead to the same startup symptom.
 
-Immediate Action: Find the process using the port, stop it if appropriate, or change the Altibase port property.
+Immediate Action: Preserve the substituted OS error value or `errno`, find the
+process using the port, stop it if appropriate, or choose another valid port.
+Do not change `PORT_NO` until the configured port and process owner are known.
 
 Check SQL or Command:
 
@@ -500,6 +560,10 @@ netstat -an | grep '<PORT_NO>'
 lsof -i :<PORT_NO>
 tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
 ```
+
+Required Customer Input: exact version and patch level, configured listener
+property, full error line including substituted OS error or `errno`, startup
+phase, host/port, and port-ownership command output.
 
 Version Cautions: Applies across 7.1, 7.3, and 8.1. On systems without `lsof`, use the OS-native socket inspection command.
 
@@ -611,8 +675,12 @@ Applies To: Concurrent transactions.
 Symptom: One transaction is selected as the deadlock victim and rolled back.
 
 Primary Causes: Two or more transactions lock resources in conflicting order.
+The documented cause is that the deadlock victim transaction was stopped and
+terminated by deadlock resolution.
 
-Immediate Action: Re-execute the rolled-back transaction. For recurring cases, standardize update order and reduce transaction duration.
+Immediate Action: The transaction was rolled back; re-execute the transaction
+after the conflict clears. For recurring cases, gather the conflicting
+transaction pattern, standardize update order, and reduce transaction duration.
 
 Check SQL or Command:
 
@@ -652,9 +720,18 @@ Applies To: SQL waiting for row, table, or tablespace locks.
 
 Symptom: A transaction cannot acquire a lock before timeout.
 
-Primary Causes: A long-running transaction holds the required lock. For DDL, `DDL_LOCK_TIMEOUT` may be too short; for user-lock requests, check `USER_LOCK_REQUEST_TIMEOUT`; for replication flows, check `REPLICATION_LOCK_TIMEOUT` or `REPLICATION_SYNC_LOCK_TIMEOUT`. For statement-level row or table locking, the relevant SQL may use `WAIT n` or `NOWAIT` with `LOCK TABLE` or `SELECT ... FOR UPDATE`.
+Primary Causes: A transaction failed to lock the object because another
+transaction holds the required lock. The source action is to increase the
+transaction lock timeout value or check whether a transaction has a `long-term
+lock`. For DDL, `DDL_LOCK_TIMEOUT` may be too short; for user-lock requests,
+check `USER_LOCK_REQUEST_TIMEOUT`; for replication flows, check
+`REPLICATION_LOCK_TIMEOUT` or `REPLICATION_SYNC_LOCK_TIMEOUT`. For
+statement-level row or table locking, the relevant SQL may use `WAIT n` or
+`NOWAIT` with `LOCK TABLE` or `SELECT ... FOR UPDATE`.
 
-Immediate Action: Identify the blocking transaction. Increase the context-specific timeout property or adjust statement-level `WAIT n`/`NOWAIT` behavior only when it is operationally acceptable.
+Immediate Action: Identify the blocking transaction and blocked SQL first.
+Increase the context-specific timeout property or adjust statement-level
+`WAIT n`/`NOWAIT` behavior only when it is operationally acceptable.
 
 Check SQL or Command:
 
@@ -1224,7 +1301,10 @@ Symptom: A tablespace cannot be dropped because objects still exist in it.
 
 Primary Causes: Tables, indexes, LOB segments, or dependent objects remain in the tablespace.
 
-Immediate Action: Identify and drop or move objects explicitly, or use the documented `DROP TABLESPACE ... INCLUDING CONTENTS` form only after confirming impact and backup status.
+Immediate Action: Identify the related objects first. Drop or move them
+explicitly, or use the documented `DROP TABLESPACE ... INCLUDING CONTENTS` form
+only after confirming object inventory, backup or recovery posture, and that the
+destructive intent is explicit.
 
 Check SQL or Command:
 
@@ -1430,21 +1510,38 @@ Related Document: SQL DDL Generation; Data Types and Properties; Data Dictionary
 
 ### Error Block: User, Table, Column, Sequence, Index, or Replication Not Found
 
-Error Code: `ERR-31010`, `ERR-31011`, `ERR-31012`, `ERR-31013`, `ERR-31014`, `ERR-31017`.
+Error Code: `ERR-31010` / `0x31010 (200720)`, `ERR-31011` /
+`0x31011 (200721)`, `ERR-31012` / `0x31012 (200722)`, `ERR-31013` /
+`0x31013 (200723)`, `ERR-31014` / `0x31014 (200724)`, `ERR-31017` /
+`0x31017 (200727)`.
 
 Reference Symbol: `qpERR_ABORT_QCM_NOT_EXIST_USER`, `qpERR_ABORT_QCM_NOT_EXIST_TABLE`, `qpERR_ABORT_QCM_NOT_EXIST_COLUMN`, `qpERR_ABORT_QCM_NOT_EXIST_SEQUENCE`, `qpERR_ABORT_QCM_NOT_EXISTS_INDEX`, `qpERR_ABORT_QCM_REPL_NOT_FOUND`.
 
 Module / Severity: QP / `ABORT`.
 
-Message: `User not found`, `Table not found`, `Column not found`, `Sequence not found`, `Index not found`, or `Replication not found`.
+Exact code map:
+
+| Runtime / reference code | Reference symbol | Exact message | Cause / action focus |
+| --- | --- | --- | --- |
+| `ERR-31010` / `0x31010 (200720)` | `qpERR_ABORT_QCM_NOT_EXIST_USER` | `User not found` | The user is not in the meta database; verify the user name and that the user exists. |
+| `ERR-31011` / `0x31011 (200721)` | `qpERR_ABORT_QCM_NOT_EXIST_TABLE` | `Table not found` | The table is not in the meta database; verify table name, owner, and database context. |
+| `ERR-31012` / `0x31012 (200722)` | `qpERR_ABORT_QCM_NOT_EXIST_COLUMN` | `Column not found` | The column is not in the meta database; verify the column name and use `DESC` or dictionary checks. |
+| `ERR-31013` / `0x31013 (200723)` | `qpERR_ABORT_QCM_NOT_EXIST_SEQUENCE` | `Sequence not found` | Verify that the sequence exists. |
+| `ERR-31014` / `0x31014 (200724)` | `qpERR_ABORT_QCM_NOT_EXISTS_INDEX` | `Index not found` | Verify that the index exists and check meta tables for the index name. |
+| `ERR-31017` / `0x31017 (200727)` | `qpERR_ABORT_QCM_REPL_NOT_FOUND` | `Replication not found` | The specified replication has not been created yet; create it first or verify the replication name. |
 
 Applies To: DDL, DML, replication DDL, and dictionary-dependent SQL.
 
 Symptom: Altibase cannot resolve an object referenced by the SQL statement.
 
-Primary Causes: Wrong owner, typo, missing object, quoted identifier case mismatch, or running against the wrong database.
+Primary Causes: Wrong owner, typo, missing user/table/column/sequence/index,
+quoted identifier case mismatch, missing replication definition, or running
+against the wrong database.
 
-Immediate Action: Verify the owner-qualified object name and the current connection user.
+Immediate Action: Preserve the literal identifier supplied by the user. Verify
+the owner-qualified object name, current connection user, target database, and,
+for `Replication not found`, replication definition metadata instead of using
+table-only checks.
 
 Check SQL or Command:
 
@@ -1494,6 +1591,10 @@ SELECT replication_name, host_ip, port_no, conn_type
 FROM SYSTEM_.SYS_REPL_HOSTS_
 WHERE replication_name = '<REPLICATION_NAME>';
 ```
+
+Required Customer Input: exact version, full error line, full SQL or
+replication command, current user, owner/object identifier exactly as typed,
+quoted identifier use, and target database or replication name.
 
 Version Cautions: Applies across 7.1, 7.3, and 8.1.
 
@@ -2026,11 +2127,19 @@ Applies To: replication startup, sender/receiver connection, and replication soc
 
 Symptom: Replication cannot start or cannot connect to the peer.
 
-Primary Causes: Network or server error, mismatched replication definitions, peer database down, `REPLICATION_PORT_NO` occupied, or wrong IP and port.
+Primary Causes: Network or server error, mismatched replication definitions,
+peer database down, `REPLICATION_PORT_NO` occupied, or wrong `IP address` and
+port number.
 
-Immediate Action: Verify both replication definitions, peer server status, `REPLICATION_PORT_NO`, and whether another process uses the port.
+Immediate Action: Verify both replication definitions, peer server status,
+`REPLICATION_PORT_NO`, exact `IP address` and port number, and whether another
+process uses the port before changing `REPLICATION_PORT_NO`.
 
 Check SQL or Command:
+
+```bash
+tail -200 "$ALTIBASE_HOME/trc/altibase_rp.log"
+```
 
 ```sql
 SELECT name, value1
@@ -2047,6 +2156,11 @@ SELECT rep_name,
 FROM V$REPSENDER
 ORDER BY rep_name;
 ```
+
+Required Customer Input: local and remote Altibase versions, replication name,
+local and peer host/port values, ordinary or SSL replication transport, current
+replication DDL, `altibase_rp.log` excerpts from both peers, and port ownership
+evidence for the listener host.
 
 Version Cautions: For SSL replication in 8.1, verify SSL configuration on both peers.
 
@@ -2068,7 +2182,9 @@ Symptom: A replication definition cannot be created.
 
 Primary Causes: The replication name already exists, or the IP address and port number are not unique.
 
-Immediate Action: Use a different replication name or remove the existing definition after impact review.
+Immediate Action: Use a different replication name after checking whether the
+existing definition is active and intentional. Remove or change an existing
+definition only after topology, data consistency, and rollback impact are known.
 
 Check SQL or Command:
 
@@ -2096,6 +2212,11 @@ FROM V$REPGAP
 WHERE rep_name = '<REPLICATION_NAME>'
 ORDER BY rep_name;
 ```
+
+Required Customer Input: exact version, proposed replication name, proposed
+`IP address` and port number, current replication definitions, whether the
+existing object is active, topology ownership, and whether any generated
+migration or `aku` script created the definition.
 
 Version Cautions: Applies across 7.1, 7.3, and 8.1.
 
@@ -2320,7 +2441,11 @@ Symptom: SSL listener or SSL connection fails.
 
 Primary Causes: Invalid certificate path, invalid private key path, private key does not match certificate, invalid CA path, peer certificate verification failure, or SSL handshake failure.
 
-Immediate Action: Verify certificate, private key, CA file, CA path, and peer certificate. Check `altibase_boot.log` for detailed SSL error text.
+Immediate Action: Verify certificate, private key, CA file, CA path, and peer
+certificate. Check `altibase_boot.log` for detailed SSL error text. If the
+reported code is `0x710CB` / `cmERR_ABORT_UNSUPPORTED_OPENSSL_VERSION`, switch
+to the unsupported OpenSSL block below instead of treating it as a certificate
+path problem.
 
 Check SQL or Command:
 

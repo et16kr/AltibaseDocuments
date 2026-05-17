@@ -826,6 +826,9 @@ Representative Command:
 ```bash
 altierr 0x00015
 altierr -266286
+altierr 266286
+altierr 0x4102E
+altierr -n 0x4102E
 altierr -w connect
 ```
 
@@ -833,17 +836,21 @@ Compact syntax:
 
 ```text
 altierr {-w keyword_pattern | [-n] error_number}
+Source syntax wording: altierr {-w keyword pattern | [-n] error number}
 ```
 
 Key Inputs:
 
 - Hexadecimal, positive decimal, or negative decimal error number.
+- `-n` means search by error number; when searching by error number, `-n` can be omitted.
+- Negative integer values can come from application `SQLCODE` variables or ODBC function return codes, for example `-266286`.
 - Keyword pattern with `-w`.
 
 Cautions:
 
 - Keyword searches can return multiple records; ask for the exact error code when possible.
 - Keep the error code literal in multilingual answers.
+- Preserve equivalent forms together when known, for example `0x4102E (266286)` and application return code `-266286`.
 
 Verification Method:
 
