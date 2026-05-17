@@ -21,6 +21,17 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J029 PSM And External Procedure Runtime Guardrail
+
+FCA-J029 cataloged one PSM/external procedure guardrail row. The selected manuals
+provide syntax, build commands, metadata checks, and troubleshooting routes, but live
+compile, shared-library load, external-agent execution, and runtime-output success
+depend on the customer's installed Altibase environment and exact source artifacts.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000219 | Guardrail | stored_external_procedures | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-013 > PSM and external procedure examples lack compile/runtime validation | Requires target Altibase version and patch, exact PSM or C/C++ source, compiler and platform, `$ALTIBASE_HOME/lib` deployment state, server runtime, full error or log output, and installed dictionary/view columns before asserting live compile, load, or execution success. | Ask for the exact Altibase version/patch, the PSM or C/C++ source, build command and compiler output, deployed shared-library path, `CREATE LIBRARY`/routine DDL, failed SQL call, full error/log text, and current `SYS_PROCEDURES_`, `SYS_LIBRARIES_`, `V$EXTPROC_AGENT`, `V$LIBRARY`, `V$PROCINFO`, and `V$PROPERTY` evidence before declaring success or root cause. | GPTs/attachments/10_psm_stored_external_procedures.md | FCA-J029 | `GAP-J002-013`; Korean Stored Procedures and External Procedures manuals build/runtime sections; catalog row SRC-OTHER-XVER-000219. |
+
 ### FCA-J027 CDC Log Analyzer And RepMgr Guardrails
 
 FCA-J027 cataloged one Replication Manager guardrail row. The selected manuals and
