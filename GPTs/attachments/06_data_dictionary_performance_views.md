@@ -334,6 +334,29 @@ FROM V$SESSION
 WHERE id = SESSION_ID();
 ```
 
+Session runtime property effects:
+
+```sql
+SELECT id,
+       autocommit_flag,
+       isolation_level,
+       query_time_limit,
+       ddl_time_limit,
+       fetch_time_limit,
+       utrans_time_limit,
+       idle_time_limit,
+       time_zone,
+       lob_cache_threshold,
+       query_rewrite_enable
+FROM V$SESSION
+WHERE id = SESSION_ID();
+```
+
+Use this after `ALTER SESSION` changes for `AUTO_COMMIT`, `QUERY_TIMEOUT`,
+`DDL_TIMEOUT`, `FETCH_TIMEOUT`, `UTRANS_TIMEOUT`, `IDLE_TIMEOUT`, `TIME_ZONE`,
+`LOB_CACHE_THRESHOLD`, or `QUERY_REWRITE_ENABLE`. Use `V$PROPERTY` for server defaults
+and bounds, then use `V$SESSION` to confirm the current session's runtime value.
+
 Replication ports:
 
 ```sql

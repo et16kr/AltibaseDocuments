@@ -165,12 +165,17 @@ WHERE name IN (
   'OPTIMIZER_UNNEST_SUBQUERY',
   'OPTIMIZER_UNNEST_COMPLEX_SUBQUERY',
   'OPTIMIZER_UNNEST_AGGREGATION_SUBQUERY',
+  'LOB_CACHE_THRESHOLD',
+  'LOCK_ESCALATION_MEMORY_SIZE',
   'TRCLOG_DETAIL_PREDICATE',
   'TRCLOG_DETAIL_INFORMATION',
   'SQL_PLAN_CACHE_SIZE',
   'SQL_PLAN_CACHE_BUCKET_CNT',
   'SQL_PLAN_CACHE_HOT_REGION_LRU_RATIO',
   'SQL_PLAN_CACHE_PREPARED_EXECUTION_CONTEXT_CNT',
+  'RESULT_CACHE_ENABLE',
+  'RESULT_CACHE_MEMORY_MAXIMUM',
+  'TOP_RESULT_CACHE_MODE',
   'HASH_AREA_SIZE',
   'SORT_AREA_SIZE',
   'TOTAL_WA_SIZE',
@@ -204,6 +209,13 @@ WHERE name IN (
   'CHECKPOINT_FLUSH_COUNT',
   'CHECKPOINT_FLUSH_MAX_GAP',
   'CHECKPOINT_FLUSH_MAX_WAIT_SEC',
+  'QUERY_TIMEOUT',
+  'FETCH_TIMEOUT',
+  'IDLE_TIMEOUT',
+  'DDL_LOCK_TIMEOUT',
+  'AUTO_COMMIT',
+  'NLS_NUMERIC_CHARACTERS',
+  'TIME_ZONE',
   'PREPARE_LOG_FILE_COUNT',
   'AGER_WAIT_MINIMUM',
   'AGER_WAIT_MAXIMUM',
@@ -292,6 +304,14 @@ Factors that can change the plan:
 - Statistics.
 - SQL hints.
 - Optimizer-related properties.
+
+Optimizer normalization property block: `NORMALFORM_MAXIMUM`
+
+- `NORMALFORM_MAXIMUM` defaults to `2048`, ranges `[1, 2^32 - 1]`, and is changeable with `ALTER SYSTEM` or `ALTER SESSION`.
+- It limits Normal Form node count when Altibase tries predicate normalization with `CNF` or `DNF`.
+- If both `CNF` and `DNF` exceed the configured limit, Altibase uses `NNF` and the condition is not normalized; an index cannot be used for that condition.
+- The same rule applies to `ON` predicates in `ON`-condition joins.
+- Raising the value too high can increase normalization cost and memory use for complex predicates, so prefer simplifying predicates and testing with execution plans before changing the property.
 
 ## Memory Tables and Disk Tables
 
