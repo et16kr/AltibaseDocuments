@@ -77,3 +77,36 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route the four new `Missing`
   rows before final full-coverage readiness can have no unresolved `Missing`
   dispositions.
+
+### FCA-J006
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged Administrator manual backup, recovery, archive
+  log, storage, server-mode, media-failure, and protected-operation rows only; no
+  customer-facing attachment text was changed and no original source documents were
+  edited.
+- Catalog totals added by this job: 34 rows total; 29 `Covered`, 3
+  `Covered-by-routing`, 2 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.1/7.3 Administrator manuals and the Altibase 8.1
+  verified-source Korean Administrator manual, with existing attachment anchors in
+  `02_administration_operations.md`, `03_sql_ddl_generation.md`,
+  `06_data_dictionary_performance_views.md`, `13_isql_iloader_basic_tools.md`, and
+  `01_getting_started_installation.md`.
+- Coverage status changes: startup/server phases, shutdown, log-anchor and physical
+  file evidence, backup-policy choices, archive-log mode, online/offline backup,
+  media-recovery variants, incomplete recovery and `RESETLOGS`, replication recovery
+  cautions, snapshot backup, incremental backup/restore, backup-file management, disk
+  usage/archive-full handling, and 8.1 checkpoint-scale handling were mapped to
+  answer-ready attachment anchors or routing targets. Missing rows were registered for
+  detailed disk tablespace physical/logical structure and detailed memory/volatile
+  tablespace structure.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 239 catalog rows and 0 matrix rows; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: later remediation jobs must close or route the two new Administrator
+  storage-structure `Missing` rows before final full-coverage readiness can have no
+  unresolved `Missing` dispositions.

@@ -22,6 +22,17 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J006 Administrator Operations Missing Rows
+
+FCA-J006 cataloged 2 unresolved `Missing` rows for source-backed Administrator manual
+storage-structure details that are not yet answer-ready in
+`02_administration_operations.md`.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000042 | administrator_operations | cross-version | Manuals/Altibase_7.3/kor/Administrator's Manual.md | Administrator's Manual > Tablespaces > disk tablespace structure | Disk tablespace physical/logical structure item block covering data files, segments, extents, pages, default `64 pages` / `512KB` extent, fixed `8KB` page size, and table/index/undo/TSS segment roles. | GPTs/attachments/02_administration_operations.md | Add a compact storage-structure block or routing entry that preserves the exact storage units, numeric sizes, and segment categories, with cross-reference to `06_data_dictionary_performance_views.md` for view-based checks. | FCA-J006 | rg -n '세그먼트\|익스텐트\|64개의 페이지\|512KB\|페이지 크기는 8KB\|TSS' Manuals/Altibase_7.3/kor/Administrator's\ Manual.md GPTs/attachments/02_administration_operations.md |
+| SRC-OTHER-XVER-000043 | administrator_operations | cross-version | Manuals/Altibase_7.3/kor/Administrator's Manual.md | Administrator's Manual > Tablespaces > memory and volatile tablespace structure | Memory and volatile tablespace structure item block covering checkpoint image files, ping-pong checkpointing, page lists, out-place update, volatile no-checkpoint-image behavior, and no disk logging/checkpoint participation. | GPTs/attachments/02_administration_operations.md | Add a compact storage-structure block or routing entry that distinguishes persistent memory tablespaces from volatile tablespaces, preserves checkpoint-image and page-list terms, and routes 8.1 checkpoint-scale exceptions to the existing 8.1 checkpoint block. | FCA-J006 | rg -n '체크포인트 이미지 파일\|핑퐁\|페이지 리스트\|out-place\|휘발성 테이블스페이스\|로깅' Manuals/Altibase_7.3/kor/Administrator's\ Manual.md GPTs/attachments/02_administration_operations.md |
+
 ### FCA-J005 Installation And Getting-Started Missing Rows
 
 FCA-J005 cataloged 4 unresolved `Missing` rows for source-backed installation/manual
