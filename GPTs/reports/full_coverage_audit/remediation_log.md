@@ -316,3 +316,34 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route the nine new FCA-J012
   `Missing` rows before final full-coverage readiness can have no unresolved
   `Missing` dispositions.
+
+### FCA-J015
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged General Reference 1 optimizer, normalization,
+  lock, timeout, autocommit, session, locale, and performance property rows only; no
+  customer-facing attachment text was changed and no original source documents were
+  edited. Network, SSL/TLS, replication, and DB Link properties remain scoped to
+  `FCA-J016`.
+- Catalog totals added by this job: 94 rows total; 54 `Covered`, 40 `Missing`, 0
+  `Covered-by-routing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0 `Retrieval-weak`.
+- Source evidence: Korean General Reference 1 detailed property sections for Altibase
+  7.1, Altibase 7.3, and the Altibase 8.1 verified source, using
+  `GPTs/reports/property_inventory.md` as the line-locator baseline and existing
+  answer-ready anchors in `GPTs/attachments/05_data_types_properties.md`.
+- Coverage status changes: optimizer behavior, `NORMALFORM_MAXIMUM`, result/LOB cache
+  routing where scoped, parallel query worker limits, lock escalation, timeouts,
+  `AUTO_COMMIT`, `ISOLATION_LEVEL`, `DEFAULT_DATE_FORMAT`, `TIME_ZONE`, NLS locale
+  settings, user-lock settings, PSM session resource limits, and XA heuristic settings
+  were mapped to existing answer-ready attachment anchors. Forty performance and lock
+  properties were registered as `Missing` because the attachment currently preserves
+  only inventory-level name/version coverage for those properties.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 624 catalog rows and 0 matrix rows; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: later remediation jobs must close or route the forty new FCA-J015
+  `Missing` rows before final full-coverage readiness can have no unresolved
+  `Missing` dispositions.
