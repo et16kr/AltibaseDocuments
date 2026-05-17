@@ -21,6 +21,18 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J026 Replication And HA Guardrails
+
+FCA-J026 cataloged the replication and HA source-family slice. The only new guardrail
+is the exact cross-version replication compatibility boundary: answers may use the
+documented LAZY compatibility matrix and 8.1 verified-source wording, but must not
+generalize to unsupported Sender/Receiver directions, optional features, or EAGER/DDL
+cases without target evidence.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-REPL-XVER-000034 | Guardrail | replication_manual | cross-version | Manuals/Altibase_7.3/kor/Replication Manual.md | Replication Manual > replication compatibility > version and protocol boundary | Exact cross-version compatibility depends on Sender/Receiver direction, `product_version`, `meta_version`, `repl_protocol_version`, replication mode, option list, and feature use; selected sources support only documented pairings and guard 8.1-to-older or optional-feature claims without target evidence. | Ask for both nodes' `V$VERSION` output, Sender/Receiver direction, replication mode, replication object options, DDL/offline/SSL/receive-only involvement, and target object list before declaring compatibility; otherwise answer only with the documented source-backed boundary and safest next checks. | GPTs/attachments/09_replication_ha_cdc.md | FCA-J026 | Korean Replication Manual 7.3 compatibility appendix plus Altibase 8.1 verified-source release-note compatibility wording; catalog evidence `SRC-REPL-XVER-000034`; attachment evidence `Compatibility Guidance`. |
+
 ### FCA-J025 Monitoring API And SNMP Guardrails
 
 FCA-J025 cataloged Monitoring API and SNMP source rows. Most items are covered in the

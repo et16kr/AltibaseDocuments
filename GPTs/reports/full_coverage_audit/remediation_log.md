@@ -590,3 +590,39 @@ Each entry should include:
 - Residual risk: this job did not remediate customer-facing text. Later performance
   remediation should close the two missing rows and three retrieval-weak plan-node
   rows before the final audit can claim no unresolved performance tuning gaps.
+
+### FCA-J026
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged the selected `replication_manual` source-family
+  slice for topology terms, replication state, LAZY/EAGER modes, target eligibility,
+  gap and failure handling, conflicts, replication DDL, options, offline recovery,
+  host routing, HA failover, sequence replication, propagation roles, compatibility
+  boundaries, and unsafe state-change stop conditions. No original manuals or
+  customer-facing attachments were edited.
+- Catalog rows added by this job: 30 rows total; 28 `Covered`, 1
+  `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Version scope: all rows are `cross-version`, using the 7.3 Korean Replication Manual
+  as the representative `source_path` and checking the 7.1 and Altibase 8.1 verified
+  source replication-manual outlines for corresponding source-family coverage.
+- Source evidence: each row records a Korean Replication Manual source locator and an
+  attachment or routing check. `09_replication_ha_cdc.md` is the primary attachment
+  owner; `SRC-REPL-XVER-000028` routes `REPLICATION_SENDER_IP` property details to
+  `05_data_types_properties.md`.
+- Coverage status changes: topology, mode, prerequisites, conflicts, EAGER failback,
+  replication options, DDL, HA failover, sequence replication, propagation, and unsafe
+  operation stop conditions were marked `Covered`; `REPLICATION_SENDER_IP` was marked
+  `Covered-by-routing`; exact cross-version compatibility was registered as a
+  `Guardrail`.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1779 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 30
+  FCA-J026 rows with 28 `Covered`, 1 `Covered-by-routing`, and 1 `Guardrail` status.
+  Standard repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no new `Missing`, `Out-of-scope`, or `Retrieval-weak` rows were
+  added. Cross-version replication compatibility remains guarded by exact
+  Sender/Receiver direction, installed `V$VERSION` output, replication mode, option
+  list, and feature-use evidence before giving a definitive customer answer.
