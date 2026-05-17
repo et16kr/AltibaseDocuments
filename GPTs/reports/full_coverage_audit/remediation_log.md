@@ -1235,3 +1235,54 @@ Each entry should include:
 - Skipped checks: no full 270-question live benchmark was launched for this scoped
   routing-remediation job; the locked latest benchmark run remains priority evidence,
   not the completion scope for `FCA-J046`.
+
+### FCA-J047
+
+- Changed files: `GPTs/attachments/10_psm_stored_external_procedures.md`,
+  `GPTs/attachments/11_java_jdbc_spring.md`,
+  `GPTs/attachments/12_c_cli_odbc_precompiler.md`,
+  `GPTs/attachments/13_isql_iloader_basic_tools.md`,
+  `GPTs/attachments/14_utilities_operation_tools.md`,
+  `GPTs/attachments/15_migration_oracle_compatibility.md`,
+  `GPTs/attachments/16_dblink_external_connectors.md`,
+  `GPTs/attachments/17_kubernetes_aku_cloud.md`,
+  `GPTs/attachments/18_security_ssl_tls.md`,
+  `GPTs/attachments/19_spatial_nifi_tableau_misc.md`,
+  `retrieval_weakness_register.md`, and this remediation log.
+- Product coverage changes: no new Altibase behavior was added and no original source
+  documents were edited. The job strengthened retrieval routing for the developer-tool
+  and integration attachment group by adding focused routing-anchor bullets to the
+  `Retrieval Alias Index` in attachments `10` through `19`.
+- Disposition changes: scoped unresolved-row checks found `0` active
+  `Retrieval-weak` rows in both `source_item_catalog.tsv` and
+  `source_to_attachment_matrix.tsv` for attachments `10` through `19`; therefore no
+  catalog or matrix row required a status transition. The register now records this
+  zero-active-row result and the routing-hardening proof.
+- Source and benchmark evidence: used repository-local selected attachment content and
+  the locked benchmark evidence in
+  `evals/altibase_answerability/reports/full_benchmark/runs/altibase_answerability_20260517_205641/`.
+  The latest run remained `blocking_gaps`; the `tools_apis_connectors_migration`
+  domain had 26/50 passed and failed questions with exact-token or retrieval-risk
+  pressure across PSM/external procedures, JDBC/Spring/Hibernate, C/CLI/ODBC/APRE,
+  iSQL/iLoader, utilities, migration/Adapter for Oracle, Hadoop/Kubernetes, and
+  Spatial/NiFi/Tableau.
+- Exact routing tokens reinforced: `RETURN data_type`, `RETURN expression`,
+  `CREATE LIBRARY`, `PARAMETERS`, `jdbc:Altibase://localhost:20300/mydb?fetch_enough=0&time_zone=DB_TZ`,
+  `alternateservers`, `jdbc:Altibase://127.0.0.1:20300/mydb?lob_null_select=off`,
+  `AltibaseDialect`, `LongDataCompat`, `SQLFreeLob2(stmt, locator)`,
+  `altibase_store_result()`, `SQLCA`, `employees.fmt`, `DBMS_METADATA`,
+  `ERR-91144`, `AEXPORT_FILE_PERMISSION`, `altiComp`, `altierr`,
+  `./migcenter.sh filesync project_path`, `oraAdapter`,
+  `altibase_sqoop14_connector.jar`, `publishNotReadyAddresses: true`,
+  `truststore_url`, `SELECT * FROM SPATIAL_REF_SYS`, and
+  `SYS_SPATIAL.ADD_SPATIAL_REF_SYS`.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers` passed; scoped unresolved-row checks for attachments `10`
+  through `19` returned zero `Retrieval-weak` rows in both catalog and matrix; scoped
+  exact-token checks against the edited attachments passed; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable `Blocker`, `High`, `Medium`, or `Low` rows.
+- Skipped checks: no full 270-question live benchmark was launched for this scoped
+  routing-remediation job; the locked latest benchmark run remains priority evidence,
+  not the completion scope for `FCA-J047`.
