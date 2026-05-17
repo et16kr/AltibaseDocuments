@@ -24,6 +24,16 @@
 - 8.1: Altibase 8.1 verified source Replication Manual; Altibase 8.1 verified source Log Analyzer User's Manual; Replication Manager User's Manual; Altibase 8.1 release notes.
 - Supplemental compatibility and network-check documents: Replication Compatibility; Replication Network Check.
 
+## Exact Token Index For CDC, RepMgr, TLS, And Network Answers
+
+Use this compact index when the user asks about CDC, Log Analyzer, Replication Manager, replication SSL, ordinary TLS, ports, certificates, or replication network diagnosis. Preserve these tokens literally in answers when the topic matches.
+
+- Log Analyzer CDC: `FOR ANALYSIS`, `FOR ANALYSIS PROPAGATION`, `XLog Sender`, `XLog Collector`, `Log Analysis API`, `Handshake`, `ALA_FAILURE`, `ALA_ErrorMgr`, `ALA_GetErrorCode`, `ALA_GetErrorLevel`, `ALA_GetErrorMessage`, `ALA_ERROR_FATAL`, `ALA_ERROR_ABORT`, `ALA_ERROR_INFO`, `ALA_DestroyXLogCollector`, `ALA_Handshake`, `ALA_FreeXLog`, `Autocommit`, `alaAPI.h`, `alaTypes.h`, `libala_sl.x`, `libala.x`.
+- CDC transport: `WITH 'collector_ip', collector_port`, `WITH UNIX_DOMAIN`, `$ALTIBASE_HOME/trc/rp-replication_name`, `REPLICATION_RECEIVE_TIMEOUT`, `REPLICATION_LOG_BUFFER_SIZE`, `archive log mode`, `START AT SN`, `QUICKSTART`.
+- Replication SSL and ports: `Altibase 8.1 verified source`, `USING SSL`, `REPLICATION_SSL_PORT_NO`, `REPLICATION_PORT_NO`, `REPLICATION_IB_PORT_NO`, `SSL_PORT_NO`, `TCP`, `SSL`, `IB`, `Unsigned Integer`, `read-only`, `single value`.
+- Replication network diagnostics: `v$repreceiver`, `insert_success_count`, `pstack`, `recvXlog`, `sendCmBlock`, `netstat -nrv`, `sendq`, `recvq`, `tcpdump`, `wireshark`, `REPLICATION_HBT_DETECT_TIME`, `TCP Dup ACK`.
+- Replication Manager: `Replication Manager`, `1.4`, `August 31, 2023`, `BUG-50573`, `JRE`, `6`, `8`, `Altibase 4.3.9`, `ReplicationManager_1.4.0-win32.win32.x86.zip`, `ReplicationManager_1.4.0-linux.gtk.x86.zip`, `JDBC driver`, `DB Connections`, `Replication Pairs`, `Map`, `Properties`.
+
 ## Altibase Replication and Scope Overview
 - **Active-Active Replication**: Altibase supports replication topologies through XLog-based Sender and Receiver processing. Active-Active use requires explicit write ownership, conflict avoidance or conflict policy design, replication gap monitoring, and failover/failback planning. Do not promise fixed latency or automatic conflict-free behavior.
 - **Scale-out scope**: Sharding and `ShardManager` setup are outside this attachment's selected replication, HA, CDC, Log Analyzer, and replication SSL source family. Do not generate sharding configuration procedures from this file; use a dedicated sharding source audit if a user asks for scale-out setup.
@@ -1814,11 +1824,40 @@ Transport mismatch triage:
 Network evidence collection block:
 
 - Capture evidence from both sides of the connection. A Sender-side trace alone cannot prove whether packets reached the Receiver host.
-- On the Standby or receiving side, check whether `V$REPRECEIVER.INSERT_SUCCESS_COUNT`, `UPDATE_SUCCESS_COUNT`, or `DELETE_SUCCESS_COUNT` continues to increase during normal replication or `SYNC`.
-- Capture Sender and Receiver thread states with platform tools such as `pstack` where available. Network-check guidance identifies Receiver waits around `recvXlog... select` and Sender waits around `sendCmBlock... write` as useful stack evidence.
-- Use `netstat` to inspect send queue, receive queue, retransmission behavior, routing, gateway, subnet mask, and interface.
-- Capture packets on both Sender and Receiver hosts in binary format, then inspect them with Wireshark or an equivalent packet analyzer.
-- During packet tests, if heartbeat socket churn makes analysis difficult, record the current `REPLICATION_HBT_DETECT_TIME`, temporarily raise it for the test window, and restore it afterward.
+- On the Standby or receiving side, check whether `V$REPRECEIVER.INSERT_SUCCESS_COUNT`, `UPDATE_SUCCESS_COUNT`, or `DELETE_SUCCESS_COUNT` continues to increase during normal replication or `SYNC`. The selected network-check document also writes this as `v$repreceiver.insert_success_count`; preserve the lower-case token when the user's evidence uses it.
+- Capture Sender and Receiver thread states with platform tools such as `pstack` where available. Network-check guidance identifies Receiver waits around `recvXlog... select` and Sender waits around `sendCmBlock... write` as useful stack evidence; the Sender-side pattern can involve a 64 KB sender socket buffer.
+- Use `netstat` to inspect `sendq`, `recvq`, TCP retransmit behavior, routing, gateway, subnet mask, and interface. Include `netstat -nrv` when route evidence is needed.
+- Capture packets with `tcpdump` on both Sender and Receiver hosts in binary format, then inspect the capture with `wireshark` or an equivalent packet analyzer. Do not rely on text-only packet output when IP and port details must be validated.
+- During packet tests, if heartbeat socket churn makes analysis difficult, record the current `REPLICATION_HBT_DETECT_TIME`, temporarily raise it for the test window, and restore it afterward. The network-check document uses `7200` seconds as the test-window value.
+- In packet inspection, symptoms such as `TCP Previous segment not captured` and repeated `TCP Dup ACK` can indicate packet loss where the Standby is asking the Active side to retransmit a missing sequence.
+
+Exact network diagnostic answer block:
+
+```sql
+-- Lowercase aliases preserve source and benchmark wording; unquoted view and
+-- column names are case-insensitive in SQL.
+SELECT rep_name,
+       insert_success_count,
+       update_success_count,
+       delete_success_count
+FROM v$repreceiver
+ORDER BY rep_name;
+```
+
+```sh
+# Check routing, gateway, subnet mask, and interface.
+netstat -nrv
+
+# Capture binary packets on both Sender and Receiver hosts, then open the
+# resulting files in wireshark.
+tcpdump -i interface_name -vv -w sender_repl_capture.pcap
+tcpdump -i interface_name -vv -w receiver_repl_capture.pcap
+```
+
+Stop conditions:
+
+- Do not use `QUICKSTART` as a network fix. It starts from the current log position and can skip unsent XLogs.
+- If `insert_success_count` stops increasing and packet evidence shows retransmit, `TCP Previous segment not captured`, or `TCP Dup ACK`, preserve the replication state and escalate with both-side packet captures, `netstat -nrv`, Sender and Receiver `pstack`, `V$REPSENDER`, `v$repreceiver`, and `altibase_rp.log` evidence.
 
 ## Troubleshooting Playbooks
 
@@ -1842,12 +1881,12 @@ Playbook block: replication gap grows
 
 Playbook block: network issue suspected
 
-1. On Standby, check whether `V$REPRECEIVER.INSERT_SUCCESS_COUNT` increases during replication or `SYNC`.
-2. Capture Sender and Receiver thread states with platform stack tools such as `pstack` where available.
-3. Use `netstat` to inspect send queue, receive queue, retransmission behavior, routing, gateway, subnet mask, and interface.
-4. Capture packets on both Sender and Receiver hosts, in binary capture format.
-5. Increase `REPLICATION_HBT_DETECT_TIME` temporarily before packet tests if heartbeat socket churn makes analysis difficult.
-6. Inspect captures in Wireshark or an equivalent packet analyzer for retransmission, duplicate ACK, missing segment, and one-way packet-loss patterns.
+1. On Standby, check whether `V$REPRECEIVER.INSERT_SUCCESS_COUNT` or `v$repreceiver.insert_success_count` increases during replication or `SYNC`.
+2. Capture Sender and Receiver thread states with platform stack tools such as `pstack` where available; look for `recvXlog... select` and `sendCmBlock... write`.
+3. Use `netstat` to inspect `sendq`, `recvq`, TCP retransmit behavior, routing, gateway, subnet mask, and interface; include `netstat -nrv`.
+4. Capture packets with `tcpdump` on both Sender and Receiver hosts, in binary capture format.
+5. Increase `REPLICATION_HBT_DETECT_TIME` temporarily before packet tests if heartbeat socket churn makes analysis difficult; restore the previous value after the test.
+6. Inspect captures in `wireshark` or an equivalent packet analyzer for retransmission, `TCP Dup ACK`, missing segment, and one-way packet-loss patterns.
 
 Network command examples:
 
@@ -1890,6 +1929,15 @@ Version and runtime block:
 - The documented Java requirement is JDK or JRE 6 or later. Some packages include a JRE and some require the user to provide Java; Replication Manager 1.4 release notes record a packaged JRE update from 6 to 8. Verify the exact tool release in use.
 - Replication Manager is documented for Altibase 4.3.9 or later. Because one tool can connect to multiple Altibase server versions, import a JDBC driver file that matches each target Altibase server version.
 - Replication Manager 1.2 release notes add multi-IP database support. Replication Manager 1.3 release notes add easier `Create Full-mesh Replications`, `Join to Full-mesh`, and external help-link behavior.
+
+Replication Manager 1.4 package block:
+
+- Release: `Replication Manager` `1.4`, dated `August 31, 2023`.
+- Software requirement: Java Development Kit or Java Runtime Environment `6` or later; the release notes still state JDK/JRE `6` or later even though `BUG-50573` updated the packaged `JRE` from `6` to `8`.
+- Compatible Altibase baseline: `Altibase 4.3.9` or later. This is tool connection compatibility, not replication protocol compatibility.
+- Windows package: `ReplicationManager_1.4.0-win32.win32.x86.zip`.
+- Linux package: `ReplicationManager_1.4.0-linux.gtk.x86.zip`.
+- Mixed-version rule: load the `JDBC driver` matching each target Altibase server version before creating or testing a DB connection.
 
 JDBC driver workflow:
 
@@ -1985,10 +2033,11 @@ flowchart LR
 
 Log Analyzer terms:
 
-- `XLog`: logical change log for DML and control events.
-- `XLog Sender`: analyzes active logs and sends XLogs to the collector.
+- `Log Analyzer`: CDC feature set made of an Altibase DBMS internal module, an external communication-connected module, and APIs for using XLog. Use it for integration with another DBMS or external detection and processing of database changes.
+- `XLog`: logical transformation of physical logs; it represents DML transaction history and control events delivered to the user application.
+- `XLog Sender`: analyzes active logs, creates XLogs, actively performs Handshake, and sends XLogs to the collector.
 - `XLog Collector`: receives metadata and XLogs, stores them in queues and pools, and exposes them through the API.
-- `Log Analysis API`: API used by a client application to receive, inspect, convert, acknowledge, and free XLogs.
+- `Log Analysis API`: API used by a client application to receive, inspect, convert, acknowledge, and free XLogs. Metadata needed to interpret XLogs is received during `Handshake` and is valid until the next `Handshake`.
 - `Handshake`: checks protocol version, metadata, role, and other prerequisites before XLog transfer.
 - `Restart SN`: active-log SN from which XLog Sender restarts.
 
@@ -2069,11 +2118,12 @@ API cautions:
 
 - The caller creates and retains `ALA_ErrorMgr`.
 - `ALA_ErrorMgr` contains only the most recent error.
+- If any Log Analysis API call returns `ALA_FAILURE`, inspect `ALA_ErrorMgr` through `ALA_GetErrorCode()`, `ALA_GetErrorLevel()`, and `ALA_GetErrorMessage()` before deciding recovery.
 - Use `ALA_GetErrorCode()` instead of reading `mErrorCode` directly.
 - `ALA_ERROR_FATAL` means destroy the XLog Collector with `ALA_DestroyXLogCollector()`.
 - `ALA_ERROR_ABORT` means perform `ALA_Handshake()` again.
 - `ALA_ERROR_INFO` requires action based on the specific code.
-- If applying XLogs to a database through ODBC, set `AUTOCOMMIT` to `OFF`.
+- If applying XLogs to a database through ODBC, turn `Autocommit` off; use `AUTOCOMMIT OFF` or the equivalent ODBC setting for the target apply path.
 - `ALA_ReceiveXLog()` and `ALA_GetXLog()` do not have to be called by the same thread.
 - After `ALA_FreeXLog()`, the XLog and related data must no longer be used.
 
@@ -2100,7 +2150,7 @@ CDC control XLog handling:
 Create an XLog Sender:
 
 ```sql
-CREATE REPLICATION log_analysis FOR ANALYSIS
+CREATE REPLICATION log_analysis FOR ANALYSIS [PROPAGATION]
 WITH 'collector_ip', collector_port
 FROM sys.t1 TO sys.t1;
 ```
@@ -2108,7 +2158,7 @@ FROM sys.t1 TO sys.t1;
 Create an XLog Sender using UNIX domain socket:
 
 ```sql
-CREATE REPLICATION log_analysis FOR ANALYSIS
+CREATE REPLICATION log_analysis FOR ANALYSIS [PROPAGATION]
 WITH UNIX_DOMAIN
 FROM sys.t1 TO sys.t1;
 ```
@@ -2149,12 +2199,20 @@ ALTER REPLICATION log_analysis FLUSH WAIT 10;
 XLog Sender cautions:
 
 - The XLog Collector must be online and waiting before XLog Sender start.
+- XLog Sender creation is forced to LAZY mode; EAGER mode cannot be specified.
 - `START AT SN` requires Archivelog mode and `REPLICATION_LOG_BUFFER_SIZE = 0`.
+- In customer wording, preserve the prerequisite as `archive log mode` plus `REPLICATION_LOG_BUFFER_SIZE = 0`.
 - With UNIX domain sockets, `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - A UNIX-domain XLog Sender cannot add hosts.
 - `ADD HOST`, `DROP HOST`, and `SET HOST` are only for TCP/IP XLog Collector endpoints.
 - `SET HOST` takes effect after the XLog Sender is restarted.
 - `FLUSH` can time out if the XLog Collector does not send ACK.
+
+Log Analyzer failure-handling answer block:
+
+```text
+If a Log Analysis API function returns `ALA_FAILURE`, do not guess from the failed call alone. Use the caller-owned `ALA_ErrorMgr` and retrieve `ALA_GetErrorCode()`, `ALA_GetErrorLevel()`, and `ALA_GetErrorMessage()`. For `ALA_ERROR_FATAL`, call `ALA_DestroyXLogCollector()` for that collector. For `ALA_ERROR_ABORT`, correct the cause and call `ALA_Handshake()` again. For `ALA_ERROR_INFO`, branch by the specific error code. If the CDC application applies XLogs through ODBC, turn `Autocommit` off. After `ALA_FreeXLog()`, do not read the XLog or related data again; `ALA_ReceiveXLog()` and `ALA_GetXLog()` may be called from different threads in the documented flow.
+```
 
 ## XLog Types
 
@@ -2379,7 +2437,7 @@ For Log Analyzer, treat ACK and Restart SN as part of recovery. Process all XLog
 Template: answer a Replication Manager question
 
 ```text
-Use Replication Manager for GUI-based replication object management after importing the JDBC driver that matches each target Altibase server and creating tested DB connections. Use `DB Connections`, `Replication Pairs`, `Map`, and `Properties` according to the task, and keep high-risk actions such as `Quick Start`, `Drop`, full-mesh creation, and `Sync` behind the same production checks used for SQL-based replication operations.
+Use Replication Manager for GUI-based replication object management after importing the JDBC driver that matches each target Altibase server and creating tested DB connections. For Replication Manager 1.4, preserve the release date `August 31, 2023`, the `BUG-50573` JRE packaging change from `6` to `8`, the `Altibase 4.3.9` or later compatibility baseline, and the package names `ReplicationManager_1.4.0-win32.win32.x86.zip` and `ReplicationManager_1.4.0-linux.gtk.x86.zip` when packaging is part of the question. Use `DB Connections`, `Replication Pairs`, `Map`, and `Properties` according to the task, and keep high-risk actions such as `Quick Start`, `Drop`, full-mesh creation, and `Sync` behind the same production checks used for SQL-based replication operations.
 ```
 
 Template: answer a failed or interrupted synchronization question

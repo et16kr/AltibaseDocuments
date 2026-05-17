@@ -34,9 +34,17 @@
 - Ask for Altibase version, remote DBMS, JDBC driver version, Java version, target host and port, transaction level, connector version, and network/firewall context before giving production-ready integration commands.
 - Treat sample accounts such as `SYS` and `MANAGER` as placeholders. Advise users to use least-privilege accounts and protected secret handling.
 - For SSL/TLS, truststores, certificate verification, and ciphers, use `11_java_jdbc_spring.md` and `18_security_ssl_tls.md` for Altibase JDBC/SSL parameter names. This attachment gives connector workflow context and should not invent connector-specific TLS placement unless the connector accepts the documented Altibase JDBC URL or properties.
+- For CDC, XLog, Log Analyzer, or Replication Manager questions, route the operational answer to `09_replication_ha_cdc.md`. Preserve `XLog Sender`, `XLog Collector`, `Log Analysis API`, `FOR ANALYSIS`, `ALA_FAILURE`, `Replication Manager`, `DB Connections`, `Replication Pairs`, `Map`, and `Properties` as literal tokens when those tools are involved.
 - For generic JDBC URL attributes, Spring Boot, and Hibernate application code, cross-reference the Java/JDBC/Spring attachment.
 - GoldenGate scope is limited to Altibase as the target database through the Oracle GoldenGate for Big Data JDBC Handler. Do not provide Oracle GoldenGate or Oracle GoldenGate for Big Data installation and product-level configuration steps beyond the Altibase JDBC Handler properties shown here; the source says to use the Oracle GoldenGate product manuals for that material.
 - For passwords in `dblink.conf`, use protected file permissions and secret handling. In Altibase 8.1 verified source, release notes say passwords encrypted with `altiEncrypt` can be used in `aku`, `dblink`, and Adapter configuration files; do not claim that behavior for 7.1 or 7.3 without an exact patch source.
+
+CDC and TLS boundary block:
+
+- `Log Analyzer` CDC is not a generic external connector setting. Create the Altibase-side XLog Sender with `CREATE REPLICATION ... FOR ANALYSIS`, start the external XLog Collector first, then use the `Log Analysis API` flow from `09_replication_ha_cdc.md`.
+- If an external adapter consumes Altibase changes through Log Analyzer, the collector listen endpoint is the adapter or application port; do not substitute `SSL_PORT_NO`, `REPLICATION_SSL_PORT_NO`, or a DB Link port unless the source for that adapter says so.
+- Connector TLS answers must distinguish the ordinary Altibase JDBC/ODBC/CLI TLS surface from replication SSL. Ordinary client TLS uses `SSL_PORT_NO` and client properties such as `ssl_enable`, `truststore_url`, `SSL_VERIFY`, or certificate paths; Altibase 8.1 verified-source replication SSL uses `REPLICATION_SSL_PORT_NO` and `USING SSL`.
+- Before combining connector, CDC, and TLS guidance, ask for the exact Altibase version, adapter/tool name and version, JDBC or ODBC/CLI driver version, host and port map, certificate mode, and whether the change stream is Log Analyzer CDC or table-to-table replication.
 
 ## Fast Decision Map
 

@@ -73,6 +73,17 @@ Port and endpoint separation:
 
 Platform caveat: before production JDBC or ODBC/CLI SSL/TLS guidance, verify the exact Altibase version and platform against supported-platform information. The SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel Linux / Intel-Linux; do not extend that support to other platforms without target-version evidence.
 
+Exact TLS and port token block:
+
+- 7.1 precheck: `OpenSSL` toolkit `0.9.4` through `1.0.2`, `Heartbleed`, `OPENSSL_NO_HEARTBEATS`, `Intel Linux`, `SSL_ENABLE`, `SSL_PORT_NO`, `SSL_CERT`, `SSL_KEY`.
+- Server TLS setup path: `$ALTIBASE_HOME/conf/altibase.properties`.
+- Server TLS properties: `SSL_ENABLE`, `SSL_PORT_NO`, `SSL_MAX_LISTEN`, `SSL_CLIENT_AUTHENTICATION`, `SSL_CERT`, `SSL_KEY`, `SSL_CA`, `SSL_CAPATH`, `SSL_CIPHER_LIST`, `SSL_CIPHER_SUITES`, `SSL_LOAD_CONFIG`.
+- Client TLS interfaces: `JDBC`, `ODBC/CLI`, `ADO.NET`, iSQL, and utilities use the ordinary server `SSL_PORT_NO`, not `REPLICATION_SSL_PORT_NO`.
+- ODBC/CLI client TLS properties: `SSL_CA`, `SSL_CAPATH`, `SSL_CERT`, `SSL_KEY`, `SSL_VERIFY`, `SSL_CIPHER`; connect with `CONNTYPE=SSL;PORT=20443` style syntax, not a client-side `SSL_PORT_NO`.
+- FIPS client loading: `ALTIBASE_SSL_LOAD_CONFIG=1` is for ODBC/CLI clients when `FIPS` module configuration must be loaded; skip it when `FIPS` is not used.
+- SSL monitoring: `V$SESSION`, `COMM_NAME`, and `ALTER DATABASE database_name SESSION CLOSE session_number`.
+- Altibase 8.1 verified source replication SSL: `USING SSL`, `REPLICATION_SSL_PORT_NO`, `Unsigned Integer`, `0`, `65535`, `read-only`, `single value`.
+
 ```mermaid
 flowchart LR
   Client[JDBC, ODBC/CLI, ADO.NET, iSQL, utility] -->|SSL/TLS to SSL_PORT_NO| DB1[Altibase server]
@@ -682,7 +693,7 @@ Troubleshooting block: replication SSL does not connect
 Template: server SSL/TLS setup
 
 ```text
-Configure server SSL/TLS in `altibase.properties`: set `SSL_ENABLE=1`, choose a unique `SSL_PORT_NO`, set `SSL_CERT`, `SSL_KEY`, and `SSL_CA` or `SSL_CAPATH`, then choose `SSL_CLIENT_AUTHENTICATION=0` for server-only authentication or `1` for mutual authentication. Restart the server and verify the startup output shows `Listener started : SSL on port ...`.
+Configure server SSL/TLS in `$ALTIBASE_HOME/conf/altibase.properties`: set `SSL_ENABLE=1`, choose a unique `SSL_PORT_NO`, set `SSL_CERT`, `SSL_KEY`, and `SSL_CA` or `SSL_CAPATH`, then choose `SSL_CLIENT_AUTHENTICATION=0` for server-only authentication or `1` for mutual authentication. For TLS 1.3 cipher candidates use `SSL_CIPHER_SUITES`; for FIPS or OpenSSL configuration loading use `SSL_LOAD_CONFIG=1`. Restart the server, verify startup output such as `Listener started : SSL on port ...`, then check `V$SESSION.COMM_NAME` for sessions whose `COMM_NAME` starts with `SSL`.
 ```
 
 Template: JDBC SSL/TLS setup
@@ -694,7 +705,7 @@ For JDBC, first verify that the target Altibase version and platform are support
 Template: ODBC/CLI SSL/TLS setup
 
 ```text
-For ODBC/CLI, first verify that the target Altibase version and platform are supported for SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux. Then verify OpenSSL on the client host, connect with the SSL connection type, and use the server `SSL_PORT_NO`. Configure `SSL_CA` or `SSL_CAPATH` for server verification. For mutual authentication, also configure `SSL_CERT` and `SSL_KEY`. Use `SSL_VERIFY=1` when the server certificate must be verified.
+For ODBC/CLI, first verify that the target Altibase version and platform are supported for SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux. Then verify OpenSSL on the client host, connect with `CONNTYPE=SSL;PORT=20443` style syntax where `PORT` is the server `SSL_PORT_NO`, and configure `SSL_CA` or `SSL_CAPATH` for server verification. For mutual authentication, also configure `SSL_CERT` and `SSL_KEY`. Use `SSL_VERIFY=1` when the server certificate must be verified; if verification fails, SSL Handshake fails and SSL communication does not proceed. `SSL_ENABLE`, `SSL_PORT_NO`, `SSL_MAX_LISTEN`, `SSL_CLIENT_AUTHENTICATION`, and `SSL_CIPHER_LIST` are server properties, not ODBC/CLI client properties. For ODBC/CLI `FIPS` module use, set `ALTIBASE_SSL_LOAD_CONFIG=1`; skip that step when `FIPS` is not used.
 ```
 
 Template: Altibase 8.1 replication SSL setup
