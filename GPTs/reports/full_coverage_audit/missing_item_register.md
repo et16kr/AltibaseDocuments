@@ -126,36 +126,32 @@ details that are not yet answer-ready in `03_sql_ddl_generation.md`.
 
 ### FCA-J007 Administrator Tablespace Account Privilege Missing Rows
 
-FCA-J007 cataloged 2 unresolved `Missing` rows for source-backed Administrator and SQL
-Reference account/schema/privilege details that are not yet answer-ready in the target
-attachments.
+FCA-J007 cataloged Administrator and SQL Reference account/schema/privilege details.
+`SRC-SQL-XVER-000007` was remediated by `FCA-J042` in
+`GPTs/attachments/02_administration_operations.md` and is no longer an active
+`Missing` row.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-SQL-XVER-000007 | sql_reference | cross-version | Manuals/Altibase_7.3/kor/SQL Reference.md | SQL Reference > GRANT > system privilege catalog | Complete system privilege list preserving exact privilege names, privilege families, and source cautions, especially SYS-only `ALTER DATABASE`, `DROP DATABASE`, `MANAGE TABLESPACE`, and `SYSDBA`. | GPTs/attachments/02_administration_operations.md | Add a privilege-catalog block or routing table with the complete source-backed system privilege names and caution notes, plus `SYSTEM_.SYS_PRIVILEGES_` validation SQL. | FCA-J007 | source locator: Manuals/Altibase_7.3/kor/SQL Reference.md lines 10950-11220; target attachments contain common privilege blocks and a `SYS_PRIVILEGES_` query but not the full exact system privilege catalog |
 
 ### FCA-J006 Administrator Operations Missing Rows
 
-FCA-J006 cataloged 2 unresolved `Missing` rows for source-backed Administrator manual
-storage-structure details that are not yet answer-ready in
-`02_administration_operations.md`.
+FCA-J006 cataloged Administrator manual storage-structure details. The two
+storage-structure rows below were remediated by `FCA-J042` in
+`GPTs/attachments/02_administration_operations.md` and are no longer active `Missing`
+rows.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-OTHER-XVER-000042 | administrator_operations | cross-version | Manuals/Altibase_7.3/kor/Administrator's Manual.md | Administrator's Manual > Tablespaces > disk tablespace structure | Disk tablespace physical/logical structure item block covering data files, segments, extents, pages, default `64 pages` / `512KB` extent, fixed `8KB` page size, and table/index/undo/TSS segment roles. | GPTs/attachments/02_administration_operations.md | Add a compact storage-structure block or routing entry that preserves the exact storage units, numeric sizes, and segment categories, with cross-reference to `06_data_dictionary_performance_views.md` for view-based checks. | FCA-J006 | rg -n '세그먼트\|익스텐트\|64개의 페이지\|512KB\|페이지 크기는 8KB\|TSS' Manuals/Altibase_7.3/kor/Administrator's\ Manual.md GPTs/attachments/02_administration_operations.md |
-| SRC-OTHER-XVER-000043 | administrator_operations | cross-version | Manuals/Altibase_7.3/kor/Administrator's Manual.md | Administrator's Manual > Tablespaces > memory and volatile tablespace structure | Memory and volatile tablespace structure item block covering checkpoint image files, ping-pong checkpointing, page lists, out-place update, volatile no-checkpoint-image behavior, and no disk logging/checkpoint participation. | GPTs/attachments/02_administration_operations.md | Add a compact storage-structure block or routing entry that distinguishes persistent memory tablespaces from volatile tablespaces, preserves checkpoint-image and page-list terms, and routes 8.1 checkpoint-scale exceptions to the existing 8.1 checkpoint block. | FCA-J006 | rg -n '체크포인트 이미지 파일\|핑퐁\|페이지 리스트\|out-place\|휘발성 테이블스페이스\|로깅' Manuals/Altibase_7.3/kor/Administrator's\ Manual.md GPTs/attachments/02_administration_operations.md |
 
 ### FCA-J005 Installation And Getting-Started Missing Rows
 
-FCA-J005 cataloged 4 unresolved `Missing` rows for source-backed installation/manual
-details that are not yet answer-ready in `01_getting_started_installation.md`.
+FCA-J005 cataloged installation/manual details. The four rows below were remediated by
+`FCA-J042` in `GPTs/attachments/01_getting_started_installation.md` and are no longer
+active `Missing` rows.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-OTHER-XVER-000006 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > Appendix A > Setting User Resource Limit Values | Exact client stack-size minimum `70KB` and resource-limit explanation beside `ulimit`, `unlimited`, and `core file size` cautions. | GPTs/attachments/01_getting_started_installation.md | Add a compact pre-install resource-limit item preserving `Stack size` and `70KB`, or route it to a covered OS prerequisite block. | FCA-J005 | rg -n 'ulimit\|core file size\|Stack size\|70KB' Manuals/Altibase_7.3/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
-| SRC-OTHER-XVER-000025 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > APatch directory > file inventory | Exact APatch file inventory and role list for `patchinfo`, `pkg_patch_<version>.txt`, `altibase_base_install.log`, `Backup`, `uninstall-base`, and `rollback-p<patch_version>`. | GPTs/attachments/01_getting_started_installation.md | Add or route an APatch inventory block that distinguishes metadata, revision logs, base-install logs, rollback backups, and uninstall executables. | FCA-J005 | rg -n 'patchinfo\|pkg_patch_\|altibase_base_install.log\|Backup\|uninstall-base\|rollback-p' Manuals/Altibase_7.3/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
-| SRC-OTHER-XVER-000028 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > Patching products > full package versus patch package step matrix | Answer-ready server/client full-package versus patch-package step matrix, including which steps are skipped during patch installation. | GPTs/attachments/01_getting_started_installation.md | Add a compact table preserving `Full Package`, `Patch Package`, `Checking the Patch Version`, and license/property step differences for server and client packages. | FCA-J005 | rg -n 'Full Package\|Patch Package\|Checking the Patch Version\|Registering the Altibase License Key' Manuals/Altibase_7.3/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
-| SRC-OTHER-XVER-000029 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > Uninstalling Altibase Products > Full Uninstallation | Full uninstallation runbook using `uninstall-base` and the requirement to manually delete Altibase environment variables from the account profile. | GPTs/attachments/01_getting_started_installation.md | Add or route a guarded uninstall block with preconditions, `APatch` executable selection, profile cleanup, and stop conditions for data/log preservation. | FCA-J005 | rg -n 'uninstall-base\|environment variable\|manually delete\|Full Uninstallation\|APatch' Manuals/Altibase_7.3/eng/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
 
 ### FCA-J004 Release, Patch, And Platform Missing Rows
 

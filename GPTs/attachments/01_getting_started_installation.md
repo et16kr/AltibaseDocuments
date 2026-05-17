@@ -19,8 +19,8 @@
 
 Use this compact index before scanning the installation runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact first-start, environment, startup, shutdown, or patch block.
 
-- Aliases and customer wording: install Altibase, server package, client package, post-install, first database, create database, startup phases, ordinary users cannot connect, shutdown modes, license file, patch rollback, APatch, PSM catalog loading.
-- Exact-token anchors: `$ALTIBASE_HOME`, `$ALTIBASE_HOME/conf/altibase_user.env`, `$ALTIBASE_HOME/conf/license`, `$ALTIBASE_HOME/install/pre_install.sh`, `$ALTIBASE_HOME/install/post_install.sh`, `post_install.sh dbcreate`, `server create`, `server start`, `server stop`, `server downgrade`, `isql`, `catproc.sql`, `PRE-PROCESS`, `PRE_PROCESS`, `PROCESS`, `CONTROL`, `META`, `SERVICE`.
+- Aliases and customer wording: install Altibase, server package, client package, post-install, first database, create database, startup phases, ordinary users cannot connect, shutdown modes, license file, patch rollback, APatch, full uninstall, PSM catalog loading.
+- Exact-token anchors: `$ALTIBASE_HOME`, `$ALTIBASE_HOME/conf/altibase_user.env`, `$ALTIBASE_HOME/conf/license`, `$ALTIBASE_HOME/install/pre_install.sh`, `$ALTIBASE_HOME/install/post_install.sh`, `post_install.sh dbcreate`, `server create`, `server start`, `server stop`, `server downgrade`, `isql`, `catproc.sql`, `ulimit`, `Stack size`, `70KB`, `core file size`, `$ALTIBASE_HOME/APatch`, `$ALTIBASE_HOME/APatch/patchinfo`, `pkg_patch_<version>.txt`, `altibase_base_install.log`, `Backup`, `uninstall-base`, `uninstall-p<patch_version>`, `rollback-p<patch_version>`, `Full Package`, `Patch Package`, `PRE-PROCESS`, `PRE_PROCESS`, `PROCESS`, `CONTROL`, `META`, `SERVICE`.
 - Answer route: use this file for package and first-run sequencing; use `02_administration_operations.md` when the question moves from first start into backup, recovery, storage, accounts, privileges, or tablespace operation.
 - Missing-input trigger: before copy-ready installation or patch commands, ask for exact Altibase version and patch, server or client package target, OS and CPU architecture, `ALTIBASE_HOME`, port, character sets, license state, and whether installer database-creation properties were supplied.
 
@@ -106,17 +106,59 @@ Anchor: 7.3 platform and pre-install checks
 - For Linux x86-64, the cited 7.3 table lists `Red Hat Enterprise Linux 6` and `Red Hat Enterprise Linux 7` for server and client with `GNU glibc 2.12 ~ 2.33`.
 - For RHEL minor versions or non-RHEL Linux, consult the repository supported-platform document instead of assuming every 64-bit Linux distribution is supported.
 - Before blaming startup on database files, check `ulimit`, avoid unlimited `core file size`, set `RemoveIPC=no` in `/etc/systemd/logind.conf` where required, and set Transparent Huge Pages to `never`.
+- User resource limits to review include `File Size`, `Data segment size`, `Max memory size`, `Open files (descriptor)`, `Stack size`, and `Virtual memory`.
+- Unix-like installation guidance recommends setting the Altibase account resource limits to `unlimited` except `core file size`, because an Altibase server crash can dump the memory database into a core file and exhaust disk space.
+- Altibase client products require `Stack size` of at least `70KB`.
 
 Anchor: APatch rollback and meta downgrade
 
 - Version scope: 7.3 Installation Guide patch-administration source; exact rollback availability can be platform-specific.
 - `$ALTIBASE_HOME/APatch` stores package metadata, patch uninstall executables, and rollback backup directories for installer-managed files.
+- `patchinfo` records the installed base release, patch version, operating-system, compiler, and Java build-environment information.
+- `pkg_patch_<version>.txt` is generated whenever a product is patched and records the source-code revision numbers used for that patch. Example package tokens include `pkg_patch_0_0_0_0.txt` and `pkg_patch_0_0_0_10.txt`.
+- `altibase_base_install.log` records all actions from the most recent base installation.
+- The `Backup` directory contains separate backup directories for each patch. These backups are used for patch rollback.
 - `uninstall-base` removes the base product; `uninstall-p<patch_version>` removes a patch; `rollback-p<patch_version>` stores backup files for the corresponding patch.
 - Only the `latest patch` can be rolled back through this package-uninstaller path.
 - Package rollback does not back up post-install data files or log files. Back up product home, data files, log files, log anchors, and configuration before patch work.
+- On HP platforms, installer patch automatic backup and rollback are not supported; manually back up data and log files before patching.
 - Before `server downgrade`, stop Altibase with `server stop`; if it succeeds, the output transitions through `PROCESS`, `CONTROL`, `META`, and `DOWNGRADE`.
 - If meta downgrade fails, investigate `$ALTIBASE_HOME/trc/altibase_boot.log` and `$ALTIBASE_HOME/trc/altibase_qp.log`.
 - After successful `server downgrade`, delete the patch before starting the server again; otherwise the patched binary can run meta upgrade again.
+
+Anchor: 7.3 full package versus patch package steps
+
+Use this matrix when a customer asks which installer prompts should appear during a
+7.3 server or client full installation versus a patch installation. `O` means the
+source matrix includes the step.
+
+Server product:
+
+| Installation step | Full Package | Patch Package |
+| --- | --- | --- |
+| Checking the Environment Before Installation | O | O |
+| Starting the Altibase Package Installer | O | O |
+| Checking System Parameters | O |  |
+| Entering the Installation Directory | O | O |
+| Checking the Patch Version |  | O |
+| Setting Altibase Properties | O |  |
+| Checking Configured Properties | O |  |
+| Installing the Altibase Product | O | O |
+| Registering the Altibase License Key | O |  |
+| Previewing the Altibase Quick Setup Guide | O |  |
+| Finishing Installation | O | O |
+
+Client product:
+
+| Installation step | Full Package | Patch Package |
+| --- | --- | --- |
+| Checking the Environment Before Installation | O | O |
+| Starting the Altibase Package Installer | O | O |
+| Entering the Installation Directory | O | O |
+| Checking the Patch Version |  | O |
+| Setting Altibase Properties | O |  |
+| Installing the Altibase Product | O | O |
+| Finishing Installation | O | O |
 
 ## Installation Flow
 
@@ -188,7 +230,7 @@ Item: operating system account
 Install and operate Altibase with the account that owns the Altibase installation. Startup and shutdown commands should be run by that installation account. Kernel parameters require `root`.
 
 Item: user resource limits
-Check user limits with `ulimit`. For Unix-like systems, the manuals recommend setting the Altibase account resource limits to `unlimited`, except that core file size should be handled carefully because a crash dump can be very large.
+Check user limits with `ulimit`. Review `File Size`, `Data segment size`, `Max memory size`, `Open files (descriptor)`, `Stack size`, and `Virtual memory`. For Unix-like systems, the manuals recommend setting the Altibase account resource limits to `unlimited`, except that `core file size` should not be set to `unlimited` because an Altibase server crash can dump the memory database into the core file and exhaust disk. Altibase client products require `Stack size` of at least `70KB`.
 
 Item: kernel parameters
 Configure shared memory, semaphore, file-cache, and related OS settings before running Altibase. The installer shows recommended values, and `$ALTIBASE_HOME/install/pre_install.sh` contains the post-installation reference for minimum kernel settings.
@@ -388,7 +430,7 @@ Item: `$ALTIBASE_HOME/packages/catproc.sql`
 This script installs scripts required for PSM use when they were not run during installation.
 
 Item: `$ALTIBASE_HOME/APatch`
-This directory stores patch metadata, uninstall scripts such as `uninstall-base`, and rollback material for patch packages. Data files and log files are not backed up by the package rollback mechanism.
+This directory stores patch metadata, uninstall scripts, and rollback material for patch packages. Use `patchinfo` for installed base and patch metadata, `pkg_patch_<version>.txt` for patch revision information, `altibase_base_install.log` for the most recent base-install action log, `Backup` directories for per-patch rollback backups, `uninstall-base` for base-product removal, `uninstall-p<patch_version>` for patch removal, and `rollback-p<patch_version>` for backed-up patch files. Data files and log files are not backed up by the package rollback mechanism.
 
 ## First Database Creation Runbook
 
@@ -680,6 +722,55 @@ If a meta downgrade is attempted while the server is running, the documented err
 ```text
 you must shutdown first before server downgrade
 ```
+
+## Full Uninstallation Runbook
+
+Use this only for products installed by the Altibase Package Installer. The uninstaller
+can remove the installed product or patch-managed files, but in Unix environments it
+does not remove Altibase environment variables from the account profile.
+
+Required inputs:
+
+- Exact Altibase version and patch level.
+- Whether the target is a base product full uninstall or a patch rollback.
+- `ALTIBASE_HOME`, installation account, and shell profile file such as `.profile`,
+  `.bash_profile`, or `.bashrc`.
+- Confirmation that product files, data files, log files, log anchors, configuration,
+  and any required backup or recovery evidence have been preserved separately.
+
+Base product removal:
+
+```bash
+cd "$ALTIBASE_HOME/APatch"
+./uninstall-base
+```
+
+Patch removal:
+
+```bash
+cd "$ALTIBASE_HOME/APatch"
+./uninstall-p<patch_version>
+```
+
+Cleanup after the uninstaller:
+
+1. Manually delete Altibase-related environment variable lines from the account's
+   shell profile because the Unix uninstaller does not remove them. In exact source
+   terms, the customer must `manually delete` those Altibase environment variables.
+2. Remove or refresh exported values such as `ALTIBASE_HOME`, `ALTIBASE_PORT_NO`,
+   `PATH`, `LD_LIBRARY_PATH`, and `CLASSPATH` in active shells before testing another
+   installation.
+3. Keep database data files and log files separate from the uninstaller decision. The
+   package rollback/uninstall path excludes files created after installation, including
+   database data files and log files.
+
+Stop conditions:
+
+- Do not run `uninstall-base` when the request is only to remove the latest patch.
+- Do not promise data-file or log-file rollback from `$ALTIBASE_HOME/APatch`; package
+  rollback covers package-installed files only.
+- Do not tell the customer the environment is clean until the account profile has been
+  manually checked for Altibase variables.
 
 ## Troubleshooting First-Run Failures
 

@@ -18,8 +18,8 @@
 
 Use this compact index before scanning the long administration runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact account, backup, recovery, tablespace, datafile, or log-anchor block.
 
-- Aliases and customer wording: administration, operations, runbook, backup, restore, recover, incomplete recovery, media recovery, archive log mode, noarchive log mode, loganchor, checkpoint image, datafile rename, tablespace resize, user and role administration, privileges, storage lifecycle, destructive operation.
-- Exact-token anchors: `SYS`, `SYSTEM_`, `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_TEMP`, `SYS_TBS_DISK_UNDO`, `CREATE_LSN_FILENO`, `CURRSIZE`, `OPENED`, `BEGIN BACKUP`, `END BACKUP`, `ALTER DATABASE RECOVER DATABASE`, `ALTER DATABASE db_name META RESETLOGS`, `ALTER DATABASE dbname SERVICE`, `RESETLOGS`, `DROP TABLESPACE`, `DISCARD`, `REUSE`.
+- Aliases and customer wording: administration, operations, runbook, backup, restore, recover, incomplete recovery, media recovery, archive log mode, noarchive log mode, loganchor, checkpoint image, datafile rename, tablespace resize, tablespace structure, system privilege catalog, user and role administration, privileges, storage lifecycle, destructive operation.
+- Exact-token anchors: `SYS`, `SYSTEM_`, `SYSTEM_.SYS_PRIVILEGES_`, `PrivID`, `ALL`, `ALTER SYSTEM`, `ALTER DATABASE`, `DROP DATABASE`, `MANAGE TABLESPACE`, `SYSDBA`, `CREATE PUBLIC_DATABASE LINK`, `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_TEMP`, `SYS_TBS_DISK_UNDO`, `CREATE_LSN_FILENO`, `CURRSIZE`, `OPENED`, `BEGIN BACKUP`, `END BACKUP`, `ALTER DATABASE RECOVER DATABASE`, `ALTER DATABASE db_name META RESETLOGS`, `ALTER DATABASE dbname SERVICE`, `RESETLOGS`, `DROP TABLESPACE`, `DISCARD`, `REUSE`, `segment`, `extent`, `64 pages`, `512KB`, `8KB`, `Table segment`, `Index segment`, `Undo segment`, `TSS segment`, `checkpoint image file`, `ping-pong checkpoint`, `page list`, `out-place update`.
 - Answer route: use this file for operational decision steps and safety checks; use `03_sql_ddl_generation.md` for generated SQL syntax and examples; use `06_data_dictionary_performance_views.md` for object, space, backup, log, and state verification queries.
 - Stop condition: for destructive actions or recovery, require version, startup phase, database mode, target object or file, backup status, archive-log state, replication state, downtime window, and rollback plan before giving production-ready steps.
 
@@ -545,12 +545,91 @@ Role rules:
 
 Privilege block: system privileges
 
-- Database: `ALTER SYSTEM`, `ALTER DATABASE`, `DROP DATABASE`.
-- Tablespace: `CREATE TABLESPACE`, `ALTER TABLESPACE`, `DROP TABLESPACE`. `MANAGE TABLESPACE` is documented as SYS-only; do not grant it or recommend it in customer grant scripts.
-- User: `CREATE USER`, `ALTER USER`, `DROP USER`.
-- Table: `CREATE TABLE`, `CREATE ANY TABLE`, `ALTER ANY TABLE`, `DROP ANY TABLE`, `SELECT ANY TABLE`, `INSERT ANY TABLE`, `UPDATE ANY TABLE`, `DELETE ANY TABLE`, `LOCK ANY TABLE`.
-- Session: `CREATE SESSION`, `ALTER SESSION`.
-- Other common families: index, sequence, procedure, view, role, synonym, materialized view, trigger, directory, database link, library, and job privileges.
+System privileges allow DDL and DCL work and can affect objects across schemas. `SYS`
+or a user with `GRANT ANY PRIVILEGES` can grant system privileges. `SYS` owns all
+system privileges. `ANY` privileges apply to all schemas. A user must reconnect before
+newly granted role privileges are enabled.
+The SQL Reference caution treats a `CREATE` system privilege as including deletion of
+that object type. It also states that index creation included through table creation is
+an object privilege, not a separate system privilege.
+
+Use the source-backed catalog below when a customer asks which exact system privileges
+Altibase supports. Confirm the installed catalog with:
+
+```sql
+SELECT * FROM SYSTEM_.SYS_PRIVILEGES_ where PRIV_TYPE = 2;
+```
+
+| PrivID | Family | System privilege | Customer-answer purpose or caution |
+| ---: | --- | --- | --- |
+| `1` | all | `ALL` | Grants all system privileges except `ALTER DATABASE`, `DROP DATABASE`, and `MANAGE TABLESPACE`; avoid as a routine application grant. |
+| `201` | database | `ALTER SYSTEM` | Dynamically change Altibase property settings where the property supports it. |
+| `233` | database | `ALTER DATABASE` | SYS-only according to the system privilege catalog. |
+| `234` | database | `DROP DATABASE` | SYS-only according to the system privilege catalog. |
+| `202` | index | `CREATE ANY INDEX` | Create indexes in any schema. |
+| `203` | index | `ALTER ANY INDEX` | Alter any index definition. |
+| `204` | index | `DROP ANY INDEX` | Drop any index. |
+| `205` | procedure | `CREATE PROCEDURE` | Create stored procedures or functions in the user's own schema. |
+| `206` | procedure | `CREATE ANY PROCEDURE` | Create stored procedures or functions in any schema. |
+| `207` | procedure | `ALTER ANY PROCEDURE` | Recompile any stored procedure or function. |
+| `208` | procedure | `DROP ANY PROCEDURE` | Drop any stored procedure or function. |
+| `209` | procedure | `EXECUTE ANY PROCEDURE` | Execute any stored procedure or function. |
+| `210` | sequence | `CREATE SEQUENCE` | Create sequences in the user's own schema. |
+| `211` | sequence | `CREATE ANY SEQUENCE` | Create sequences in any schema. |
+| `212` | sequence | `ALTER ANY SEQUENCE` | Alter any sequence definition. |
+| `213` | sequence | `DROP ANY SEQUENCE` | Drop any sequence. |
+| `214` | sequence | `SELECT ANY SEQUENCE` | Query any sequence. |
+| `215` | session | `CREATE SESSION` | Connect to the server. |
+| `216` | session | `ALTER SESSION` | Automatically granted to all users. |
+| `217` | table | `CREATE TABLE` | Create tables in the user's own schema. The SQL Reference caution says this also includes dropping the created object. |
+| `218` | table | `CREATE ANY TABLE` | Create tables in any schema. |
+| `219` | table | `ALTER ANY TABLE` | Alter any table definition or truncate all records from any table. |
+| `220` | table | `DELETE ANY TABLE` | Delete records from any table. |
+| `221` | table | `DROP ANY TABLE` | Drop any table. |
+| `222` | table | `INSERT ANY TABLE` | Insert rows into any table. |
+| `223` | table | `LOCK ANY TABLE` | Lock any table. |
+| `224` | table | `SELECT ANY TABLE` | Query data from any table. |
+| `225` | table | `UPDATE ANY TABLE` | Modify data in any table. |
+| `226` | user | `CREATE USER` | Create users. |
+| `227` | user | `ALTER USER` | Change any user's password. |
+| `228` | user | `DROP USER` | Remove users. |
+| `229` | view | `CREATE VIEW` | Create views in the user's own schema. |
+| `230` | view | `CREATE ANY VIEW` | Create views in any schema. |
+| `231` | view | `DROP ANY VIEW` | Drop any view. |
+| `232` | miscellaneous | `GRANT ANY PRIVILEGES` | Grant any system privilege to another user. |
+| `235` | tablespaces | `CREATE TABLESPACE` | Create tablespaces. |
+| `236` | tablespaces | `ALTER TABLESPACE` | Change tablespace definitions. |
+| `237` | tablespaces | `DROP TABLESPACE` | Drop tablespaces. |
+| `238` | tablespaces | `MANAGE TABLESPACE` | SYS-only according to the system privilege catalog; do not grant it in customer scripts. |
+| `240` | tablespaces | `SYSDBA` | SYS-only according to the system privilege catalog. |
+| `241` | trigger | `CREATE TRIGGER` | Create triggers in the user's own schema. |
+| `242` | trigger | `CREATE ANY TRIGGER` | Create triggers in any schema. |
+| `243` | trigger | `ALTER ANY TRIGGER` | Alter any trigger definition. |
+| `244` | trigger | `DROP ANY TRIGGER` | Drop any trigger. |
+| `245` | synonym | `CREATE SYNONYM` | Create private synonyms owned by the user. |
+| `246` | synonym | `CREATE PUBLIC SYNONYM` | Create public synonyms. |
+| `247` | synonym | `CREATE ANY SYNONYM` | Create private synonyms in any schema. |
+| `248` | synonym | `DROP ANY SYNONYM` | Drop private synonyms. |
+| `249` | synonym | `DROP PUBLIC SYNONYM` | Drop public synonyms. |
+| `250` | directory | `CREATE ANY DIRECTORY` | Create directory objects for stored-procedure file control. |
+| `251` | directory | `DROP ANY DIRECTORY` | Drop directory objects. |
+| `252` | materialized view | `CREATE MATERIALIZED VIEW` | Create materialized views in the user's own schema. |
+| `253` | materialized view | `CREATE ANY MATERIALIZED VIEW` | Create materialized views in any schema. |
+| `254` | materialized view | `ALTER ANY MATERIALIZED VIEW` | Alter any materialized view. |
+| `255` | materialized view | `DROP ANY MATERIALIZED VIEW` | Drop any materialized view. |
+| `256` | library | `CREATE LIBRARY` | Create library objects in the user's own schema. |
+| `257` | library | `CREATE ANY LIBRARY` | Create library objects in any schema. |
+| `258` | library | `ALTER ANY LIBRARY` | Compile any library object. |
+| `259` | library | `DROP ANY LIBRARY` | Remove any library object. |
+| `260` | database link | `CREATE DATABASE LINK` | Create database links. |
+| `261` | database link | `CREATE PUBLIC_DATABASE LINK` | Create public database links. Preserve the source privilege token with the underscore. |
+| `262` | database link | `DROP PUBLIC DATABASE LINK` | Drop public database links. |
+| `263` | role | `CREATE ROLE` | Create roles. |
+| `264` | role | `DROP ANY ROLE` | Drop any role. |
+| `265` | role | `GRANT ANY ROLE` | Grant any role to another user. |
+| `266` | job | `CREATE ANY JOB` | Create jobs in any schema. |
+| `268` | job | `ALTER ANY JOB` | Alter any job. |
+| `267` | job | `DROP ANY JOB` | Drop any job. |
 
 Object privilege support blocks:
 
@@ -1014,6 +1093,21 @@ flowchart TD
   CP0 --> FILE0[TablespaceName-0-fileNo]
   CP1 --> FILE1[TablespaceName-1-fileNo]
 ```
+
+Storage structure item blocks:
+
+| Structure | Answer-ready details |
+| --- | --- |
+| Disk tablespace physical structure | A disk tablespace stores all data in disk space. It consists physically of one or more data files. A data file exists as an operating-system file. Segments are stored logically in a tablespace and physically in data files. |
+| Disk tablespace logical structure | Disk tablespaces consist logically of segments, extents, and pages. A segment is a set of extents and is the allocation unit for a table or index. Each segment manages `Free` and `Full` extent lists and requests more extents from the tablespace when free extents are insufficient. |
+| Disk segment types | `Table segment` or `table segment`: stores table data, including a whole non-partitioned table or one partition of a partitioned table. `Index segment` or `index segment`: stores all data for one index or one partition of a partitioned index. `Undo segment` or `undo segment`: stores before-image data used to undo changes during rollback. `TSS segment`: manages `TSS` or `Transaction Status Slot` records and is allocated in the system undo tablespace. |
+| Extent | An `extent` allocates consecutive pages for storing data objects. When free pages are insufficient, Altibase allocates pages from the tablespace by extent. One extent is `64 pages` or `512KB` by default, but extent size can differ by tablespace. |
+| Page | A page is the minimum storage unit for table and index records and the minimum I/O unit. Altibase page size is `8KB`; multiple page sizes are not supported. Page categories include data pages, index pages, and undo pages. |
+| Memory tablespace physical structure | A memory tablespace stores data in linear memory space. Its physical backup structure is the checkpoint image file. Checkpoint image files are not the same kind of live storage as disk tablespace data files, but they are required to shorten backup and recovery time. |
+| Memory tablespace logical structure | Memory space is divided into pages, and table data is maintained through `page list` structures. Memory tablespaces do not need segment or extent concepts for table management. Memory table indexes do not use page lists and are rebuilt when the system restarts. |
+| Memory checkpoint image files | During checkpoint, memory pages are stored in operating-system files. Altibase uses `ping-pong checkpoint` behavior with two checkpoint image sets, `0` and `1`, alternating at each checkpoint. Each checkpoint image can be split into multiple smaller files to distribute disk I/O. |
+| Memory update method | Memory tablespaces use `out-place update`: instead of modifying an existing record image directly, Altibase allocates space for a new version and treats the operation as delete plus insert. |
+| Volatile tablespace structure | A volatile tablespace has the same in-memory page and `page list` structure as a memory tablespace, but it has no checkpoint image file. Volatile data resides only in memory. Volatile work has `no disk logging` and is excluded from checkpointing, so volatile data is lost when the server shuts down. |
 
 Tablespace type block: disk data tablespace
 

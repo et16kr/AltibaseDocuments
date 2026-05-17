@@ -1040,3 +1040,38 @@ Each entry should include:
 - Source policy: used repository-local selected sources only, with Korean release-note and 7.3 property precedence where English extraction differed, including `TRANSACTION_SEGMENT_COUNT` range `[1, 16384]` and read-only startup scope.
 - Evidence: scoped literal-token check across the 81 rows returned `rows with absent literal tokens 0`; detailed evidence commands are recorded in the touched catalog and matrix rows.
 - Validation: standard verification results are recorded in the final job output for `FCA-J041`.
+
+### FCA-J042
+
+- Changed files: `GPTs/attachments/01_getting_started_installation.md`,
+  `GPTs/attachments/02_administration_operations.md`,
+  `source_item_catalog.tsv`, `source_to_attachment_matrix.tsv`,
+  `missing_item_register.md`, and this remediation log.
+- Product coverage changes: remediated the seven scoped operation/installation
+  `Missing` rows: `SRC-OTHER-XVER-000006`, `SRC-OTHER-XVER-000025`,
+  `SRC-OTHER-XVER-000028`, `SRC-OTHER-XVER-000029`, `SRC-OTHER-XVER-000042`,
+  `SRC-OTHER-XVER-000043`, and `SRC-SQL-XVER-000007`. No unresolved `Missing` or
+  `Retrieval-weak` rows remain for attachments `01`, `02`, or `07`.
+- Attachment changes: `01_getting_started_installation.md` now preserves the
+  source-backed `ulimit`/`Stack size`/`70KB` resource-limit rule, exact APatch file
+  inventory, server and client `Full Package` versus `Patch Package` matrices, and a
+  guarded `uninstall-base` full-uninstallation/profile-cleanup runbook.
+  `02_administration_operations.md` now preserves disk/memory/volatile tablespace
+  structure details, exact storage units and segment types, and the complete
+  `SYSTEM_.SYS_PRIVILEGES_` system privilege catalog with `PrivID`, exact names,
+  purposes, and SYS-only cautions.
+- Source evidence: Korean Altibase 7.3 Installation Guide APatch, patch, uninstall,
+  and resource-limit sections; Korean Altibase 7.3 Administrator's Manual tablespace
+  structure sections; and Korean Altibase 7.3 SQL Reference GRANT system-privilege
+  catalog. Detailed evidence commands are recorded in the touched catalog and matrix
+  rows.
+- Disposition changes: the seven touched catalog and matrix rows now use
+  `coverage_status=Covered`, `audit_job=FCA-J042`, and answer-ready attachment
+  anchors. No `Guardrail` or `Out-of-scope` disposition was added.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed; `catalog-qa` and `matrix-qa` passed; scoped literal-token check passed for
+  all seven FCA-J042 rows; scoped unresolved-row checks found no `Missing` or
+  `Retrieval-weak` rows for attachments `01`, `02`, or `07`; `git diff --check`
+  passed; `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable `Blocker`, `High`, `Medium`, or `Low` rows.
