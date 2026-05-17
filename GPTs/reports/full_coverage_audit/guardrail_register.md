@@ -21,6 +21,18 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J023 Error Reference Source Drift Guardrail
+
+FCA-J023 cataloged the 7.1 `SD Error Code` exact-code rows and added one `Guardrail`
+row for the cross-version `sdERR_*` source-drift boundary. Answers must use the 7.1
+exact-code map only for 7.1 unless the customer supplies installed-version evidence for
+another target.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-ERR-XVER-000561 | Guardrail | error_message_reference | cross-version | Manuals/Altibase_7.1/kor/Error Message Reference.md | Error Message Reference > SD Error Code > source drift boundary | Require exact installed version, patch level, full error line, and installed manual/runtime evidence before making a 7.3 or 8.1 `sdERR_*` claim because checked Korean 7.3 and 8.1 sources do not list `SD Error Code`. | Ask for `altibase -v`, full error line, target patch, failed SQL/command, shard metadata or runtime evidence, and installed manual/runtime proof; otherwise keep unsupported cause/action fields as `Unknown from the supplied message`. | GPTs/attachments/07_error_messages_troubleshooting.md | FCA-J023 | source locators: 7.1 Korean Error Message Reference `SD Error Code`; checked 7.3 and 8.1 verified source Korean Error Message References do not list `SD Error Code`; attachment source-drift caution and exact-code map inserted by FCA-J023. |
+
+
 ### FCA-J019 View Column And Metadata Guardrails
 
 FCA-J019 cataloged 7 `Guardrail` rows for exact view-column layout, installed

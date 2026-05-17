@@ -44,7 +44,7 @@ evidence where the entry says those inputs are required.
 | `GAP-J002-007` | Guardrail for exact patch/platform support boundaries. |
 | `GAP-J002-008` | Guardrail for exact error codes not yet consolidated into grouped blocks. |
 | `GAP-J022-001` | Guardrail for `sdERR_*` source drift and installed-version evidence. |
-| `GAP-J026-001` | Guardrail for Spatial `stERR_*` exact-code itemization. |
+| `GAP-J026-001` | Guardrail for Spatial `stERR_*` exact-code diagnosis and customer-evidence requirements. |
 | `GAP-J002-009`, `GAP-J002-012`, `GAP-J002-013`, `GAP-J002-016`, `GAP-J002-018` | Verification-limited because source-backed documentation exists but live execution was not performed. |
 | `GAP-J002-011`, `GAP-J002-014`, `GAP-J002-015`, `GAP-J004-001` | Guardrail for installed tool/client/package, Java/runtime, exact header, or lower-retrieval property detail limits. |
 | `GAP-J010-001` | Closed-trace after J040 final retrieval validation; exact-version SQL edge cases remain governed by the general missing-input rule. |
@@ -322,6 +322,11 @@ evidence where the entry says those inputs are required.
   cause/action fields to `Unknown from the supplied message`, ask for version, patch,
   full error line, SQL/command, object definition, and trace excerpt, and provide only
   source-backed next checks.
+- FCA-J023 full coverage audit update: `07_error_messages_troubleshooting.md` now
+  includes grouped exact-code maps for Spatial `ST Error Code` and 7.1 `SD Error Code`
+  rows. `GAP-J026-001` is no longer a missing exact-map gap; it remains a
+  customer-evidence guardrail for Spatial diagnosis, while `GAP-J022-001` remains the
+  7.3/8.1 `sdERR_*` source-drift guardrail.
 
 ### GAP-J022-001: `SD Error Code` source drift needs exact installed-version evidence
 
@@ -352,20 +357,22 @@ evidence where the entry says those inputs are required.
 - J040 final disposition: keep this as a final guardrail. Do not claim 7.3 or 8.1
   `sdERR_*` support from the checked Korean sources alone; require exact installed
   version and runtime/manual evidence.
+- FCA-J023 full coverage audit update: `07_error_messages_troubleshooting.md` now
+  has a 7.1-scoped exact-code map for all checked Korean `SD Error Code` entries, and
+  `source_item_catalog.tsv` has a matching cross-version guardrail row for the 7.3/8.1
+  source-drift boundary.
 
-### GAP-J026-001: Spatial `ST Error Code` exact-code blocks need itemization
+### GAP-J026-001: Spatial `ST Error Code` exact-code diagnosis remains customer-evidence guarded
 
 - Status: `Guardrail`
 - Source family and version scope: `error_message_reference` plus
   `spatial_nifi_tableau` and related dictionary metadata; Altibase 7.1, Altibase 7.3,
   and Altibase 8.1 verified source, with Korean Error Message Reference and Spatial
   SQL Reference manuals as the authority.
-- Missing item or behavior: The selected Korean Error Message Reference manuals list
-  `ST Error Code` / `stERR_*` chapters for Spatial SQL and geometry processing, but
-  the customer-facing error attachment does not yet provide exact-code maps for
-  Spatial errors such as WKT/WKB parsing, incompatible geometry types, SRID-sensitive
-  operations, invalid buffer distance, object integrity, ring/line/polygon validation,
-  and Spatial conversion failures.
+- Guarded item or behavior: The customer-facing error attachment now provides grouped
+  exact-code maps for Spatial `ST Error Code` / `stERR_*` rows, but definitive Spatial
+  diagnosis still depends on the exact code, failed Spatial operation, geometry input,
+  SRID and metadata evidence, target version, and trace or loader output.
 - Affected attachments: `07_error_messages_troubleshooting.md` for exact-code
   troubleshooting blocks; `19_spatial_nifi_tableau_misc.md` for Spatial SQL,
   `GEOMETRY`, SRID, `GEOMETRY_COLUMNS`, `SPATIAL_REF_SYS`, R-Tree, and
@@ -377,7 +384,7 @@ evidence where the entry says those inputs are required.
   `Manuals/Altibase_7.1/kor/Spatial SQL Reference.md`;
   `Manuals/Altibase_7.3/kor/Spatial SQL Reference.md`;
   `Manuals/Altibase_trunk/kor/Spatial SQL Reference.md`.
-- Required remediation shape: Add grouped exact-code maps with code, decimal value,
+- Required answer shape: Use the grouped exact-code map with code, decimal value,
   symbol, message, source-backed cause/action, affected version scope, and first
   checks. Required customer-input prompts should request the failed Spatial SQL
   function or operator, `GEOMETRY` column definition, WKT/WKB/EWKT/EWKB input when
@@ -391,6 +398,11 @@ evidence where the entry says those inputs are required.
   requires exact-code evidence and Spatial metadata checks for `stERR_*` questions.
   Do not invent a Spatial error cause/action without the exact code and failed Spatial
   operation.
+- FCA-J023 full coverage audit update: `07_error_messages_troubleshooting.md` now
+  includes a grouped exact-code map for all checked Spatial `ST Error Code` rows from
+  7.3 and Altibase 8.1 verified source, with 7.1 coverage noted for all rows except
+  `stERR_ABORT_GEOS_UNEXPECTED_ERROR`. The residual guardrail is customer-evidence
+  dependent diagnosis, not missing exact-code map coverage.
 
 ### GAP-J002-009: Monitoring API and SNMP behavior was source-reviewed, not live-tested
 

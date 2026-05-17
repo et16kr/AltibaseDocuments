@@ -90,6 +90,8 @@ SQL, property, object, and data error rows:
 | `ERR-31363` / `0x31363 (201571)` | `qpERR_ABORT_QDB_TEMPORARY_TABLE_DDL_DISABLE` | `Cannot execute DDL when a temporary table is in use.` | DDL cannot execute while temporary tables based on the target table are in use. Truncate all related temporary tables and retry; do not jump to session termination. | Target table, related temporary tables, owning sessions, exact DDL. |
 | `0x2106D (135277)` | `mtERR_ABORT_JSON_WITHOUT_TEMPLOB` | `JSON type cannot be used when the TEMPORARY_LOB_ENABLE property is disabled.` | Altibase 8.1 verified source JSON behavior; check whether `TEMPORARY_LOB_ENABLE` is enabled. | Version, property value, JSON SQL, and proof if target is not 8.1. |
 | `0x314C5`, `0x314C8`, `0x314CA` | `qpERR_ABORT_JSON_INVALID_JSON_PATH`, `qpERR_ABORT_JSON_MULTIPLE_RESULTS`, `qpERR_ABORT_JSON_RETURNS_NON_SCALAR_VALUE` | JSON path syntax error, multiple results, or non-scalar values. | Distinguish path syntax, result cardinality, and scalar-return shape. Check JSON path expression, wrapper option, and `RETURNING` clause. | JSON data, literal JSON path, function name, `RETURNING`, wrapper option. |
+| `0xE1001`, `0xE1003`, `0xE1004`, `0xE1065`, `0xE13E7` | `sdERR_*` | Altibase 7.1 sharding metadata, shard object, shard routing, shard library, and unexpected shard errors. | Use the exact 7.1 `SD Error Code` row; for 7.3 or 8.1 require installed-version evidence because the checked Korean sources do not list `SD Error Code`. | `altibase -v`, `V$VERSION`, shard metadata, failed SQL, shard node/object/key details. |
+| `0xA101A`, `0xA1046`, `0xA104E`, `0xA104F`, `0xA1050`, `0xA1054` | `stERR_*` | Spatial WKT/WKB parsing, invalid geometry, SRID mismatch or lookup, `PROJ4`, `GEOS`, and geometry validation errors. | Preserve failed Spatial function/operator, geometry input, SRID, and metadata evidence; use the Spatial exact-code map before general geometry advice. | `GEOMETRY_COLUMNS`, `SPATIAL_REF_SYS`, failed Spatial SQL, sanitized WKT/WKB/EWKT/EWKB, trace or loader output. |
 
 Replication and SSL high-risk rows:
 
@@ -2518,23 +2520,91 @@ Version Cautions: Use this block for 7.3 and Altibase 8.1 verified source. Do no
 
 Related Document: Security SSL TLS; Version Release Platform.
 
-### Error Block: Shard Metadata or Shard Object Not Found
+### Error Block: Shard Metadata, Shard Routing, and Shard Library Errors
 
-Error Code: `0xE1001 (921601)`, `0xE1003 (921603)`, `0xE1004 (921604)`, `0xE1065 (921701)`.
+Error Codes: listed individually in the exact code map below.
 
-Reference Symbol: `sdERR_ABORT_SDM_SHARD_META_NOT_CREATED`, `sdERR_ABORT_SDM_SHARD_NODE_NOT_EXIST`, `sdERR_ABORT_SDM_SHARD_TABLE_NOT_EXIST`, `sdERR_ABORT_SDA_NOT_SUPPORTED_SQLTEXT_FOR_SHARD`.
+Module / Severity: `SD` / `ABORT`.
 
-Module / Severity: SD / `ABORT`.
+Exact code map:
 
-Message: Shard metadata not created, shard data node not found, shard object not found, or SQL statement not supported in Altibase sharding.
+| Reference code | Reference symbol | Source message or action focus |
+| --- | --- | --- |
+| `0xE1001 (921601)` | `sdERR_ABORT_SDM_SHARD_META_NOT_CREATED` | There is no shard meta <0%s>; action: Create shard meta. |
+| `0xE1002 (921602)` | `sdERR_ABORT_SDM_SHARD_NODE_OVERFLOW` | There is overflow in the number of shard data nodes; action: Refer to the manual to verify the number of permissible shard data nodes. |
+| `0xE1003 (921603)` | `sdERR_ABORT_SDM_SHARD_NODE_NOT_EXIST` | The shard data node cannot be found; action: Verify whether the name of shard data node is correct. |
+| `0xE1004 (921604)` | `sdERR_ABORT_SDM_SHARD_TABLE_NOT_EXIST` | The shard object cannot be found; action: Verify whether the shard object is correct. |
+| `0xE1005 (921605)` | `sdERR_ABORT_SDM_SHARD_KEY_COLUMN_NOT_EXIST` | The shard key <0%s>.<1%s>.<2%s> cannot be found; action: Verify whether the shard key is correct. |
+| `0xE1006 (921606)` | `sdERR_ABORT_SDM_UNSUPPORTED_SHARD_KEY_COLUMN_TYPE` | The data type of shard key <0%s>.<1%s>.<2%s> is not supported; action: Verify whether the data type used in the shard key is correct. |
+| `0xE1007 (921607)` | `sdERR_ABORT_SDM_INVALID_RANGE_FUNCTION` | The split method in the shard key does not correspond; action: Verify whether the split method is correct. |
+| `0xE1008 (921608)` | `sdERR_ABORT_SDM_AREADY_EXIST_SHARD_OBJECT` | The object already exists; action: Verify the object name. |
+| `0xE1009 (921609)` | `sdERR_ABORT_SDM_SYSTEM_OBJECT` | A shard object cannot be created with a meta object; action: Verify whether the object privilege is correct. |
+| `0xE100A (921610)` | `sdERR_ABORT_SDM_CHECK_META_VERSION` | Confirmation of shard version failed; action: Verify the shard version with the altibase -v command to see if the version is correct. |
+| `0xE100B (921611)` | `sdERR_ABORT_SDM_MISMATCH_META_VERSION` | The shard version between meta node and data node is mismatched; action: Verify the shard version with the altibase -v command to see if the version is correct. |
+| `0xE100D (921613)` | `sdERR_ABORT_SDM_DUPLICATED_RANGE_VALUE` | The range value of shard key is duplicated; action: Verify whether the range value of shard key is correct. |
+| `0xE100E (921614)` | `sdERR_ABORT_SDM_INVALID_META_NODE_INFO` | Invalid information of shard meta node; action: Execute function DBMS_SHARD.RESET_META_NODE_ID to correct the table SYS_SHARD.LOCAL_META_INFO_. |
+| `0xE100F (921615)` | `sdERR_ABORT_SDM_SHARD_RANGE_OVERFLOW` | There is overflow in the number of shard ranges; action: Refer to the manual to verify the number of permissible shard ranges. |
+| `0xE1010 (921616)` | `sdERR_ABORT_SDM_EXIST_REFERENCES_NODE` | There is an object that references a node; action: Verify the shard meta information. |
+| `0xE1065 (921701)` | `sdERR_ABORT_SDA_NOT_SUPPORTED_SQLTEXT_FOR_SHARD` | The statement is not supported in Altibase sharding due to the following reason: <0%s>; action: Verify whether the statement is correct. |
+| `0xE1066 (921702)` | `sdERR_ABORT_SDA_INVALID_SHARD_KEY_CONDITION` | Invalid shard key value expression was used; action: Verify whether the shard key expression is correct. |
+| `0xE1067 (921703)` | `sdERR_ABORT_SDA_NOT_EXIST_SHARD_KEY_CONDITION` | The shard key value cannot be found; action: Verify whether the shard key exists. |
+| `0xE1068 (921704)` | `sdERR_ABORT_SDA_DATA_NODE_NOT_FOUND` | The data node corresponding to the shard key cannot be found; action: Verify the distribution setting or shard key value. |
+| `0xE10C9 (921801)` | `sdERR_ABORT_SDF_INVALID_SHARD_NODE` | Invalid shard data node was used; action: Verify the host IP and port number for shard data node. |
+| `0xE10CA (921802)` | `sdERR_ABORT_SDF_AREADY_EXIST_SHARD_NODE` | The shard data node of identical IP and port already exists; action: Verify the IP and port of the shard data node. |
+| `0xE10CB (921803)` | `sdERR_ABORT_SDF_SHARD_USER_NAME_TOO_LONG` | The object user name is too long; action: Verify the length of the object user name. |
+| `0xE10CC (921804)` | `sdERR_ABORT_SDF_SHARD_TABLE_NAME_TOO_LONG` | The object name is too long; action: Verify the length of the object name. |
+| `0xE10CD (921805)` | `sdERR_ABORT_SDF_SHARD_NODE_NAME_TOO_LONG` | The name of shard data node is too long; action: Verify the length of the shard data node name. |
+| `0xE10CE (921806)` | `sdERR_ABORT_SDF_SHARD_MAX_VALUE_TOO_LONG` | The maximum value for shard split method is too large; action: Refer to the manual to verify permissible range for the shard split method. |
+| `0xE10CF (921807)` | `sdERR_ABORT_SDF_SHARD_KEYCOLUMN_NAME_TOO_LONG` | The shard key name is too long; action: Verify the length of the shard key name. |
+| `0xE10D0 (921808)` | `sdERR_ABORT_SDF_INVALID_SHARD_SPLIT_METHOD_NAME` | The shard split method is invalid; action: Refer to the manual to verify whether the shard split method is correct. |
+| `0xE10D1 (921809)` | `sdERR_ABORT_SDF_INVALID_SHARD_TABLE` | The specified object cannot be found; action: Retry after verifying the object and user name. |
+| `0xE10D2 (921810)` | `sdERR_ABORT_SDF_INVALID_RANGE_VALUE` | The permissible range of shard key <0%s> is invalid; action: Refer to the manual to verify the permissible range for the shard key. |
+| `0xE10D3 (921811)` | `sdERR_ABORT_SDF_INVALID_SUB_SHARD_KEY_NAME` | Invalid sub-shard key name; action: Verify whether the name of sub-shard key is correct. |
+| `0xE10D4 (921812)` | `sdERR_ABORT_SDF_UNSUPPORTED_SUB_SHARD_KEY_SPLIT_TYPE` | The split method of sub-shard key is not supported; action: Verify the split method of the sub-shard key. |
+| `0xE10D5 (921813)` | `sdERR_ABORT_SDF_UNSUPPORTED_SHARD_SPLIT_METHOD_NAME` | The shard split method is not supported; action: Verify the shard split method name. |
+| `0xE10D6 (921814)` | `sdERR_ABORT_SDF_UNSUPPORTED_META_CONNTYPE` | The internal (meta) connection type is not supported: <0%d>; action: Verify the internal connection type. |
+| `0xE10D7 (921815)` | `sdERR_ABORT_SDF_CANNOT_DELETE_CURRENT_SMN` | The shard metadata as the current SMN cannot be deleted; action: Check the current shard meta number of SYS_SHARD.GLOBAL_META_INFO_. |
+| `0xE10D8 (921816)` | `sdERR_ABORT_SDF_INVALID_META_CHANGE` | Invalid shard meta change information; action: Check the shard meta information of the object. |
+| `0xE112D (921901)` | `sdERR_ABORT_SHARD_LIBRARY_ERROR` | An error occurred in the library function call when executing <1%s> for shard data node <0%s>; action: Verify the state of shard data node. |
+| `0xE112E (921902)` | `sdERR_ABORT_SHARD_LIBRARY_ERROR_1` | The following error occurs when <1%s> of shard data node <0%s> is performed: <2%s>; action: Verify the state of shard data node. |
+| `0xE112F (921903)` | `sdERR_ABORT_SHARD_LIBRARY_ERROR_2` | The following error occurs when <1%s> of shard data node <0%s> is performed: <2%s><3%s>; action: Verify the state of shard data node. |
+| `0xE1130 (921904)` | `sdERR_ABORT_SHARD_LIBRARY_ERROR_3` | The following error occurs when <1%s> of shard data node <0%s> is performed: <2%s><3%s><4%s>; action: Verify the state of shard data node. |
+| `0xE1131 (921905)` | `sdERR_ABORT_SHARD_LIBRARY_ERROR_4` | The following error occurs when <1%s> of shard data node <0%s> is performed: <2%s><3%s><4%s><5%s>; action: Verify the state of shard data node. |
+| `0xE1132 (921906)` | `sdERR_ABORT_SHARD_LIBRARY_LINK_FAILURE_ERROR` | The link failed when performing <1%s> on shard data node <0%s>; action: Verify the state of link on the shard data node. |
+| `0xE1133 (921907)` | `sdERR_ABORT_INIT_SDL_ODBCCLI` | The library initialization failed and the following error occurred: <0%s>; action: Verify the library of shard meta node. |
+| `0xE1134 (921908)` | `sdERR_ABORT_EXECUTE_NULL_DBC` | The connection cannot be found when shard data node <0%s> is <1%s>; action: Verify the connection state. |
+| `0xE1135 (921909)` | `sdERR_ABORT_EXECUTE_NULL_STMT` | The statement cannot be found when shard data node <0%s> is <1%s>; action: Verify the statement in the shard data node. |
+| `0xE1136 (921910)` | `sdERR_ABORT_UNINITIALIZED_LIBRARY` | Shard data node <0%s> fails to perform <1%s> because the library was not initialized; action: Restart the server after verifying the library of shard meta node. |
+| `0xE1137 (921911)` | `sdERR_ABORT_DBCLINK_ALLOC` | <1%s> on shard data node <0%s> failed; action: Verify the memory usage. |
+| `0xE1138 (921912)` | `sdERR_ABORT_SHARD_XA_LIBRARY_ERROR` | An error occurred in the library function call when executing <1%s> for shard <0%s>; action: Verify the state of shard library. |
+| `0xE1139 (921913)` | `sdERR_ABORT_SHARD_LIBRARY_FAILOVER_SUCCESS` | The <1%s> of server-side failover success.: <0%s> <2%s>; action: Re-execute application logic. |
+| `0xE113A (921914)` | `sdERR_ABORT_INTERNAL_ALTERNATE_NODE_SETTING_IS_MISSING` | Alternate shard node <0%s> information is missing from external or internal network settings; action: Verify the alternate host IP and port number of the shard node. |
+| `0xE113B (921915)` | `sdERR_ABORT_SHARD_NODE_FAILOVER_IS_NOT_AVAILABLE` | Failover is not available; action: Check the shard node status or network. |
+| `0xE113C (921916)` | `sdERR_ABORT_EXECUTE_NULL_SD_STMT` | The shard statement cannot be found when performing <1%s> to shard data node <0%s>; action: Verify the statement in the shard coordinator. |
+| `0xE1191 (922001)` | `sdERR_ABORT_SDPJ_SYNTAX` | JSON syntax error; action: Refer to JSON format. |
+| `0xE1192 (922002)` | `sdERR_ABORT_SDPJ_ALLOC` | JSON parsing failed at <0%d>% due to insufficient memory buffer; action: Verify the memory buffer size. |
+| `0xE1193 (922003)` | `sdERR_ABORT_SDPJ_CONVERT` | Failed to convert the condition to shard analyze information. (<0%s>); action: Verify the condition. |
+| `0xE1321 (922401)` | `sdERR_ABORT_SDI_SHARD_LINKER_NOT_INITIALIZED` | The meta connection cannot be initialized; action: Verify the setting of shard meta and data is correct. |
+| `0xE1322 (922402)` | `sdERR_ABORT_SDI_INCOMPLETE_RANGE_SET` | The shard key range of <0%s>.<1%s> is invalid; action: Verify the key range for shard split method. |
+| `0xE1323 (922403)` | `sdERR_ABORT_SDI_NOT_EXIST_SHARD_ANALYSIS` | The result of shard analysis does not exist; action: Verify the distribution setting or shard key value. |
+| `0xE1324 (922404)` | `sdERR_ABORT_SDI_DATA_NODE_NOT_FOUND` | The data node corresponding to the shard key cannot be found; action: Verify the distribution setting or shard key value. |
+| `0xE1325 (922405)` | `sdERR_ABORT_SDI_DUPLICATED_NODE_NAME` | Duplicate node name <0%s>; action: Verify that no duplicate node names are specified. |
+| `0xE1326 (922406)` | `sdERR_ABORT_SDI_INVALID_NODE_NAME` | Invalid node name <0%s>; action: Verify that the node name is valid. |
+| `0xE1327 (922407)` | `sdERR_ABORT_SDI_INVALID_NODE_NAME2` | Invalid node name: <0%s>; action: Verify that the node name is valid. |
+| `0xE1328 (922408)` | `sdERR_ABORT_SDI_SHARD_META_PROPAGATION_TIMEOUT` | Shard meta update propagation timeout; action: Check shard meta number and information. |
+| `0xE1385 (922501)` | `sdERR_ABORT_EXIST_SHARD_TABLE_OUTSIDE_SHARD_VIEW` | The shard table is only available within the shard view: <0%s>; action: Rewrite the shard query. |
+| `0xE1386 (922502)` | `sdERR_ABORT_INVALID_SHARD_QUERY` | The shard query is not supported and the following error occurs: <0%s> <1%s>; action: Rewrite the shard query. |
+| `0xE1387 (922503)` | `sdERR_ABORT_UNSUPPORTED_SHARD_DATA_IN_DML` | The shard keyword is not supported in DML statements; action: Rewrite the shard query. |
+| `0xE1388 (922504)` | `sdERR_ABORT_SHARD_REBUILD_ERROR` | Shard rebuild error; action: Re-connect the client program. |
+| `0xE13E7 (922599)` | `sdERR_ABORT_SDC_UNEXPECTED_ERROR` | Unexpected errors have occurred.: <0%s>: <1%s>; action: Verify the error number in the trace log file and contact Altibase Support Center (http://support.altibase.com). |
 
-Applies To: Altibase sharding metadata and shard SQL routing.
+Applies To: Altibase 7.1 sharding metadata, shard node definitions, shard routing analysis, server-side shard library calls, failover, and shard DML restrictions.
 
-Symptom: Shard DDL or SQL fails because metadata, shard node, shard object, shard key, or supported SQL shape is missing or invalid.
+Symptom: Shard DDL or SQL fails because metadata, shard node, shard object, shard key, shard range, shard library state, or supported SQL shape is missing, invalid, duplicated, or unavailable.
 
-Primary Causes: Shard metadata not initialized, wrong shard node name, wrong shard object name, unsupported statement for sharding, or invalid shard key condition.
+Primary Causes: Shard metadata not initialized, wrong shard node or object name, invalid shard key/range definition, unsupported shard SQL, metadata version mismatch, shard library/ODBC initialization failure, shard link failure, or shard failover/routing state mismatch.
 
-Immediate Action: Verify shard metadata, shard node, object name, and whether the SQL statement is supported for sharding.
+Immediate Action: Use the exact code row first. Verify the Altibase version and patch level, shard meta/data-node configuration, shard object name, shard key condition, and library/link state before changing metadata or rerunning shard DDL.
 
 Check SQL or Command:
 
@@ -2547,9 +2617,127 @@ SELECT product_version, meta_version
 FROM V$VERSION;
 ```
 
-Version Cautions: `sdERR_*` coverage is confirmed in the 7.1 Error Message Reference. For 7.3 or 8.1 sharding errors, ask for the exact product version, patch level, full error line, and installed manual/runtime evidence before giving a definitive `sdERR_*` version claim. Sharding-related errors can also appear under other modules, so use the exact code first.
+Required Customer Input: exact Altibase version and patch level, full error line, failed SQL or command, shard meta node and data node names, shard object name, shard key/range definition, connection or library error detail, and trace log excerpt.
+
+Version Cautions: `sdERR_*` exact-code entries are confirmed in the checked 7.1 Korean Error Message Reference. The checked 7.3 and Altibase 8.1 verified source Korean Error Message References do not list an `SD Error Code` chapter. For 7.3 or 8.1 sharding errors, require the exact installed-version evidence before making a definitive `sdERR_*` version claim.
 
 Related Document: SQL DDL Generation; Data Dictionary and Performance Views.
+
+### Error Block: Spatial Geometry, WKT/WKB, SRID, and Geometry Validation Errors
+
+Error Codes: listed individually in the exact code map below.
+
+Module / Severity: `ST` / `FATAL`, `ABORT`, or `IGNORE`; treat `FATAL` rows as high-risk Spatial engine or metadata failures.
+
+Exact code map:
+
+| Reference code | Reference symbol | Severity | Version scope | Source message or action focus |
+| --- | --- | --- | --- | --- |
+| `0xA0003 (655363)` | `stERR_FATAL_MEMORY_SHORTAGE` | `FATAL` | 7.1, 7.3, Altibase 8.1 verified source | Out of memory; action: Verify that the system has sufficient memory. |
+| `0xA0005 (655365)` | `stERR_FATAL_INCOMPATIBLE_TYPE` | `FATAL` | 7.1, 7.3, Altibase 8.1 verified source | Incompatible data type <0%s>; action: Check the compatibility between data types. |
+| `0xA0031 (655409)` | `stERR_FATAL_COLUMN_NOT_FOUND` | `FATAL` | 7.1, 7.3, Altibase 8.1 verified source | Unable to find a column; action: Verify that the column being looked for is valid. |
+| `0xA1002 (659458)` | `stERR_ABORT_NOT_APPLICABLE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Not applicable; action: Check the error number from the trace log and contact Altibase's Support Center (http://support.altibase.com). |
+| `0xA1007 (659463)` | `stERR_ABORT_LANGUAGE_MODULE_NOT_FOUND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Language module <0%s> not found; action: Check the language. |
+| `0xA1008 (659464)` | `stERR_ABORT_DATATYPE_MODULE_NOT_FOUND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Data type module <0%s> not found; action: Check the data type. |
+| `0xA1009 (659465)` | `stERR_ABORT_CONVERSION_MODULE_NOT_FOUND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Conversion module <0%s> not found; action: Check the compatibility between data types. |
+| `0xA100A (659466)` | `stERR_ABORT_FUNCTION_MODULE_NOT_FOUND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Function module <0%s> not found; action: Use the correct function name. |
+| `0xA100B (659467)` | `stERR_ABORT_INVALID_FUNCTION_ARGUMENT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid number of arguments for a function; action: Check the number of arguments for the function. |
+| `0xA100C (659468)` | `stERR_ABORT_CONVERSION_NOT_APPLICABLE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Conversion not applicable; action: Check the compatibility between data types. |
+| `0xA100D (659469)` | `stERR_ABORT_INVALID_LENGTH` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid length of the data type; action: Check the length of the data type. |
+| `0xA100E (659470)` | `stERR_ABORT_INVALID_PRECISION` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid precision of the data type; action: Check the precision of the data type. |
+| `0xA100F (659471)` | `stERR_ABORT_INVALID_SCALE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid scale of the data type; action: Check the scale of the data type. |
+| `0xA1010 (659472)` | `stERR_ABORT_VALUE_OVERFLOW` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Value overflow; action: Change the value or data type. |
+| `0xA1011 (659473)` | `stERR_ABORT_INVALID_LITERAL` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid literal; action: Check the constant indicating the data type. |
+| `0xA1013 (659475)` | `stERR_ABORT_STACK_OVERFLOW` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Calculation stack overflow; action: Alter the calculation stack size using the ALTER SESSION statement. |
+| `0xA1014 (659476)` | `stERR_ABORT_NOT_AGGREGATION` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The function is not an aggregate function; action: Remove the ALL or DISTINCT keyword. |
+| `0xA1016 (659478)` | `stERR_ABORT_DIVIDE_BY_ZERO` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Division by zero; action: Determine whether an attempt to divide a number by zero is being made. |
+| `0xA1017 (659479)` | `stERR_ABORT_ARGUMENT_NOT_APPLICABLE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The argument is not applicable; action: Change the argument so that it falls within the valid range. |
+| `0xA1018 (659480)` | `stERR_ABORT_NOT_SUPPORTED_OBJECT_TYPE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The specified object type is not currently supported; action: For geometry types, only the POINT type is currently supported. |
+| `0xA1019 (659481)` | `stERR_ABORT_OBJECT_TYPE_NOT_APPLICABLE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Inapplicable object type; action: Check the object type. |
+| `0xA101A (659482)` | `stERR_ABORT_INVALID_WKT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Error parsing well-known-text; action: Check the well-known-text. |
+| `0xA101B (659483)` | `stERR_ABORT_TO_CHAR_MAX_PRECISION` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The value exceeds the maximum precision ( <0%d> ) of the format; action: Check the size of format string. |
+| `0xA101C (659484)` | `stERR_ABORT_VALIDATE_INVALID_VALUE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid data value; action: Check the data value. |
+| `0xA101D (659485)` | `stERR_ABORT_VALIDATE_INVALID_LENGTH` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid data length; action: Check the length of the data. |
+| `0xA101E (659486)` | `stERR_ABORT_CODING_INVALID_FMT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid coding format; action: Check the compiled format. |
+| `0xA101F (659487)` | `stERR_ABORT_CODING_DATA_FMT_MISMATCH` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Mismatched data and format; action: Check the data string. |
+| `0xA1020 (659488)` | `stERR_ABORT_INVALID_LITERAL_AFTER_ESCAPE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Missing or invalid literal following the escape character; action: Check the LIKE predicate. |
+| `0xA1021 (659489)` | `stERR_ABORT_INVALID_ESCAPE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid escape literal; action: Check the escape character in the LIKE predicate. |
+| `0xA1022 (659490)` | `stERR_ABORT_INVALID_DATE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid date literal; action: Check the arguments for the date conversion function. |
+| `0xA1023 (659491)` | `stERR_ABORT_INVALID_YEAR` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid year; action: Check the arguments for the date conversion function. |
+| `0xA1024 (659492)` | `stERR_ABORT_INVALID_MONTH` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid month; action: Check the arguments for the date conversion function. |
+| `0xA1025 (659493)` | `stERR_ABORT_INVALID_DAY` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid day; action: Check the arguments for the date conversion function. |
+| `0xA1026 (659494)` | `stERR_ABORT_INVALID_HOUR` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid hour; action: Check the arguments for the date conversion function. |
+| `0xA1027 (659495)` | `stERR_ABORT_INVALID_MINUTE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid minutes; action: Check the arguments for the date conversion function. |
+| `0xA1028 (659496)` | `stERR_ABORT_INVALID_SECOND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid seconds; action: Check the arguments for the date conversion function. |
+| `0xA1029 (659497)` | `stERR_ABORT_INVALID_MICROSECOND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid microseconds; action: Check the arguments for the date conversion function. |
+| `0xA102B (659499)` | `stERR_ABORT_INVALID_DIGEST_ALGORITHM` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid digest algorithm; action: Check the second argument on the digest function. |
+| `0xA102C (659500)` | `stERR_ABORT_ARGUMENT_VALUE_OUT_OF_RANGE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The argument '<0%d>' is out of range; action: Check the argument value. |
+| `0xA102D (659501)` | `stERR_ABORT_DATEDIFF_OUT_OF_RANGE_IN_SECOND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The interval between startdate and enddate exceeded 68 years; action: Check the values of startdate and enddate. |
+| `0xA102E (659502)` | `stERR_ABORT_DATEDIFF_OUT_OF_RANGE_IN_MICROSECOND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The interval between startdate and enddate exceeded 30 days; action: Check the values of startdate and enddate. |
+| `0xA102F (659503)` | `stERR_ABORT_INVALID_SIZE_OF_SECOND_AND_MICROSECOND` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The values of SSSSSSSS must be a number of eight digits; action: Check the value of SSSSSSSS. |
+| `0xA1030 (659504)` | `stERR_ABORT_INVALID_CHARACTER` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid character use; action: Verify that every character in the input string is a valid character. |
+| `0xA1032 (659506)` | `stERR_ABORT_TRAVERSE_NOT_APPLICABLE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Unable to traverse; action: Verify that the traverse is valid. |
+| `0xA1033 (659507)` | `stERR_ABORT_INVALID_BYTE_ORDER` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid byte order information; action: Verify the validity of the byte order. |
+| `0xA1034 (659508)` | `stERR_ABORT_INVALID_FUNCTION_PRECISION` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid function precision; action: Verify the validity of the function precision. |
+| `0xA1035 (659509)` | `stERR_ABORT_INVALID_BUFFER_DISTANCE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid distance value for the buffer function; action: Verify the validity of the distance value for the buffer function. |
+| `0xA1036 (659510)` | `stERR_ABORT_INVALID_RELATE_PATTERN` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid pattern of the relate function; action: Verify that values matching '\*TF012' are set, and that the pattern length is 9. |
+| `0xA1037 (659511)` | `stERR_ABORT_STNMR_DUMP_EMPTY_OBJECT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Empty dump object; action: Specify a dump object for the dump table. |
+| `0xA1038 (659512)` | `stERR_ABORT_STNMR_INVALID_DUMP_OBJECT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid dump object; action: Use a valid dump object for the dump table. |
+| `0xA1039 (659513)` | `stERR_ABORT_OBJECT_BUFFER_OVERFLOW` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Object buffer overflow; action: Use the ALTER SESSION/SYSTEM SET ST_OBJECT_BUFFER_SIZE statement or the ST_OBJECT_BUFFER_SIZE hint to increase the object buffer size. |
+| `0xA103A (659514)` | `stERR_ABORT_OBJECT_INTEGRITY_VIOLATION` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Object integrity violation; action: Verify that a valid object is being used. |
+| `0xA103B (659515)` | `stERR_ABORT_RING_POINT_COUNT_LESS_THAN_4` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The ring (<0%d>) has less than 4 points; action: Verify that a valid object is being used. |
+| `0xA103C (659516)` | `stERR_ABORT_NOT_CLOSED_RING` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The ring (<0%d>) is not closed; action: Verify that a valid object is being used. |
+| `0xA103D (659517)` | `stERR_ABORT_OBJECT_SIZE` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The size of the object is incorrect; action: Verify that a valid object is being used. |
+| `0xA103E (659518)` | `stERR_ABORT_RING_BOUND_CROSS` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The ring <0%d> and ring <1%d> bounds cross; action: Verify that a valid object is being used. |
+| `0xA103F (659519)` | `stERR_ABORT_POLYGON_HAS_MULTI_EXTERNAL_RING` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The external ring does not include the internal ring <0%d>; action: Verify that a valid object is being used. |
+| `0xA1040 (659520)` | `stERR_ABORT_LINE_POINT_COUNT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The point count of a line is less than 2; action: Verify that a valid object is being used. |
+| `0xA1041 (659521)` | `stERR_ABORT_LINE_POINT_SAME` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | A line has only two points with the same value; action: Verify that a valid object is being used. |
+| `0xA1042 (659522)` | `stERR_ABORT_RING_LINE_COUNT` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | A ring has less than three lines; action: Verify that a valid object is being used. |
+| `0xA1043 (659523)` | `stERR_ABORT_RING_ZERO_AREA` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The area of a ring is zero; action: Verify that a valid object is being used. |
+| `0xA1044 (659524)` | `stERR_ABORT_RING_LINE_CROSS` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | A ring has crossing lines; action: Verify that a valid object is being used. |
+| `0xA1045 (659525)` | `stERR_ABORT_POLYGON_INTERSECTS` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | A multipolygon has intersecting polygons: (polygon:<0%d>, ring:<1%d>), (polygon:<2%d>, ring:<3%d>); action: Verify that a valid object is being used. |
+| `0xA1046 (659526)` | `stERR_ABORT_INVALID_WKB` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Error parsing well-known-binary; action: Check the well-known-binary. |
+| `0xA1047 (659527)` | `stERR_ABORT_INVALID_OBJECT_IN_GEOMCOLLECTION` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The type <0%d> of object <1%d> in the geometry collection is not valid; action: Check the well-known-binary. |
+| `0xA1048 (659528)` | `stERR_ABORT_INVALID_STORED_DATA_LENGTH` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The data saved in the DBMS is not the expected length; action: Check the error number from the trace log and contact Altibase's Support Center (http://support.altibase.com). |
+| `0xA1049 (659529)` | `stERR_ABORT_INVALID_POLYGON` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid Polygon; action: Check the structure of the polygon and try again. |
+| `0xA104A (659530)` | `stERR_ABORT_UNKNOWN_POLYGON` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Unverified Polygon; action: Insert the Polygon again, or perform a validity check on the polygon. |
+| `0xA104B (659531)` | `stERR_ABORT_UNEXPECTED_ERROR` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Unexpected error: <0%s>: <1%s>; action: Check the error number from the trace log and contact Altibase's Support Center (http://support.altibase.com). |
+| `0xA104C (659532)` | `stERR_ABORT_INVALID_POINTS` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid combination of identical points; action: Ensure that the geometry object is valid. |
+| `0xA104D (659533)` | `stERR_ABORT_INVALID_GEOMETRY` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid Geometry; action: Ensure that the geometry object is valid. |
+| `0xA104E (659534)` | `stERR_ABORT_INVALID_SRID` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | The Spatial Reference ID(SRID) is incorrect; action: Verify the input Spatial Reference ID(SRID). |
+| `0xA104F (659535)` | `stERR_ABORT_MIXED_SRID` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Operation on mixed SRID geometries. (<0%d>: <1%d>); action: Verify the input SRIDs. |
+| `0xA1050 (659536)` | `stERR_ABORT_UNKNOWN_SRID` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Unknown Spatial Reference ID (<0%d>); action: Verify the input Spatial Reference ID(SRID). |
+| `0xA1051 (659537)` | `stERR_ABORT_PROJ4_INIT_FAILED` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Failed to initialize PROJ4 library (<0%s>, <1%d>, <2%d>); action: Verify the input arguments. |
+| `0xA1052 (659538)` | `stERR_ABORT_PROJ4_TRANSFORM_FAILED` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Failed to PROJ4 transform (<0%s>); action: Verify the input arguments. |
+| `0xA1053 (659539)` | `stERR_ABORT_INVALID_GEOMETRY_MADEBY_GEOMFROMWKB` | `ABORT` | 7.1, 7.3, Altibase 8.1 verified source | Invalid Geometry(<0%s>); action: Check the error number from the trace log and contact Altibase's Support Center (http://support.altibase.com). |
+| `0xA1054 (659540)` | `stERR_ABORT_GEOS_UNEXPECTED_ERROR` | `ABORT` | 7.3 and Altibase 8.1 verified source; not found in checked 7.1 source | <0%s>: <1%s>; action: Check the error number from the trace log and contact Altibase's Support Center (http://support.altibase.com). |
+| `0xA2000 (663552)` | `stERR_IGNORE_NOERROR` | `IGNORE` | 7.1, 7.3, Altibase 8.1 verified source | Ignore this message; action: Ignore this message. |
+
+Applies To: Spatial SQL functions and operators, `GEOMETRY` values, WKT/WKB/EWKT/EWKB parsing, SRID checks, R-Tree/spatial object validation, geometry collections, `PROJ4`, `GEOS`, and Spatial internal binary data.
+
+Symptom: Spatial SQL, geometry loading, conversion, validation, relationship testing, buffering, transformation, or metadata-backed SRID work fails with an `stERR_*` code.
+
+Primary Causes: invalid Spatial function arguments, unsupported geometry object type, invalid WKT/WKB or byte order, mixed or unknown SRID, invalid geometry/ring/line/polygon structure, object buffer exhaustion, corrupt or inconsistent stored geometry data, `PROJ4`/`GEOS` failures, or insufficient memory.
+
+Immediate Action: Use the exact code row first. Preserve the failed Spatial SQL function or operator, sanitized WKT/WKB/EWKT/EWKB input when safe to share, `GEOMETRY` column definition, SRID value, and metadata evidence before suggesting DDL, data rewrite, index rebuild, or replication changes.
+
+Check SQL or Command:
+
+```sql
+SELECT table_schema, table_name, column_name, coord_dimension, srid, geometry_type
+FROM GEOMETRY_COLUMNS
+WHERE table_name = '<TABLE_NAME>';
+
+SELECT srid, auth_name, auth_srid, srtext
+FROM SPATIAL_REF_SYS
+WHERE srid = <SRID>;
+```
+
+Required Customer Input: exact Altibase version and patch level, full error line, failed Spatial SQL function or operator, sanitized geometry input when shareable, `GEOMETRY` column definition, SRID value, `GEOMETRY_COLUMNS` and `SPATIAL_REF_SYS` rows, loader command or source file when relevant, and trace or utility output.
+
+Version Cautions: All listed `ST Error Code` rows are present in the checked 7.3 Korean Error Message Reference and the Altibase 8.1 verified source Korean Error Message Reference. All listed rows except `stERR_ABORT_GEOS_UNEXPECTED_ERROR` are also present in the checked 7.1 Korean Error Message Reference.
+
+Related Document: Spatial, NiFi, Tableau, and Miscellaneous Integrations; SQL DML and Oracle Compatibility; Data Dictionary and Performance Views.
 
 ### Error Block: DB Link Configuration, AltiLinker, Network, and Transaction Errors
 
@@ -2889,6 +3077,7 @@ Use this order:
 - J023 expanded storage, backup, recovery, datafile, log, checkpoint, incremental backup, and tablespace exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps are still grouped troubleshooting blocks, not a replacement for the complete source manuals.
 - J024 expanded SQL parser, DDL, table/column/data type, constraint, regular-expression, JSON, LOB, Temporary LOB, and related client/utility LOB exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. JSON and Temporary LOB blocks remain 8.1-scoped.
 - J025 expanded client connection, network, SSL/TLS, replication, utility, DB Link, Log Analyzer, APRE, and CLI/ODBC grouped exact-code maps from the selected 7.1, 7.3, and Altibase 8.1 verified source Error Message References. The maps preserve component-specific evidence prompts and avoid numeric-only routing for overlapping `0x510xx` families.
-- J026 QA aligned the response format with `Required Customer Input`, tightened uncovered-code and prefix-safety wording, and recorded the remaining Spatial `ST Error Code` exact-code itemization gap as `GAP-J026-001`.
+- J026 QA aligned the response format with `Required Customer Input`, tightened uncovered-code and prefix-safety wording, and recorded the then-remaining Spatial `ST Error Code` exact-code itemization gap as `GAP-J026-001`.
+- FCA-J023 full coverage audit added exact-code maps for the Spatial `ST Error Code` family and the 7.1 `SD Error Code` family. The residual `sdERR_*` limit is source drift: the checked 7.3 and Altibase 8.1 verified source Korean manuals do not list `SD Error Code`, so require installed-version evidence for those targets.
 - Add future error blocks only after source-backed review, and keep the standardized error format above.
-- The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here.
+- The full Error Message Reference is not yet converted into exact-code blocks. Future updates should use the inventory baseline and preserve the uncovered-code response rule for entries not yet consolidated here. Spatial `stERR_*` and 7.1 sharding `sdERR_*` entries are now consolidated as grouped exact-code maps.

@@ -514,3 +514,41 @@ Each entry should include:
   utility, APRE, CLI/ODBC, and Log Analyzer errors still require exact version, full
   error line, command/API call, topology or connection string, relevant properties, and
   log/client evidence as requested by `07_error_messages_troubleshooting.md`.
+
+### FCA-J023
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`,
+  `remediation_log.md`, `GPTs/attachments/07_error_messages_troubleshooting.md`, and
+  `GPTs/reports/gap_register.md`.
+- Product coverage changes: cataloged the remaining scoped `error_message_reference`
+  proof for Spatial `ST Error Code`, 7.1 `SD Error Code` sharding entries, the QP
+  memory exact-code block, and the cross-version `sdERR_*` source-drift guardrail. No
+  original manuals or source documents were edited.
+- Catalog rows added by this job: 148 rows total; 1 `Covered`, 146
+  `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Version scope: 81 `cross-version` rows and 67 `7.1` rows. The Spatial rows are
+  checked against 7.1, 7.3, and Altibase 8.1 verified source Korean Error Message
+  References; `stERR_ABORT_GEOS_UNEXPECTED_ERROR` is recorded as 7.3 and Altibase 8.1
+  verified source only because the checked 7.1 source has no matching symbol. The
+  sharding `sdERR_*` rows are 7.1-scoped because checked 7.3 and 8.1 Korean sources do
+  not list `SD Error Code`.
+- Source evidence: selected Korean Error Message Reference entries were matched by
+  exact reference code and symbol. Each row records source line locators plus the
+  `07_error_messages_troubleshooting.md` exact-code map or block used for attachment
+  evidence.
+- Coverage status changes: the dedicated `qpERR_ABORT_MEMORY_ALLOCATION` block was
+  marked `Covered`; Spatial and 7.1 sharding exact-code maps were marked
+  `Covered-by-routing`; the 7.3/8.1 `sdERR_*` source-drift boundary was registered as a
+  `Guardrail`.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1615 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 148
+  FCA-J023 rows with 1 `Covered`, 146 `Covered-by-routing`, and 1 `Guardrail` status.
+  Standard repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no new `Missing`, `Out-of-scope`, or `Retrieval-weak` rows were added.
+  `sdERR_*` answers outside confirmed 7.1 remain guarded by installed-version evidence;
+  Spatial answers still require the exact code, failed Spatial SQL/function/operator,
+  geometry metadata, SRID, sanitized geometry input when shareable, and trace or loader
+  output before state-changing advice.
