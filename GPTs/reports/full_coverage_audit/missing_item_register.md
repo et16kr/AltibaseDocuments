@@ -25,53 +25,44 @@ Each entry should record:
 ### FCA-J038 Technical Documents Support Missing Rows
 
 FCA-J038 cataloged the remaining technical-document support slice for replication
-compatibility and cross-family Java/tool runtime compatibility. The rows below are
-source-backed and in scope, but the current attachments do not yet preserve the exact
-Java compatibility legend or several tool-specific runtime matrices as answer-ready
-blocks.
+compatibility and cross-family Java/tool runtime compatibility. `FCA-J044` resolved
+the Java compatibility legend, `altiMon`, `Altibase Hadoop Connector`, and
+`dataCompJ` rows owned by attachments `11`, `14`, and `16`. The active rows below are
+outside the `FCA-J044` attachment boundary and remain assigned to later remediation.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-OTHER-XVER-000268 | technical_documents_support | cross-version | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > overview > symbol and test policy | Answer-ready Java compatibility legend preserving `x`, `●`, `-`, Oracle OpenJDK test basis, vendor binary-compatibility note, and Altibase Support escalation for untested runtimes. | GPTs/attachments/11_java_jdbc_spring.md | Add a compact supplemental Java compatibility legend and route cross-family tool rows to the owning attachments; until then, do not infer tested support from a table symbol that is not represented in the upload set. | FCA-J038 | source locator: Korean JavaCompatibility lines 19-31; catalog row `SRC-OTHER-XVER-000268`. |
-| SRC-OTHER-7.3-000003 | technical_documents_support | 7.3 | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Altibase 7.3 > Server Side > altiMon | Exact 7.3 altiMon Java matrix: Java 5/6/7 unsupported and Java 8 through Java 17-21 compatibility-tested. | GPTs/attachments/14_utilities_operation_tools.md | Add a Java compatibility note to the altiMon utility block preserving the unsupported and tested runtime ranges; until then ask for exact Altibase/tool patch and installed Java output before advising altiMon runtime compatibility. | FCA-J038 | source locator: Korean JavaCompatibility lines 39-45; catalog row `SRC-OTHER-7.3-000003`. |
-| SRC-OTHER-7.1-000004 | technical_documents_support | 7.1 | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Altibase 7.1 > Server Side > altiMon | Exact 7.1 altiMon Java matrix, including Java 5 through Java 17-21 tested and the Java 11-or-later boundary beginning from Altibase 7.1.0.2.6. | GPTs/attachments/14_utilities_operation_tools.md | Add a 7.1 altiMon Java compatibility note with the 7.1.0.2.6 patch boundary; until then ask for exact 7.1 patch and installed Java output before advising altiMon runtime compatibility. | FCA-J038 | source locator: Korean JavaCompatibility lines 63-72; catalog row `SRC-OTHER-7.1-000004`. |
 | SRC-TOOL-XVER-000069 | technical_documents_support | cross-version | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Tools > altiShapeLoader 1.0 | Full altiShapeLoader 1.0 Java compatibility matrix, including Java 6/7 unsupported, Java 8 through Java 12 and Java 18 tested, and Java 17 untested. | GPTs/attachments/19_spatial_nifi_tableau_misc.md | Add a Java runtime compatibility note to the altiShapeLoader block; until then, attachment 19's Java 8 setup requirement is not enough to answer exact Java 17/18 compatibility questions. | FCA-J038 | source locator: Korean JavaCompatibility lines 112-122; catalog row `SRC-TOOL-XVER-000069`. |
-| SRC-TOOL-XVER-000070 | technical_documents_support | cross-version | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Tools > Altibase Hadoop Connector | Full Altibase Hadoop Connector Java compatibility matrix, including Java 6 through Java 10 tested and Java 11/12/17/18 untested. | GPTs/attachments/16_dblink_external_connectors.md | Add a connector Java runtime compatibility note alongside the Hadoop Connector setup block; until then, do not expand the broad JRE/JDK 1.6-or-later requirement into tested Java 11+ support. | FCA-J038 | source locator: Korean JavaCompatibility lines 112-122; catalog row `SRC-TOOL-XVER-000070`. |
-| SRC-TOOL-XVER-000071 | technical_documents_support | cross-version | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Tools > dataCompJ 7.2 | Full dataCompJ Java matrix, including Java 8 minimum from dataCompJ 7.2, Java 11-or-later support from dataCompJ 7.1, tested Java 8 through Java 12 and Java 18, and Java 17 untested. | GPTs/attachments/14_utilities_operation_tools.md | Add a dataCompJ Java runtime compatibility note with the 7.2 and 7.1 version boundaries; until then, attachment 14's broad Java runtime wording is insufficient for exact Java-version answers. | FCA-J038 | source locator: Korean JavaCompatibility lines 112-130; catalog row `SRC-TOOL-XVER-000071`. |
 | SRC-TOOL-XVER-000072 | technical_documents_support | cross-version | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Tools > Migration Center 7.10 | Full Migration Center 7.10 Java matrix for Linux/Unix and Windows bundled-JRE handling, including Java 8 minimum from 7.9, Java 11-or-later support from 7.8, Java 17 untested, and Java 18 tested. | GPTs/attachments/15_migration_oracle_compatibility.md | Add a Migration Center Java runtime compatibility note with Linux/Unix and Windows bundled-JRE boundaries; until then, attachment 15's Java 8-or-later runtime line is insufficient for exact Java 17/18 answers. | FCA-J038 | source locator: Korean JavaCompatibility lines 112-130; catalog row `SRC-TOOL-XVER-000072`. |
 
 ### FCA-J033 Utilities And Operation Tools Missing Rows
 
-FCA-J033 cataloged the utilities and operation-tools source-family slice. The row
-below is source-backed and in scope, but attachment 14 currently summarizes the
-dataCompJ 7.2 release note without preserving the exact package names and BUG-token
-fix list as an answer-ready release-note block.
+Resolved by `FCA-J044`. `SRC-REL-PATCH-000023` is no longer an active `Missing` row;
+the active catalog and matrix rows now point to
+`14_utilities_operation_tools.md` > `Exact block: dataCompJ 7.2 release note and Java
+compatibility`.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-REL-PATCH-000023 | utilities_datacompj | patch-specific | ReleaseNotes/kor/Altibase_dataCompJ_7_2_Release_Notes.md | dataCompJ 7.2 Release Notes > fixed bugs and package tokens | Exact release-note block for `dataCompJ 7.2`, package names `dataCompJ7.2.zip` and `dataCompJ7.2.tar.gz`, BUG tokens `BUG-45222`, `BUG-46675`, `BUG-46689`, `BUG-49501`, and the `Log4j 2.17.1` fix boundary. | GPTs/attachments/14_utilities_operation_tools.md | Add a compact dataCompJ 7.2 release-note block that preserves the package names and BUG-token fixes; until then, cite the source limit and avoid claiming exact fixed-bug/package coverage from attachment 14 alone. | FCA-J033 | source locator: Korean dataCompJ 7.2 release notes lines 130-210; catalog row `SRC-REL-PATCH-000023`; attachment grep currently finds only summarized release-note wording. |
 
 ### FCA-J032 iSQL And iLoader Missing Rows
 
-FCA-J032 cataloged the iSQL and iLoader source rows. The row below is source-backed
-and in scope, but attachment 13 currently preserves the command-line token without an
-answer-ready explanation of the environment-variable behavior, NCHAR literal boundary,
-and cost caution from the Korean iSQL manual.
+Resolved by `FCA-J044`. `SRC-ISQL-XVER-000013` is no longer an active `Missing` row;
+the active catalog and matrix rows now point to
+`13_isql_iloader_basic_tools.md` > `iSQL NCHAR Literal Handling`.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-ISQL-XVER-000013 | isql_iloader | cross-version | Manuals/Altibase_7.3/kor/iSQL User's Manual.md | iSQL User's Manual > ALTIBASE_NLS_NCHAR_LITERAL_REPLACE and national character literals | Answer-ready block for `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE`, including values `0` and `1`, `N`-prefixed NCHAR literal handling, NCHAR/NVARCHAR use case, client conversion behavior, cost caution, and safest national-character setup pattern. | GPTs/attachments/13_isql_iloader_basic_tools.md | Add a compact iSQL NCHAR literal block that preserves the environment variable, command-line option relationship, values, conversion behavior, export example, and caution; until then ask for exact client NLS settings and avoid inferring national-character behavior from generic database rules. | FCA-J032 | source locators: Korean iSQL 7.3 lines 844-864 and 3604-3612; catalog row `SRC-ISQL-XVER-000013`. |
 
 ### FCA-J031 C CLI ODBC And Precompiler Missing Rows
 
-FCA-J031 cataloged the C-facing client source rows. The rows below are source-backed
-and in scope, but attachment 12 does not yet expose dedicated compile-ready blocks for
-the exact CLI and ACI header/library/link flags.
+Resolved by `FCA-J044`. `SRC-OTHER-XVER-000227` and `SRC-OTHER-XVER-000228` are no
+longer active `Missing` rows; the active catalog and matrix rows now point to
+`12_c_cli_odbc_precompiler.md` build blocks for CLI and Altibase C Interface compile
+and link files.
 
 | source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-OTHER-XVER-000227 | c_cli_odbc_precompiler | cross-version | Manuals/Altibase_7.3/kor/CLI User's Manual.md | CLI User's Manual > Altibase CLI application build > headers and libraries | Exact CLI compile/link block preserving `$ALTIBASE_HOME/include/sqlcli.h`, `$ALTIBASE_HOME/lib/libodbccli.a`, `-I$ALTIBASE_HOME/include`, and `-L$ALTIBASE_HOME/lib -lodbccli`. | GPTs/attachments/12_c_cli_odbc_precompiler.md | Add a compact CLI build block with header, library, include path, library path, and Unix-like link flags; until then ask for exact client package, OS/compiler, and installed `$ALTIBASE_HOME/include` and `lib` layout before producing compile-ready commands. | FCA-J031 | source locator: Korean CLI 7.3 lines 683-710; catalog row `SRC-OTHER-XVER-000227`. |
-| SRC-OTHER-XVER-000228 | c_cli_odbc_precompiler | cross-version | Manuals/Altibase_7.3/kor/Altibase C Interface Manual.md | Altibase C Interface Manual > ACI application build > headers and libraries | Exact ACI compile/link block preserving `alticapi.h`, `libalticapi.a`, `libodbccli.a`, `-I$ALTIBASE_HOME/include`, `-L$ALTIBASE_HOME/lib`, `-lalticapi`, and `-lodbccli`. | GPTs/attachments/12_c_cli_odbc_precompiler.md | Add a compact ACI build block with header, libraries, include path, library path, and Unix-like link flags; until then ask for exact client package, OS/compiler, and installed `$ALTIBASE_HOME/include` and `lib` layout before producing compile-ready commands. | FCA-J031 | source locator: Korean ACI 7.3 lines 479-509; catalog row `SRC-OTHER-XVER-000228`. |
 
 ### FCA-J024 Performance Tuning And Optimizer Missing Rows
 

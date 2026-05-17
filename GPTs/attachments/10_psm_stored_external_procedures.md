@@ -22,7 +22,7 @@
 Use this compact index before scanning PSM, package, trigger, type, and external procedure sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact procedure, function, anonymous block, type, pragma, or external library block.
 
 - Aliases and customer wording: stored procedure, stored function, PSM, anonymous block, trigger body, package, package body, user-defined type, associative array, varray, cursor, ref cursor, dynamic SQL, exception, pragma, external procedure, external library, C external function.
-- Exact-token anchors: `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE PACKAGE`, `CREATE PACKAGE BODY`, `RETURN`, `DETERMINISTIC`, `AUTHID`, `NOCOPY`, `ASSOCIATIVE ARRAY`, `VARRAY`, `TYPESET`, `OPEN FOR`, `END;`, `CREATE LIBRARY`, `LANGUAGE C`, `EXTERNAL NAME`, `PRAGMA AUTONOMOUS_TRANSACTION`, `PRAGMA EXCEPTION_INIT`, `DBMS_OUTPUT`.
+- Exact-token anchors: `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE PACKAGE`, `CREATE PACKAGE BODY`, `RETURN`, `DETERMINISTIC`, `AUTHID`, `NOCOPY`, `ASSOCIATIVE ARRAY`, `VARRAY`, `TYPESET`, `OPEN FOR`, `END;`, `CREATE LIBRARY`, `LANGUAGE C`, `EXTERNAL NAME`, `PRAGMA AUTONOMOUS_TRANSACTION`, `PRAGMA EXCEPTION_INIT`, `DBMS_OUTPUT`, `DBMS_APPLICATION_INFO`, `DBMS_ALERT`, `DBMS_CONCURRENT_EXEC`, `DBMS_SQL`, `DBMS_STATS`, `UTL_RAW`, `UTL_SMTP`, `UTL_TCP`.
 - Answer route: use this file for PSM generation and external procedure deployment; use `04_sql_dml_oracle_compatibility.md` for SQL inside PSM; use `05_data_types_properties.md` for type limits; use `12_c_cli_odbc_precompiler.md` for C interface details outside the external procedure contract.
 - Safety route: external procedure answers must ask for target OS, Altibase version, compiler/runtime ABI, library path, parameter types, and deployment privileges before production commands.
 
@@ -1001,6 +1001,143 @@ Common package item blocks:
 - `UTL_TCP`: controls TCP access in PSM.
 
 Do not assume Oracle package parity. Match requested Oracle packages to the Altibase package list and verify procedure signatures.
+
+### System Package Routine Reference
+
+Use this reference when a customer asks for an Altibase system-defined package routine, a PL/SQL package equivalent, or an exact subprogram name. Version scope is selected 7.1, 7.3, and Altibase 8.1 verified source Stored Procedures manuals unless a customer provides an installed package definition that proves a patch-specific difference.
+
+Routine block: `DBMS_APPLICATION_INFO`
+
+- Purpose: sets or reads application information stored in session metadata such as `V$SESSION` `MODULE`, `ACTION`, and `CLIENT_INFO`.
+- Routines and signatures:
+  - `DBMS_APPLICATION_INFO.READ_CLIENT_INFO(client_info OUT VARCHAR(128));`
+  - `DBMS_APPLICATION_INFO.READ_MODULE(module_name OUT VARCHAR(128), action_name OUT VARCHAR(128));`
+  - `DBMS_APPLICATION_INFO.SET_ACTION(action_name VARCHAR(128));`
+  - `DBMS_APPLICATION_INFO.SET_CLIENT_INFO(client_info VARCHAR(128));`
+  - `DBMS_APPLICATION_INFO.SET_MODULE(module_name VARCHAR(128), action_name VARCHAR(128));`
+- Example:
+
+```sql
+EXEC DBMS_APPLICATION_INFO.SET_MODULE('altibase_module', 'running');
+EXEC DBMS_APPLICATION_INFO.SET_ACTION('stop');
+EXEC DBMS_APPLICATION_INFO.SET_CLIENT_INFO('test_application');
+```
+
+Routine block: `DBMS_ALERT`
+
+- Purpose: registers named database alerts, sends alert messages, waits for alerts, and removes alert registrations.
+- Selected-source routine set: `REGISTER`, `REMOVE_EVENT`, `REMOVEALL`, `SET_DEFAULTS`, `SIGNAL`, `WAITANY`, and `WAITONE`. The selected 7.1, 7.3, and 8.1 source manuals do not list `POLLANY` or `POLLONE`; ask for the exact installed package definition before promising those names.
+- Routines and signatures:
+  - `DBMS_ALERT.REGISTER(name);`
+  - `DBMS_ALERT.REMOVE_EVENT(name);`
+  - `DBMS_ALERT.REMOVEALL();`
+  - `DBMS_ALERT.SET_DEFAULTS(poll_interval);`
+  - `DBMS_ALERT.SIGNAL(name, message);`
+  - `DBMS_ALERT.WAITANY(name, message, status, timeout);`
+  - `DBMS_ALERT.WAITONE(name, message, status, timeout);`
+- Parameter notes: alert `name` is `VARCHAR2(30)`, `message` is `VARCHAR2(1800)`, `status` is `INTEGER` where documented success is `0` and failure is `1`, and `timeout`/`poll_interval` are seconds.
+- Example:
+
+```sql
+EXEC DBMS_ALERT.REGISTER('S1');
+EXEC DBMS_ALERT.SIGNAL('S1', 'MESSAGE 001');
+EXEC DBMS_ALERT.WAITONE(:NAME, :MESSAGE, :STATUS, 5);
+```
+
+Routine block: `DBMS_CONCURRENT_EXEC`
+
+- Purpose: requests concurrent execution of procedures that do not return result values.
+- Related properties: `CONCURRENT_EXEC_DEGREE_MAX`, `CONCURRENT_EXEC_DEGREE_DEFAULT`, and `CONCURRENT_EXEC_WAIT_INTERVAL`.
+- Restrictions: it cannot execute functions, cannot execute procedures whose parameter mode is `OUT`, cannot be called recursively, cannot be used in parallel query, and `PRINT`/`PRINTLN` output from procedures run through the package is written to `$ALTIBASE_HOME/trc/altibase_qp.log`.
+- Routines and signatures:
+  - `DBMS_CONCURRENT_EXEC.INITIALIZE(in_degree INTEGER DEFAULT NULL)` returns the configured degree or `0` if resources cannot be allocated.
+  - `DBMS_CONCURRENT_EXEC.REQUEST(text VARCHAR(8192))` returns a Request ID, or `-1` when the request itself fails.
+  - `DBMS_CONCURRENT_EXEC.WAIT_ALL()` waits for all requested procedures and returns `1` or `-1`.
+  - `DBMS_CONCURRENT_EXEC.WAIT_REQ(req_id INTEGER)` waits for one Request ID and returns `1` or `-1`.
+  - `DBMS_CONCURRENT_EXEC.GET_ERROR_COUNT()` returns the count of errors after `WAIT_ALL`.
+  - `DBMS_CONCURRENT_EXEC.GET_ERROR(req_id IN INTEGER, text OUT VARCHAR(8192), err_code OUT INTEGER, err_msg OUT VARCHAR(8192))` returns the Request ID or `-1`.
+  - `DBMS_CONCURRENT_EXEC.PRINT_ERROR(req_id IN INTEGER)` prints the requested error detail.
+  - `DBMS_CONCURRENT_EXEC.GET_LAST_REQ_ID()` returns the last successful Request ID.
+  - `DBMS_CONCURRENT_EXEC.GET_REQ_TEXT(req_id IN INTEGER)` returns the requested procedure text or `NULL`.
+  - `DBMS_CONCURRENT_EXEC.FINALIZE()` releases package resources and returns `1` on success.
+- Example call order: `INITIALIZE`, one or more `REQUEST` calls, `WAIT_ALL` or `WAIT_REQ`, `GET_ERROR_COUNT`/`GET_ERROR` or `PRINT_ERROR`, then `FINALIZE`.
+
+```sql
+VARIABLE OUT_DEGREE INTEGER;
+VARIABLE REQ_ID1 INTEGER;
+VARIABLE RC INTEGER;
+EXEC :OUT_DEGREE := DBMS_CONCURRENT_EXEC.INITIALIZE(4);
+EXEC :REQ_ID1 := DBMS_CONCURRENT_EXEC.REQUEST('PROC1');
+EXEC :RC := DBMS_CONCURRENT_EXEC.WAIT_REQ(:REQ_ID1);
+EXEC :RC := DBMS_CONCURRENT_EXEC.FINALIZE();
+```
+
+Routine block: `DBMS_SQL`
+
+- Purpose: dynamic SQL cursor API for open, parse, bind, execute, fetch, extract, and close operations.
+- Related property: `PSM_CURSOR_OPEN_LIMIT`; the selected source states the default open-cursor limit as `32`.
+- Dynamic SQL call order: `OPEN_CURSOR`, `PARSE`, optional `BIND_VARIABLE`, `EXECUTE_CURSOR`, for `SELECT` use `DEFINE_COLUMN`, loop `FETCH_ROWS`, use `COLUMN_VALUE`, then `CLOSE_CURSOR`. Use `LAST_ERROR_POSITION` immediately after a `PARSE` error.
+- Routines and signatures:
+  - `INTEGER variable := DBMS_SQL.OPEN_CURSOR;`
+  - `BOOLEAN variable := DBMS_SQL.IS_OPEN(c);`
+  - `DBMS_SQL.PARSE(c, sql, language_flag);`
+  - `DBMS_SQL.BIND_VARIABLE(c, name, value);`
+  - `BIGINT variable := DBMS_SQL.EXECUTE_CURSOR(c);`
+  - `DBMS_SQL.DEFINE_COLUMN(c, position, column_value);`
+  - `INTEGER variable := DBMS_SQL.FETCH_ROWS(c);`
+  - `DBMS_SQL.COLUMN_VALUE(c, position, column_value);`
+  - `DBMS_SQL.CLOSE_CURSOR(c);`
+  - `DBMS_SQL.LAST_ERROR_POSITION;`
+- Supported bind/column value families in the selected source include `VARCHAR2(32000)`, `CHAR(32000)`, `INTEGER`, `BIGINT`, `SMALLINT`, `DOUBLE`, `REAL`, `NUMERIC(38)`, and `DATE`; column positions start at `1`.
+- Example:
+
+```sql
+c := DBMS_SQL.OPEN_CURSOR;
+DBMS_SQL.PARSE(c, 'select i1 from t1 where i1 = :b1', DBMS_SQL.NATIVE);
+DBMS_SQL.BIND_VARIABLE(c, ':b1', b1);
+rc := DBMS_SQL.EXECUTE_CURSOR(c);
+DBMS_SQL.DEFINE_COLUMN(c, 1, c1);
+LOOP
+  EXIT WHEN DBMS_SQL.FETCH_ROWS(c) = 0;
+  DBMS_SQL.COLUMN_VALUE(c, 1, c1);
+END LOOP;
+DBMS_SQL.CLOSE_CURSOR(c);
+```
+
+Routine block: `DBMS_STATS`
+
+- Purpose: collects, deletes, reads, sets, locks, and unlocks optimizer statistics for database, system, table, index, column, primary-key, unique-key, and partition cases.
+- Routine inventory: `COPY_TABLE_STATS`, `DELETE_COLUMN_STATS`, `DELETE_DATABASE_STATS`, `DELETE_INDEX_STATS`, `DELETE_TABLE_STATS`, `DELETE_SYSTEM_STATS`, `GATHER_DATABASE_STATS`, `GATHER_INDEX_STATS`, `GATHER_SYSTEM_STATS`, `GATHER_TABLE_STATS`, `GET_COLUMN_STATS`, `GET_INDEX_STATS`, `GET_SYSTEM_STATS`, `GET_TABLE_STATS`, `LOCK_TABLE_STATS`, `SET_COLUMN_STATS`, `SET_INDEX_STATS`, `SET_PRIMARY_KEY_STATS`, `SET_SYSTEM_STATS`, `SET_TABLE_STATS`, `SET_UNIQUE_KEY_STATS`, and `UNLOCK_TABLE_STATS`.
+- Exact signatures expanded in the selected source include:
+  - `DBMS_STATS.SET_PRIMARY_KEY_STATS(ownname VARCHAR(128), tabname VARCHAR(128), keycount BIGINT DEFAULT NULL, numpage BIGINT DEFAULT NULL, numdist BIGINT DEFAULT NULL, clusteringfactor BIGINT DEFAULT NULL, indexheight BIGINT DEFAULT NULL, avgslotcnt BIGINT DEFAULT NULL, no_invalidate BOOLEAN DEFAULT FALSE);`
+  - `DBMS_STATS.SET_UNIQUE_KEY_STATS(ownname VARCHAR(128), tabname VARCHAR(128), colnamelist VARCHAR(32000), keycount BIGINT DEFAULT NULL, numpage BIGINT DEFAULT NULL, numdist BIGINT DEFAULT NULL, clusteringfactor BIGINT DEFAULT NULL, indexheight BIGINT DEFAULT NULL, avgslotcnt BIGINT DEFAULT NULL, no_invalidate BOOLEAN DEFAULT FALSE);`
+  - `DBMS_STATS.LOCK_TABLE_STATS(ownname VARCHAR(128), tabname VARCHAR(128));`
+  - `DBMS_STATS.UNLOCK_TABLE_STATS(ownname VARCHAR(128), tabname VARCHAR(128));`
+- `no_invalidate` default is `FALSE`; use `TRUE` when the intent is not to rebuild related execution plans after stats changes.
+- Example:
+
+```sql
+EXEC DBMS_STATS.LOCK_TABLE_STATS('SYS', 'T1');
+EXEC DBMS_STATS.UNLOCK_TABLE_STATS('SYS', 'T1');
+```
+
+Routine block: raw, SMTP, TCP, lock, metadata, output, random, recycle bin, plan cache, and file packages
+
+- `UTL_RAW`: conversion/manipulation routines include `CAST_FROM_BINARY_INTEGER`, `CAST_FROM_NUMBER`, `CAST_TO_BINARY_INTEGER`, `CAST_TO_NUMBER`, `CAST_TO_RAW`, `CAST_TO_VARCHAR2`, `CONCAT`, `LENGTH`, and `SUBSTR`. Key signatures include `UTL_RAW.CAST_TO_RAW(c IN VARCHAR(32767))`, `UTL_RAW.CAST_TO_VARCHAR2(c IN RAW(32767))`, and `UTL_RAW.CONCAT(r1...r12 IN RAW(32767))`.
+- `UTL_SMTP`: SMTP call order is `OPEN_CONNECTION`, `HELO`, `MAIL`, `RCPT`, `OPEN_DATA`, `WRITE_DATA` or `WRITE_RAW_DATA`, `CLOSE_DATA`, then `QUIT`. The selected source lists `CONNECT_TYPE` handles, `VARCHAR(64)` host/domain fields, `VARCHAR(256)` sender/recipient fields, and `VARCHAR(65534)` or `RAW(65534)` data payloads.
+- `UTL_TCP`: TCP routines include `CLOSE_ALL_CONNECTIONS`, `CLOSE_CONNECTION(c IN CONNECT_TYPE)`, `IS_CONNECT(c IN CONNECT_TYPE)`, `OPEN_CONNECTION(...)`, and `WRITE_RAW(...)`. Use `IS_CONNECT` before assuming a handle is still valid.
+- `DBMS_LOCK`: user-lock routines are `REQUEST`, `RELEASE`, `SLEEP`, and `SLEEP2`; lock ID range is `0` through `1073741823`, and `SLEEP2` accepts microseconds up to `999999`.
+- `DBMS_METADATA`: DDL extraction routines are `GET_DDL`, `GET_DEPENDENT_DDL`, `GET_GRANTED_DDL`, `SET_TRANSFORM_PARAM`, and `SHOW_TRANSFORM_PARAMS`; common transform parameters include `SQLTERMINATOR`, `SEGMENT_ATTRIBUTES`, `STORAGE`, `TABLESPACE`, `CONSTRAINTS`, and `REF_CONSTRAINTS`.
+- `DBMS_OUTPUT`: output routines are `NEW_LINE`, `PUT(str IN VARCHAR(65534))`, and `PUT_LINE(str IN VARCHAR(65533))`.
+- `DBMS_RANDOM`: random routines include `INITIALIZE`, `SEED`, `STRING`, `VALUE`, and `RANDOM`.
+- `DBMS_RECYCLEBIN`: purge routines include `PURGE_USER_RECYCLEBIN`, `PURGE_ALL_RECYCLEBIN`, `PURGE_TABLESPACE`, and `PURGE_ORIGINAL_NAME`.
+- `DBMS_SQL_PLAN_CACHE`: plan cache routines are `KEEP_PLAN(sql_text_id)` and `UNKEEP_PLAN(sql_text_id)` where `sql_text_id` is `VARCHAR(64)`.
+- `DBMS_STANDARD`: trigger-context routines include `DELETING`, `INSERTING`, and `UPDATING`, including `UPDATING(COLNAME IN VARCHAR(128))`.
+- `DBMS_UTILITY`: diagnostic routines include `FORMAT_CALL_STACK` and `FORMAT_ERROR_BACKTRACE`.
+- `STANDARD`: defines PSM base types usable without extra package qualification.
+- `SYS_SPATIAL`: provides `GEOMETRY`-related subprograms; use `19_spatial_nifi_tableau_misc.md` for Spatial SQL and API details.
+- `UTL_COPYSWAP`: online-DDL copy-and-swap routines include `CHECK_PRECONDITION`, `COPY_TABLE_SCHEMA`, `REPLICATE_TABLE`, `SWAP_TABLE`, `SWAP_TABLE_PARTITION`, and `FINISH`; ask for replication name, source/target table names, foreign-key/encryption state, and rollback plan before using it in production.
+- `UTL_FILE`: file routines are covered in the `File Control` block above; preserve `FILE_TYPE`, `FOPEN`, `FCLOSE`, `FCLOSE_ALL`, `FCOPY`, `FFLUSH`, `FREMOVE`, `FRENAME`, `GET_LINE`, `IS_OPEN`, `NEW_LINE`, `PUT`, and `PUT_LINE`.
 
 ## 8.1 Temporary LOB in PSM
 

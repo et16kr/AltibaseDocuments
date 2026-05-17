@@ -22,7 +22,7 @@
 Use this compact index before scanning utility command blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact migration, comparison, synchronization, monitoring, diagnostic, or dump-family block.
 
 - Aliases and customer wording: utility, aexport, logical migration, altiComp, data comparison, data synchronization, dataCompJ, XML configuration, dumptrc, dumpla, dumpddf, altierr, altimon, altiMon, altiAudit, altiProfile, checkServer, server command, AKU utility.
-- Exact-token anchors: `aexport`, `altiComp`, `dataCompJ`, `SYNC`, `SU`, `SI`, `MI`, `SD`, `Connections`, `Options`, `TablePairs`, `Materialized View`, `altierr`, `dumptrc`, `dumpla`, `dumpddf`, `checkServer`, `server`, `aku -p start`, `aku -p end`, `aku -p clean`, `ERR-00015`, `ERR-91144`.
+- Exact-token anchors: `aexport`, `altiComp`, `dataCompJ`, `SYNC`, `SU`, `SI`, `MI`, `SD`, `Connections`, `Options`, `TablePairs`, `Materialized View`, `dataCompJ 7.2`, `dataCompJ7.2.zip`, `dataCompJ7.2.tar.gz`, `BUG-45222`, `BUG-46675`, `BUG-46689`, `BUG-49501`, `Log4j 2.17.1`, `altiMon`, `Java 17 ~ 21`, `7.1.0.2.6`, `altierr`, `dumptrc`, `dumpla`, `dumpddf`, `checkServer`, `server`, `aku -p start`, `aku -p end`, `aku -p clean`, `ERR-00015`, `ERR-91144`.
 - Answer route: use this file for utilities and diagnostics; use `13_isql_iloader_basic_tools.md` for iSQL and iLoader; use `17_kubernetes_aku_cloud.md` for Kubernetes AKU lifecycle; use `09_replication_ha_cdc.md` for Replication Manager topology and operation context.
 - Stop condition: before `SYNC`, `aku -p clean`, generated import scripts, or corrective utility commands, require version, target host, port, database role, backup status, replication status, downtime window, and rollback plan.
 
@@ -103,6 +103,26 @@ Exact block: `dataCompJ` fit, configuration, and artifacts
 - `DIFF` writes inconsistent records to CSV output; `SYNC` resolves inconsistencies according to configured policy.
 - Build-stage failures for target-table validity or supported-data-type constraints are reported in `dataCompJ_report.txt`, and the tool does not proceed to the Run stage.
 - Check `dataCompJ_report.txt`, `dataCompJ.log`, and `dataCompJ_data.log`; enable detailed data tracing carefully because `dataCompJ_data.log` can become large.
+
+Exact block: `dataCompJ 7.2` release note and Java compatibility
+
+- Version scope: `dataCompJ 7.2` release-note boundary and supplemental Java compatibility material.
+- Package file names: `dataCompJ7.2.zip` and `dataCompJ7.2.tar.gz`.
+- Fixed BUG tokens:
+  - `BUG-45222`: quoted user-input object names must be handled.
+  - `BUG-46675`: error messages for unsupported DB JDBC URLs must be clearer.
+  - `BUG-46689`: DB type checking through JDBC URL strings was fixed.
+  - `BUG-49501`: dataCompJ Log4j security issue upgraded to `Log4j 2.17.1`.
+- Database compatibility from the release note: Master DB Altibase 5.3.3 or later; Slave DB Oracle 9i or later; Slave DB MariaDB 5.5.x or later.
+- Java compatibility matrix for `dataCompJ 7.2`: Java 6 and Java 7 are unsupported; Java 8 is tested and is the minimum from `dataCompJ 7.2`; Java 9 through Java 10 are tested; Java 11 is tested with the note that Java 11 or later is supported from `dataCompJ 7.1`; Java 12 is tested; Java 17 is untested; Java 18 is tested.
+- Answer rule: do not treat the broad `JRE 8 or higher` requirement as tested Java 17 support. Ask for the exact `dataCompJ` version, package file, `java -version`, JDBC driver versions, and non-production `DIFF` evidence before production use.
+
+Exact block: `altiMon` Java compatibility
+
+- Version scope: supplemental Java compatibility material for server-side `altiMon`.
+- Altibase 7.3 `altiMon`: Java 5, Java 6, and Java 7 are unsupported; Java 8, Java 9, Java 10, Java 11, Java 12, and Java 17 ~ 21 are compatibility-tested.
+- Altibase 7.1 `altiMon`: Java 5, Java 6, Java 7, Java 8, Java 9, Java 10, Java 11, Java 12, and Java 17 ~ 21 are compatibility-tested, but Java 11 or later support starts from Altibase 7.1.0.2.6.
+- Answer rule: before advising an `altiMon` runtime, ask for Altibase version and patch, `altimon.sh` package location, `java -version`, OS/PICL compatibility, and `$ALTIBASE_HOME/altiMon/logs/altimon.log` evidence after `start`.
 
 Exact block: `altierr` lookup forms
 
@@ -879,7 +899,7 @@ altimon.sh stop
 
 Key Inputs:
 
-- Java 8 or higher, with bitness compatible with the PICL C library.
+- Java runtime per the `altiMon` Java compatibility block above, with bitness compatible with the PICL C library; common 7.3 guidance uses Java 8 or higher.
 - `$ALTIBASE_HOME/altiMon/conf/config.xml`.
 - `$ALTIBASE_HOME/altiMon/conf/Metrics.xml`.
 - `$ALTIBASE_HOME/altiMon/conf/GroupMetrics.xml`.

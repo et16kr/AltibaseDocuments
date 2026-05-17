@@ -23,7 +23,7 @@
 Use this compact index before scanning CLI, ODBC, C Interface, and Precompiler sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact API, connection string, LOB, diagnostic, or APRE block.
 
 - Aliases and customer wording: CLI, ODBC, C Interface, ACI, APRE, embedded SQL, precompiler, DSN, SQLDriverConnect, diagnostics, SQLSTATE, autocommit, commit, rollback, LOB locator, file LOB, empty LOB, JSON LOB cleanup, ODBC SSL.
-- Exact-token anchors: `SQLDriverConnect`, `SQLConnect`, `SQLAllocHandle`, `SQLExecDirect`, `SQLPrepare`, `SQLExecute`, `SQLFetch`, `SQLGetDiagRec`, `DSN=ALTIBASE;LongDataCompat=ON`, `ALTIBASE_HDB_ODBC_64bit`, `BLOB`, `CLOB`, `GEOMETRY`, `SQLCA`, `SQLEmptyLob()`, `SQLGetLobLength2()`, `GET DIAGNOSTICS`, `EXEC SQL`, `COMMIT`, `ROLLBACK`.
+- Exact-token anchors: `SQLDriverConnect`, `SQLConnect`, `SQLAllocHandle`, `SQLExecDirect`, `SQLPrepare`, `SQLExecute`, `SQLFetch`, `SQLGetDiagRec`, `DSN=ALTIBASE;LongDataCompat=ON`, `ALTIBASE_HDB_ODBC_64bit`, `BLOB`, `CLOB`, `GEOMETRY`, `SQLCA`, `SQLEmptyLob()`, `SQLGetLobLength2()`, `GET DIAGNOSTICS`, `EXEC SQL`, `COMMIT`, `ROLLBACK`, `$ALTIBASE_HOME/include/sqlcli.h`, `$ALTIBASE_HOME/lib/libodbccli.a`, `-I$ALTIBASE_HOME/include`, `-L$ALTIBASE_HOME/lib -lodbccli`, `alticapi.h`, `libalticapi.a`, `-lalticapi`.
 - Answer route: use this file for C-facing API and compile guidance; use `18_security_ssl_tls.md` for server/client TLS setup; use `07_error_messages_troubleshooting.md` for exact native error-code cause/action; use `13_isql_iloader_basic_tools.md` when the task is tool-based export/import rather than application code.
 - Missing-input trigger: for compile-ready C or APRE guidance, ask for Altibase version, client package version, OS, compiler, driver manager, `SQLLEN` size, connection method, character set, SSL/TLS requirement, autocommit mode, and LOB sizes.
 
@@ -93,6 +93,44 @@ Exact block: ACI result retrieval choice
 - If `altibase_store_result()` returns `NULL`, result-set retrieval failed; when a query returns no rows, it returns an empty result set rather than `NULL`.
 - `altibase_use_result()` does not retrieve the entire result set from the server at once.
 - For large result sets, `LOB` columns, or `GEOMETRY` data, avoid casually recommending store-result patterns that can consume excessive client memory.
+
+Exact block: CLI compile and link files
+
+- Version scope: selected 7.3 CLI build guidance; verify the installed client package layout before producing a final build command for a different target patch or OS.
+- Required CLI header: `$ALTIBASE_HOME/include/sqlcli.h`.
+- Required CLI library: `$ALTIBASE_HOME/lib/libodbccli.a`.
+- Compile include option:
+
+```text
+-I$ALTIBASE_HOME/include
+```
+
+- Unix-like link option:
+
+```text
+-L$ALTIBASE_HOME/lib -lodbccli
+```
+
+- Safe readiness checks before a compile-ready answer: confirm `$ALTIBASE_HOME` points to the intended client installation, confirm `sqlcli.h` and `libodbccli.a` exist under that tree, then match the OS, compiler, and bitness before adding platform-specific flags.
+
+Exact block: Altibase C Interface compile and link files
+
+- Version scope: selected 7.3 Altibase C Interface build guidance; verify the installed client package layout before producing a final build command for a different target patch or OS.
+- Required ACI header: `alticapi.h` under `$ALTIBASE_HOME/include`.
+- Required ACI libraries under `$ALTIBASE_HOME/lib`: `libalticapi.a` and `libodbccli.a`.
+- Compile include option:
+
+```text
+-I$ALTIBASE_HOME/include
+```
+
+- Unix-like link option:
+
+```text
+-L$ALTIBASE_HOME/lib -lalticapi -lodbccli
+```
+
+- Safe readiness checks before a compile-ready answer: confirm the exact client package, OS, compiler, and bitness; then confirm `alticapi.h`, `libalticapi.a`, and `libodbccli.a` exist in the target `$ALTIBASE_HOME` tree.
 
 Exact block: APRE build and error handling
 

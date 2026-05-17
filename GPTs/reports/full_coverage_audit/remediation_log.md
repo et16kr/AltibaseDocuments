@@ -1109,3 +1109,42 @@ Each entry should include:
   found no `Missing` or `Retrieval-weak` rows for attachments `06`, `08`, `09`, or
   `18`. Standard repository verification is recorded in the final `FCA-J043` job
   output.
+
+### FCA-J044
+
+- Changed files: `GPTs/attachments/10_psm_stored_external_procedures.md`,
+  `GPTs/attachments/11_java_jdbc_spring.md`,
+  `GPTs/attachments/12_c_cli_odbc_precompiler.md`,
+  `GPTs/attachments/13_isql_iloader_basic_tools.md`,
+  `GPTs/attachments/14_utilities_operation_tools.md`,
+  `GPTs/attachments/16_dblink_external_connectors.md`,
+  `source_item_catalog.tsv`, `source_to_attachment_matrix.tsv`,
+  `missing_item_register.md`, `retrieval_weakness_register.md`, and this remediation
+  log.
+- Product coverage changes: remediated 9 scoped `Missing` rows and 7 scoped
+  `Retrieval-weak` rows for PSM system-defined package routine retrieval, Java
+  compatibility legend, CLI and ACI compile/link files, iSQL NCHAR literal handling,
+  `dataCompJ 7.2` release and Java runtime boundaries, `altiMon` Java runtime
+  boundaries, and Altibase Hadoop Connector Java runtime boundaries.
+- Affected source item IDs: `SRC-API-XVER-000038` through `SRC-API-XVER-000044`,
+  `SRC-OTHER-XVER-000227`, `SRC-OTHER-XVER-000228`, `SRC-ISQL-XVER-000013`,
+  `SRC-REL-PATCH-000023`, `SRC-OTHER-XVER-000268`, `SRC-OTHER-7.3-000003`,
+  `SRC-OTHER-7.1-000004`, `SRC-TOOL-XVER-000070`, and `SRC-TOOL-XVER-000071`.
+- Disposition changes: the 16 touched catalog and matrix rows now use
+  `coverage_status=Covered`, `audit_job=FCA-J044`, and answer-ready attachment
+  anchors in attachments `10`, `11`, `12`, `13`, `14`, and `16`. No `Guardrail` or
+  `Out-of-scope` disposition was added.
+- Source evidence: Korean Stored Procedures Manual 7.3 system-defined package
+  sections; Korean CLI User's Manual 7.3 application build section; Korean Altibase C
+  Interface Manual 7.3 application build section; Korean iSQL User's Manual 7.3
+  `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE` and national-character sections; Korean
+  `dataCompJ 7.2` release notes; and `Technical Documents/kor/JavaCompatibility.md`.
+  Detailed evidence commands are recorded in the touched catalog and matrix rows.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers` passed; `catalog-qa` and `matrix-qa` passed; scoped
+  FCA-J044 row checks found 16 rows in both catalog and matrix with
+  `coverage_status=Covered`, `audit_job=FCA-J044`, non-empty anchors, and non-empty
+  evidence; scoped exact-token `rg` checks passed; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable `Blocker`, `High`, `Medium`, or `Low` rows.

@@ -24,7 +24,7 @@
 Use this compact index before scanning DB Link and connector sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact DB Link, AltiLinker, Hadoop, DBeaver, Hibernate, OpenLDAP, GoldenGate, CDC, or TLS boundary block.
 
 - Aliases and customer wording: DB Link, database link, AltiLinker, remote database, Hadoop Connector, Sqoop, DBeaver, Hibernate, OpenLDAP back-sql, GoldenGate JDBC Handler, external connector, connector TLS, CDC connector boundary.
-- Exact-token anchors: `DBLINK_ENABLE`, `ALTILINKER_ENABLE`, `ALTILINKER_PORT_NO`, `AltiLinker`, `V$DBLINK_ALTILINKER_STATUS`, `V$DBLINK_DATABASE_LINK_INFO`, `REMOTE_TABLE`, `REMOTE_EXECUTE_IMMEDIATE`, `sqoop import`, `sqoop export`, `--connection-manager com.altibase.sqoop.manager.AltibaseManager`, `AltibaseDialect`, `Altibase.jdbc.driver.AltibaseDriver`, `DB Connections`, `Replication Pairs`, `FOR ANALYSIS`, `XLog Sender`, `Log Analysis API`, `gg.handler.jdbcwriter.DriverClass`.
+- Exact-token anchors: `DBLINK_ENABLE`, `ALTILINKER_ENABLE`, `ALTILINKER_PORT_NO`, `AltiLinker`, `V$DBLINK_ALTILINKER_STATUS`, `V$DBLINK_DATABASE_LINK_INFO`, `REMOTE_TABLE`, `REMOTE_EXECUTE_IMMEDIATE`, `sqoop import`, `sqoop export`, `--connection-manager com.altibase.sqoop.manager.AltibaseManager`, `Altibase Hadoop Connector`, `Java 6`, `Java 7`, `Java 8`, `Java 9 ~ Java 10`, `Java 11`, `Java 12`, `Java 17`, `Java 18`, `AltibaseDialect`, `Altibase.jdbc.driver.AltibaseDriver`, `DB Connections`, `Replication Pairs`, `FOR ANALYSIS`, `XLog Sender`, `Log Analysis API`, `gg.handler.jdbcwriter.DriverClass`.
 - Answer route: use this file for connector workflow and DB Link; use `11_java_jdbc_spring.md` for generic JDBC URL and framework properties; use `18_security_ssl_tls.md` for TLS setup; use `09_replication_ha_cdc.md` for CDC/Log Analyzer and Replication Manager operations.
 - Missing-input trigger: ask for Altibase version, remote DBMS, JDBC driver version, Java version, target host and port, transaction level, connector version, SSL/TLS requirement, and firewall context before production integration commands.
 
@@ -85,6 +85,13 @@ Exact block: Altibase Hadoop Connector with Sqoop
 - `sqoop export` moves HDFS data into an Altibase table.
 - Direction limit: `BLOB` and `CLOB` are supported for import, but not for export, in
   the source baseline.
+
+Exact block: Altibase Hadoop Connector Java compatibility
+
+- Version scope: supplemental Java compatibility material for `Altibase Hadoop Connector`; use together with the connector manual's broader `JRE`/`JDK` 1.6-or-later requirement.
+- Compatibility-tested Java versions: `Java 6`, `Java 7`, `Java 8`, and `Java 9 ~ Java 10`.
+- Untested Java versions in the source table: `Java 11`, `Java 12`, `Java 17`, and `Java 18`.
+- Answer rule: do not expand the broad `JRE` or `JDK` 1.6-or-later requirement into tested Java 11, Java 12, Java 17, or Java 18 support. Ask for the exact connector package, Sqoop version, Hadoop version, Altibase JDBC driver, `java -version`, and non-production `sqoop list-tables` or `sqoop import` output before production guidance.
 
 ## Fast Decision Map
 
@@ -860,7 +867,7 @@ When to Use:
 
 Required Pieces:
 
-- `JRE` or `JDK` 1.6 or later.
+- `JRE` or `JDK` 1.6 or later; use the Java compatibility block above before treating any Java 11 or later runtime as tested.
 - Hadoop 1.0 in the source manual baseline.
 - Sqoop 1.4.4 or later.
 - Altibase 5.0 or later.

@@ -22,7 +22,7 @@
 Use this compact index before scanning JDBC, Spring, Hibernate, and Adapter sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact URL, driver, connection attribute, Java version, API, or framework block.
 
 - Aliases and customer wording: JDBC URL, driver class, Altibase.jar, Altibase42.jar, Maven dependency, Spring Boot, Hibernate dialect, connection pool, failover, SSL JDBC, truststore, LOB handling, generated keys, Java compatibility, Adapter for JDBC, SQLSTATE troubleshooting.
-- Exact-token anchors: `jdbc:Altibase://host:port/database`, `Altibase.jdbc.driver.AltibaseDriver`, `Altibase.jar`, `Altibase42.jar`, `AltibaseDialect`, `hibernate-community-dialects`, `lob_null_select=off`, `fetch_enough=0`, `time_zone=DB_TZ`, `failover`, `(database1:20300, database2:20300)`, `Connection.isValid()`, `AltibaseJDBCType`, `reuse_resultset`, `stmt_cache_enable`.
+- Exact-token anchors: `jdbc:Altibase://host:port/database`, `Altibase.jdbc.driver.AltibaseDriver`, `Altibase.jar`, `Altibase42.jar`, `AltibaseDialect`, `hibernate-community-dialects`, `lob_null_select=off`, `fetch_enough=0`, `time_zone=DB_TZ`, `failover`, `(database1:20300, database2:20300)`, `Connection.isValid()`, `AltibaseJDBCType`, `reuse_resultset`, `stmt_cache_enable`, `Oracle OpenJDK`, `Oracle JDK`, `IBM SDK`, `x`, `●`, `-`, `Altibase Support`.
 - Answer route: use this file for JDBC and Java framework configuration; use `18_security_ssl_tls.md` for certificate and cipher procedure; use `16_dblink_external_connectors.md` for connector workflows that happen to use JDBC; use `05_data_types_properties.md` for server-side property semantics.
 - Missing-input trigger: before production Java guidance, ask for Altibase server version, JDBC driver patch, Java version, framework version, host, port, database name, SSL/TLS requirement, failover topology, and connection pool.
 
@@ -153,6 +153,16 @@ Exact block: Java runtime boundary for 7.3 JDBC and Adapter for JDBC
 - Do not plan Java 5, Java 6, or Java 7 for Altibase 7.3 JDBC or Adapter for JDBC.
 - For Adapter for JDBC, verify both the Adapter version and the target database JDBC
   driver runtime requirement before committing to Java 17-21.
+
+Exact block: Java compatibility table legend and support boundary
+
+- Version scope: supplemental Java compatibility material for Java-based Altibase libraries and utilities; use it as compatibility evidence only for the listed product family, version, and patch boundary.
+- Compatibility test basis: Altibase Java compatibility testing is performed against `Oracle OpenJDK`.
+- Vendor boundary: the source treats `Oracle JDK`, `Oracle OpenJDK`, and `IBM SDK` as binary compatible for the tested Java versions, so the table records Java version compatibility rather than every vendor binary.
+- Symbol `x`: unsupported Java version. Do not recommend it for production use.
+- Symbol `●`: compatibility testing completed for that Java version.
+- Symbol `-`: compatibility testing was not performed; compatibility follows the JDK backward-compatibility policy, but if Altibase compatibility-test evidence is required, escalate to `Altibase Support` instead of claiming the runtime is tested.
+- Customer-answer rule: never convert a `-` cell into tested support. Ask for the exact Altibase patch, driver or tool version, `java -version` output, and vendor runtime before giving production Java runtime guidance.
 
 ## Version Differences
 

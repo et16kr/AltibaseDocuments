@@ -22,7 +22,7 @@
 Use this compact index before scanning iSQL and iLoader cookbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact command option, script, host-variable, load-mode, LOB, bad-row, or result-code block.
 
 - Aliases and customer wording: iSQL connect, iSQL script, iSQL output, host variables, PREPARE, object inspection, transaction command, iLoader export, iLoader import, load mode, CSV delimiter, FORM file, bad file, log file, errors limit, LOB file, geom WKB, replication load, secure login.
-- Exact-token anchors: `isql`, `CONNECT`, `-s`, `-u`, `-p`, `-f`, `-silent`, `PREPARE`, `HOST VARIABLE`, `-bad`, `-log`, `-errors`, `-KEEP_SYSDBA`, `APPEND`, `REPLACE`, `TRUNCATE`, `structout`, `-displayquery`, `-partition`, `-geom WKB`, `-replication`, `employees.dat`, `employees.fmt`, `t1.dat`, `t1.fmt`.
+- Exact-token anchors: `isql`, `CONNECT`, `-s`, `-u`, `-p`, `-f`, `-silent`, `PREPARE`, `HOST VARIABLE`, `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE`, `-NLS_NCHAR_LITERAL_REPLACE 0|1`, `NCHAR`, `NVARCHAR`, `N`, `-bad`, `-log`, `-errors`, `-KEEP_SYSDBA`, `APPEND`, `REPLACE`, `TRUNCATE`, `structout`, `-displayquery`, `-partition`, `-geom WKB`, `-replication`, `employees.dat`, `employees.fmt`, `t1.dat`, `t1.fmt`.
 - Answer route: use this file for direct iSQL/iLoader commands; use `14_utilities_operation_tools.md` for `aexport`, `altiComp`, `dataCompJ`, dump tools, and `altierr`; use `02_administration_operations.md` for backup/recovery decisions; use `07_error_messages_troubleshooting.md` for failed-load error handling.
 - Safety route: before production import, ask for version, target table, load mode, row count, character set, delimiter, LOB handling, replication impact, backup status, and retry plan.
 
@@ -201,6 +201,31 @@ Syntax notes:
 - `-KEEP_SYSDBA` is used with `-SYSDBA` when you want iSQL to keep administrator mode after startup instead of reconnecting to a service session.
 - `-F` runs a script immediately after iSQL starts. Parameters after the script name can be used as substitution values when the script uses substitution variables.
 - `-O` writes iSQL command results to a file in the current directory and overwrites an existing file with the same name.
+
+## iSQL NCHAR Literal Handling
+
+Block: `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE`
+
+- Version scope: selected 7.1, 7.3, and Altibase 8.1 verified source iSQL manuals.
+- Related command-line option: `-NLS_NCHAR_LITERAL_REPLACE 0|1`.
+- Purpose: controls whether iSQL searches SQL text for literals prefixed with `N` so national-character literals can bypass client conversion to the database character set.
+- Value `0`: iSQL does not check for `N` before literals and converts the whole query text to the database character set.
+- Value `1`: when iSQL finds an `N`-prefixed `NCHAR` literal, the client sends that literal without converting it to the database character set; the server converts it to the national character set.
+- Use case: `NCHAR` and `NVARCHAR` data when the national-character data needs an encoding different from the database character set.
+- Cost caution: setting this value to `1` adds significant client-side cost because the client searches query text for `N`-prefixed literals.
+- Safe setup pattern: set the environment variable deliberately before starting iSQL, keep `NLS_USE`/`ALTIBASE_NLS_USE` aligned with the real client input, and prefix national-character constants with `N`.
+
+```sh
+export ALTIBASE_NLS_NCHAR_LITERAL_REPLACE=1
+```
+
+```sql
+CREATE TABLE t1 (c1 NVARCHAR(10));
+INSERT INTO t1 VALUES (N'AB<national_text>');
+SELECT * FROM t1;
+```
+
+Caution: do not infer this behavior from generic database rules. Ask for the exact client character set, database character set, national character set, and iSQL option/environment settings when multilingual data is at risk.
 
 ## iSQL Connection Cookbook
 
