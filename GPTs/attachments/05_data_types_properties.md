@@ -1784,6 +1784,8 @@ Range: 32-bit `[2097152, 2^32 + 1]`; 64-bit `[2097152, 2^64]`.
 
 Behavior: if the memory database expands beyond this value, the offending transaction errors, and later non-`SELECT` SQL also errors until the condition is resolved.
 
+DDL link: for `CREATE MEMORY TABLESPACE ... MAXSIZE UNLIMITED` and the SQL Reference wording for `CREATE VOLATILE TABLESPACE ... MAXSIZE UNLIMITED`, preserve `MEM_MAX_DB_SIZE` as a required sizing check. Also check `VOLATILE_MAX_DB_SIZE` for volatile-only total capacity.
+
 Ask for missing input before change guidance: exact Altibase version/patch, 32-bit or 64-bit mode if applicable, current `VALUE1`, `MIN`, and `MAX`, current memory tablespace sizes, and available OS memory.
 
 Check SQL:
@@ -1926,6 +1928,8 @@ Dynamic Change Support: read-only, single-value. This is not a dynamic `ALTER SY
 Range: 32-bit `[2097152, 2^32 + 1]`; 64-bit `[2097152, 2^64]`.
 
 Caution: the configured total volatile tablespace size cannot exceed memory space provided by the operating system.
+
+DDL link: generated volatile tablespace SQL should include `CREATE VOLATILE TABLESPACE`, `SIZE`, `AUTOEXTEND`, `NEXT`, `MAXSIZE`, and `UNLIMITED` when applicable. For `MAXSIZE UNLIMITED`, check both this property and the `MEM_MAX_DB_SIZE` limit described in the SQL Reference's volatile tablespace section.
 
 Ask for missing input before change guidance: exact version/patch, current `VALUE1`, `MIN`, and `MAX`, volatile tablespace inventory, and available OS memory.
 

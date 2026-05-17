@@ -61,6 +61,12 @@ Syntax notation used in this attachment:
 - `...` after a clause means the clause may repeat.
 - Lowercase names such as `table_name`, `expr`, and `subquery` are placeholders to replace with customer objects or expressions.
 
+Exact-token generation anchors:
+
+- Tablespaces and files: preserve `CREATE TABLESPACE`, `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `DATAFILE`, `TEMPFILE`, `SIZE`, `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE`, `UNLIMITED`, `CHECKPOINT PATH`, `SPLIT EACH`, `EXPAND_CHUNK_PAGE_COUNT`, `MEM_MAX_DB_SIZE`, `VOLATILE_MAX_DB_SIZE`, and `MEM_DB_DIR` when those facts drive the answer.
+- Table, partition, and LOB DDL: preserve `GLOBAL TEMPORARY`, `ON COMMIT DELETE ROWS`, `ON COMMIT PRESERVE ROWS`, `ALTER TABLE`, `DROP TABLE`, `CREATE INDEX`, `TIMESTAMP`, `8-byte`, `INSERT`, `UPDATE`, `PARTITION BY RANGE`, `VALUES LESS THAN`, `DEFAULT`, `NULL`, `ALTER TABLE ADD PARTITION`, `PARTITION BY HASH`, `PARTITION BY LIST`, `ROW MOVEMENT`, `DISABLE ROW MOVEMENT`, `1000`, `CREATE TABLE AS SELECT`, `alias`, `table_compression_clause`, `PRIMARY KEY`, `UNIQUE`, `BLOB`, `CLOB`, `LOB`, `STORE AS`, `TABLESPACE`, and `LOB(column_name)`.
+- Index and destructive-DDL safety: preserve `PARALLEL`, `INDEX_BUILD_THREAD_COUNT`, `LOGGING`, `NOLOGGING`, `FORCE`, `NOFORCE`, `V$DISK_BTREE_HEADER`, `DROP TABLESPACE`, `INCLUDING CONTENTS`, `AND DATAFILES`, `CASCADE CONSTRAINTS`, and `PURGE TABLE` when generating operational or cleanup SQL.
+
 ### Tablespace Syntax
 
 ```text
@@ -150,11 +156,19 @@ Generation notes:
 - Memory tablespace `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. `AUTOEXTEND OFF` is the default.
 - Memory `MAXSIZE UNLIMITED` is still bounded by available memory and `MEM_MAX_DB_SIZE`. If `CHECKPOINT PATH` is omitted, Altibase uses `MEM_DB_DIR`.
 - A memory tablespace can be created `OFFLINE` and later made available with `ALTER TABLESPACE ... ONLINE`.
-- Volatile tablespaces exist in memory, have no checkpoint image files, and lose data at shutdown. Their `SIZE` and `AUTOEXTEND NEXT` use the same allocation-unit rule as memory tablespaces, but their total growth is bounded by `VOLATILE_MAX_DB_SIZE`.
+- Volatile tablespaces exist in memory, have no checkpoint image files, and lose data at shutdown. Their `SIZE` and `AUTOEXTEND NEXT` use the same allocation-unit rule as memory tablespaces. For `CREATE VOLATILE TABLESPACE ... MAXSIZE UNLIMITED`, preserve the SQL Reference caveat that growth is limited when the combined memory and volatile total reaches `MEM_MAX_DB_SIZE`; also check `VOLATILE_MAX_DB_SIZE`, which the General Reference defines as the maximum total volatile tablespace size.
 - `CREATE TEMPORARY TABLESPACE` creates disk working space for temporary query results and user `TEMPORARY TABLESPACE` assignment. `GLOBAL TEMPORARY TABLE` objects use a volatile tablespace in the table `TABLESPACE` clause.
 - User-defined disk and memory tablespaces can move between `ONLINE` and `OFFLINE`; volatile and temporary tablespaces cannot use state changes. `DISCARD` is for damaged disk or memory tablespaces during `CONTROL` startup.
 - `AND DATAFILES` in `DROP TABLESPACE` applies to disk data files or memory checkpoint image files. Omit `AND DATAFILES` for volatile tablespaces.
 - `BEGIN BACKUP` and `END BACKUP` are tablespace online-backup state changes; use them only inside a documented backup procedure and end backup state as soon as copied files are complete.
+
+Tablespace exact-answer blocks:
+
+- Disk data: `CREATE DISK TABLESPACE` and `CREATE TABLESPACE` both target an ordinary disk data tablespace; `CREATE DISK DATA TABLESPACE` is the explicit expanded form. Include `DATAFILE`, quoted absolute file paths, `SIZE`, optional `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE {size | UNLIMITED}`, and the `SYS` or `CREATE TABLESPACE` privilege caveat. `REUSE` can destroy existing file contents; ask for confirmation of the exact path and backup state before using it.
+- Memory data: `CREATE MEMORY TABLESPACE` or `CREATE MEMORY DATA TABLESPACE` requires `SIZE`. When generating `AUTOEXTEND ON`, include `NEXT` and either `MAXSIZE size` or `MAXSIZE UNLIMITED`; ensure `SIZE`, `NEXT`, and `SPLIT EACH` are multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`. Include `CHECKPOINT PATH` when the customer requires explicit checkpoint image placement; otherwise state that `MEM_DB_DIR` is used. `MAXSIZE UNLIMITED` is still constrained by `MEM_MAX_DB_SIZE`.
+- Volatile data: `CREATE VOLATILE TABLESPACE` or `CREATE VOLATILE DATA TABLESPACE` uses `SIZE` and optional `AUTOEXTEND`; do not add `CHECKPOINT PATH`, `SPLIT EACH`, `ONLINE`, or `OFFLINE`. Preserve `UNLIMITED`, `EXPAND_CHUNK_PAGE_COUNT`, `MEM_MAX_DB_SIZE`, and `VOLATILE_MAX_DB_SIZE` checks when explaining growth. Volatile data is restart-discardable.
+- Temporary disk work space: `CREATE TEMPORARY TABLESPACE` uses `TEMPFILE`, not `DATAFILE`. Use it for disk temporary query work space and user `TEMPORARY TABLESPACE` assignment. Do not use it as the `TABLESPACE` for `GLOBAL TEMPORARY TABLE`; use a volatile tablespace there.
+- Destructive drops: `DROP TABLESPACE ... INCLUDING CONTENTS` is required when objects remain in the tablespace. Add `AND DATAFILES` only when intentionally removing disk data files or memory checkpoint image files. Add `CASCADE CONSTRAINTS` only when dropping referential constraints in other tablespaces is accepted. Never generate `DROP TABLESPACE` for `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_UNDO`, or `SYS_TBS_DISK_TEMP`.
 
 Tablespace generation checklist:
 
@@ -415,6 +429,7 @@ alter_table_partition ::=
 
 Generation notes:
 
+- `GLOBAL TEMPORARY` table answers must state both row-scope choices: `ON COMMIT DELETE ROWS` for transaction scope and `ON COMMIT PRESERVE ROWS` for session scope. Include the DDL binding caveat before generating follow-up `ALTER TABLE`, `DROP TABLE`, or `CREATE INDEX`: session-scoped temporary table DDL is allowed only when the session is not bound to the table; transaction-scoped temporary table DDL is allowed but Altibase commits before DDL, so transaction-level rows disappear.
 - `IF NOT EXISTS` for `CREATE TABLE` and `IF EXISTS` for `DROP TABLE` are available in the Altibase 8.1 verified source. Omit both for 7.1 and 7.3.
 - Required privilege: `SYS`, `CREATE TABLE` or `CREATE ANY TABLE` for the target schema when creating tables; `SYS`, owner, `ALTER` object privilege, or `ALTER ANY TABLE` for `ALTER TABLE`; `SYS`, owner, or `DROP ANY TABLE` for `DROP TABLE`.
 - If `TABLESPACE` is omitted, Altibase uses the creating user's `DEFAULT TABLESPACE`; if that is not set, the system memory default tablespace is used.
@@ -440,10 +455,11 @@ Generation notes:
 - Be explicit with full date literals in `CHECK` constraints. If the year or month is omitted in a `DATE` constant, Altibase can derive it from the current date.
 - `MODIFY CONSTRAINT constraint_name ENABLE VALIDATE` enforces and validates a constraint. `ENABLE NOVALIDATE` enables future enforcement without validating existing rows. Use `RENAME CONSTRAINT old_name TO new_name` when only the constraint name changes.
 - A `TIMESTAMP` constraint cannot be added to or dropped from an existing column through `ADD CONSTRAINT` or `DROP CONSTRAINT`.
-- A table can have at most `64` indexes. The combined number of primary-key and unique-key constraints in one table is also limited to `64`.
+- For `ALTER TABLE` planning, the SQL Reference caution says a table can have at most `64` indexes, and the combined number of primary-key and unique-key constraints in one table cannot exceed `64`. The `CREATE TABLE` caution also states that the combined count of indexes, primary keys, and unique keys cannot exceed `1024`; when a numeric limit is the main answer, quote the target SQL Reference section and installed version.
 - LOB columns in disk tables can be stored in a separate disk LOB tablespace. LOB columns in memory tables cannot be stored separately from the table; memory LOB `IN ROW` sizing belongs in the data type definition.
 - LOB type columns cannot be used in volatile tables or disk temporary tablespaces, cannot be partition keys, cannot be indexed, and should not normally be declared `NOT NULL`.
 - `ALTER TABLE ... ALTER LOB (...) STORE AS (...)` changes LOB column storage attributes. `ALTER TABLE ... ALTER TABLESPACE ... LOB (lob_column TABLESPACE lob_tablespace)` moves disk-table LOB storage; use only disk LOB tablespaces for separate LOB placement.
+- For disk-table LOB placement answers, preserve both the readable grammar and the compact placeholder token: `LOB(column_name)` means the actual SQL form `LOB (column_name) STORE AS (TABLESPACE lob_tablespace)`. Do not copy Oracle `SECUREFILE`, `BASICFILE`, `RETENTION`, or `CACHE` options into Altibase LOB syntax.
 - Temporary tables can use `ON COMMIT DELETE ROWS` for transaction-specific data or `ON COMMIT PRESERVE ROWS` for session-specific data.
 - For `GLOBAL TEMPORARY TABLE`, specify a volatile tablespace in the table `TABLESPACE` clause, not a disk temporary tablespace.
 - Temporary table definitions are shared metadata, but rows are private to the session that inserts them. Session-specific temporary table DDL is allowed only when the session is not bound to the table; transaction-specific temporary table DDL causes the internal DDL commit behavior to remove transaction-level rows.
@@ -451,7 +467,9 @@ Generation notes:
 - For 7.1 range partitioned tables, include a `DEFAULT` partition. For 7.3 and Altibase 8.1 verified source, range partitioning may omit `DEFAULT`; only default-less range tables can be extended with range `ADD PARTITION`.
 - List partitioned tables require a `DEFAULT` partition. Range and hash partition keys can use up to 32 columns; list partitioning uses a single partition key column.
 - `ENABLE ROW MOVEMENT` allows updates that move rows between partitions when partition key values change. If omitted, `DISABLE ROW MOVEMENT` is the default.
-- `ADD PARTITION` is for hash partitioning, and for 7.3 or Altibase 8.1 verified source default-less range tables when appending the last range with `VALUES LESS THAN (...)`. Do not use `ADD PARTITION` to add a range `DEFAULT` partition or insert a middle range; use `SPLIT PARTITION` for middle/default range changes. `COALESCE PARTITION` is for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
+- `ALTER TABLE ADD PARTITION` is for hash partitioning, and for 7.3 or Altibase 8.1 verified source default-less `PARTITION BY RANGE` tables when appending the last range with `VALUES LESS THAN (...)`. Do not use `ALTER TABLE ADD PARTITION` to add a range `DEFAULT` partition or insert a middle range; use `SPLIT PARTITION` for middle/default range changes. `COALESCE PARTITION` is for hash partitioning. `DROP PARTITION`, `MERGE PARTITIONS`, and `SPLIT PARTITION` are not for hash partitioning.
+- In a `PARTITION BY RANGE` table with a `DEFAULT` partition, values outside explicit ranges and `NULL` go to the `DEFAULT` partition. In a default-less range table, the SQL Reference example shows an extra metadata range row whose `PARTITION_NAME` displays blank; treat that as a `NULL`/unnamed partition indicator in validation SQL.
+- For `PARTITION BY RANGE_USING_HASH`, preserve the fixed hash modulus `1000` in the answer. The partition key is a single column, and the partition bounds are `VALUES LESS THAN (hash_mod_1000_value)` plus `DEFAULT`.
 - `ACCESS PARTITION partition_name READ ONLY|READ WRITE|READ APPEND` changes one partition's access mode. Table-level or partition-level read-only/read-append mode still permits replication changes, `TRUNCATE`, and LOB column changes documented by the SQL Reference.
 - Moving a non-partitioned table with `ALTER TABLE ... ALTER TABLESPACE` moves records. Moving a partitioned table's table-level tablespace does not move existing partition records; use partition-level clauses to move partition data.
 - Changing a non-partitioned table from a disk tablespace to memory or volatile can implicitly change eligible columns to `VARIABLE`; changing from memory or volatile to disk changes columns to `FIXED`. Temporary tables cannot be moved with `ALTER TABLE ... ALTER TABLESPACE`.
@@ -459,6 +477,7 @@ Generation notes:
 - `COMPACT` returns empty pages for memory and volatile tables without moving data. `AGING` physically removes old versions of logically deleted records. Both can be run for a named partition where the syntax permits.
 - Do not generate ad hoc `ALTER TABLE` for replication targets. For replication-target DDL, use the standard remove/re-add flow or the documented DDL synchronization procedure in `09_replication_ha_cdc.md`.
 - `CREATE TABLE ... AS SELECT` copies column attributes and data from the query. Do not specify a different number of columns, explicit target data types, or `CHECK` constraints; expression columns need aliases. If CTAS output needs validation, review existing rows and then use `ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)`.
+- `table_compression_clause` is not compatible with `CREATE TABLE AS SELECT` in one statement. Compression answers must also state that `PRIMARY KEY`, `UNIQUE`, and `TIMESTAMP` columns are not compressible.
 - `PCTFREE` and `PCTUSED` are meaningful for disk-based table pages. Do not copy Oracle storage clauses without checking Altibase syntax and storage target.
 - `JSON` columns are an 8.1 baseline feature. Use `JSON [IN ROW size]` when needed, ensure `TEMPORARY_LOB_ENABLE=1`, and avoid JSON columns for 7.1 or 7.3 unless a later Altibase source for the exact target version and patch explicitly documents native `JSON` support.
 
@@ -578,6 +597,9 @@ Generation notes:
 - For memory tables, a `TABLESPACE` clause on an index is ignored because memory indexes are not stored in tablespaces.
 - For disk-table indexes, `NOLOGGING` can improve build speed but may require dropping and rebuilding the index after a system or media fault if the index becomes inconsistent.
 - `PARALLEL integer` is an index-build hint. Valid generation range is `0` through `512`; omitted or `0` lets Altibase derive the thread count from `INDEX_BUILD_THREAD_COUNT` or the host CPU count.
+- Before generating performance-oriented `CREATE INDEX` SQL, preserve the full decision line: use `TABLESPACE` only for disk-table indexes or local index partitions, choose one of `LOGGING` or `NOLOGGING [FORCE | NOFORCE]`, use `PARALLEL integer` only as a build hint, and check `INDEX_BUILD_THREAD_COUNT` when `PARALLEL` is omitted or `0`.
+- After `NOLOGGING [FORCE | NOFORCE]` disk-index builds, verify `V$DISK_BTREE_HEADER`. If a system or media fault leaves an index inconsistent, drop and rebuild the affected index. Do not rebuild blindly without the target index name, table, and maintenance window.
+- `LOB` columns cannot be index keys. If a requested index expression, function-based index, partition key, join condition, or uniqueness design depends on `BLOB`, `CLOB`, or JSON/LOB-like data, stop and ask for a different scalar key or generated column design backed by the target version.
 - Use `ALTER INDEX ... REBUILD` for inconsistent disk B-tree indexes or after changing direct-key attributes. `AGING` is for disk indexes; `REORGANIZATION` is for memory B-tree index space cleanup.
 - `ALTER INDEX ... STORAGE (INITEXTENTS ...)` ignores `INITEXTENTS`; do not present it as an effective change. Use `NEXTEXTENTS`, `MINEXTENTS`, or `MAXEXTENTS` only when disk index segment management is the real target.
 - `IF NOT EXISTS` for `CREATE INDEX` and `IF EXISTS` for `DROP INDEX` are Altibase 8.1 verified source syntax. Omit both for 7.1 and 7.3.
@@ -1606,6 +1628,23 @@ TEMPFILE '/data/altibase/dbs/app_temp01.tmp' SIZE 512M
 AUTOEXTEND ON NEXT 128M MAXSIZE 8G;
 ```
 
+Use these equivalent shorthand forms when the customer or test asks for the exact source tokens `CREATE DISK TABLESPACE` or `CREATE VOLATILE TABLESPACE`:
+
+```sql
+CREATE DISK TABLESPACE app_disk_tbs_short
+DATAFILE '/data/altibase/dbs/app_disk_short01.dbf' SIZE 1G REUSE
+AUTOEXTEND ON NEXT 256M MAXSIZE UNLIMITED;
+
+CREATE VOLATILE TABLESPACE app_vol_tbs_short
+SIZE 500M
+AUTOEXTEND ON NEXT 100M MAXSIZE UNLIMITED;
+```
+
+Safety for these shorthand forms:
+
+- `REUSE` is destructive if the named file already exists. Use it only after the customer confirms the exact path, that the existing file can be overwritten, and that required backup or recovery evidence is available.
+- `MAXSIZE UNLIMITED` does not mean unlimited physical capacity. For disk files, growth is limited by operating-system and filesystem free space. For memory and volatile tablespaces, check `MEM_MAX_DB_SIZE`, `VOLATILE_MAX_DB_SIZE`, and available OS memory.
+
 Alter disk and temporary files:
 
 ```sql
@@ -1891,6 +1930,8 @@ CREATE TABLE app.app_document (
 LOB (body) STORE AS (TABLESPACE app_disk_tbs);
 ```
 
+The compact placeholder `LOB(column_name)` in generated-answer checklists maps to the actual Altibase syntax `LOB (column_name) STORE AS (TABLESPACE lob_tablespace)`. Replace `column_name` with the concrete `BLOB` or `CLOB` column and keep the LOB tablespace a disk tablespace.
+
 Create transaction-specific and session-specific temporary tables:
 
 ```sql
@@ -1928,6 +1969,28 @@ PARTITION BY RANGE (order_date)
 )
 TABLESPACE app_disk_tbs;
 ```
+
+Create a default-less range-partitioned table only when future high-end range append is expected, then use `ALTER TABLE ADD PARTITION` for the next last range:
+
+```sql
+CREATE TABLE app.order_history_open (
+    order_id    BIGINT NOT NULL,
+    order_date  DATE NOT NULL,
+    amount      NUMBER(12, 2)
+)
+PARTITION BY RANGE (order_date)
+(
+    PARTITION p_2025 VALUES LESS THAN (TO_DATE('2026-01-01', 'YYYY-MM-DD')) TABLESPACE app_disk_tbs
+)
+TABLESPACE app_disk_tbs;
+
+ALTER TABLE app.order_history_open
+ADD PARTITION p_2026
+VALUES LESS THAN (TO_DATE('2027-01-01', 'YYYY-MM-DD'))
+TABLESPACE app_disk_tbs;
+```
+
+For default-less range validation, inspect `SYSTEM_.SYS_TABLE_PARTITIONS_`; the source example displays an extra range row with a blank `PARTITION_NAME`, which should be treated as `NULL`/unnamed metadata rather than as a user-created `DEFAULT` partition.
 
 Create list and hash partitioned disk tables:
 
@@ -1981,6 +2044,34 @@ CREATE TABLE app.app_event (
 - JSON processing uses Temporary LOB internally; check `TEMPORARY_LOB_ENABLE` when a JSON workload fails or when memory use is being reviewed.
 - Avoid generating the `JSON` column type for 7.1 or 7.3 unless a later Altibase source for the exact target version and patch explicitly documents native `JSON` support.
 - Do not create partition keys or indexes on JSON columns. Treat JSON columns as LOB-like for DDL restrictions.
+
+`TIMESTAMP` and `CREATE TABLE AS SELECT` generation examples:
+
+```sql
+CREATE TABLE app.audit_marker (
+    marker_id  INTEGER PRIMARY KEY,
+    row_stamp  TIMESTAMP,
+    note       VARCHAR(200)
+) TABLESPACE app_mem_tbs;
+
+INSERT INTO app.audit_marker (marker_id, note)
+VALUES (1, 'created by INSERT');
+
+UPDATE app.audit_marker
+SET row_stamp = DEFAULT,
+    note = 'updated by UPDATE'
+WHERE marker_id = 1;
+
+CREATE TABLE app.order_amounts AS
+SELECT order_id,
+       amount AS amount_value
+FROM app.order_history;
+```
+
+Generation notes for these examples:
+
+- `TIMESTAMP` is an internally generated `8-byte` column. Use at most one `TIMESTAMP` column per table, do not specify an explicit `DEFAULT` in `CREATE TABLE`, and use `DEFAULT` in `UPDATE` only when the intended value is the current system time.
+- `CREATE TABLE AS SELECT` must not specify explicit target data types or `CHECK` constraints. If the select list contains expressions, each expression needs an `alias` that becomes the target column name.
 
 Alter table examples:
 
@@ -2115,6 +2206,7 @@ WHERE t.table_oid = m.table_oid
   AND t.table_name = 'APP_USER';
 
 SELECT p.partition_name,
+       CASE WHEN p.partition_name IS NULL THEN 'Y' ELSE 'N' END AS partition_name_is_null,
        p.partition_min_value,
        p.partition_max_value,
        p.partition_order,

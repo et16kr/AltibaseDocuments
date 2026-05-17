@@ -887,6 +887,8 @@ ALTER TABLESPACE app_data DISCARD;
 
 Version rule: `IF NOT EXISTS` is available for tablespace creation in the Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
 
+DDL-generation anchors: when answering tablespace creation or deletion questions, preserve exact tokens such as `CREATE TABLESPACE`, `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `DATAFILE`, `TEMPFILE`, `SIZE`, `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE`, `UNLIMITED`, `CHECKPOINT PATH`, `SPLIT EACH`, `DROP TABLESPACE`, `INCLUDING CONTENTS`, `AND DATAFILES`, and `CASCADE CONSTRAINTS`. See `03_sql_ddl_generation.md` for full generated-SQL examples.
+
 Disk data tablespace:
 
 ```text
@@ -1001,7 +1003,7 @@ DDL rules:
 - Memory and volatile `SIZE` and `AUTOEXTEND NEXT` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`.
 - Memory growth is bounded by `MEM_MAX_DB_SIZE`; if memory database expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors until capacity is corrected.
 - Disk database growth is bounded by `DISK_MAX_DB_SIZE`; if expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors.
-- Volatile growth is bounded by `VOLATILE_MAX_DB_SIZE`, and that total volatile tablespace limit cannot exceed memory space provided by the operating system.
+- For `CREATE VOLATILE TABLESPACE ... MAXSIZE UNLIMITED`, preserve both limits: the SQL Reference describes growth against the combined memory and volatile total reaching `MEM_MAX_DB_SIZE`, and the General Reference defines `VOLATILE_MAX_DB_SIZE` as the maximum total volatile tablespace size. That total volatile limit cannot exceed memory space provided by the operating system.
 - `CHECKPOINT PATH` operations apply only to memory tablespaces and require the DBA to create, move, or remove the underlying OS directories and checkpoint image files.
 - Temporary tablespaces are disk work space. `GLOBAL TEMPORARY TABLE` storage is specified with a volatile tablespace in the table `TABLESPACE` clause.
 
