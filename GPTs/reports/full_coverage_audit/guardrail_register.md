@@ -21,6 +21,18 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J034 Migration And Oracle Compatibility Guardrail
+
+FCA-J034 cataloged Migration Center and Adapter for Oracle source rows. The selected
+manuals and release notes support the documented tool workflows, conversion rules,
+options, property blocks, and validation checks, but production migration correctness
+still depends on the customer's exact source and target environment and generated
+artifacts.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000230 | Guardrail | migration_oracle | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-017 and GAP-J002-018 > migration, adapter, and live validation boundary | Selected sources document the migration and adapter workflows, but production migration correctness depends on exact source and target versions, patch levels, object definitions, character sets, JDBC/OCI drivers, generated reports, configuration, logs, and non-production validation output. | Ask for source Oracle version, target Altibase version and patch, source and target character sets, storage/tablespace design, object DDL, PSM use, generated Build/Reconcile/Run/Data Validation reports, Adapter `oraAdapter.conf`, JDBC/OCI versions, logs, backup/rollback plan, and non-production validation evidence before asserting production migration success or compatibility. | GPTs/attachments/15_migration_oracle_compatibility.md | FCA-J034 | `GAP-J002-017`; `GAP-J002-018`; catalog row `SRC-OTHER-XVER-000230`; attachment `Residual Scope`. |
+
 ### FCA-J033 Utilities And Operation Tool Guardrails
 
 FCA-J033 cataloged utility commands, operation-tool outputs, dump diagnostics,

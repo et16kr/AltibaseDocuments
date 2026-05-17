@@ -806,3 +806,39 @@ Each entry should include:
   release-note block before final audit closure; the installed-tool guardrail remains
   intentional until exact package, configuration, input file, generated report, and
   live/non-production output evidence is provided.
+
+### FCA-J034
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged the `migration_oracle` source-family slice for
+  Migration Center 7.19 release scope, runtime/database requirements, five-stage
+  workflow, CLI commands, Build/Reconcile/Run/Data Validation outputs, migration
+  options, Oracle object/type/default/JSON/empty-string conversion, PSM converter
+  review rules, Oracle-specific troubleshooting, Adapter for Oracle prerequisites,
+  `oraAdapter.conf` properties, constraints, startup/shutdown, `oaUtility`, data type
+  mapping, DDL order, and offline option. No original manuals or customer-facing
+  attachments were edited.
+- Catalog rows added by this job: 30 rows total; 29 `Covered`, 0
+  `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Migration Center trunk and release manuals, Korean Migration
+  Center 7.19 release notes, and Korean Adapter for Oracle 7.1, 7.3, and trunk
+  manuals were used as authoritative sources. Matching attachment evidence is in
+  `15_migration_oracle_compatibility.md`.
+- Coverage status changes: existing answer-ready anchors in
+  `15_migration_oracle_compatibility.md` cover the scoped Migration Center and Adapter
+  rows. `SRC-OTHER-XVER-000230` was registered as a `Guardrail` for production
+  migration/adapter success because selected sources require exact versions, object
+  DDL, generated reports, configuration, logs, driver/OCI state, backup/rollback plan,
+  and non-production validation output before definitive customer claims.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 2044 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 30
+  FCA-J034 rows with 29 `Covered` and 1 `Guardrail` status. Standard repository
+  verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no customer-facing attachment text was changed. The migration and
+  adapter guardrail remains intentional until the customer provides exact source/target
+  versions, schemas, generated reports, configuration, logs, rollback plan, and
+  non-production validation evidence.
