@@ -478,3 +478,39 @@ Each entry should include:
   LOB, and regex errors still require the version, full error line, SQL/API/tool
   command, object definition, property values, and log/client evidence requested by
   `07_error_messages_troubleshooting.md`.
+
+### FCA-J022
+
+- Changed files: `source_item_catalog.tsv` and this remediation log.
+- Product coverage changes: cataloged the selected `error_message_reference` client,
+  network, replication, SSL/TLS, DB Link, iSQL/iLoader utility, APRE, CLI/ODBC, and
+  Log Analyzer exact-code slice only; no customer-facing attachment text or original
+  source documents were edited.
+- Catalog rows added by this job: 148 rows total; 5 `Covered`, 143
+  `Covered-by-routing`, 0 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Version scope: all rows are `cross-version` rows with the 7.3 Korean Error Message
+  Reference as the representative `source_path`. `cmERR_ABORT_UNSUPPORTED_OPENSSL_VERSION`
+  records 7.3 and Altibase 8.1 verified-source evidence and notes that the checked 7.1
+  Korean source has no matching symbol.
+- Source evidence: selected Korean Altibase 7.1, Altibase 7.3, and Altibase 8.1
+  verified-source Error Message Reference entries were matched by exact reference code
+  and symbol. Each row records line locators plus the existing
+  `07_error_messages_troubleshooting.md` block or exact-code map line used for
+  attachment evidence.
+- Coverage status changes: dedicated single-code blocks for idle-instance utility
+  connection, communication failure, INET socket bind failure, duplicate replication
+  name, and unsupported OpenSSL were marked `Covered`. Grouped maps for client
+  session/protocol, replication startup and metadata mismatch, client/server SSL, DB
+  Link, utility, APRE, and Log Analyzer errors were marked `Covered-by-routing`.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1467 catalog rows and 0 matrix rows; scoped TSV counts confirmed 148
+  FCA-J022 rows with 5 `Covered` and 143 `Covered-by-routing` statuses. Standard
+  repository verification passed: `git diff --check`, `bash review/scripts/run_review_stage.sh validate`,
+  and the review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: no new `Missing`, `Guardrail`, `Out-of-scope`, or `Retrieval-weak`
+  rows were added by FCA-J022. Customer answers for replication, SSL/TLS, DB Link,
+  utility, APRE, CLI/ODBC, and Log Analyzer errors still require exact version, full
+  error line, command/API call, topology or connection string, relevant properties, and
+  log/client evidence as requested by `07_error_messages_troubleshooting.md`.
