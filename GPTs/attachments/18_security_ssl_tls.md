@@ -2,7 +2,7 @@
 
 ## Applicable Versions
 
-- 7.1: Based on Altibase 7.1 SSL/TLS guidance.
+- 7.1: Based on Altibase 7.1 SSL/TLS guidance. The source software requirement scopes the server to Intel Linux.
 - 7.3: Based on Altibase 7.3 SSL/TLS guidance and release notes for OpenSSL 3.0.8, TLS 1.3, and FIPS configuration.
 - 8.1: Based on Altibase 8.1 verified source SSL/TLS guidance, release notes, and replication SSL guidance.
 
@@ -29,7 +29,7 @@
 - For 8.1-specific statements, say `Altibase 8.1 verified source`.
 - Do not expose internal source labels or local source-tree paths in customer answers.
 - For production SSL/TLS changes, ask for the exact Altibase version, client interface, authentication mode, certificate type, server and client OS, OpenSSL version, and target ports before giving a final procedure.
-- For production JDBC or ODBC/CLI SSL/TLS recommendations, also verify the target version and platform. The Altibase SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel-Linux.
+- For production JDBC or ODBC/CLI SSL/TLS recommendations, also verify the target version and platform. The Altibase SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel Linux / Intel-Linux.
 
 ## Fast Decision Map
 
@@ -71,7 +71,7 @@ Port and endpoint separation:
 - Altibase 8.1 verified source SSL replication uses the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - `REPLICATION_SSL_PORT_NO` is a replication Receiver port. It does not replace the server `SSL_PORT_NO` used by application clients.
 
-Platform caveat: before production JDBC or ODBC/CLI SSL/TLS guidance, verify the exact Altibase version and platform against supported-platform information. The SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel-Linux; do not extend that support to other platforms without target-version evidence.
+Platform caveat: before production JDBC or ODBC/CLI SSL/TLS guidance, verify the exact Altibase version and platform against supported-platform information. The SSL/TLS guide states that JDBC and ODBC SSL connections are currently supported only on Intel Linux / Intel-Linux; do not extend that support to other platforms without target-version evidence.
 
 ```mermaid
 flowchart LR
@@ -86,6 +86,7 @@ Version block: 7.1
 
 - TLS support: Altibase 7.1 SSL/TLS guidance describes TLS 1.0 through the OpenSSL library.
 - OpenSSL requirement: OpenSSL toolkit `0.9.4` through `1.0.2` according to the 7.1 SSL/TLS guide.
+- Platform requirement: the 7.1 SSL/TLS guide scopes the server requirement to Altibase 6.5.1 or later on Intel Linux.
 - Heartbleed caution: before enabling SSL/TLS on Altibase 7.1-era systems, verify that the installed OpenSSL version is not vulnerable to Heartbleed. The 7.1 SSL/TLS guide gives `OPENSSL_NO_HEARTBEATS` as the source-provided check.
 - Java guidance: JRE 1.6 or later is recommended for convenient SSL client setup; JRE 1.5 can be used but is not recommended.
 - Server properties: use `SSL_ENABLE`, `SSL_PORT_NO`, `SSL_MAX_LISTEN`, `SSL_CIPHER_LIST`, `SSL_CLIENT_AUTHENTICATION`, `SSL_CERT`, `SSL_KEY`, `SSL_CA`, and `SSL_CAPATH`.
@@ -114,7 +115,7 @@ Server setup checklist:
 
 1. Confirm that the Altibase version and OpenSSL version match the target version guidance. For Altibase 7.1, verify that the installed OpenSSL is not vulnerable to Heartbleed before enabling SSL/TLS; use `OPENSSL_NO_HEARTBEATS` as the source-provided check.
 2. Prepare the server certificate, server private key, and CA certificate or CA directory.
-3. Set SSL/TLS server properties in `altibase.properties`.
+3. Set SSL/TLS server properties in `$ALTIBASE_HOME/conf/altibase.properties`.
 4. Decide whether the server will use server-only authentication or mutual authentication.
 5. Start the server and verify that the SSL listener is created.
 6. Test one client connection over the SSL/TLS port.
@@ -149,6 +150,7 @@ Server property block: `SSL_PORT_NO`
 - Range: `1024` through `65535`.
 - Default: `20443`.
 - Caution: the SSL/TLS port must be distinct from the ordinary TCP service port.
+- Boundary: this is the ordinary client/server SSL/TLS port, not `REPLICATION_SSL_PORT_NO`.
 
 Server property block: `SSL_MAX_LISTEN`
 
@@ -225,6 +227,18 @@ Expected listener evidence:
 [CM] Listener started : SSL on port 20443 [IPV4]
 ```
 
+Server monitoring and close check:
+
+```sql
+SELECT ID, DB_USERNAME, COMM_NAME
+FROM V$SESSION
+WHERE COMM_NAME LIKE 'SSL%';
+
+ALTER DATABASE database_name SESSION CLOSE session_number;
+```
+
+Monitoring rule: an SSL/TLS session should be visible in `V$SESSION.COMM_NAME` with a value that starts with `SSL`. A suspicious SSL/TLS session can be closed by `SYS` in `SYSDBA` mode with `ALTER DATABASE database_name SESSION CLOSE session_number`, then checked again in `V$SESSION`.
+
 ## Client SSL/TLS
 
 Use this section for client-to-server SSL/TLS. This includes applications and tools. It does not configure replication SSL.
@@ -259,7 +273,7 @@ Certificate evidence to request:
 
 JDBC setup checklist:
 
-1. Verify that the target Altibase version and platform are supported for JDBC SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux.
+1. Verify that the target Altibase version and platform are supported for JDBC SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel Linux / Intel-Linux.
 2. For private CA server certificates, import the server CA certificate into a truststore.
 3. For mutual authentication, prepare a PKCS #12 file containing the client certificate and private key, then import it into a Java keystore.
 4. Configure Java SSL properties either as JVM options, `System.setProperty(...)`, or JDBC connection properties.
@@ -320,6 +334,7 @@ JDBC property block: `port`
 
 - Purpose: target server port.
 - For SSL/TLS: set it to the server `SSL_PORT_NO`.
+- Precedence when `ssl_enable=true`: JDBC `port` wins first; if `port` is absent, `ALTIBASE_SSL_PORT_NO` is used; if both are absent, use the documented default SSL port `20443`.
 - Caution: do not rely on implicit defaults in production. Set `port` or `ALTIBASE_SSL_PORT_NO` explicitly.
 
 JDBC property block: `ciphersuite_list`
@@ -354,7 +369,7 @@ JDBC property block: `truststore_url`, `truststore_type`, `truststore_password`
 
 ODBC/CLI setup checklist:
 
-1. Verify that the target Altibase version and platform are supported for ODBC/CLI SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel-Linux.
+1. Verify that the target Altibase version and platform are supported for ODBC/CLI SSL/TLS; the SSL/TLS guide scopes JDBC and ODBC SSL connections to Intel Linux / Intel-Linux.
 2. Verify that OpenSSL libraries and the `openssl` utility are installed on the client host.
 3. For mutual authentication, prepare the client certificate and private key in PEM format.
 4. Configure `SSL_CA` or `SSL_CAPATH` when server certificate verification is required.
@@ -406,6 +421,7 @@ ODBC/CLI connection note:
 
 - On the client side, `SSL_ENABLE` and `SSL_PORT_NO` are server properties. ODBC/CLI clients select SSL/TLS with the SSL connection type and connect to the SSL/TLS port, for example `PORT=20443` or the equivalent tool-specific `PORT_NO` key.
 - If a specific tool documents a numeric connection type for SSL/TLS, use that tool's documented value. Otherwise keep answers at the named setting level, such as `CONNTYPE=SSL`.
+- For ODBC/CLI `FIPS` use, set the client environment variable `ALTIBASE_SSL_LOAD_CONFIG=1`; skip that step when `FIPS` is not used.
 
 ADO.NET setup checklist:
 
@@ -454,9 +470,10 @@ Replication property block: `REPLICATION_SSL_PORT_NO`
 
 - Version: Altibase 8.1 verified source.
 - Purpose: local SSL replication Receiver port.
-- Data type: unsigned integer.
+- Data type: `Unsigned Integer`.
 - Default: `0`.
 - Range: `0` through `65535`.
+- Attribute: read-only; single value.
 - Meaning of `0`: SSL replication cannot be connected on that node.
 - Caution: this is not the ordinary client/server `SSL_PORT_NO`.
 
@@ -504,6 +521,7 @@ Replication connection type guidance:
 - For TCP replication, the peer port is `REPLICATION_PORT_NO`.
 - For SSL replication, the peer port is `REPLICATION_SSL_PORT_NO`.
 - For InfiniBand replication, the peer port is `REPLICATION_IB_PORT_NO`.
+- Port separation token block: `PORT_NO` is the ordinary client/server TCP port, `SSL_PORT_NO` is the ordinary client/server SSL/TLS port, `REPLICATION_PORT_NO` is the ordinary TCP replication Receiver port, and `REPLICATION_SSL_PORT_NO` is the Altibase 8.1 verified source SSL replication Receiver port.
 
 ## Managing SSL/TLS Access
 

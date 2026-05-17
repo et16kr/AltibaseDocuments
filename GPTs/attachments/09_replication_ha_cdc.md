@@ -239,8 +239,11 @@ Topology block: multi-IP replication
 
 - A replication object can contain multiple remote host address and port pairs.
 - The Sender starts with the first host and can reconnect through another host after a line failure.
+- In `CREATE REPLICATION`, multiple `WITH 'remote_host', remote_port [USING conn_type [ib_latency]]` host entries are listed without comma separators between host entries; `FROM ... TO ...` table entries use comma separators.
 - `ALTER REPLICATION ... ADD HOST`, `DROP HOST`, and `SET HOST` require the replication object to be stopped.
+- `ALTER REPLICATION replication_name DROP HOST ALL` removes all hosts. After `DROP HOST ALL`, replication cannot be started again until host information is added.
 - After `SET HOST`, the selected host is used when replication is restarted.
+- If `USING conn_type` is omitted, ordinary `TCP` is used. `USING IB [ib_latency]` requires `IB_ENABLE=1`; InfiniBand use does not detect physical network failures, so do not treat it as a full network-failure detector.
 
 ```mermaid
 flowchart LR
@@ -503,7 +506,7 @@ Syntax notes:
 - `IF NOT EXISTS` is available for `CREATE REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
 - `IF EXISTS` is available for `DROP REPLICATION` in Altibase 8.1 verified source. Omit it for 7.1 and 7.3.
 - `replication_name` must be the same on both nodes.
-- `remote_host_port_no` is the peer Receiver port.
+- `remote_host_port_no` is the peer Receiver port, not an arbitrary client port.
 - If the `USING` clause is omitted, ordinary TCP replication is used.
 - In non-SSL TCP replication, use the peer `REPLICATION_PORT_NO`. This is the ordinary replication port, not the database service port and not `SSL_PORT_NO`.
 - In Altibase 8.1 verified source SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
@@ -582,6 +585,7 @@ SSL prerequisites:
 - Each node has a nonzero `REPLICATION_SSL_PORT_NO`.
 - Firewalls allow each peer to connect to the other peer's `REPLICATION_SSL_PORT_NO`.
 - `USING SSL` is specified in both matching `CREATE REPLICATION` statements.
+- Keep the ordinary TCP replication port `REPLICATION_PORT_NO` in the answer as the contrast point: TCP uses `REPLICATION_PORT_NO`; SSL replication uses `REPLICATION_SSL_PORT_NO`; ordinary client/server SSL/TLS uses `SSL_PORT_NO`.
 - `FOR ANALYSIS` Log Analyzer replication is not combined with SSL, because Log Analyzer does not support SSL or InfiniBand communication in the verified source guidance.
 
 Preflight:
@@ -592,6 +596,7 @@ FROM V$PROPERTY
 WHERE name IN (
   'SSL_ENABLE',
   'SSL_PORT_NO',
+  'REPLICATION_PORT_NO',
   'REPLICATION_SSL_PORT_NO',
   'REPLICATION_MAX_COUNT'
 )
@@ -636,9 +641,9 @@ Altibase 8.1 SSL cautions:
 
 - Altibase 8.1 supports SSL/TLS encryption for replication communication.
 - `USING SSL` is specified in `CREATE REPLICATION`.
-- `REPLICATION_SSL_PORT_NO` configures the local SSL replication Receiver port. If this property is `0`, SSL replication cannot connect to that node.
+- `REPLICATION_SSL_PORT_NO` is an `Unsigned Integer`, read-only, single value property. It configures the local SSL replication Receiver port. If this property is `0`, SSL replication cannot connect to that node.
 - General SSL/TLS server setup must be completed before using SSL replication.
-- `SSL_PORT_NO` and `REPLICATION_SSL_PORT_NO` are different ports.
+- `REPLICATION_PORT_NO`, `SSL_PORT_NO`, and `REPLICATION_SSL_PORT_NO` are different ports.
 - Log Analyzer does not support SSL or InfiniBand communication; do not combine `FOR ANALYSIS` with `USING SSL`.
 
 Non-SSL multi-IP example:

@@ -744,6 +744,9 @@ alter_system_property ::=
 alter_session_property ::=
   ALTER SESSION SET property_name = property_value
 
+reload_access_list ::=
+  ALTER SYSTEM RELOAD ACCESS LIST
+
 free_session_temporary_lob_8_1 ::=
   ALTER SESSION SET FREE TEMPORARY LOB
 ```
@@ -756,6 +759,7 @@ Property SQL rules:
 - For `ALTER SYSTEM`, the user must be `SYS` or have `ALTER SYSTEM` privilege.
 - For `ALTER SESSION`, the change affects only the current session.
 - For persistent operations policy, also maintain `altibase.properties` when the site requires restart-stable configuration; do not assume a dynamic statement replaces file configuration unless the target version documentation confirms it.
+- `ALTER SYSTEM RELOAD ACCESS LIST` rebuilds runtime access-list rules from `ACCESS_LIST_FILE` and is run in `SYSDBA` administrator mode. It applies to new connection requests; existing sessions are not disconnected by the reload.
 
 ## Property Check SQL
 
@@ -1398,7 +1402,7 @@ Altibase 8.1 verified source only:
 - `REPLICATION_DDL_ENABLE_LEVEL`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_SYNC_TIMEOUT`, `REPLICATION_EAGER_PARALLEL_FACTOR`, `REPLICATION_EAGER_RECEIVER_MAX_ERROR_COUNT`, `REPLICATION_FAILBACK_INCREMENTAL_SYNC`, `REPLICATION_GAPLESS_ALLOW_TIME`
 - `REPLICATION_GAPLESS_MAX_WAIT_TIME`, `REPLICATION_GAP_UNIT`, `REPLICATION_GROUPING_AHEAD_READ_NEXT_LOG_FILE`, `REPLICATION_GROUPING_TRANSACTION_MAX_COUNT`, `REPLICATION_HBT_DETECT_HIGHWATER_MARK`, `REPLICATION_HBT_DETECT_TIME`, `REPLICATION_IB_LATENCY`
 - `REPLICATION_IB_PORT_NO`, `REPLICATION_INSERT_REPLACE`, `REPLICATION_KEEP_ALIVE_CNT`, `REPLICATION_LOCK_TIMEOUT`, `REPLICATION_LOG_BUFFER_SIZE`, `REPLICATION_MAX_COUNT`, `REPLICATION_MAX_LISTEN`
-- `REPLICATION_MAX_LOGFILE`, `REPLICATION_POOL_ELEMENT_COUNT`, `REPLICATION_POOL_ELEMENT_SIZE`, `REPLICATION_PORT_NO`, `REPLICATION_PREFETCH_LOGFILE_COUNT`, `REPLICATION_RECEIVER_APPLIER_ASSIGN_MODE`, `REPLICATION_RECEIVER_APPLIER_QUEUE_SIZE`
+- `REPLICATION_MAX_LOGFILE`, `REPLICATION_POOL_ELEMENT_COUNT`, `REPLICATION_POOL_ELEMENT_SIZE`, `REPLICATION_PORT_NO`, `REPLICATION_SSL_PORT_NO`, `REPLICATION_PREFETCH_LOGFILE_COUNT`, `REPLICATION_RECEIVER_APPLIER_ASSIGN_MODE`, `REPLICATION_RECEIVER_APPLIER_QUEUE_SIZE`
 - `REPLICATION_RECEIVE_TIMEOUT`, `REPLICATION_RECOVERY_MAX_LOGFILE`, `REPLICATION_RECOVERY_MAX_TIME`, `REPLICATION_SENDER_AUTO_START`, `REPLICATION_SENDER_COMPRESS_XLOG`, `REPLICATION_SENDER_ENCRYPT_XLOG`, `REPLICATION_SENDER_IP`
 - `REPLICATION_SENDER_SEND_TIMEOUT`, `REPLICATION_SENDER_SLEEP_TIME`, `REPLICATION_SENDER_SLEEP_TIMEOUT`, `REPLICATION_SENDER_START_AFTER_GIVING_UP`, `REPLICATION_SERVER_FAILBACK_MAX_TIME`, `REPLICATION_SQL_APPLY_ENABLE`, `REPLICATION_SYNC_APPLY_METHOD`
 - `REPLICATION_SYNC_LOCK_TIMEOUT`, `REPLICATION_SYNC_LOG`, `REPLICATION_SYNC_TUPLE_COUNT`, `REPLICATION_TIMESTAMP_RESOLUTION`, `REPLICATION_TRANSACTION_POOL_SIZE`
@@ -1407,8 +1411,8 @@ Altibase 8.1 verified source only:
 
 - `IB_CONCHKSPIN`, `IB_ENABLE`, `IB_LATENCY`, `IB_LISTENER_DISABLE`, `IB_MAX_LISTEN`, `IB_PORT_NO`, `SNMP_ALARM_FETCH_TIMEOUT`
 - `SNMP_ALARM_QUERY_TIMEOUT`, `SNMP_ALARM_SESSION_FAILURE_COUNT`, `SNMP_ALARM_UTRANS_TIMEOUT`, `SNMP_ENABLE`, `SNMP_MSGLOG_FLAG`, `SNMP_PORT_NO`, `SNMP_RECV_TIMEOUT`
-- `SNMP_SEND_TIMEOUT`, `SNMP_TRAP_PORT_NO`, `SSL_CA`, `SSL_CAPATH`, `SSL_CERT`, `SSL_CIPHER_LIST`, `SSL_CLIENT_AUTHENTICATION`
-- `SSL_ENABLE`, `SSL_KEY`, `SSL_MAX_LISTEN`, `SSL_PORT_NO`, `TCP_ENABLE`
+- `SNMP_SEND_TIMEOUT`, `SNMP_TRAP_PORT_NO`, `SSL_CA`, `SSL_CAPATH`, `SSL_CERT`, `SSL_CIPHER_LIST`, `SSL_CIPHER_SUITES`, `SSL_CLIENT_AUTHENTICATION`
+- `SSL_ENABLE`, `SSL_KEY`, `SSL_LOAD_CONFIG`, `SSL_MAX_LISTEN`, `SSL_PORT_NO`, `TCP_ENABLE`
 
 #### `M` Message logging
 
@@ -3326,20 +3330,26 @@ WHERE name = 'MAX_CLIENT';
 
 ### Property Item: `REPLICATION_PORT_NO`
 
-Meaning: local ordinary replication port.
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source for ordinary TCP replication.
+
+Meaning: local server replication Receiver port for ordinary non-SSL TCP replication connections.
 
 Default: `0`.
 
-Dynamic Change Support: read-only.
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Dynamic Change Support: read-only. Configure in `altibase.properties` before startup rather than generating `ALTER SYSTEM`.
 
 Range: `[0, 65535]`.
 
-Behavior: `0` disables ordinary replication listener use for this property.
+Behavior: `0` means replication is not used through `REPLICATION_PORT_NO`.
+
+Port boundary: this is not the ordinary client/server `PORT_NO` and not the client/server SSL/TLS listener `SSL_PORT_NO`. In `CREATE REPLICATION ... WITH 'peer_host', peer_port`, ordinary TCP replication uses the peer server's `REPLICATION_PORT_NO`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'REPLICATION_PORT_NO';
 ```
@@ -3348,31 +3358,138 @@ WHERE name = 'REPLICATION_PORT_NO';
 
 Version: Altibase 8.1 verified source only in the selected General Reference 1 detailed property sections.
 
-Meaning: local SSL replication port used when replication connects with SSL.
+Meaning: local server replication Receiver port used when replication connects with SSL/TLS.
 
 Default: `0`.
 
-Dynamic Change Support: read-only.
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Dynamic Change Support: read-only. Configure in `altibase.properties` before startup rather than generating `ALTER SYSTEM`.
 
 Range: `[0, 65535]`.
 
-Behavior: `0` means SSL replication cannot be connected through this property. Before using SSL replication, complete SSL configuration on each replication target server.
+Behavior: `0` means SSL replication cannot connect to that node through this property.
+
+Prerequisite: before using SSL replication, complete SSL/TLS setup on each replication target server.
+
+Port boundary: this is not ordinary client/server `SSL_PORT_NO`. In Altibase 8.1 verified source replication DDL, `CREATE REPLICATION ... WITH 'peer_host', peer_ssl_replication_port USING SSL` must use the peer server's `REPLICATION_SSL_PORT_NO`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'REPLICATION_SSL_PORT_NO';
 ```
 
-### Property Item: `SSL_ENABLE`
+### Property Item: `REPLICATION_EAGER_PARALLEL_FACTOR`
 
-Meaning: enables or disables SSL/TLS for Altibase client/server communication.
+Version: documented in 7.3 and Altibase 8.1 verified source for EAGER replication. Verify 7.1 patch scope before applying.
+
+Meaning: number of parallel Sender threads used for EAGER-mode replication work.
+
+Default: the smaller of logical core count divided by `2` and `512`.
+
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Range: `[2, 512]`.
+
+High-risk caution: increasing the Sender thread count can improve EAGER replication throughput, but the transaction order sent by those Sender threads is not guaranteed. Before recommending any change, ask for topology, EAGER object definitions, workload order requirements, current gap/state, and maintenance-window restart plan.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'REPLICATION_EAGER_PARALLEL_FACTOR';
+```
+
+### Property Item: `REPLICATION_DDL_ENABLE`
+
+Version: documented in 7.3 and Altibase 8.1 verified source; patch-specific restrictions can also apply.
+
+Meaning: controls whether DDL statements are allowed on replication target tables.
 
 Default: `0`.
 
-Dynamic Change Support: read-only.
+Data type and attribute: `Unsigned Integer`; read-write; single value.
+
+Range: `[0, 1]`.
+
+Dynamic Change Support: `ALTER SYSTEM`.
+
+Value semantics: `0` does not allow DDL on replication target tables through this property; `1` allows DDL only within the documented replication DDL constraints.
+
+Required caution: before executing DDL, set the current session's transaction replication property to a value other than `NONE` so the Sender can recognize the DDL execution. Check the Replication Manual for the allowed DDL list and restrictions; do not infer allowed DDL from generic Altibase or Oracle DDL rules.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'REPLICATION_DDL_ENABLE';
+```
+
+### Property Item: `REPLICATION_DDL_ENABLE_LEVEL`
+
+Version: documented in 7.3 and Altibase 8.1 verified source; patch-specific restrictions can also apply.
+
+Meaning: controls the scope of DDL statements allowed on replication target tables.
+
+Default: `0`.
+
+Data type and attribute: `Unsigned Integer`; read-write; single value.
+
+Range: `[0, 1]`.
+
+Dynamic Change Support: `ALTER SYSTEM`.
+
+Prerequisite: set `REPLICATION_DDL_ENABLE=1` first. Then check the Replication Manual for which DDL statements correspond to the selected `REPLICATION_DDL_ENABLE_LEVEL`.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'REPLICATION_DDL_ENABLE_LEVEL';
+```
+
+### Property Item: `REPLICATION_SQL_APPLY_ENABLE`
+
+Version: documented in 7.3 and Altibase 8.1 verified source for Lazy replication metadata-difference handling.
+
+Meaning: controls SQL Apply fallback when Lazy replication table metadata differs between Active and Standby servers in documented ways.
+
+Default: `0`.
+
+Data type and attribute: `Unsigned Integer`; read-write; single value.
+
+Range: `[0, 1]`.
+
+Value semantics:
+
+- `0`: replication uses `XLog`; if the replicated table metadata differs, a `Handshaking` error occurs.
+- `1`: under documented metadata-difference conditions, `XLog` is converted to `SQL` statements and applied to the replication target table.
+
+Documented conditions include column data type, size, precision, or scale differences; check constraint or `Not Null` constraint differences; other metadata differences involving a LOB column; and listed unique-index or function-based-index differences. Treat this as a Lazy replication compatibility fallback, not permission for arbitrary schema drift.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'REPLICATION_SQL_APPLY_ENABLE';
+```
+
+### Property Item: `SSL_ENABLE`
+
+Meaning: enables or disables ordinary Altibase client/server SSL/TLS communication.
+
+Default: `0`.
+
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Dynamic Change Support: read-only. Configure in `$ALTIBASE_HOME/conf/altibase.properties` and restart/verify the listener.
 
 Range: `[0, 1]`.
 
@@ -3384,27 +3501,51 @@ Values:
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'SSL_ENABLE';
 ```
 
 ### Property Item: `SSL_PORT_NO`
 
-Meaning: SSL/TLS listener port for client/server communication.
+Meaning: ordinary client/server SSL/TLS listener port.
 
 Default: `20443`.
 
-Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`. After changing it, verify SSL/TLS listener and client connection behavior.
+Data type and attribute: `Unsigned Integer`; read-write; single value.
+
+Dynamic Change Support: changeable property. After changing it, verify listener startup output and client connection behavior; do not assume existing clients automatically move ports.
 
 Range: `[1024, 65535]`.
+
+Port boundary: `SSL_PORT_NO` is for JDBC, ODBC/CLI, ADO.NET, iSQL, and utility SSL/TLS client connections. It is not the Altibase 8.1 replication SSL Receiver port; use `REPLICATION_SSL_PORT_NO` for `CREATE REPLICATION ... USING SSL`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, min, max, value1
 FROM V$PROPERTY
 WHERE name = 'SSL_PORT_NO';
+```
+
+### Property Item: `SSL_MAX_LISTEN`
+
+Meaning: listen queue size for concurrent ordinary SSL/TLS client connections.
+
+Default: `128`.
+
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Range: `[0, 16384]`.
+
+Caution: a larger queue can require more server memory.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'SSL_MAX_LISTEN';
 ```
 
 ### Property Item: `SSL_CA`
@@ -3420,9 +3561,27 @@ Range: path value.
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, value1
 FROM V$PROPERTY
 WHERE name = 'SSL_CA';
+```
+
+### Property Item: `SSL_CAPATH`
+
+Meaning: CA certificate directory path in X.509 directory format.
+
+Default: none.
+
+Dynamic Change Support: read-only.
+
+Range: path value.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, value1
+FROM V$PROPERTY
+WHERE name = 'SSL_CAPATH';
 ```
 
 ### Property Item: `SSL_CERT`
@@ -3435,10 +3594,12 @@ Dynamic Change Support: read-only.
 
 Range: path value.
 
+Caution: the certificate must match the private key configured by `SSL_KEY`.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, value1
 FROM V$PROPERTY
 WHERE name = 'SSL_CERT';
 ```
@@ -3453,12 +3614,106 @@ Dynamic Change Support: read-only.
 
 Range: path value.
 
+Caution: protect this private-key file with OS permissions and do not distribute it as a client trust file.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, storedcount, attr, value1
 FROM V$PROPERTY
 WHERE name = 'SSL_KEY';
+```
+
+### Property Item: `SSL_CIPHER_LIST`
+
+Meaning: pre-TLS-1.3 cipher candidate list negotiated between client and server.
+
+Default: none.
+
+Data type and attribute: string; read-only; single value.
+
+Range: maximum length `255`.
+
+Format: OpenSSL cipher names separated by colons. Check candidate names with `openssl ciphers`.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, value1
+FROM V$PROPERTY
+WHERE name = 'SSL_CIPHER_LIST';
+```
+
+### Property Item: `SSL_CIPHER_SUITES`
+
+Version: documented in 7.3 and Altibase 8.1 verified source, not in the selected 7.1 SSL/TLS guide.
+
+Meaning: TLS 1.3 cipher suite candidate list.
+
+Default behavior: when unset, OpenSSL can use all available TLS 1.3 cipher candidates.
+
+Data type and attribute: string; read-only; single value.
+
+Format: TLS 1.3 cipher suite names separated by colons.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, value1
+FROM V$PROPERTY
+WHERE name = 'SSL_CIPHER_SUITES';
+```
+
+### Property Item: `SSL_CLIENT_AUTHENTICATION`
+
+Meaning: controls whether the server requests a client certificate during SSL/TLS handshake.
+
+Default: `0`.
+
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Range: `[0, 1]`.
+
+Values:
+
+- `0`: server-only authentication.
+- `1`: mutual server/client authentication.
+
+Use `1` only after client certificates, private keys, and CA trust are prepared and distributed.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'SSL_CLIENT_AUTHENTICATION';
+```
+
+### Property Item: `SSL_LOAD_CONFIG`
+
+Version: documented in 7.3 and Altibase 8.1 verified source, not in the selected 7.1 SSL/TLS guide.
+
+Meaning: controls loading of the OpenSSL `openssl.cnf` configuration file.
+
+Default: `0`.
+
+Data type and attribute: `Unsigned Integer`; read-only; single value.
+
+Range: `[0, 1]`.
+
+Values:
+
+- `0`: do not load the OpenSSL configuration file.
+- `1`: load the OpenSSL configuration file.
+
+Use when: the OpenSSL FIPS module or another OpenSSL configuration must be loaded by Altibase.
+
+Check SQL:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name = 'SSL_LOAD_CONFIG';
 ```
 
 ### Property Item Group: Session client, IPC, and NLS properties
@@ -3599,8 +3854,8 @@ Meaning: configure local replication ports, peer connection wait behavior, heart
 
 Properties:
 
-- `REPLICATION_PORT_NO`: local ordinary replication port; default `0`; range `[0, 65535]`; read-only. `0` disables ordinary replication listener use for this property.
-- `REPLICATION_SSL_PORT_NO`: local SSL replication port; default `0`; range `[0, 65535]`; read-only. `0` means SSL replication cannot connect through this property; configure SSL/TLS on each replication target before using `CREATE REPLICATION ... USING SSL`.
+- `REPLICATION_PORT_NO`: local ordinary replication Receiver port; data type `Unsigned Integer`; default `0`; range `[0, 65535]`; read-only, single value. `0` means replication is not used through `REPLICATION_PORT_NO`; this is not client `PORT_NO` or `SSL_PORT_NO`.
+- `REPLICATION_SSL_PORT_NO`: Altibase 8.1 verified source local SSL replication Receiver port; data type `Unsigned Integer`; default `0`; range `[0, 65535]`; read-only, single value. `0` means SSL replication cannot connect through this property; configure SSL/TLS on each replication target before using `CREATE REPLICATION ... USING SSL`.
 - `REPLICATION_IB_PORT_NO`: local InfiniBand replication port; default `0`; range `[0, 65535]`; read-only. `0` means InfiniBand replication cannot connect through this property, and `IB_ENABLE=1` is required for InfiniBand use.
 - `REPLICATION_CONNECT_TIMEOUT`: connection attempt timeout for a target host, in seconds; default `10`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
 - `REPLICATION_CONNECT_RECEIVE_TIMEOUT`: wait after attempting connection to a replication target host, in seconds; default `60`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`.
@@ -3684,7 +3939,7 @@ Properties:
 - `REPLICATION_SENDER_AUTO_START`: automatically starts replication objects that were not stopped before server shutdown; default `1`; range `[0, 1]`; read-only.
 - `REPLICATION_SENDER_START_AFTER_GIVING_UP`: behavior after replication pauses because log files before restart redo point exceed `REPLICATION_MAX_LOGFILE`; default `1`; range `[0, 1]`; read-write property. `0` resets restart SN to `-1` and stops replication; `1` restarts from the current last SN.
 - `REPLICATION_SERVER_FAILBACK_MAX_TIME`: maximum failback synchronization time for EAGER mode after an abnormal server restart; default `2^32 - 1`; range `[0, 2^32 - 1]`; read-only.
-- `REPLICATION_SQL_APPLY_ENABLE`: SQL Apply fallback when Lazy Active/Standby replication table metadata differs in documented ways; default `0`; range `[0, 1]`; read-write property. `0` uses XLog and raises handshaking errors on metadata mismatch; `1` can convert XLog to SQL for supported column, constraint, and index mismatch cases.
+- `REPLICATION_SQL_APPLY_ENABLE`: SQL Apply fallback when Lazy Active/Standby replication table metadata differs in documented ways; default `0`; range `[0, 1]`; read-write property. `0` uses `XLog` and raises `Handshaking` errors on metadata mismatch; `1` can convert `XLog` to `SQL` for supported column, constraint, and index mismatch cases.
 - `REPLICATION_SYNC_APPLY_METHOD`: synchronization method for mismatched data between local and remote servers; default `0`; range `[0, 1]`; read-write with `ALTER SYSTEM`. `0` means Normal Insert; `1` means Direct-Path Insert and can leave indexes inconsistent if synchronization fails midstream.
 - `REPLICATION_SYNC_LOCK_TIMEOUT`: sender wait for an `S Lock` on synchronization target tables, in seconds; default `30`; range `[0, 2^32 - 1]`; read-write with `ALTER SYSTEM`. `0` skips acquiring the target table lock and can allow data conflicts.
 - `REPLICATION_SYNC_LOG`: sender sends only disk-flushed logs during replication; default `0`; range `[0, 1]`; read-only.
@@ -3784,6 +4039,122 @@ WHERE name IN (
 )
 ORDER BY name;
 ```
+
+### Property Item Group: Account password, administrator access, and ACCESS_LIST properties
+
+Version scope: Altibase 7.3 and Altibase 8.1 verified source for the detailed account/access blocks below; verify selected 7.1 scope before applying 7.3-only details.
+
+Meaning: control password case handling, remote `SYSDBA` access, administrator-only connection mode, IP address allow/deny rules, external access-list files, access-list reload behavior, and runtime `V$ACCESS_LIST` inspection.
+
+Property item: `CASE_SENSITIVE_PASSWORD`
+
+- Data type and attribute: `Unsigned Integer`; read-write; single value.
+- Default: `0`.
+- Range: `[0, 1]`.
+- Dynamic Change Support: `ALTER SYSTEM`.
+- `0`: passwords are not case-sensitive and are handled as uppercase in the database.
+- `1`: passwords are case-sensitive only when the password in the user-creation statement is enclosed in double quotes. If the password is not enclosed in double quotes, it is still recognized as uppercase.
+- Caution: before changing account policy, ask for the exact Altibase version, whether existing users were created with quoted passwords, and a maintenance plan for application credentials.
+
+Property item: `REMOTE_SYSDBA_ENABLE`
+
+- Data type and attribute: `Unsigned Integer`; read-write; single value.
+- Default: `1`.
+- Range: `[0, 1]`.
+- Dynamic Change Support: `ALTER SYSTEM`.
+- `0`: remote `SYSDBA` mode connection is not allowed.
+- `1`: remote `SYSDBA` mode connection is allowed.
+- Caution: lowering it can block remote emergency administration; raising it increases remote privileged-access exposure. Verify the network source and administrator access path first.
+
+Property item: `ADMIN_MODE`
+
+- Data type and attribute: `Unsigned Integer`; read-write; single value.
+- Default: `0`.
+- Range: `[0, 1]`.
+- Dynamic Change Support: `ALTER SYSTEM`.
+- `0`: administrator-only access mode is off.
+- `1`: administrator mode is on. Only `SYS` or `SYSTEM_` users connecting with `SYSDBA` can work with the server; ordinary users fail to connect.
+- Caution: treat `ADMIN_MODE=1` as service-impacting and confirm who still needs to connect during the maintenance window.
+
+Property item: `ACCESS_LIST`
+
+- Format: `ACCESS_LIST = operation, address, mask, [limit]`.
+- `operation`: `PERMIT` or `DENY`.
+- `address`: IP address to inspect.
+- `mask`: subnet mask for IPv4; prefix-bit length for IPv6.
+- Optional `limit`: maximum allowed sessions from the permitted IP address range.
+- Rule order: rules are evaluated in the written order. If a packet does not match the current rule, the next rule is checked.
+- Default allow behavior: if no condition matches, access is allowed. To permit only selected ranges, add explicit `PERMIT` entries first and then a broad `DENY` rule.
+- `limit` behavior: if `limit` is present, the limit condition is checked for every connection request; even a permitted IP is rejected when the permitted count is exceeded. If `limit` is omitted, the limit condition is not checked.
+- Reload behavior: `ALTER SYSTEM RELOAD ACCESS LIST` is run in `SYSDBA` administrator mode and applies changed `ACCESS_LIST` rules only to new connection requests. Existing sessions are not affected, so `V$ACCESS_LIST.CONNECTED` can be greater than `V$ACCESS_LIST.LIMIT` after a reload.
+
+Property item: `ACCESS_LIST_FILE`
+
+- Data type and attribute: string; read-only; single value.
+- Default: none.
+- Purpose: external absolute-path file used instead of inline `ACCESS_LIST` entries.
+- Startup caution: if the file name or path is wrong, the server cannot start.
+- File format: omit the `ACCESS_LIST=` prefix and put only rule content, for example `PERMIT, 192.168.3.0, 255.255.255.0`.
+- External file limit: up to `1024` entries.
+- Reload source: `ALTER SYSTEM RELOAD ACCESS LIST` rebuilds the runtime access list from the file named by `ACCESS_LIST_FILE`.
+
+Access-list examples:
+
+```properties
+# Deny one IPv4 host and allow all others.
+ACCESS_LIST = DENY, 192.168.1.55, 255.255.255.255
+
+# Permit two IPv4 /24 ranges, then deny the remaining IPv4 space.
+ACCESS_LIST = PERMIT, 192.168.3.0, 255.255.255.0
+ACCESS_LIST = PERMIT, 219.211.253.0, 255.255.255.0
+ACCESS_LIST = DENY, 0.0.0.0, 0.0.0.0
+
+# Permit only five sessions from one host.
+ACCESS_LIST = PERMIT, 192.168.3.17, 255.255.255.255, 5
+```
+
+External file example for `ACCESS_LIST_FILE`:
+
+```text
+PERMIT, 192.168.3.0, 255.255.255.0
+PERMIT, fe80::, 16
+DENY, 0.0.0.0, 0.0.0.0
+DENY, ::1, 1
+DENY, fe80::, 1
+```
+
+Check SQL and reload command:
+
+```sql
+SELECT name, storedcount, attr, min, max, value1
+FROM V$PROPERTY
+WHERE name IN (
+  'CASE_SENSITIVE_PASSWORD',
+  'REMOTE_SYSDBA_ENABLE',
+  'ADMIN_MODE',
+  'ACCESS_LIST',
+  'ACCESS_LIST_FILE'
+)
+ORDER BY name;
+
+SELECT id, address, operation, mask, limit, connected
+FROM V$ACCESS_LIST
+ORDER BY id;
+
+ALTER SYSTEM RELOAD ACCESS LIST;
+```
+
+Password-aging policy properties:
+
+- `FAILED_LOGIN_ATTEMPTS`: failed-login count before the account cannot log in; default `0`; range `[0, 1000]`; read-only.
+- `PASSWORD_LOCK_TIME`: days before a locked account is unlocked; default `0`; range `[0, 3650]`; read-only.
+- `PASSWORD_LIFE_TIME`: password validity in days; default `0`; range `[0, 3650]`; read-only.
+- `PASSWORD_GRACE_TIME`: grace period after password expiration, in days; default `0`; range `[0, 3650]`; read-only.
+- `PASSWORD_REUSE_TIME`: days that must pass before reusing the same password; default `0`; range `[0, 3650]`; read-only.
+- `PASSWORD_REUSE_MAX`: password-change count before the same password can be reused; default `0`; range `[0, 1000]`; read-only.
+- `PASSWORD_VERIFY_FUNCTION`: user-defined callback function used to verify passwords; default empty string; maximum length `40` bytes; read-only.
+
+Customer-answer stop condition: if an access-control answer could block administrators or production clients, ask for exact version, patch level, current `V$SESSION` evidence, current `V$ACCESS_LIST`, planned `ACCESS_LIST_FILE` path, and rollback path before recommending `ADMIN_MODE`, `REMOTE_SYSDBA_ENABLE`, or `ALTER SYSTEM RELOAD ACCESS LIST`.
 
 ### Property Item: `PSM_CASE_SENSITIVE_MODE`
 
