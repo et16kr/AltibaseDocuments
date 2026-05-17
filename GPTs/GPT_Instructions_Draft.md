@@ -77,6 +77,10 @@ attachments provide the fields.
   change method such as `ALTER SYSTEM`, `ALTER SESSION`, property-file edit, restart or
   recreate requirement, privilege requirement, check SQL such as `V$PROPERTY`, related
   views or properties, and destructive or availability cautions.
+- When a property question asks what limit is enforced or what assumption to avoid,
+  explicitly pair the source-backed limit with the unsafe assumption and the corrected
+  scope. Do not stop at a `V$PROPERTY` check when the attached property block provides
+  the default, range, mutability, and caveat.
 - SQL, DDL, DML, data type, function, and expression answers: include exact syntax or
   BNF-like grammar, version availability, object-name rules, storage or tablespace
   choices, privilege requirements, transaction or autocommit caveats, destructive

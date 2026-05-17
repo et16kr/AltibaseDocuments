@@ -27,6 +27,21 @@ Use this compact index before scanning data type and property blocks. It is inte
 - Answer route: use this file for meanings, defaults, ranges, mutability, restart requirements, and property SQL; use `06_data_dictionary_performance_views.md` for view-column verification; use `03_sql_ddl_generation.md` only for generated `ALTER SYSTEM` or `ALTER SESSION` forms.
 - Missing-input trigger: for property change advice, ask for exact version, current `V$PROPERTY` row, whether the property is file, environment, system, or session scoped, and whether restart or recreation is acceptable.
 
+## High-Signal Property Answer Anchors
+
+Use these compact anchors when a customer question uses wording that may not exactly
+match the later property item heading. Preserve the literal defaults, ranges, units,
+and unsafe-assumption wording in answers.
+
+- Result cache limit / common system-wide assumption to avoid / Altibase 7.3
+  `RESULT_CACHE_MEMORY_MAXIMUM`: limits memory stored for `Result Cache` and
+  `Top Result Cache` for one query; unit is bytes; default `10M`; range
+  `[4096, ULONG MAX]`; read-write with `ALTER SYSTEM`; check with `V$PROPERTY`.
+  If the value is exceeded, the cached item is not stored in memory and is freed.
+  Avoid the assumption that `RESULT_CACHE_MEMORY_MAXIMUM` is a system-wide
+  result-cache memory cap; it is a per-query constraint and does not provide a
+  system-wide memory limit.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 General Reference 1.
