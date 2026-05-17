@@ -22,6 +22,18 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J005 Installation And Getting-Started Missing Rows
+
+FCA-J005 cataloged 4 unresolved `Missing` rows for source-backed installation/manual
+details that are not yet answer-ready in `01_getting_started_installation.md`.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000006 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > Appendix A > Setting User Resource Limit Values | Exact client stack-size minimum `70KB` and resource-limit explanation beside `ulimit`, `unlimited`, and `core file size` cautions. | GPTs/attachments/01_getting_started_installation.md | Add a compact pre-install resource-limit item preserving `Stack size` and `70KB`, or route it to a covered OS prerequisite block. | FCA-J005 | rg -n 'ulimit\|core file size\|Stack size\|70KB' Manuals/Altibase_7.3/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
+| SRC-OTHER-XVER-000025 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > APatch directory > file inventory | Exact APatch file inventory and role list for `patchinfo`, `pkg_patch_<version>.txt`, `altibase_base_install.log`, `Backup`, `uninstall-base`, and `rollback-p<patch_version>`. | GPTs/attachments/01_getting_started_installation.md | Add or route an APatch inventory block that distinguishes metadata, revision logs, base-install logs, rollback backups, and uninstall executables. | FCA-J005 | rg -n 'patchinfo\|pkg_patch_\|altibase_base_install.log\|Backup\|uninstall-base\|rollback-p' Manuals/Altibase_7.3/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
+| SRC-OTHER-XVER-000028 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > Patching products > full package versus patch package step matrix | Answer-ready server/client full-package versus patch-package step matrix, including which steps are skipped during patch installation. | GPTs/attachments/01_getting_started_installation.md | Add a compact table preserving `Full Package`, `Patch Package`, `Checking the Patch Version`, and license/property step differences for server and client packages. | FCA-J005 | rg -n 'Full Package\|Patch Package\|Checking the Patch Version\|Registering the Altibase License Key' Manuals/Altibase_7.3/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
+| SRC-OTHER-XVER-000029 | getting_started_installation | cross-version | Manuals/Altibase_7.3/kor/Installation Guide.md | Installation Guide > Uninstalling Altibase Products > Full Uninstallation | Full uninstallation runbook using `uninstall-base` and the requirement to manually delete Altibase environment variables from the account profile. | GPTs/attachments/01_getting_started_installation.md | Add or route a guarded uninstall block with preconditions, `APatch` executable selection, profile cleanup, and stop conditions for data/log preservation. | FCA-J005 | rg -n 'uninstall-base\|environment variable\|manually delete\|Full Uninstallation\|APatch' Manuals/Altibase_7.3/eng/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
+
 ### FCA-J004 Release, Patch, And Platform Missing Rows
 
 FCA-J004 cataloged 128 unresolved `Missing` rows. These are in-scope source-backed release-note or patch-note items whose exact version/change-set details are not yet answer-ready in the target attachment.

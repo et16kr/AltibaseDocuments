@@ -49,3 +49,31 @@ Each entry should include:
 - Coverage status changes: exact release/platform rows already represented in `00_version_release_platform.md` were marked `Covered` or `Covered-by-routing`; exact patch-note change-set rows and older tool-release boundaries absent from answer-ready attachments were registered as `Missing`; unlisted platform support, release-note-only procedure scope, Shard/Windows2026 release notes without a selected owner, and 6.5.1 platform rows were registered as guardrail or out-of-scope rows.
 - Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers` passed with 165 catalog rows and 0 matrix rows; ASCII hygiene scan passed; `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate` passed with 20 upload attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
 - Residual risk: patch notes are cataloged at patch-file change-set granularity with all `BUG-*` tokens preserved in `literal_tokens`; later matrix/remediation work may split high-priority patch files into per-BUG rows before closing exact patch answerability gaps.
+
+### FCA-J005
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`,
+  `guardrail_register.md`, and this remediation log.
+- Product coverage changes: cataloged Getting Started and Installation manual rows only;
+  no customer-facing attachment text was changed and no original source documents were
+  edited.
+- Catalog totals added by this job: 40 rows total; 27 `Covered`, 7
+  `Covered-by-routing`, 4 `Missing`, 2 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.1/7.3/8.1 Getting Started Guides and Installation
+  Guides, with matching English manuals used as extraction aids where consistent.
+- Coverage status changes: installation, environment setup, database creation, startup,
+  shutdown, client install, patch rollback, meta downgrade, first-run checks, and
+  broad getting-started overview topics were mapped to answer-ready attachment anchors
+  or routing targets. Missing rows were registered for the exact `70KB` client stack
+  size, APatch file inventory, full-versus-patch step matrix, and full-uninstall/profile
+  cleanup runbook. Guardrails were registered for live package download availability
+  and license acquisition/entitlement.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 205 catalog rows and 0 matrix rows; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: later remediation jobs must close or route the four new `Missing`
+  rows before final full-coverage readiness can have no unresolved `Missing`
+  dispositions.

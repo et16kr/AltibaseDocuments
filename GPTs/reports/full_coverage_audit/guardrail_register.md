@@ -21,6 +21,16 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J005 Installation And Getting-Started Guardrails
+
+FCA-J005 cataloged 2 `Guardrail` rows. These are acceptable only when answers ask for
+the customer evidence below instead of guessing package availability or license status.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000030 | Guardrail | getting_started_installation | cross-version | Manuals/Altibase_trunk/kor/Installation Guide.md | Installation Guide > Package installer download > support portal package acquisition | Current package download availability depends on exact version, patch, customer entitlement, OS/CPU package naming, and live Altibase Support portal state; selected manuals identify the route but cannot verify current access. | Ask for exact Altibase version/patch, server or client target, OS/version, CPU architecture, and whether the customer has the installer package or support-portal entitlement before giving copy-ready package commands. | GPTs/attachments/01_getting_started_installation.md | FCA-J005 | rg -n 'support.altibase.com\|패키지 인스톨러\|operating system' Manuals/Altibase_trunk/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
+| SRC-OTHER-7.1-000001 | Guardrail | getting_started_installation | 7.1 | Manuals/Altibase_7.1/kor/Installation Guide.md | Installation Guide > Register or Update the Altibase License Key > license acquisition | License issuance depends on license type, customer contract, current Altibase Support process, and issued license validity; selected 7.1 source documents historical acquisition paths but cannot verify current entitlement or portal behavior. | Ask for license type, exact Altibase version/patch, whether a license file/key has already been issued, and the current support/contract path; for installation, only state the source-backed placement and startup effect of `$ALTIBASE_HOME/conf/license`. | GPTs/attachments/01_getting_started_installation.md | FCA-J005 | rg -n 'Enterprise Edition\|Trial\|support.altibase.com\|라이선스' Manuals/Altibase_7.1/kor/Installation\ Guide.md GPTs/attachments/01_getting_started_installation.md |
+
 ### FCA-J004 Release, Platform, And Scope Guardrails
 
 FCA-J004 cataloged 6 `Guardrail` or `Out-of-scope` rows. These rows remain acceptable only with the missing-input or source-boundary pattern below.
