@@ -280,3 +280,39 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route `SRC-SQL-8.1-000015`
   and `SRC-SQL-XVER-000089` before final full-coverage readiness can have no
   unresolved `Missing` dispositions.
+
+### FCA-J012
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged General Reference 1 data-type overview,
+  storage-size formulas, NULL semantics, implicit and explicit conversion rules,
+  string-literal notation, scalar type items, numeric and date format model elements,
+  binary types, LOB overview and restrictions, GEOMETRY routing, 8.1 Temporary LOB
+  examples, 8.1 JSON path examples, and the 7.1 LOB `NOT NULL` caution only; no
+  customer-facing attachment text was changed and no original source documents were
+  edited.
+- Catalog totals added by this job: 34 rows total; 22 `Covered`, 3
+  `Covered-by-routing`, 9 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.1, 7.3, and 8.1 verified-source General
+  Reference 1 data type chapters were sufficient for this catalog scope. SQL
+  Reference-owned direct-key indexing remains under `SRC-SQL-XVER-000035` from
+  `FCA-J008`; no duplicate General Reference row was created because the scoped
+  General Reference source does not contain the direct-key matrix.
+- Coverage status changes: core scalar data types, binary types, BLOB/CLOB,
+  LOB restrictions, GEOMETRY routing, LOB API routing, and the 7.1 LOB `NOT NULL`
+  caution were mapped to existing attachment anchors or routing anchors. Nine new
+  `Missing` rows were registered because the attachments do not yet preserve
+  answer-ready storage-size formulas, NULL semantics, implicit/explicit conversion
+  rules, string literal quoting, numeric/date format element tables, 8.1 Temporary
+  LOB examples, or 8.1 JSON path example/result tables.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 402 catalog rows and 0 matrix rows; scoped TSV required-cell,
+  duplicate-ID, status, version-scope, and guardrail-reason checks passed;
+  `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate`
+  passed with 20 upload attachments; review-report severity scan showed
+  `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: later remediation jobs must close or route the nine new FCA-J012
+  `Missing` rows before final full-coverage readiness can have no unresolved
+  `Missing` dispositions.
