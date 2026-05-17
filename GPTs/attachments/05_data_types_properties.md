@@ -4076,7 +4076,7 @@ ORDER BY name;
 
 ### Property Item Group: Account password, administrator access, and ACCESS_LIST properties
 
-Version scope: Altibase 7.3 and Altibase 8.1 verified source for the detailed account/access blocks below; verify selected 7.1 scope before applying 7.3-only details.
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source for the detailed account/access blocks below.
 
 Meaning: control password case handling, remote `SYSDBA` access, administrator-only connection mode, IP address allow/deny rules, external access-list files, access-list reload behavior, and runtime `V$ACCESS_LIST` inspection.
 

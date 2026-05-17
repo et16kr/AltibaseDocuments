@@ -347,3 +347,37 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route the forty new FCA-J015
   `Missing` rows before final full-coverage readiness can have no unresolved
   `Missing` dispositions.
+
+### FCA-J016
+
+- Changed files: `source_item_catalog.tsv`,
+  `GPTs/attachments/05_data_types_properties.md`, and this remediation log.
+- Product coverage changes: cataloged General Reference 1 account/password,
+  administrator access, `ACCESS_LIST`, network/listener/IPC, SSL/TLS, SNMP,
+  InfiniBand, replication transport/apply/conflict/recovery, SQL Apply, and DB Link
+  property rows only; no original source documents were edited.
+- Catalog totals added by this job: 121 rows total; 121 `Covered`, 0 `Missing`,
+  0 `Covered-by-routing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean General Reference 1 detailed property sections for
+  Altibase 7.1, Altibase 7.3, and the Altibase 8.1 verified source, using
+  `GPTs/reports/property_inventory.md` as the line-locator baseline and existing
+  answer-ready anchors in `GPTs/attachments/05_data_types_properties.md` plus
+  `GPTs/attachments/16_dblink_external_connectors.md`.
+- Coverage status changes: `MAX_CLIENT`, listener/IPC ports, all scoped
+  `REPLICATION_*` properties including Altibase 8.1-only `REPLICATION_SSL_PORT_NO`,
+  `SSL_*`, `SNMP_*`, `IB_*`, `TCP_ENABLE`, `DBLINK_*`, password-aging properties,
+  `REMOTE_SYSDBA_ENABLE`, `ADMIN_MODE`, `ACCESS_LIST`, and `ACCESS_LIST_FILE` were
+  mapped to existing answer-ready attachment anchors. The account/access attachment
+  version-scope note was normalized from 7.3/8.1-only wording to 7.1/7.3/8.1 after
+  checking the Korean 7.1, 7.3, and 8.1 source sections.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 745 catalog rows and 0 matrix rows; scoped TSV required-cell,
+  duplicate-ID, status, version-scope, and guardrail-reason checks passed;
+  `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate`
+  passed with 20 upload attachments; review-report severity scan showed
+  `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no new `Missing`, `Guardrail`, `Out-of-scope`, or
+  `Retrieval-weak` rows were added by FCA-J016. Exact production changes for
+  replication, SSL/TLS, DB Link, and access-control properties still require the
+  customer inputs and installed-server checks recorded in the attachment cautions.
