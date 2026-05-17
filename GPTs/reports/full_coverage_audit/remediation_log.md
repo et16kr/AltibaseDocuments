@@ -143,3 +143,35 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route the two new Administrator
   privilege and schema-taxonomy `Missing` rows before final full-coverage readiness
   can have no unresolved `Missing` dispositions.
+
+### FCA-J008
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged Korean SQL Reference DDL rows for table,
+  partition, constraint, LOB storage, queue, index, and table-maintenance grammar; no
+  customer-facing attachment text was changed and no original source documents were
+  edited. Existing `FCA-J007` rows already cover the overlapping tablespace/datafile
+  DDL rows `SRC-SQL-XVER-000009` through `SRC-SQL-XVER-000012` and
+  `SRC-SQL-8.1-000001`.
+- Catalog totals added by this job: 27 rows total; 23 `Covered`, 4 `Missing`, 0
+  `Covered-by-routing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0 `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.1, 7.3, and Altibase 8.1 verified-source SQL
+  Reference manuals, checked against existing answer-ready anchors in
+  `GPTs/attachments/03_sql_ddl_generation.md` and related dictionary routing where
+  applicable.
+- Coverage status changes: core `CREATE TABLE`, `ALTER TABLE`, partition, LOB storage,
+  queue, `ENQUEUE`/`DEQUEUE`, `CREATE INDEX`, `ALTER INDEX`, `DROP INDEX`, table
+  maintenance, conjoin/disjoin, and 8.1-only idempotent table/index/queue clauses were
+  mapped to covered attachment anchors. Missing rows were registered for the exact
+  `table_compression_clause` type/minimum-size matrix, the `ALTER TABLE MODIFY COLUMN`
+  conversion matrix, full `COMMENT ON` limit/delete behavior, and the direct-key
+  supported type/`MAXSIZE` matrix.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 295 catalog rows and 0 matrix rows; scoped ASCII hygiene scan passed;
+  `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate`
+  passed with 20 upload attachments; review-report severity scan showed
+  `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: later remediation jobs must close or route the four new SQL DDL
+  `Missing` rows before final full-coverage readiness can have no unresolved
+  `Missing` dispositions.
