@@ -8,7 +8,7 @@ FCA-J006	Done	docs	Administrator backup recovery archive and storage catalog	Ext
 FCA-J007	Done	docs	Administrator tablespace account privilege catalog	Extract tablespace, datafile, user, role, privilege, account, schema administration, and validation-check items.
 FCA-J008	Done	docs	SQL Reference DDL storage table index catalog	Extract tablespace, datafile, table, partition, index, constraint, LOB storage, queue, and related DDL grammar items.
 FCA-J009	Done	docs	SQL Reference DCL admin replication destructive catalog	Extract DCL, user/privilege SQL, administrative SQL, replication SQL, Log Analyzer SQL, destructive SQL, privileges, and safety-boundary items.
-FCA-J010	ToDo	docs	SQL Reference DML expression and function catalog	Extract DML, predicates, expressions, built-in functions, regular expression, object-name, and syntax restriction items.
+FCA-J010	Done	docs	SQL Reference DML expression and function catalog	Extract DML, predicates, expressions, built-in functions, regular expression, object-name, and syntax restriction items.
 FCA-J011	ToDo	docs	SQL Reference JSON LOB and Oracle-difference catalog	Extract JSON SQL, LOB SQL, data-type syntax restrictions, Oracle-difference, migration-risk, and compatibility items.
 FCA-J012	ToDo	docs	General Reference data type catalog	Extract data type, LOB, JSON, Temporary LOB, direct-key, conversion, and data-type compatibility items.
 FCA-J013	ToDo	docs	Property catalog core path and storage	Extract core identity, path, database-file, memory-directory, storage, log-anchor, and startup/restart property items.
