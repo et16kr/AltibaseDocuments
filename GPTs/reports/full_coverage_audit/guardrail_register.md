@@ -21,6 +21,18 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J038 Technical Documents Support Out-Of-Scope Rows
+
+FCA-J038 cataloged the remaining technical-document support slice. Two selected-source
+subsections are retained as traceability rows but remain outside the customer-facing
+Altibase 7.1, 7.3, and 8.1 upload scope except where an in-scope compatibility row
+explicitly uses an older version as an endpoint.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-REPL-XVER-000040 | Out-of-scope | technical_documents_support | cross-version | Technical Documents/kor/ReplicationCompatibility.md | ReplicationCompatibility > Altibase 6.x standalone sections and protocol rows | Altibase 6.x standalone replication compatibility and protocol rows are outside the locked customer-facing upload scope of Altibase 7.1, 7.3, and 8.1 except when an in-scope 7.x row explicitly uses 6.x as a Sender/Receiver endpoint. | Ask for the exact target versions, Sender/Receiver direction, `V$VERSION.repl_protocol_version`, replication mode, and whether the question is a 7.1/7.3 compatibility endpoint before using any 6.x row; otherwise do not answer 6.x-only protocol questions from the upload package. | N/A | FCA-J038 | source locator: Korean ReplicationCompatibility lines 69-98 and 123-141; catalog row `SRC-REPL-XVER-000040`. |
+| SRC-OTHER-XVER-000269 | Out-of-scope | technical_documents_support | cross-version | Technical Documents/kor/JavaCompatibility.md | JavaCompatibility > Altibase 6.5.1 Java compatibility | Altibase 6.5.1 Java compatibility rows are outside the locked customer-facing upload scope of Altibase 7.1, 7.3, and 8.1; do not use them to answer current 7.x or 8.1 Java runtime questions unless an in-scope row explicitly uses 6.5.1 as a compatibility endpoint. | Ask for exact Altibase version and patch, component, Java runtime, and whether the question is a historical 6.5.1 migration/support question; otherwise route current Java runtime questions to 7.1, 7.3, or Altibase 8.1 verified-source rows. | N/A | FCA-J038 | source locator: Korean JavaCompatibility lines 88-110; catalog row `SRC-OTHER-XVER-000269`. |
+
 ### FCA-J037 Spatial NiFi Tableau And Live Integration Guardrail
 
 FCA-J037 cataloged Spatial SQL, `GEOMETRY`, Spatial API, `altiShapeLoader`, NiFi, and

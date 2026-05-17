@@ -915,3 +915,42 @@ Each entry should include:
   exact Altibase patch, JDBC/Java versions, host/port/database details, character set,
   SRID, geometry precision, shapefile component set and size, integration versions,
   property/config files, full logs/output, and rollback or reload plan.
+
+### FCA-J038
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`,
+  `guardrail_register.md`, and this remediation log.
+- Product coverage changes: cataloged the remaining technical-document support slice
+  for `ReplicationCompatibility.md` and cross-family `JavaCompatibility.md` rows not
+  fully owned by earlier catalog jobs. No original manuals or customer-facing
+  attachments were edited.
+- Catalog rows added by this job: 17 rows total; 8 `Covered`, 0
+  `Covered-by-routing`, 7 `Missing`, 0 `Guardrail`, 2 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean `Technical Documents/kor/ReplicationCompatibility.md` was
+  used for LAZY replication backward compatibility, 7.1/7.3 Sender/Receiver matrices,
+  and 7.1/7.3 replication protocol ranges. Korean
+  `Technical Documents/kor/JavaCompatibility.md` was used for the Java compatibility
+  legend, DB Link runtime rows, altiMon runtime rows, and tool runtime rows for
+  `altiShapeLoader`, Altibase Hadoop Connector, `dataCompJ`, Migration Center, and
+  Replication Manager.
+- Coverage status changes: existing answer-ready anchors in
+  `09_replication_ha_cdc.md` cover the in-scope replication compatibility rows and the
+  Replication Manager bundled-JRE row; existing DB Link Java runtime wording in
+  `16_dblink_external_connectors.md` covers the 7.1/7.3 DB Link Java compatibility
+  rows. The Java compatibility legend, altiMon, `altiShapeLoader`, Hadoop Connector,
+  `dataCompJ`, and Migration Center exact runtime matrices were registered as
+  `Missing`. Standalone 6.x replication and Java compatibility sections were
+  registered as `Out-of-scope` for the locked 7.1/7.3/8.1 customer upload scope.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 2153 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 17
+  FCA-J038 rows with 8 `Covered`, 7 `Missing`, and 2 `Out-of-scope` status values and
+  non-empty required fields/guardrail reasons. Standard repository verification passed:
+  `git diff --check`, `bash review/scripts/run_review_stage.sh validate`, and the
+  review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable
+  severity rows.
+- Residual risk: no customer-facing attachment text was changed. The seven
+  Java/tool-runtime `Missing` rows should be remediated with compact compatibility
+  blocks before final audit closure; the two 6.x out-of-scope rows remain intentional
+  unless a later source-family update explicitly expands customer-facing historical
+  scope.
