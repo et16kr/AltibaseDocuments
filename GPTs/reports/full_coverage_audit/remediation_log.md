@@ -664,3 +664,38 @@ Each entry should include:
 - Residual risk: this job did not remediate customer-facing text. Later CDC/RepMgr
   remediation should close the six missing rows before the final audit can claim no
   unresolved CDC or Replication Manager source-item gaps.
+
+### FCA-J028
+
+- Changed files: `source_item_catalog.tsv` and this remediation log.
+- Product coverage changes: cataloged the `security_ssl_tls` source-family slice for
+  SSL/TLS handshake behavior, server certificate and listener setup, JDBC, ODBC/CLI,
+  ADO.NET, FIPS, TCP-access restriction, session monitoring, sample locations, 7.1
+  Heartbleed/OpenSSL requirements, 7.3/8.1 TLS 1.3 requirements, Altibase 8.1
+  replication SSL, and the selected replication network-check technical document.
+  No original manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 21 rows total; 20 `Covered`, 1
+  `Covered-by-routing`, 0 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Version scope: ordinary SSL/TLS rows use the Korean 7.3 SSL/TLS guide as the
+  representative source with 7.1 and Altibase 8.1 verified-source checks where
+  corresponding material exists; 7.1-specific and 8.1-specific rows use explicit
+  version scopes. Replication network diagnostics use
+  `Technical Documents/kor/Replication network check.md` under
+  `technical_documents_support`.
+- Source evidence: each row records a Korean source locator plus attachment evidence
+  in `18_security_ssl_tls.md` or `09_replication_ha_cdc.md`. Overlapping
+  `ACCESS_LIST`, `ACCESS_LIST_FILE`, `SSL_*`, and `REPLICATION_*` property details
+  already cataloged by `FCA-J016` were preserved rather than duplicated.
+- Coverage status changes: the scoped SSL/TLS and network-diagnostic rows were mapped
+  to existing answer-ready attachment anchors; the SSL sample location row is
+  `Covered-by-routing` because the source is represented through the client setup and
+  troubleshooting routing rather than a standalone sample-code block.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1825 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 21
+  FCA-J028 rows with 20 `Covered` and 1 `Covered-by-routing` status. Standard
+  repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: this job did not remediate customer-facing text and added no new
+  unresolved `Missing`, `Guardrail`, `Out-of-scope`, or `Retrieval-weak` rows.
