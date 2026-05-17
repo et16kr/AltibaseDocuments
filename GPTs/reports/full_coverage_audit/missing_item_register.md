@@ -22,6 +22,17 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J033 Utilities And Operation Tools Missing Rows
+
+FCA-J033 cataloged the utilities and operation-tools source-family slice. The row
+below is source-backed and in scope, but attachment 14 currently summarizes the
+dataCompJ 7.2 release note without preserving the exact package names and BUG-token
+fix list as an answer-ready release-note block.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-REL-PATCH-000023 | utilities_datacompj | patch-specific | ReleaseNotes/kor/Altibase_dataCompJ_7_2_Release_Notes.md | dataCompJ 7.2 Release Notes > fixed bugs and package tokens | Exact release-note block for `dataCompJ 7.2`, package names `dataCompJ7.2.zip` and `dataCompJ7.2.tar.gz`, BUG tokens `BUG-45222`, `BUG-46675`, `BUG-46689`, `BUG-49501`, and the `Log4j 2.17.1` fix boundary. | GPTs/attachments/14_utilities_operation_tools.md | Add a compact dataCompJ 7.2 release-note block that preserves the package names and BUG-token fixes; until then, cite the source limit and avoid claiming exact fixed-bug/package coverage from attachment 14 alone. | FCA-J033 | source locator: Korean dataCompJ 7.2 release notes lines 130-210; catalog row `SRC-REL-PATCH-000023`; attachment grep currently finds only summarized release-note wording. |
+
 ### FCA-J032 iSQL And iLoader Missing Rows
 
 FCA-J032 cataloged the iSQL and iLoader source rows. The row below is source-backed

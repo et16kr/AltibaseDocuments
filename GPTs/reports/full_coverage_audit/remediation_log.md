@@ -770,3 +770,39 @@ Each entry should include:
   literal `Missing` row should be remediated with a compact answer-ready block before
   final audit closure; the `-dry-run` guardrail remains intentional until installed
   client behavior is verified or fuller selected-source semantics are added.
+
+### FCA-J033
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`,
+  `guardrail_register.md`, and this remediation log.
+- Product coverage changes: cataloged the `utilities_datacompj` source-family slice
+  for `aexport`, `altiComp`, `aku`, `altiMon`, `altiAudit`, `altibase`, `altierr`,
+  `altipasswd`, `altiProfile`, `altiwrap`, `awrite`, `checkServer`,
+  `killCheckServer`, `server`, dump-family diagnostics, and `dataCompJ`. No original
+  manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 40 rows total; 34 `Covered`, 4
+  `Covered-by-routing`, 1 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Utilities manuals for 7.1, 7.3, and Altibase trunk were
+  used for utility headings and command/output boundaries; Korean dataCompJ release
+  and trunk manuals were used for dataCompJ command, report, and compatibility rows;
+  the Korean dataCompJ 7.2 release note was used for the exact package and BUG-token
+  release-note row.
+- Coverage status changes: existing answer-ready anchors in
+  `14_utilities_operation_tools.md` cover the scoped utility and dataCompJ rows, with
+  AKU rows routed through both attachment 14 and `17_kubernetes_aku_cloud.md`.
+  `SRC-REL-PATCH-000023` was registered as `Missing` for exact dataCompJ 7.2 package
+  and BUG-token preservation. `SRC-OTHER-XVER-000229` was registered as a
+  `Guardrail` for installed-tool behavior, generated outputs, dump-file
+  interpretation, synchronization effects, and live diagnostic conclusions.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 2014 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 40
+  FCA-J033 rows with 34 `Covered`, 4 `Covered-by-routing`, 1 `Missing`, and 1
+  `Guardrail` status. Standard repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no customer-facing attachment text was changed. The dataCompJ 7.2
+  exact package/BUG-token `Missing` row should be remediated with a compact
+  release-note block before final audit closure; the installed-tool guardrail remains
+  intentional until exact package, configuration, input file, generated report, and
+  live/non-production output evidence is provided.

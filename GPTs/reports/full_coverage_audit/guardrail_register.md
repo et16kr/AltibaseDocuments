@@ -21,6 +21,17 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J033 Utilities And Operation Tool Guardrails
+
+FCA-J033 cataloged utility commands, operation-tool outputs, dump diagnostics,
+dataCompJ, and AKU routing. The selected manuals support command syntax and expected
+output patterns, but installed-tool behavior and live diagnostic conclusions still
+depend on customer evidence.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000229 | Guardrail | utilities_datacompj | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-016 > utilities and dump-tool live validation boundary | Selected sources document utility commands and output patterns, but exact installed behavior, generated files, dump decoding, synchronization effects, and diagnostic conclusions depend on exact version, package, input files, environment, and runtime output. | Ask for the exact Altibase version and patch, client/server package, installed utility help or version output, command line, configuration file, target source/destination objects, input dump/log/trace files, generated scripts or reports, and non-production/live output before asserting package-specific behavior, synchronization effect, dump interpretation, or root cause. | GPTs/attachments/14_utilities_operation_tools.md | FCA-J033 | `GAP-J002-016`; catalog row `SRC-OTHER-XVER-000229`; attachment `Residual Scope` and `Operational Guardrails`. |
+
 ### FCA-J032 iSQL And iLoader Guardrails
 
 FCA-J032 cataloged the iSQL and iLoader source rows. Most source-backed tool behavior
