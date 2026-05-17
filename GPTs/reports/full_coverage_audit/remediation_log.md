@@ -879,3 +879,39 @@ Each entry should include:
   guardrail remains intentional until the customer provides exact Altibase patch,
   DB Link and connector configuration, Java/JDBC/ODBC/runtime versions, topology,
   security settings, logs, and non-production or live output evidence.
+
+### FCA-J037
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged the Spatial, `altiShapeLoader`, NiFi, Tableau,
+  and miscellaneous integration slice for Spatial concepts, `GEOMETRY` subtypes,
+  WKT/WKB/EWKT/EWKB, Spatial DDL and R-Tree syntax, SRID metadata and
+  `SYS_SPATIAL` procedures, Spatial function/operator families, Spatial API function
+  families, Altibase-to-Altibase WKB/EWKB migration, `altiShapeLoader` setup/options,
+  shapefile import/export, shapefile constraints/type mappings, NiFi JDBC
+  `DBCPConnectionPool` setup, and Tableau `Other Databases (JDBC)` setup. No original
+  manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 30 rows total; 29 `Covered`, 0
+  `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Spatial SQL 7.1, 7.3, and trunk manuals; Korean
+  `altiShapeLoader` release and trunk manuals; Korean NiFi and Tableau third-party
+  guides; and `GAP-J002-017`/`GAP-J002-018` for live validation boundaries. Matching
+  attachment evidence is in `19_spatial_nifi_tableau_misc.md`.
+- Coverage status changes: existing answer-ready anchors in
+  `19_spatial_nifi_tableau_misc.md` cover the scoped Spatial, loader, NiFi, and
+  Tableau rows. `SRC-OTHER-XVER-000267` was registered as a `Guardrail` for
+  production import/export, BI/ETL connectivity, performance, and root-cause claims
+  that require exact versions, source files, configuration, logs, and live output.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 2136 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 30
+  FCA-J037 rows with 29 `Covered`, 1 `Guardrail`, and no `Missing` or
+  `Retrieval-weak` rows. Standard repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no customer-facing attachment text was changed. The live Spatial,
+  loader, NiFi, and Tableau guardrail remains intentional until the customer provides
+  exact Altibase patch, JDBC/Java versions, host/port/database details, character set,
+  SRID, geometry precision, shapefile component set and size, integration versions,
+  property/config files, full logs/output, and rollback or reload plan.

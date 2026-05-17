@@ -21,6 +21,17 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J037 Spatial NiFi Tableau And Live Integration Guardrail
+
+FCA-J037 cataloged Spatial SQL, `GEOMETRY`, Spatial API, `altiShapeLoader`, NiFi, and
+Tableau source rows. Source-backed syntax, options, setup procedures, and validation
+checks are represented in attachment 19, but live import/export, BI/ETL connectivity,
+performance, and root-cause claims remain dependent on customer environment evidence.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000267 | Guardrail | spatial_nifi_tableau | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-017 and GAP-J002-018 > Spatial NiFi Tableau and live tool validation boundary | Requires exact Altibase version and patch, JDBC driver version, Java version, host, port, database name, character set, SRID, geometry precision, shapefile component set and size, NiFi/Tableau versions, relevant property/config files, full error/log/output, and rollback or reload plan before asserting production import/export, BI/ETL success, performance, or root cause. | Ask for the exact Altibase version and patch, JDBC driver version, Java version, host, port, database name, character set, SRID, geometry precision, shapefile component set and size, NiFi/Tableau versions, relevant property/config files, full error/log/output, and rollback or reload plan; validate first in non-production before declaring production import/export or integration success. | GPTs/attachments/19_spatial_nifi_tableau_misc.md | FCA-J037 | `GAP-J002-017`; `GAP-J002-018`; catalog row `SRC-OTHER-XVER-000267`; attachment anchors `Response Rules`, `Retrieval Alias Index`, and `Residual Scope`. |
+
 ### FCA-J036 Kubernetes AKU And Cloud Guardrail
 
 FCA-J036 cataloged Kubernetes object examples, AKU sample object sets, AKU configuration
