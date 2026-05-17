@@ -21,6 +21,17 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J027 CDC Log Analyzer And RepMgr Guardrails
+
+FCA-J027 cataloged one Replication Manager guardrail row. The selected manuals and
+release notes identify package names, Java/JDBC prerequisites, and download route, but
+they do not provide a stable file manifest for every Replication Manager distribution
+or installed tool state.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-TOOL-XVER-000011 | Guardrail | replication_manager | cross-version | Manuals/Tools/Altibase_release/kor/Replication Manager User's Manual.md | Replication Manager User's Manual and release notes > package-manifest boundary | Stable package contents and installed-file manifests depend on the exact Replication Manager release, downloaded distribution, OS package, bundled JRE state, and local installation; selected sources support package names and prerequisites but not a definitive manifest for every distribution. | Ask for exact Replication Manager release, downloaded archive name, OS package, install directory listing, bundled or external JRE state, and JDBC driver files before asserting package-file contents; otherwise answer only with source-backed package names, runtime requirements, and installation/removal route. | GPTs/attachments/09_replication_ha_cdc.md | FCA-J027 | `GAP-J002-011`; Korean Replication Manager release manual lines 280-295 and Korean 1.2/1.4 release-note package sections; catalog row SRC-TOOL-XVER-000011. |
+
 ### FCA-J026 Replication And HA Guardrails
 
 FCA-J026 cataloged the replication and HA source-family slice. The only new guardrail

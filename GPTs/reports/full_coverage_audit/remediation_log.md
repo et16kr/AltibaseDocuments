@@ -626,3 +626,41 @@ Each entry should include:
   added. Cross-version replication compatibility remains guarded by exact
   Sender/Receiver direction, installed `V$VERSION` output, replication mode, option
   list, and feature-use evidence before giving a definitive customer answer.
+
+### FCA-J027
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`,
+  `guardrail_register.md`, and this remediation log.
+- Product coverage changes: cataloged the `log_analyzer` and `replication_manager`
+  source-family slices for CDC concepts, Log Analysis API files/call order/collector
+  setup/ACK-restart behavior/status diagnostics/XLog handling/conversion/error APIs,
+  Replication Manager connection workflows, pane/object action mapping, full-mesh and
+  join workflows, package-boundary guardrails, and 1.2 through 1.4 release-note items.
+  No original manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 25 rows total; 18 `Covered`, 0
+  `Covered-by-routing`, 6 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Version scope: Log Analyzer rows are `cross-version`, using the 7.3 Korean Log
+  Analyzer manual as representative source and checking 7.1 and Altibase 8.1
+  verified-source outlines for corresponding sections. Replication Manager manual rows
+  use the release Korean manual and trunk Korean manual as checked sources. Replication
+  Manager release-note rows are `patch-specific` for 1.2, 1.3, and 1.4.
+- Source evidence: each row records a Korean source locator and attachment or register
+  evidence. Attachment owner is `09_replication_ha_cdc.md`; `14_utilities_operation_tools.md`
+  remains a cross-route only for generic tool routing.
+- Coverage status changes: core CDC concepts, limitations, required files, call order,
+  collector setup, ACK/restart behavior, collector status, XLog types, inspection,
+  metadata, conversion, error handling, and Replication Manager workflows were marked
+  `Covered`; Replication Manager package-manifest claims were marked `Guardrail`.
+  Exact environment/logging API details, XLog structure tables, `ALA_IsNullValue`,
+  sample program path, and detailed Replication Manager 1.2/1.3 BUG-token release
+  rows were registered as `Missing`.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1804 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 25
+  FCA-J027 rows with 18 `Covered`, 6 `Missing`, and 1 `Guardrail` status. Standard
+  repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: this job did not remediate customer-facing text. Later CDC/RepMgr
+  remediation should close the six missing rows before the final audit can claim no
+  unresolved CDC or Replication Manager source-item gaps.
