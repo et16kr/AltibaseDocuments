@@ -1148,3 +1148,43 @@ Each entry should include:
   `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
   attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
   actionable `Blocker`, `High`, `Medium`, or `Low` rows.
+
+### FCA-J045
+
+- Changed files: `GPTs/attachments/15_migration_oracle_compatibility.md`,
+  `GPTs/attachments/19_spatial_nifi_tableau_misc.md`, `source_item_catalog.tsv`,
+  `source_to_attachment_matrix.tsv`, `missing_item_register.md`, and this remediation
+  log.
+- Product coverage changes: remediated 12 scoped `Missing` rows for Migration Center
+  `7.9` through `7.18` release-note boundaries, Migration Center `7.10` Java runtime
+  compatibility, and `altiShapeLoader 1.0` Java runtime compatibility. Scoped matrix
+  checks found no unresolved `Missing` or `Retrieval-weak` rows for attachments `15`,
+  `17`, or `19`.
+- Affected source item IDs: `SRC-REL-PATCH-000001` through
+  `SRC-REL-PATCH-000009`, `SRC-REL-PATCH-000011`, `SRC-TOOL-XVER-000069`, and
+  `SRC-TOOL-XVER-000072`.
+- Attachment changes: `15_migration_oracle_compatibility.md` now has an answer-ready
+  Migration Center `7.9` through `7.18` release-note table preserving exact release
+  dates, BUG/TASK tokens, source/target database boundary changes, conversion option
+  changes, runtime caveats, and the package-version guardrail; it also has a
+  Migration Center Java compatibility block covering Linux/Unix Java 6 through Java
+  18 plus the Windows `JRE bundle` boundary. `19_spatial_nifi_tableau_misc.md` now has
+  an `altiShapeLoader 1.0` Java compatibility block covering Java 6 through Java 18
+  and the Java 17 untested guardrail.
+- Disposition changes: the 12 touched catalog and matrix rows now use
+  `coverage_status=Covered`, `audit_job=FCA-J045`, and answer-ready anchors in
+  attachments `15` and `19`. No `Guardrail` or `Out-of-scope` disposition was added.
+- Source evidence: Korean Migration Center `7.9` through `7.18` release notes and
+  `Technical Documents/kor/JavaCompatibility.md`. Detailed source/attachment `rg`
+  evidence commands are recorded in the touched catalog and matrix rows.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers` passed; `catalog-qa` and `matrix-qa` passed; scoped
+  exact-token checks passed for Migration Center release/BUG/TASK tokens and Java
+  compatibility tokens; scoped unresolved-row checks found no `Missing` or
+  `Retrieval-weak` rows for attachments `15`, `17`, or `19`; `git diff --check`
+  passed; `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable `Blocker`, `High`, `Medium`, or `Low` rows.
+- Skipped checks: no full 270-question live benchmark was launched for this scoped
+  remediation job; the locked latest benchmark run remains priority evidence, not the
+  completion scope for this item-level audit job.

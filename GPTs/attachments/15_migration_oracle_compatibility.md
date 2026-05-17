@@ -19,15 +19,15 @@
 Use this compact index before scanning migration, adapter, and Oracle-difference sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact Migration Center, oraAdapter, conversion, validation, or rewrite block.
 
 - Aliases and customer wording: Oracle migration, Migration Center, schema migration, data migration, DB to DB, DB to File, Prepare, Build, Reconcile, Run, Data Validation, empty string, PSM conversion, partition conversion, oraAdapter, Adapter for Oracle, Oracle differences, Altibase to Altibase logical migration.
-- Exact-token anchors: `Migration Center`, `7.19`, `Prepare`, `Build`, `Reconcile`, `Run`, `Data Validation`, `Write to CSV`, `Oracle Database 10gR2`, `Oracle Database 12.2.0.1.0`, `Altibase 6.5.1`, `Altibase Log Analysis API`, `oraAdapter`, `Primary Key`, `aexport`, `DBMS_METADATA`, `JSON`.
+- Exact-token anchors: `Migration Center`, `7.9`, `7.10`, `7.11`, `7.12`, `7.13`, `7.14`, `7.15`, `7.16`, `7.17`, `7.18`, `7.19`, `BUG-47352`, `BUG-47372`, `BUG-47376`, `BUG-47381`, `BUG-47402`, `BUG-47408`, `BUG-47409`, `BUG-48340`, `BUG-48672`, `BUG-49467`, `BUG-49499`, `BUG-49579`, `BUG-49595`, `BUG-49731`, `BUG-49950`, `BUG-49951`, `BUG-50092`, `BUG-50160`, `BUG-50173`, `BUG-50180`, `BUG-50263`, `BUG-50652`, `BUG-50821`, `BUG-50827`, `BUG-51034`, `BUG-51035`, `BUG-51075`, `BUG-51076`, `BUG-51219`, `BUG-51220`, `BUG-51311`, `BUG-51319`, `BUG-51321`, `BUG-51472`, `BUG-51650`, `TASK-7433`, `Java 17`, `Java 18`, `JRE bundle`, `Prepare`, `Build`, `Reconcile`, `Run`, `Data Validation`, `Write to CSV`, `Oracle Database 10gR2`, `Oracle Database 12.2.0.1.0`, `Altibase 6.5.1`, `Altibase Log Analysis API`, `oraAdapter`, `Primary Key`, `aexport`, `DBMS_METADATA`, `JSON`.
 - Answer route: use this file for migration planning and tool workflow; use `03_sql_ddl_generation.md` for converted DDL; use `04_sql_dml_oracle_compatibility.md` for SQL rewrites; use `05_data_types_properties.md` for data type and JSON limits; use `14_utilities_operation_tools.md` for `aexport`.
 - Missing-input trigger: before production migration steps, ask for source Oracle version, target Altibase version, source and target character sets, storage design, object list, PSM use, downtime window, backup/rollback plan, and whether applications continue writing.
 
 ## Source Documents
 
 - 7.1: Altibase 7.1 Adapter for Oracle User's Manual; Migration Center User's Manual.
-- 7.3: Altibase 7.3 Adapter for Oracle User's Manual; Migration Center User's Manual; Migration Center 7.19 Release Notes.
-- 8.1: Altibase 8.1 verified source Adapter for Oracle User's Manual; Altibase 8.1 verified source Migration Center User's Manual; Migration Center 7.19 Release Notes.
+- 7.3: Altibase 7.3 Adapter for Oracle User's Manual; Migration Center User's Manual; Migration Center 7.9 through 7.19 Release Notes; Altibase Java compatibility technical note.
+- 8.1: Altibase 8.1 verified source Adapter for Oracle User's Manual; Altibase 8.1 verified source Migration Center User's Manual; Migration Center 7.9 through 7.19 Release Notes; Altibase Java compatibility technical note.
 
 ## Response Rules
 
@@ -71,6 +71,49 @@ Exact block: Migration Center 7.19 runtime and database scope
 - Connection model: Migration Center uses JDBC drivers for source and destination
   database connections; use an Oracle JDBC driver compatible with the source Oracle
   DBMS and the Java runtime.
+
+Exact block: Migration Center 7.9-7.18 release-note boundary
+
+- Version scope: Migration Center tool releases `7.9` through `7.18`; these are tool
+  package versions, not Altibase database server versions.
+- Customer answer rule: if a question asks whether a release-note change applies, ask
+  for the installed Migration Center package version when it is missing. Do not assume
+  a later-release change exists in an earlier package.
+- Runtime boundary: the checked release notes for `7.9` through `7.18` require Java 8
+  or later. GUI mode requires a Java Swing-capable graphics environment; CLI mode does
+  not require an OS graphic library. Migration Center `7.10` additionally records
+  OpenJDK 18 validation as `TASK-7433`.
+- Release-note index:
+
+| Tool release | Release date | Source-backed change boundary | BUG/TASK tokens |
+| --- | --- | --- | --- |
+| `7.9` | Dec. 31, 2021 | Adds Tibero 4 SP1 source support and OpenJDK 12 support; changes the minimum Migration Center runtime from JRE 1.5 to Java 8; updates the bundled JRE from 7 to 8 for Altibase 7.2 JDBC. | `BUG-47352`, `BUG-47372`, `BUG-47376`, `BUG-47381`, `BUG-47402`, `BUG-47408`, `BUG-47409`, `BUG-48340`, `BUG-48672`, `BUG-49467`, `BUG-49499` |
+| `7.10` | Sept. 19, 2022 | Adds MySQL 5.6 and MySQL 5.7 as source versions, adds the `Batch LOB type` option for LOB batch processing, validates OpenJDK 18, and fixes MySQL BIT default conversion to `VARBIT`. | `BUG-49595`, `BUG-49731`, `TASK-7433`, `BUG-49579` |
+| `7.11` | Oct. 21, 2022 | Adds unsupported-object SQL/report evidence during `Build` through `SrcDbObj_Create.sql` and `BuildReport4Unsupported.html`; fixes MySQL Unicode `CHAR`/`VARCHAR` conversion, including `CLOB` fallback when converted target length exceeds the target maximum. | `BUG-49950`, `BUG-49951` |
+| `7.12` | Jan. 30, 2023 | Adds PostgreSQL 9.5.3 as a source database; preserves primary-key column sort order such as descending order during migration. | `BUG-50092` |
+| `7.13` | March 20, 2023 | Fixes PostgreSQL migration of inherited `serial` defaults, unsupported constraint handling, and sequence `START WITH` values. | `BUG-50180`, `BUG-50173`, `BUG-50160` |
+| `7.14` | Nov. 1, 2024 | Allows `Select Editing` conditions from `Reconcile` to be edited for `Run` through the UI or `TableCondition.properties`; changes Oracle/TimesTen/Tibero `BINARY_DOUBLE` mapping from `VARCHAR` to `DOUBLE` with `NaN`/`INF` data-loss caution; no longer supports Altibase-to-Oracle as a target direction; changes TimesTen `Binary` mapping from `BLOB` to `BYTE`; adds options for Empty String conversion and `Not Null & Default ''`; improves option-window scrolling and splitter resizing. | `BUG-50652`, `BUG-50263`, `BUG-50821`, `BUG-50827`, `BUG-51034`, `BUG-51035`, `BUG-51075`, `BUG-51076` |
+| `7.15` | April 25, 2025 | Adds Oracle 12c, 18c, and 19c source support, Tibero 7 through 7.2.2 support, `Invisible Column Migration`, `Convert Oversized String VARCHAR To CLOB`, Oracle `Identity` migration through sequence-backed defaults, Oracle `DEFAULT ON NULL` conversion, and Oracle external-table/hybrid-partitioned-table migration as regular or partitioned Altibase tables assigned to disk tablespace. | `BUG-51219`, `BUG-51220`, `BUG-51311`, `BUG-51319` |
+| `7.16` | Sept. 12, 2025 | Adds Oracle 21c source support, JSON data type migration as `JSON` when the target Altibase supports it or `CLOB` otherwise, `Correction Factor for Character Type Conversion`, option-value validation, and `orai18n.jar`; drops support for Oracle 9i, Oracle 10gR1, TimesTen 7, and Informix 11.50. | `BUG-51321`, `BUG-51472`, `BUG-51650` |
+| `7.17` | Nov. 24, 2025 | Adds Altibase Windows 2026, also shown as Altibase 2.6.0, as a source and target database in the compatible database list. | No `BUG-*` token in the checked release note. |
+| `7.18` | March 20, 2026 | Adds Altibase 8.1 as a source and target database in the compatible database list. | No `BUG-*` token in the checked release note. |
+
+Exact block: Migration Center Java compatibility note
+
+- Version scope: Altibase Java compatibility technical note, Tools table entry for
+  `Migration Center 7.10`.
+- Linux and Unix compatibility row: `Java 6` is unsupported, `Java 7` is unsupported,
+  `Java 8` is supported with the footnote that Migration Center `7.9` changed the
+  minimum Java version to Java 8, `Java 9 ~ Java 10` is supported, `Java 11` is
+  supported with the footnote that Java 11 or later is supported from Migration Center
+  `7.8`, `Java 12` is supported, `Java 17` is untested, and `Java 18` is tested.
+- Windows boundary: Migration Center for Windows provides a `JRE bundle`; the source
+  note groups it with Replication Manager as not affected by the externally installed
+  Java version.
+- Customer answer rule: for a `Java 17` question, do not infer support from `Java 18`.
+  Say that the source table marks `Java 17` as untested, ask for OS, package version,
+  GUI/CLI mode, and the actual startup error or log, then use a tested runtime or a
+  staged run as the safest next check.
 
 Exact block: CLI sequence from project setup through FILESYNC
 

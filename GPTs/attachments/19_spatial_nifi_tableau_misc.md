@@ -22,16 +22,16 @@
 
 Use this compact index before scanning Spatial, loader, NiFi, and Tableau sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact geometry, SRID, WKT/WKB, shapefile, loader option, JDBC field, or BI/ETL block.
 
-- Aliases and customer wording: Spatial SQL, geometry column, R-Tree index, SRID, WKT, WKB, EWKT, EWKB, spatial reference, shapefile import, shapefile export, altiShapeLoader, NiFi JDBC, Tableau JDBC, Other Databases JDBC, Spatial migration.
-- Exact-token anchors: `GEOMETRY`, `SRID`, `WKT`, `WKB`, `EWKT`, `EWKB`, `SPATIAL_REF_SYS`, `SYS_SPATIAL.ADD_SPATIAL_REF_SYS`, `INDEXTYPE IS RTREE`, `100MBytes`, `altiShapeLoader.properties`, `altiShapeLoader.properties.release`, `CREATE_TABLE`, `TABLE_TBS`, `CREATE_INDEX`, `INDEX_TBS`, `DBF_CHAR`, `CASE_SENSITIVE`, `GEO_COL_SIZE`, `NiFi 1.12.1`, `Altibase42.jar`, `Database Connection URL`, `jdbc:Altibase://host_ip:port_no/database_name`, `Altibase.jdbc.driver.AltibaseDriver`, `force_clob_bind=true`, `TableauDesktop-64bit-2021-4-4`, `C:\Program Files\Tableau\Drivers`.
+- Aliases and customer wording: Spatial SQL, geometry column, R-Tree index, SRID, WKT, WKB, EWKT, EWKB, spatial reference, shapefile import, shapefile export, altiShapeLoader, altiShapeLoader Java compatibility, NiFi JDBC, Tableau JDBC, Other Databases JDBC, Spatial migration.
+- Exact-token anchors: `GEOMETRY`, `SRID`, `WKT`, `WKB`, `EWKT`, `EWKB`, `SPATIAL_REF_SYS`, `SYS_SPATIAL.ADD_SPATIAL_REF_SYS`, `INDEXTYPE IS RTREE`, `100MBytes`, `altiShapeLoader.properties`, `altiShapeLoader.properties.release`, `CREATE_TABLE`, `TABLE_TBS`, `CREATE_INDEX`, `INDEX_TBS`, `DBF_CHAR`, `CASE_SENSITIVE`, `GEO_COL_SIZE`, `Java 6`, `Java 7`, `Java 8`, `Java 9 ~ Java 10`, `Java 11`, `Java 12`, `Java 17`, `Java 18`, `NiFi 1.12.1`, `Altibase42.jar`, `Database Connection URL`, `jdbc:Altibase://host_ip:port_no/database_name`, `Altibase.jdbc.driver.AltibaseDriver`, `force_clob_bind=true`, `TableauDesktop-64bit-2021-4-4`, `C:\Program Files\Tableau\Drivers`.
 - Answer route: use this file for Spatial SQL and selected NiFi/Tableau procedures; use `05_data_types_properties.md` for non-spatial data type limits; use `13_isql_iloader_basic_tools.md` for ordinary iLoader; use `15_migration_oracle_compatibility.md` for non-Spatial Oracle migration planning.
 - Missing-input trigger: for production import/export or BI/ETL setup, ask for Altibase version, JDBC driver version, Java version, host, port, database name, character set, SRID, file size, geometry precision, and rollback or reload plan.
 
 ## Source Documents
 
 - 7.1: Altibase 7.1 Spatial SQL Reference.
-- 7.3: Altibase 7.3 Spatial SQL Reference; altiShapeLoader User's Manual; NiFi User's Guide for Altibase; Tableau User's Guide for Altibase.
-- 8.1: Altibase 8.1 verified source Spatial SQL Reference; altiShapeLoader User's Manual; NiFi User's Guide for Altibase; Tableau User's Guide for Altibase.
+- 7.3: Altibase 7.3 Spatial SQL Reference; altiShapeLoader User's Manual; NiFi User's Guide for Altibase; Tableau User's Guide for Altibase; Altibase Java compatibility technical note.
+- 8.1: Altibase 8.1 verified source Spatial SQL Reference; altiShapeLoader User's Manual; NiFi User's Guide for Altibase; Tableau User's Guide for Altibase; Altibase Java compatibility technical note.
 
 ## Response Rules
 
@@ -97,6 +97,22 @@ SELECT * FROM SPATIAL_REF_SYS;
   required `SRID` is missing.
 - Do not claim that `altiShapeLoader` automatically registers every `SRID` from a
   `.prj` file.
+
+Exact block: `altiShapeLoader 1.0` Java compatibility
+
+- Version scope: Altibase Java compatibility technical note, Tools table entry for
+  `altiShapeLoader 1.0`.
+- Compatibility row: `Java 6` is unsupported, `Java 7` is unsupported, `Java 8` is
+  supported, `Java 9 ~ Java 10` is supported, `Java 11` is supported, `Java 12` is
+  supported, `Java 17` is untested, and `Java 18` is tested.
+- Setup relationship: the altiShapeLoader manual still requires `JAVA_HOME`, a 64-bit
+  OS where Java can run, and Java Runtime Environment 8 or higher. The compatibility
+  table is the exact source for Java-version questions beyond that minimum.
+- Customer answer rule: for a `Java 17` question, say that `Java 17` is untested in
+  the source table. Ask for OS, installed JRE/JDK vendor and version, the
+  `altiShapeLoader.sh` or `altiShapeLoader.bat` command, and the error or log output;
+  the safest source-backed next check is to run with a tested Java version or validate
+  the exact installed runtime in staging.
 
 Exact block: Apache NiFi through JDBC
 
