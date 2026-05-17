@@ -552,3 +552,41 @@ Each entry should include:
   Spatial answers still require the exact code, failed Spatial SQL/function/operator,
   geometry metadata, SRID, sanitized geometry input when shareable, and trace or loader
   output before state-changing advice.
+
+### FCA-J024
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`,
+  `retrieval_weakness_register.md`, and this remediation log.
+- Product coverage changes: cataloged the `performance_tuning` source family for
+  Korean Performance Tuning Guide execution plans, access methods, indexes, optimizer
+  flow, query transformations, join methods, plan nodes, statistics, hints, SQL Plan
+  Cache, Result Cache, waits, locks, sessions, and server-tuning workflows. No original
+  manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 81 rows total; 73 `Covered`, 3
+  `Covered-by-routing`, 2 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 3
+  `Retrieval-weak`.
+- Version scope: all rows are `cross-version`, based on checked Korean Altibase 7.1,
+  7.3, and Altibase 8.1 verified-source Performance Tuning Guide headings. The 7.3
+  Korean manual is the representative `source_path`, and matching English manuals were
+  used only to normalize English summaries where consistent with Korean source.
+- Source evidence: each row records a Korean Performance Tuning Guide source locator
+  and an attachment or grep check. The job used `08_performance_tuning_monitoring.md`
+  as the primary owner and routed wait/lock/session evidence to the existing
+  `06_data_dictionary_performance_views.md` cross-reference where exact view columns
+  are owned by earlier catalog jobs.
+- Coverage status changes: existing attachment sections were mapped to answer-ready
+  plan, access-method, join, statistics, hint, plan-cache, result-cache, and server
+  tuning blocks. Query transformation detail and the full comparison-operator/index
+  availability matrix were registered as `Missing`. `GROUP-CUBE`, `GROUP-ROLLUP`, and
+  `WINDOW  SORT`/`WINDOW-SORT` were registered as `Retrieval-weak` because current
+  attachment coverage preserves only token-level/result-cache routing rather than
+  dedicated plan-node answer blocks.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1696 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 81
+  FCA-J024 rows with 73 `Covered`, 3 `Covered-by-routing`, 2 `Missing`, and 3
+  `Retrieval-weak` statuses. Standard repository verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: this job did not remediate customer-facing text. Later performance
+  remediation should close the two missing rows and three retrieval-weak plan-node
+  rows before the final audit can claim no unresolved performance tuning gaps.

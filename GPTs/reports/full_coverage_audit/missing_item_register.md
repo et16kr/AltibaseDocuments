@@ -22,6 +22,18 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J024 Performance Tuning And Optimizer Missing Rows
+
+FCA-J024 cataloged two source-backed Performance Tuning Guide items whose exact
+source detail is not yet represented as answer-ready attachment blocks. Later
+performance remediation should either add the missing item blocks or split them into
+more granular covered rows.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000124 | performance_tuning | cross-version | Manuals/Altibase_7.3/kor/Performance Tuning Guide.md | Performance Tuning Guide > Query Transformation | Answer-ready descriptions, caveats, examples, and related hints for `Common Subexpression Elimination`, `Constant Filter`, `View Merging`, `Subquery Unnesting`, `Predicate Pushdown`, `Transitive Predicate Generation`, and `View Materialization`. | GPTs/attachments/08_performance_tuning_monitoring.md | Add a compact optimizer transformation reference block that preserves each transformation name, purpose, safe rewrite boundary, related hints, and when a customer must provide SQL text and plan evidence before applying it. | FCA-J024 | source locators: Korean Performance Tuning Guide 7.3 lines 1038-1283; `rg -n 'Common Subexpression\|Constant Filter\|View Merging\|Subquery Unnesting\|Predicate Pushdown\|Transitive Predicate\|View Materialization' GPTs/attachments/08_performance_tuning_monitoring.md` shows incomplete answer-ready transformation coverage. |
+| SRC-OTHER-XVER-000133 | performance_tuning | cross-version | Manuals/Altibase_7.3/kor/Performance Tuning Guide.md | Performance Tuning Guide > Access Methods > Indexes and comparison operators | Full source-backed comparison-operator and data-type index-availability matrix, including operator classes, index availability, remarks, and cautions for type conversion and predicate form. | GPTs/attachments/08_performance_tuning_monitoring.md | Add an index-availability matrix or grouped item block for the Performance Tuning Guide comparison-operator and data-type rules; until then, do not infer operator-specific index usability beyond the existing general type-conversion caution. | FCA-J024 | source locators: Korean Performance Tuning Guide 7.3 lines 1600-2309; `rg -n 'Index availability\|Comparison Operator\|LIKE\|BETWEEN\|IS NULL' GPTs/attachments/08_performance_tuning_monitoring.md` shows no full operator/index matrix. |
+
 ### FCA-J014 Property Catalog Memory Log Cache And Capacity Missing Rows
 
 FCA-J014 cataloged scoped memory, disk, log, buffer, and secondary-cache properties whose names are present in the attachment inventory baseline but whose per-property source details are not yet answer-ready in `GPTs/attachments/05_data_types_properties.md`.
