@@ -144,6 +144,100 @@ Anchor: protected administration stop points
 - When restoring a replicated database, ask for topology and whether the target host is the same host. Restoring backup files can resend based on `backup-time metadata`; set `REPLICATION_SENDER_AUTO_START` to `0` when the recovery plan requires preventing automatic replication startup.
 - Do not issue `DROP TABLESPACE`, `DISCARD`, incomplete recovery, historical log-anchor restore, or `RESETLOGS` without exact version, database mode, startup phase, backup evidence, object scope, and business approval.
 
+## Protected Backup And Recovery Answer Anchors
+
+Use these anchors before the longer backup and recovery runbooks when the customer asks
+for backup, archive log mode, restore, media failure, incomplete recovery,
+`RESETLOGS`, `DROP`, `DISCARD`, `REUSE`, or other destructive operations.
+
+Anchor: backup family and archive-log mode decision
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source unless a target-version source says otherwise.
+- `iLoader` is a logical table-level backup and restore path. It uses `formout` to create a `FORM file` such as `t1.fmt`, `out` to export data to a file such as `t1.dat`, and `in` to import the data back. It does not restore database files, log anchors, or tablespace state.
+- Physical backup means copying database files, checkpoint image files, log anchor files, and required logs. Use physical backup and media recovery for datafile, log-anchor, tablespace, or database-state recovery.
+- `ARCHIVELOG` mode copies a filled online log file to the archive directory when log switching occurs. The archive destination is controlled by `ARCHIVE_DIR` in `$ALTIBASE_HOME/conf/altibase.properties`.
+- `NOARCHIVELOG` mode deletes online log files during checkpoint. For damaged permanent data files, it is limited to restoring an offline backup and cannot recover changes after that backup.
+- Online backup and complete or incomplete media recovery require `ARCHIVELOG`. The database mode is chosen at `CREATE DATABASE` time and can be changed in `CONTROL` with `ALTER DATABASE ARCHIVELOG` or `ALTER DATABASE NOARCHIVELOG`.
+- Check mode and archive state with `V$LOG` and `V$ARCHIVE` before promising online backup or media recovery.
+
+Anchor: online backup completion and DBA-driven file copy
+
+- For database-driven online backup, use `ALTER DATABASE BACKUP DATABASE TO '/backup/dir'` or `ALTER DATABASE BACKUP TABLESPACE tablespace_name TO '/backup/dir'`.
+- For DBA-driven tablespace online backup, wrap manual OS copy with `ALTER TABLESPACE tablespace_name BEGIN BACKUP` and `ALTER TABLESPACE tablespace_name END BACKUP`.
+- For memory tablespaces, identify the stable checkpoint image file before copying it. For Altibase 8.1 verified source, check `V$LOG.CHECKPOINT_SCALE` before interpreting `PAIR`, `SINGLE`, and stable checkpoint image evidence.
+- After DBA-driven direct online backup, force archive of the backup-related log files with `ALTER SYSTEM SWITCH LOGFILE`.
+- Check `altibase_sm.log` for backup completion evidence. The manual example includes `Waiting logfile... to archive` followed by `Database-Level Backup Completed [SUCCESS]`.
+- Stop if the database is in `NOARCHIVELOG`, archive storage is full, `BEGIN BACKUP` is already active, or the affected memory checkpoint image cannot be identified.
+
+Anchor: media recovery choice, complete versus incomplete
+
+- Altibase recovery types include logical restore from `iLoader` backup, automatic `restart recovery` after abnormal server termination, and `media recovery` for lost or damaged data files.
+- Media recovery uses backup data files, `loganchor*` files, archive log files, and online logs. Altibase supports only offline media recovery in the `CONTROL` startup phase.
+- Complete recovery restores data files to the current point when required archive logs and online logs are available:
+
+```sql
+STARTUP CONTROL;
+ALTER DATABASE RECOVER DATABASE;
+STARTUP SERVICE;
+```
+
+- Incomplete recovery uses exactly one target: `ALTER DATABASE RECOVER DATABASE UNTIL TIME '<yyyy-mm-dd:hh24:mi:ss>'` for a target time, or `ALTER DATABASE RECOVER DATABASE UNTIL CANCEL` to stop before a missing or corrupt log boundary.
+- Stop before incomplete recovery unless the business accepts losing changes after the target time or last valid log.
+
+Anchor: `RESETLOGS` after incomplete recovery
+
+- If incomplete recovery is performed in `CONTROL`, moving to `META` requires the exact form `ALTER DATABASE db_name META RESETLOGS`.
+- `RESETLOGS` initializes `online logs` because the database was restored to a past point and restart recovery should not apply no-longer-needed log records.
+- Do not run `META RESETLOGS` after complete recovery, and do not run it just because startup is difficult.
+- After `RESETLOGS` transitions the database to `META`, take a `full database backup` by offline or online backup before relying on future media recovery.
+- If another media failure occurs after `RESETLOGS` and no new `full database backup` exists, recovery is possible only to before the log reset, so changes after reset can be lost.
+
+Anchor: current loganchor versus historical loganchor
+
+- For ordinary complete media recovery, use the `current loganchor` files whenever possible. Restore backup data files only, unless the recovery scenario requires historical metadata.
+- Use backed-up historical `loganchor*` files only for source-backed special cases such as accidental `DROP TABLESPACE`, planned past-time recovery, or incremental tag recovery where the current log anchors no longer contain the needed metadata.
+- When a tablespace is added, dropped, or renamed, back up `SYS_TBS_MEM_DIC` or the whole database, and back up log anchors because they contain tablespace information.
+- Use `ALTER DATABASE BACKUP LOGANCHOR TO 'anchor_path'` when the recovery plan needs an SQL log-anchor backup.
+
+Anchor: datafile, temporary file, and memory checkpoint media failures
+
+- For an unbacked lost disk datafile, this method applies to disk datafiles only. It does not apply to memory checkpoint image files.
+- Use `V$DATAFILES` to identify the file and `CREATE_LSN_FILENO`, inspect the log anchor with `dumpla`, confirm all required logs exist in `ARCHIVE_DIR` or `LOG_DIR`, then in `CONTROL` run `ALTER DATABASE CREATE DATAFILE` followed by `ALTER DATABASE RECOVER DATABASE`.
+- For backed-up disk datafiles restored to a different filesystem, copy the files first. In `CONTROL`, use `ALTER DATABASE RENAME DATAFILE old_path TO new_path`; the `TO` path must already exist and must be an `absolute path`. Do not substitute `ALTER TABLESPACE` for datafile path rename.
+- If only the `SYS_TBS_DISK_TEMP` datafile is lost in `NOARCHIVELOG` mode, recreate the temporary file in `CONTROL` with `ALTER DATABASE CREATE DATAFILE`, then move to service with `ALTER DATABASE dbname SERVICE` or the equivalent startup sequence. Do not generalize this temporary-file exception to permanent datafiles or memory checkpoint image files.
+- For lost memory checkpoint image files, check whether 8.1 `V$LOG.CHECKPOINT_SCALE` is `PAIR` or `SINGLE`; use `V$MEM_STABLE`, `V$MEM_TABLESPACES`, `CURRENT_DB`, and `dumpla` output such as `Stable Checkpoint Image Num.` or `Stable Single Checkpoint Image Num.` before choosing or renaming the stable image.
+
+Anchor: incremental restore and metadata files
+
+- Incremental backup is an online physical backup method. `BACKUP INCREMENTAL LEVEL 0` is required before `BACKUP INCREMENTAL LEVEL 1`; `CUMULATIVE` level 1 backs up changes since the latest level 0.
+- Set the server-managed incremental backup directory with `ALTER DATABASE CHANGE BACKUP DIRECTORY`.
+- `changeTracking` is stored under `$ALTIBASE_HOME/dbs`, stores changed-page bitmap information, and is required for future incremental backup.
+- `backupInfo` is stored under `$ALTIBASE_HOME/dbs`, records backup level, type, tag, times, and file locations, and is required for incremental media restore.
+- If `changeTracking` or `backupInfo` is missing and startup cannot reach `CONTROL`, start to `PROCESS`; disable invalid change tracking with `ALTER DATABASE DISABLE INCREMENTAL CHUNK CHANGE TRACKING`, copy a valid `backupInfo` from the most recent usable incremental backup path, then continue to `CONTROL`.
+- Incremental media restore and recovery run in `CONTROL`. Use `ALTER DATABASE RESTORE DATABASE` to restore files and `ALTER DATABASE RECOVER DATABASE` to apply archive logs after restoration.
+- For tag-based incomplete restoration and recovery, `RESTORE DATABASE FROM TAG '<tag>'` and `RECOVER DATABASE FROM TAG '<tag>'` must use the same tag. `ALTER DATABASE RESTORE DATABASE UNTIL CANCEL` is not supported for incremental backup restore; use `UNTIL TIME` where documented, or restore from a tag and then recover with `UNTIL TIME` or `UNTIL CANCEL`.
+
+Anchor: destructive `DROP`, `DISCARD`, and `REUSE`
+
+- `DROP TABLESPACE` requires `SYS` or `DROP TABLESPACE` system privilege. If objects remain, `INCLUDING CONTENTS` is required. Use `INCLUDING CONTENTS AND DATAFILES` only when deleting related disk datafiles or memory checkpoint image files is intended. Use `CASCADE CONSTRAINTS` only when dropping external referential constraints is accepted.
+- Never generate `DROP TABLESPACE` for system tablespaces: `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_UNDO`, or `SYS_TBS_DISK_TEMP`.
+- `ALTER TABLESPACE ... DISCARD` is acceptable only when media recovery is impossible or rejected and a damaged disk tablespace or memory data tablespace prevents startup. `DISCARD` can run only in `CONTROL`.
+- After `DISCARD`, objects in that tablespace are inaccessible and the only later action for that tablespace is `DROP`. Start the remaining database with `STARTUP SERVICE`, then remove the discarded tablespace with `DROP TABLESPACE ... INCLUDING CONTENTS`, commonly with `AND DATAFILES` when deleting related files is intended.
+- `REUSE` in tablespace or datafile DDL is destructive if the named file already exists. Ask for the exact path, file owner, backup state, and explicit permission to overwrite before using it.
+
+Anchor: replication safety during restore from backup
+
+- Restoring a backed-up replicated Altibase database on a different system can cause replication problems because network addresses differ.
+- Even on the same system, replication can resend based on `backup-time metadata`, and some data can be changed back to backup-time data.
+- Before recovery when appropriate, set `REPLICATION_SENDER_AUTO_START` to `0` so replication does not start automatically.
+- After recovery, recreate the replication object or `RESET` replication according to the recovery plan.
+- Ask for replication topology, active sender/receiver state, and whether the restore target is the same host before giving state-changing replication commands.
+
+Anchor: hard stop inputs for protected operations
+
+- Ask for: exact Altibase version and patch level, startup phase, database mode, `DB_NAME`, affected tablespace/datafile/checkpoint image/log paths, error line, `altibase_boot.log` and `altibase_sm.log` excerpts, backup manifest, `loganchor*` source, archive and online log inventory, object inventory, replication topology, target recovery time or tag, and explicit data-loss approval.
+- Stop rather than guessing when an answer depends on an exact patch level, storage layout, current log anchor contents, archive log continuity, memory checkpoint scale, object ownership, or replication topology.
+
 ## Operations Pattern
 
 Use this order for most DBA answers:

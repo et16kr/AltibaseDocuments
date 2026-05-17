@@ -1578,6 +1578,17 @@ Database and recovery example cautions:
 - Do not run `DROP DATABASE` or incomplete recovery from a generated answer unless the customer confirms the exact version, target database, backup set, recovery target, log availability, and outage plan.
 - Do not use `RESTORE TABLESPACE` as a replacement for ordinary online tablespace backup restore procedures that require OS file copy plus `RECOVER DATABASE`; choose the procedure based on the backup type and source-backed runbook in attachment 02.
 
+Protected backup and destructive-operation SQL generation:
+
+- Before generating online backup SQL, require `ARCHIVELOG` mode, writable backup storage, archive destination capacity, and target scope. Preserve `CREATE DATABASE`, `ARCHIVELOG`, `NOARCHIVELOG`, `ARCHIVE_DIR`, `V$LOG`, and `V$ARCHIVE` when explaining why online backup and ordinary media recovery depend on archive logs.
+- For DBA-driven tablespace backup, generate the full sequence: `ALTER TABLESPACE ... BEGIN BACKUP`, OS copy, `ALTER TABLESPACE ... END BACKUP`, then `ALTER SYSTEM SWITCH LOGFILE`. Tell the user to check `altibase_sm.log` for `Database-Level Backup Completed [SUCCESS]`.
+- Generate `ALTER DATABASE db_name META RESETLOGS` only after incomplete recovery. State that it resets `online logs` and requires an immediate `full database backup`.
+- For a lost temporary file in `NOARCHIVELOG`, preserve the exact service transition token `ALTER DATABASE dbname SERVICE`; do not generalize that temporary-file path to permanent datafiles.
+- For datafile relocation, use `ALTER DATABASE RENAME DATAFILE old_absolute_path TO new_absolute_path`; the target must be an `absolute path` that already exists. Do not substitute `ALTER TABLESPACE` for datafile path rename.
+- Generate `DROP TABLESPACE ... INCLUDING CONTENTS [AND DATAFILES] [CASCADE CONSTRAINTS]` only after object inventory and backup/recovery posture are known. Never generate it for `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_UNDO`, or `SYS_TBS_DISK_TEMP`.
+- Generate `ALTER TABLESPACE ... DISCARD` only for the `CONTROL` phase when media recovery is impossible or rejected and loss of the damaged disk or memory data tablespace is explicitly accepted.
+- Use `REUSE` only when overwriting the existing file is intentional and source-backed; ask for exact path, backup evidence, and overwrite approval before including it in runnable DDL.
+
 ### Tablespace Examples
 
 For 7.1 and 7.3, generate tablespace DDL without `IF NOT EXISTS`:

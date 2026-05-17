@@ -134,6 +134,15 @@ QA gate before answering:
 - Action safety: do not recommend restart, recovery, datafile replacement, `RESETLOGS`, object drop/rebuild, replication rebuild, certificate replacement, or property changes until the required evidence supports that action.
 - Gap handling: for uncovered exact codes, preserve the code, state `Unknown from the supplied message` for unsupported cause/action fields, provide the safest source-backed next check, and cross-reference the owning attachment.
 
+Protected recovery and destructive-operation triage:
+
+- If the error involves backup, archive logs, lost datafiles, missing checkpoint images, `RESETLOGS`, `DISCARD`, `DROP TABLESPACE`, `REUSE`, or log-anchor mismatch, preserve current files before changing anything.
+- Ask for exact version and patch level, startup phase, `ARCHIVELOG` or `NOARCHIVELOG`, full error line, affected tablespace or file path, backup manifest, `loganchor*` source, archive and online log inventory, and `altibase_boot.log` or `altibase_sm.log` excerpts.
+- Complete media recovery uses `ALTER DATABASE RECOVER DATABASE` in `CONTROL` when required archive logs and online logs are available. Incomplete recovery uses `UNTIL TIME` or `UNTIL CANCEL`; after that, require `ALTER DATABASE db_name META RESETLOGS` and a `full database backup`.
+- For ordinary complete recovery, use the `current loganchor` files whenever possible. Use historical `loganchor*` only for source-backed cases such as accidental `DROP TABLESPACE`, planned past-time recovery, or incremental tag recovery.
+- Do not recommend `ALTER TABLESPACE ... DISCARD` unless media recovery is impossible or rejected and the customer explicitly accepts losing the damaged disk or memory data tablespace. After `DISCARD`, the tablespace is inaccessible and the only later action is `DROP TABLESPACE ... INCLUDING CONTENTS`, usually with `AND DATAFILES` when deleting files is intended.
+- Do not suggest `REUSE` for an existing datafile path unless overwriting that file is explicitly approved and backed by recovery evidence.
+
 Short answers may compress the fields, but preserve the same order:
 
 ```text
