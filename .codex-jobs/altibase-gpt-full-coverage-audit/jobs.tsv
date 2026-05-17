@@ -2,7 +2,7 @@ id	status	kind	title	goal
 FCA-J001	Done	docs	Preflight and benchmark evidence lock	Confirm the current review/remediation cycle is complete, the worktree is clean, previous jobs are committed, and the latest full benchmark run is locked as audit evidence.
 FCA-J002	Done	docs	Source corpus lock	Freeze the exact selected source roots, source families, authoritative Korean sources, extraction aids, exclusions, and customer-facing scope boundaries.
 FCA-J003	Done	docs	Catalog schema and extraction scripts	Define the source item catalog schema, controlled vocabularies, stable ID rules, and reusable extraction and coverage-check scripts where practical.
-FCA-J004	ToDo	docs	Release notes patch notes and platform catalog	Extract release, patch, feature, platform, upgrade, and exact version-boundary items into the source item catalog.
+FCA-J004	Done	docs	Release notes patch notes and platform catalog	Extract release, patch, feature, platform, upgrade, and exact version-boundary items into the source item catalog.
 FCA-J005	ToDo	docs	Installation and getting-started catalog	Extract installation, environment setup, database creation, startup, shutdown, licensing, and first-check items.
 FCA-J006	ToDo	docs	Administrator backup recovery archive and storage catalog	Extract backup, recovery, archive log, storage, server-mode, media-failure, and protected-operation items.
 FCA-J007	ToDo	docs	Administrator tablespace account privilege catalog	Extract tablespace, datafile, user, role, privilege, account, schema administration, and validation-check items.
