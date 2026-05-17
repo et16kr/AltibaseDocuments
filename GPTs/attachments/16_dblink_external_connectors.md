@@ -46,6 +46,37 @@ CDC and TLS boundary block:
 - Connector TLS answers must distinguish the ordinary Altibase JDBC/ODBC/CLI TLS surface from replication SSL. Ordinary client TLS uses `SSL_PORT_NO` and client properties such as `ssl_enable`, `truststore_url`, `SSL_VERIFY`, or certificate paths; Altibase 8.1 verified-source replication SSL uses `REPLICATION_SSL_PORT_NO` and `USING SSL`.
 - Before combining connector, CDC, and TLS guidance, ask for the exact Altibase version, adapter/tool name and version, JDBC or ODBC/CLI driver version, host and port map, certificate mode, and whether the change stream is Log Analyzer CDC or table-to-table replication.
 
+## J017 DB Link And Connector Exact Answer Blocks
+
+Use these blocks when a DB Link, Hadoop Connector, or third-party connector answer needs
+literal function, command, and direction tokens.
+
+Exact block: `REMOTE_TABLE` versus `REMOTE_EXECUTE_IMMEDIATE`
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source DB Link guides.
+- `REMOTE_TABLE` is used in the `FROM` clause of a local `SELECT` statement and sends a
+  remote `SELECT` to the remote server.
+- `REMOTE_TABLE` can specify only a `SELECT` statement.
+- `REMOTE_TABLE` cannot be used with SQL containing a `parameter marker` for `binding`.
+- `REMOTE_EXECUTE_IMMEDIATE` executes remote SQL through a database link for supported
+  `DML`, `DDL`, and `DCL` other than `SELECT`.
+- `REMOTE_EXECUTE_IMMEDIATE` also cannot execute SQL with a `parameter marker` for
+  `binding`.
+- When `binding` is required, use the documented `REMOTE_*` functions inside PSM in the
+  required call order instead of `REMOTE_TABLE` or `REMOTE_EXECUTE_IMMEDIATE`.
+
+Exact block: Altibase Hadoop Connector with Sqoop
+
+- Version scope: Hadoop Connector guide baseline; apply production support only after
+  checking the installed connector package.
+- Required baseline pieces: Hadoop 1.0, Sqoop 1.4.4 or later, the Altibase JDBC driver,
+  and `altibase_sqoop14_connector.jar` copied into `$SQOOP_HOME/lib`.
+- Required Sqoop option: `--connection-manager com.altibase.sqoop.manager.AltibaseManager`.
+- `sqoop import` moves Altibase table data into HDFS or Hive targets.
+- `sqoop export` moves HDFS data into an Altibase table.
+- Direction limit: `BLOB` and `CLOB` are supported for import, but not for export, in
+  the source baseline.
+
 ## Fast Decision Map
 
 ```mermaid

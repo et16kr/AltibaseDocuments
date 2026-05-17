@@ -50,6 +50,73 @@ flowchart TD
   B -- Altibase to Altibase spatial migration --> K[Check metadata version and WKB/EWKB]
 ```
 
+## J017 Spatial And Integration Exact Answer Blocks
+
+Use these blocks when a Spatial, `altiShapeLoader`, NiFi, or Tableau answer needs exact
+syntax, numeric limits, paths, or driver tokens.
+
+Exact block: `GEOMETRY` column and `RTREE` index
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source Spatial SQL references.
+- Column syntax: `column_name GEOMETRY [(precision)] [(SRID srid)]`.
+- `precision` is specified in bytes.
+- `precision` minimum: `16` bytes.
+- `precision` maximum: `100MBytes`.
+- `precision` default when omitted: `32,000` bytes.
+- `SRID` is a 4-byte signed integer and defaults to `0` when omitted.
+- Spatial index syntax: `CREATE INDEX index_name ON table_name ( column_name ) [INDEXTYPE IS RTREE]`.
+- `RTREE` indexes are only for `GEOMETRY` columns; do not use `INDEXTYPE IS BTREE` for
+  an Altibase Spatial index.
+
+Exact block: `altiShapeLoader` SRID precheck
+
+- Version scope: `altiShapeLoader` User's Manual and Spatial SQL reference.
+- Purpose: `altiShapeLoader` imports and exports GIS `Shapefile` data between
+  shapefiles and an Altibase server.
+- Java setup: set `JAVA_HOME`, copy `altiShapeLoader.properties.release` to
+  `altiShapeLoader.properties`, and edit `altiShapeLoader.properties` for connection
+  and default options.
+- Import prerequisite: a `.prj` file can contain `SRID` information; that `SRID` must
+  be registered in Altibase before import.
+- Registration check:
+
+```sql
+SELECT * FROM SPATIAL_REF_SYS;
+```
+
+- Registration procedure: use `SYS_SPATIAL.ADD_SPATIAL_REF_SYS` before import when the
+  required `SRID` is missing.
+- Do not claim that `altiShapeLoader` automatically registers every `SRID` from a
+  `.prj` file.
+
+Exact block: Apache NiFi through JDBC
+
+- Version scope: selected NiFi User's Guide for Altibase; check installed NiFi and JDBC
+  driver versions before production use.
+- CLOB caveat: if `CLOB` data must be processed, the guide says to install
+  `NiFi 1.12.1` or earlier. If there is no LOB data, the guide does not impose a NiFi
+  version restriction.
+- Driver file in the guide: `$ALTIBASE_HOME/lib/Altibase42.jar`.
+- After copying the driver into the NiFi library path, restart NiFi.
+- Configure a NiFi `Controller Service` connection pool for Altibase.
+- Field name and URL form: `Database Connection URL` =
+  `jdbc:Altibase://host_ip:port_no/database_name`.
+- Driver class: `Altibase.jdbc.driver.AltibaseDriver`.
+- For CLOB binding behavior when needed, append `force_clob_bind=true` to the JDBC URL,
+  for example `jdbc:Altibase://host_ip:port_no/database_name?force_clob_bind=true`.
+
+Exact block: Tableau Desktop through JDBC
+
+- Version scope: selected Tableau User's Guide for Altibase; this is a guide baseline,
+  not a universal Tableau support matrix.
+- Guide baseline: `TableauDesktop-64bit-2021-4-4`.
+- Windows driver directory: `C:\Program Files\Tableau\Drivers`.
+- Altibase 7.1 driver file in the guide: `$ALTIBASE_HOME/lib/Altibase42.jar`.
+- Driver patch note: Altibase `7.1.0.5.6` added a JDBC API Specification 4.2 driver.
+- Tableau connector selection: `Other Databases (JDBC)`.
+- URL form: `jdbc:Altibase://host_ip:port_no/database_name`.
+- Do not answer this selected-guide setup as an ODBC DSN procedure.
+
 ## Version Differences
 
 Version block: 7.1

@@ -49,6 +49,102 @@ flowchart TD
   I -- SSL/TLS --> K[ssl_enable=true plus SSL port and truststore keys]
 ```
 
+## J017 Java Exact Answer Blocks
+
+Use these blocks when a customer question needs literal JDBC, Spring, Hibernate, or
+driver API tokens instead of a short conceptual answer.
+
+Exact block: JDBC URL attributes
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source JDBC guides.
+- Purpose: append connection attributes after the database name in an Altibase JDBC
+  URL.
+- Literal example: `jdbc:Altibase://localhost:20300/mydb?fetch_enough=0&time_zone=DB_TZ`.
+- Rule: the first URL attribute starts with `?`; each additional attribute is joined
+  with `&`, for example `?fetch_enough=0&time_zone=DB_TZ`.
+- Preserve attribute names exactly: `fetch_enough`, `time_zone`, `login_timeout`,
+  `query_timeout`, `lob_null_select`, `ssl_enable`, and other documented connection
+  attributes are JDBC driver connection attributes, not server properties changed with
+  `ALTER SYSTEM`.
+- Production check: ask for the target Altibase version, JDBC driver patch, Java
+  version, and connection-pool product before finalizing a URL.
+
+Exact block: `alternateservers` and failover assumptions
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source JDBC guides; examples
+  differ by version/driver patch, so test with the exact driver.
+- Attribute: `alternateservers`.
+- Documented `Properties` example shape in the 7.1 and Altibase 8.1 verified source
+  guides:
+
+```java
+Properties sProps = new Properties();
+sProps.put("alternateservers", "(database1:20300, database2:20300)");
+```
+
+- Do not infer load balancing, replication health checking, or automatic data
+  consistency from `alternateservers` alone.
+- Separate decisions: `loadbalance`, `connectionretrycount`, `connectionretrydelay`,
+  `sessionfailover`, `AltibaseFailoverCallback`, and the actual replication or HA
+  topology must be reviewed independently.
+
+Exact block: JDBC SSL/TLS attributes
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source JDBC guides; full
+  certificate and server-side TLS setup is in the SSL/TLS attachment.
+- Minimal client-side URL key: `ssl_enable=true`.
+- Server certificate verification key: `verify_server_certificate=true`.
+- Truststore keys: `truststore_url`, `truststore_type`, and `truststore_password`.
+- Mutual-authentication keys: `keystore_url`, `keystore_type`, and
+  `keystore_password`.
+- When using a private CA, configure a JVM default truststore or explicit
+  `truststore_url` and `truststore_password`; do not say certificate verification is
+  enabled only by setting the port.
+
+Exact block: JDBC statement caching
+
+- Version scope: Altibase 8.1 verified source for statement caching properties; API
+  support rows are present in the JDBC guides.
+- Properties: `stmt_cache_enable`, `stmt_cache_size`, and `stmt_cache_sql_limit`.
+- Default and enablement: `stmt_cache_enable` defaults to `false`; statement caching
+  must be explicitly enabled, for example `stmt_cache_enable=true`.
+- Cached object families: `PreparedStatement` and `CallableStatement` can be cached at
+  the connection level. Ordinary `Statement` objects are not cached.
+- Per-statement control: use `Statement.setPoolable(false)` to keep a specific
+  statement from being cached and `Statement.setPoolable(true)` to make it cacheable
+  when the cache is enabled. If `stmt_cache_enable=false`, `setPoolable(true)` does not
+  make the statement cache active.
+- Cautions: do not combine JDBC statement caching with `defer_prepares`; avoid duplicate
+  caching with DBCP `poolPreparedStatements`; size Java heap and cache limits deliberately
+  because cached statement metadata and objects consume memory.
+
+Exact block: Spring Boot and Hibernate 6.4 dependency tokens
+
+- Version scope: source-backed examples from the Spring Data JPA and Hibernate 6.4
+  guides; verify the exact driver patch before production use.
+- Maven Central availability examples: Altibase 7.1 driver artifacts are documented
+  from Altibase 7.1.0.9.0; Altibase 7.3 driver artifacts are documented from Altibase
+  7.3.0.0.2.
+- Maven coordinates for the Altibase JDBC driver use groupId `com.altibase` and
+  artifactId `altibase-jdbc`.
+- Hibernate 6.4 dependency: `org.hibernate.orm:hibernate-community-dialects`.
+- Driver class: `Altibase.jdbc.driver.AltibaseDriver`.
+- Spring property names: `spring.datasource.driver-class-name`,
+  `spring.datasource.url`, `spring.datasource.username`, `spring.datasource.password`,
+  and `spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation`.
+- For Hibernate LOB behavior on Altibase 7.1, add `lob_null_select=off` to the JDBC URL.
+  For 7.3 and Altibase 8.1 verified source, `lob_null_select` defaults to `off`.
+
+Exact block: Java runtime boundary for 7.3 JDBC and Adapter for JDBC
+
+- Version scope: 7.3 JDBC guide and Java compatibility material.
+- 7.3 `Altibase.jar` runs on `JRE 1.8` or later.
+- The 7.3 JDBC driver and Adapter for JDBC are listed as tested from Java 8 through
+  Java 17-21 in the supplemental compatibility material.
+- Do not plan Java 5, Java 6, or Java 7 for Altibase 7.3 JDBC or Adapter for JDBC.
+- For Adapter for JDBC, verify both the Adapter version and the target database JDBC
+  driver runtime requirement before committing to Java 17-21.
+
 ## Version Differences
 
 Version block: 7.1

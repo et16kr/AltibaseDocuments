@@ -55,6 +55,47 @@ flowchart TD
   H -- Remove AKU-managed replication --> L[aku -p clean]
 ```
 
+## J017 AKU Exact Answer Blocks
+
+Use these blocks when a Kubernetes or AKU answer must preserve the literal lifecycle
+controls and unsafe-operation cautions.
+
+Exact block: AKU purpose and scale-out boundary
+
+- Version scope: 7.1 Utilities Manual for 1 to 4 Pods; 7.3 and Altibase 8.1 verified
+  source Utilities guidance for 1 to 6 Pods.
+- `aku` is the Altibase Kubernetes Utility for Kubernetes `StatefulSet` lifecycle
+  operations.
+- AKU helps synchronize Altibase data or reset synchronization information as Pods
+  start, stop, scale up, or scale down.
+- AKU uses Altibase replication among Pods, but it does not provide Altibase data
+  scale-out.
+- `AKU_SERVER_COUNT` defines the maximum number of Altibase servers or Pods that AKU can
+  synchronize. For Altibase 8.1 verified source, the valid range is `1` to `6`.
+
+Exact block: StatefulSet controls for safe startup
+
+- Required StatefulSet control: `podManagementPolicy: OrderedReady`.
+- Required Service control: headless Service plus `publishNotReadyAddresses: true`.
+- Required probe control: `startupProbe` checking `/tmp/aku_start_completed`.
+- Required termination control: sufficiently large `terminationGracePeriodSeconds`.
+- Runtime order: start the Altibase server first, then run `aku -p start`.
+- Startup safety rule: Pods should be created sequentially so several Pods do not run
+  `aku -p start` at the same time.
+
+Exact block: safe shutdown and abnormal termination
+
+- Runtime order: `aku -p end` must run before the Altibase server stops and must
+  complete before Pod termination.
+- If `aku -p end` does not complete, or if `AKU_REPLICATION_RESET_AT_END=0` leaves
+  replication information, replication information may remain on other Pods.
+- Long-lived remaining replication information can cause online logs to accumulate for a
+  terminated Pod and can exhaust disk space.
+- Cleanup/reset is operator-reviewed work: stop and reset the affected replication
+  objects only after backup, topology, and recovery evidence are confirmed.
+- Do not delete `/tmp/aku_start_completed`, run `aku -p clean`, or issue
+  `ALTER REPLICATION ... RESET` as a blind progress fix.
+
 ## Version Differences
 
 Version block: 7.1

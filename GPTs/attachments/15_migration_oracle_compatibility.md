@@ -46,6 +46,65 @@ flowchart TD
   E --> K[Configure ALA, OCI, oraAdapter.conf, replication object]
 ```
 
+## J017 Migration And Adapter Exact Answer Blocks
+
+Use these blocks when a migration or Adapter for Oracle answer needs exact tool, scope,
+or validation tokens.
+
+Exact block: Migration Center 7.19 runtime and database scope
+
+- Version scope: Migration Center `7.19` tool release; this is not an Altibase database
+  server version.
+- Runtime: Java 8 or later. GUI mode requires Java Swing support; CLI mode does not
+  require an OS graphic library.
+- Source database scope: Oracle Database 10gR2 through Oracle Database 21c.
+- Target database scope: Altibase 6.5.1 or later.
+- Connection model: Migration Center uses JDBC drivers for source and destination
+  database connections; use an Oracle JDBC driver compatible with the source Oracle
+  DBMS and the Java runtime.
+
+Exact block: CLI sequence from project setup through FILESYNC
+
+- GUI stage names: `Prepare`, `Build`, `Reconcile`, `Run`, and `Data Validation`.
+- CLI setup: `./migcenter.sh register register.xml` registers the project and database
+  connections for the `Prepare` stage.
+- CLI sequence:
+
+```bash
+./migcenter.sh register register.xml
+./migcenter.sh build project_path
+./migcenter.sh reconcile project_path
+./migcenter.sh run project_path
+./migcenter.sh diff project_path
+./migcenter.sh filesync project_path
+```
+
+- `diff` is the CLI Data Validation step. `filesync` applies CSV differences only when
+  `FILESYNC` is the chosen correction method.
+- CLI `Reconcile` uses default values and does not provide the same manual tuning
+  workflow as GUI Reconcile; review generated reports and SQL before `Run`.
+
+Exact block: Data Validation after `Run`
+
+- Data Validation can compare only tables with a `Primary Key`.
+- LOB columns are excluded from comparison targets; validate LOB data separately.
+- `Write to CSV` controls whether inconsistent data is written to CSV files under the
+  validation directory.
+- The summary report is written regardless of the `Write to CSV` option.
+- Use row-count or application-specific checks for tables without a `Primary Key`.
+
+Exact block: `oraAdapter`, ALA, and OCI boundary
+
+- Use `oraAdapter` when Altibase is the source of DML changes and Oracle is the apply
+  target. Do not use it as the initial Oracle-to-Altibase migration tool.
+- Implementation pieces: `oraAdapter` uses Altibase Log Analysis API to receive and
+  interpret Altibase changes, and Oracle OCI to apply converted data to Oracle.
+- Required setup: configure the ALA replication object, `XLog Sender`,
+  `XLog Collector`, `oraAdapter.conf`, OCI libraries, Oracle connection properties, and
+  ports before starting change apply.
+- Startup order: start `oraAdapter`, confirm `Altibase Adapter started.`, then start the
+  Altibase XLog sender with `ALTER REPLICATION ala START`.
+
 ## Tool and Version Scope
 
 Migration Center:
