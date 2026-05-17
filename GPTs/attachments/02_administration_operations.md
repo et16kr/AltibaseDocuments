@@ -1215,9 +1215,26 @@ Runbook: preflight checks before creating or altering tablespaces
 SELECT product_version, meta_version
 FROM V$VERSION;
 
-SELECT name, value1
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
+  'DB_NAME',
+  'DEFAULT_DISK_DB_DIR',
+  'MEM_DB_DIR',
+  'LOG_DIR',
+  'LOGANCHOR_DIR',
   'DEFAULT_SEGMENT_MANAGEMENT_TYPE',
   'USER_DATA_FILE_INIT_SIZE',
   'USER_DATA_FILE_NEXT_SIZE',
@@ -1227,10 +1244,9 @@ WHERE name IN (
   'USER_TEMP_FILE_MAX_SIZE',
   'EXPAND_CHUNK_PAGE_COUNT',
   'MEM_MAX_DB_SIZE',
-  'VOLATILE_MAX_DB_SIZE',
-  'MEM_DB_DIR'
+  'VOLATILE_MAX_DB_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 
 SELECT id,
        name,
@@ -1247,6 +1263,7 @@ Preflight notes:
 
 - For 8.1, decide whether `IF NOT EXISTS` is appropriate. It suppresses a duplicate-name error but does not prove that the existing tablespace has the requested files, size, or autoextend settings.
 - For disk and temporary files, confirm filesystem free space and Altibase OS user permissions before running DDL.
+- For path properties, preserve `STOREDCOUNT` and `VALUE1` through `VALUE8` in the answer. `MEM_DB_DIR` can contain one to eight paths, and `LOGANCHOR_DIR` must contain exactly three log anchor file paths.
 - For memory tablespaces, calculate the allocation unit from `EXPAND_CHUNK_PAGE_COUNT * 32KB` and choose `SIZE`, `AUTOEXTEND NEXT`, and `SPLIT EACH` values accordingly.
 - For volatile tablespaces, calculate the allocation unit from `EXPAND_CHUNK_PAGE_COUNT * 32KB` and choose `SIZE` and `AUTOEXTEND NEXT` values accordingly.
 
@@ -1819,13 +1836,19 @@ Backup method block: offline physical backup
 Preflight discovery:
 
 ```sql
-SELECT name,
-       storedcount,
-       value1, value2, value3, value4,
-       value5, value6, value7, value8
+SELECT NAME,
+       STOREDCOUNT,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR', 'LOG_DIR', 'ARCHIVE_DIR')
-ORDER BY name;
+WHERE NAME IN ('MEM_DB_DIR', 'LOGANCHOR_DIR', 'LOG_DIR', 'ARCHIVE_DIR')
+ORDER BY NAME;
 
 SELECT spaceid, id, name
 FROM V$DATAFILES

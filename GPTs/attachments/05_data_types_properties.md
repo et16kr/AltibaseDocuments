@@ -747,26 +747,35 @@ Property SQL rules:
 Use exact property names in `V$PROPERTY`. `V$PROPERTY` exposes `NAME`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, and `VALUE1` through `VALUE8`; multi-value properties use multiple `VALUE` columns.
 
 ```sql
-SELECT name,
-       storedcount,
-       attr,
-       min,
-       max,
-       value1,
-       value2,
-       value3,
-       value4,
-       value5,
-       value6,
-       value7,
-       value8
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name = '<PROPERTY_NAME>';
+WHERE NAME = '<PROPERTY_NAME>';
 
-SELECT name, storedcount, value1, value2, value3, value4, value5, value6, value7, value8
+SELECT NAME,
+       STOREDCOUNT,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR')
-ORDER BY name;
+WHERE NAME IN ('MEM_DB_DIR', 'LOGANCHOR_DIR')
+ORDER BY NAME;
 
 SELECT name, value1
 FROM V$PROPERTY
@@ -827,6 +836,134 @@ SELECT name, utc_offset
 FROM V$TIME_ZONE_NAMES
 WHERE name = 'Asia/Seoul';
 ```
+
+## Core Identity, Path, And Storage Defaults
+
+Purpose: use this answer-ready block for database identity, static file paths, memory
+database directories, log anchor paths, disk datafile defaults, and default `IN ROW`
+storage thresholds.
+
+Version scope: unless a row states otherwise, the listed property names are documented
+in Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source. If a customer gives a
+patch-specific environment, verify the installed values with `V$VERSION` and
+`V$PROPERTY` before turning the defaults into change instructions.
+
+Static change model:
+
+- Read-only single-value or multi-value properties in this block are not dynamic
+  `ALTER SYSTEM` or `ALTER SESSION` tuning knobs.
+- Static property-file changes are made in `$ALTIBASE_HOME/conf/altibase.properties`
+  and require restarting the Altibase server before the changed value is reflected.
+- Database-creation identity and creation-time file-layout properties can require
+  database recreation or explicit storage DDL for existing databases; do not imply
+  that a restart alone rewrites existing datafiles or checkpoint image files.
+- For any production path answer, ask for the exact version and patch, current
+  `V$PROPERTY` output, the OS path layout, Altibase OS user, and whether the database
+  is before creation, before startup, or already in service.
+
+Core identity and path properties:
+
+| Property | Default and count | Attribute and change rule | Customer-safe answer points |
+| --- | --- | --- | --- |
+| `DB_NAME` | `mydb`; single value; range none | read-only string; no `ALTER SYSTEM`; changing it requires creating the database again | The database name used at `CREATE DATABASE database_name` time must match `DB_NAME`. Check `V$PROPERTY.NAME = 'DB_NAME'` and, when the server is open, cross-check `V$DATABASE.DB_NAME`. |
+| `DEFAULT_DISK_DB_DIR` | `$ALTIBASE_HOME/dbs`; single value; range none | read-only string; static file/restart planning only | Directory for disk database files. It must be configured even if disk database features are not used. Verify the directory and filesystem capacity before disk tablespace or datafile work. |
+| `DEFAULT_MEM_DB_FILE_SIZE` | `1073741824` bytes (`1G`); range `[4194304, 2^64 - 1]` | read-only single value | Default checkpoint image file size for memory tablespaces. Existing memory tablespace files are not resized by changing a default; use source-backed tablespace DDL and maintenance planning. |
+| `MEM_DB_DIR` | `$ALTIBASE_HOME/dbs`; one to eight paths; documented default count is two and both default entries use `$ALTIBASE_HOME/dbs` | read-only multi-value string; static path planning before startup | Memory database files are distributed across configured paths. Every configured path must actually exist before startup. If `CREATE MEMORY DATA TABLESPACE` omits `CHECKPOINT PATH`, paths from `MEM_DB_DIR` are used. Verify `STOREDCOUNT`, `VALUE1` through `VALUE8`. |
+| `LOG_DIR` | `$ALTIBASE_HOME/logs`; multi-value path property | read-only multi-value string; static path planning before startup | Path for log files. Treat every configured value as backup and recovery evidence; do not delete logs to create space without recovery-retention review. |
+| `LOGANCHOR_DIR` | `$ALTIBASE_HOME/logs`; exactly three log anchor file paths must be specified; by default all three paths use the default directory | read-only multi-value string; not an online `ALTER SYSTEM` setting | Log anchors are backup-critical metadata. Verify `STOREDCOUNT`, `VALUE1` through `VALUE8`; stop if the configured count or paths do not match the installed property output and recovery plan. |
+| `DOUBLE_WRITE_DIRECTORY` and `DOUBLE_WRITE_DIRECTORY_COUNT` | directory default none; count default `2`; count range `[1, 16]` | read-only; plan before startup and storage rollout | Double write files can be placed on different disks, and each flusher uses a separate double write file. Check both the directory property and the count property before concluding where double write files should exist. |
+
+Check identity and path properties with literal `V$PROPERTY` column names:
+
+```sql
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
+FROM V$PROPERTY
+WHERE NAME IN (
+  'DB_NAME',
+  'DEFAULT_DISK_DB_DIR',
+  'DEFAULT_MEM_DB_FILE_SIZE',
+  'MEM_DB_DIR',
+  'LOG_DIR',
+  'LOGANCHOR_DIR',
+  'DOUBLE_WRITE_DIRECTORY',
+  'DOUBLE_WRITE_DIRECTORY_COUNT'
+)
+ORDER BY NAME;
+```
+
+OS stop conditions for path answers:
+
+- Stop before startup if a `MEM_DB_DIR`, `LOG_DIR`, `LOGANCHOR_DIR`, or double write
+  directory value is missing, not a directory, or not usable by the Altibase OS user.
+- Stop before backup/recovery advice if the answer lacks all configured `MEM_DB_DIR`,
+  `LOGANCHOR_DIR`, `LOG_DIR`, archive log, and disk datafile paths.
+- Stop before changing path properties if the customer has not said whether this is
+  before database creation, before startup, or an already-created database requiring
+  supported tablespace, datafile, checkpoint-path, backup, or recovery procedure.
+
+Disk database file default properties:
+
+| Property family | Defaults and units | Scope and rule |
+| --- | --- | --- |
+| `SYS_DATA_FILE_INIT_SIZE`, `SYS_DATA_FILE_MAX_SIZE`, `SYS_DATA_FILE_NEXT_SIZE`, `SYS_DATA_TBS_EXTENT_SIZE` | `system001.dbf` and later `SYS_TBS_DISK_DATA` defaults: init `100 * 1024 * 1024`, max `2 * 1024 * 1024 * 1024`, next `1 * 1024 * 1024`, extent `512 * 1024`; file-size ranges use `[8 * 8KB, 32GB]`; max must be at least init, with documented minimum `64KB` | read-only single-value defaults used at system disk data tablespace creation or when added datafile size clauses are omitted. Use explicit datafile DDL to control existing operations. |
+| `SYS_TEMP_FILE_INIT_SIZE`, `SYS_TEMP_FILE_MAX_SIZE`, `SYS_TEMP_FILE_NEXT_SIZE`, `SYS_TEMP_TBS_EXTENT_SIZE` | `temp001.dbf` and later `SYS_TBS_DISK_TEMP` defaults: init `100 * 1024 * 1024`, max `2 * 1024 * 1024 * 1024`, next `1 * 1024 * 1024`, extent `512 * 1024`; file-size ranges use `[8 * 8KB, 32GB]`; max must be at least init, with documented minimum `64KB` | read-only single-value defaults for system disk temporary data files and extent size. |
+| `SYS_UNDO_FILE_INIT_SIZE`, `SYS_UNDO_FILE_MAX_SIZE`, `SYS_UNDO_FILE_NEXT_SIZE`, `SYS_UNDO_TBS_EXTENT_SIZE` | `undo001.dbf` and later `SYS_TBS_DISK_UNDO` defaults: init `100 * 1024 * 1024`, max `2 * 1024 * 1024 * 1024`, next `1 * 1024 * 1024`, extent `256 * 1024`; max must be at least init, with documented minimum `256KB` | read-only single-value defaults for the single system disk undo tablespace. Users cannot create ordinary objects in `SYS_TBS_DISK_UNDO`. |
+| `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_MAX_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, `USER_DATA_TBS_EXTENT_SIZE` | user disk data defaults: init `100 * 1024 * 1024`, max `2 * 1024 * 1024 * 1024`, next `1 * 1024 * 1024`, extent `512 * 1024`; max must be at least init, with documented minimum `64KB` | read-only single-value defaults used when user disk data tablespace datafile clauses omit the corresponding values. |
+| `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_MAX_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, `USER_TEMP_TBS_EXTENT_SIZE` | user temporary defaults: init `100 * 1024 * 1024`, max `2 * 1024 * 1024 * 1024`, next `1 * 1024 * 1024`, extent `512 * 1024`; `USER_TEMP_TBS_EXTENT_SIZE` range is `[5 * 8KB, 2^64 - 1]` in the property block | read-only single-value defaults used when user temporary datafile clauses omit the corresponding values. Selected sources contain a boundary wording inconsistency for the user temporary extent minimum; verify the installed server before answering a boundary-size dispute. |
+
+Datafile default check:
+
+```sql
+SELECT NAME, ATTR, MIN, MAX, VALUE1
+FROM V$PROPERTY
+WHERE NAME IN (
+  'SYS_DATA_FILE_INIT_SIZE',
+  'SYS_DATA_FILE_MAX_SIZE',
+  'SYS_DATA_FILE_NEXT_SIZE',
+  'SYS_DATA_TBS_EXTENT_SIZE',
+  'SYS_TEMP_FILE_INIT_SIZE',
+  'SYS_TEMP_FILE_MAX_SIZE',
+  'SYS_TEMP_FILE_NEXT_SIZE',
+  'SYS_TEMP_TBS_EXTENT_SIZE',
+  'SYS_UNDO_FILE_INIT_SIZE',
+  'SYS_UNDO_FILE_MAX_SIZE',
+  'SYS_UNDO_FILE_NEXT_SIZE',
+  'SYS_UNDO_TBS_EXTENT_SIZE',
+  'USER_DATA_FILE_INIT_SIZE',
+  'USER_DATA_FILE_MAX_SIZE',
+  'USER_DATA_FILE_NEXT_SIZE',
+  'USER_DATA_TBS_EXTENT_SIZE',
+  'USER_TEMP_FILE_INIT_SIZE',
+  'USER_TEMP_FILE_MAX_SIZE',
+  'USER_TEMP_FILE_NEXT_SIZE',
+  'USER_TEMP_TBS_EXTENT_SIZE'
+)
+ORDER BY NAME;
+```
+
+Default `IN ROW` storage properties:
+
+| Property | Default and range | Applies to | Do not confuse with |
+| --- | --- | --- | --- |
+| `DISK_LOB_COLUMN_IN_ROW_SIZE` | `4000` bytes; `[0, 4000]` | LOB data in disk tables. If LOB data length is less than or equal to this value, it is stored in the fixed area; otherwise it is stored in the variable area. | It does not control memory table LOB storage. |
+| `MEMORY_LOB_COLUMN_IN_ROW_SIZE` | `64` bytes; `[0, 4000]` | LOB data in memory tables. If LOB data length is less than or equal to this value, it is stored in the fixed area; otherwise in the variable area. | It does not control disk table LOB storage. |
+| `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE` | `32` bytes; `[0, 4000]` | non-LOB variable-size type data in memory tables. Values at or below the threshold are stored in the fixed area; larger values in the variable area. | It does not apply to disk tables. |
+
+All three `IN ROW` default properties are read-only single-value defaults. For object
+design, prefer explicit `IN ROW` clauses in DDL when the source-backed grammar supports
+them; do not answer as if these defaults can be changed online after object creation.
 
 ## Property Change Examples
 
@@ -1202,20 +1339,33 @@ Unless a property block states a narrower scope, the block is documented for Alt
 
 ### Property Item: `DB_NAME`
 
+Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
+
 Meaning: database name used when creating the database.
 
 Default: `mydb`.
 
-Dynamic Change Support: read-only. Create a new database to change it.
+Data type and attribute: string; read-only; single value.
+
+Dynamic Change Support: read-only. It is not a dynamic `ALTER SYSTEM` property.
+
+Change method: the database name used at database creation time must match `DB_NAME`.
+Create the database again to change it after creation.
 
 Range: no explicit range.
+
+Related checks: `V$PROPERTY.NAME = 'DB_NAME'`; when the server is available, also
+cross-check `V$DATABASE.DB_NAME`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT NAME, STOREDCOUNT, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name = 'DB_NAME';
+WHERE NAME = 'DB_NAME';
+
+SELECT db_name
+FROM V$DATABASE;
 ```
 
 ### Property Item: `DDL_SUPPLEMENTAL_LOG_ENABLE`
@@ -1247,18 +1397,25 @@ Meaning: default directory for disk database files.
 
 Default: `$ALTIBASE_HOME/dbs`.
 
-Dynamic Change Support: read-only; restart and file-layout planning are required.
+Data type and attribute: string; read-only; single value.
+
+Dynamic Change Support: read-only; restart and file-layout planning are required. Do
+not generate `ALTER SYSTEM` or `ALTER SESSION`.
 
 Range: directory path.
 
 Important note: this path must be configured even when disk database features are not used.
 
+Startup and storage planning: verify the directory exists, has enough filesystem
+capacity, and is usable by the Altibase OS user before creating or moving disk
+tablespace data files.
+
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT NAME, STOREDCOUNT, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name = 'DEFAULT_DISK_DB_DIR';
+WHERE NAME = 'DEFAULT_DISK_DB_DIR';
 ```
 
 ### Property Item: `DEFAULT_MEM_DB_FILE_SIZE`
@@ -1267,16 +1424,20 @@ Meaning: default size, in bytes, of checkpoint image files for memory tablespace
 
 Default: `1073741824` bytes (`1G`).
 
-Dynamic Change Support: read-only; set before database creation or recreate/replan the database file layout.
+Data type and attribute: unsigned long; read-only; single value.
+
+Dynamic Change Support: read-only; set before database creation or before creating
+the affected memory tablespace. Existing checkpoint image files are not resized by
+changing a default value.
 
 Range: `[4194304, 2^64 - 1]`.
 
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name = 'DEFAULT_MEM_DB_FILE_SIZE';
+WHERE NAME = 'DEFAULT_MEM_DB_FILE_SIZE';
 ```
 
 ### Property Item: `DEFAULT_SEGMENT_MANAGEMENT_TYPE`
@@ -1333,20 +1494,41 @@ Meaning: directory paths for memory database files.
 
 Default: `$ALTIBASE_HOME/dbs`.
 
-Dynamic Change Support: read-only; restart and storage planning are required.
+Data type and attribute: string; read-only; multi-value.
+
+Dynamic Change Support: read-only; restart and storage planning are required. Do not
+use `ALTER SYSTEM` for an online change.
 
 Range: one to eight actual paths.
 
-Behavior: when more than one path is configured, memory database files are distributed across the paths. The documented default path count is two, and both default entries use `$ALTIBASE_HOME/dbs`.
+Behavior: when more than one path is configured, memory database files are distributed
+across the paths. The documented default path count is two, and both default entries
+use `$ALTIBASE_HOME/dbs`.
+
+Startup rule: every configured path must actually exist before startup. Do not answer
+that Altibase creates missing `MEM_DB_DIR` paths automatically.
+
+DDL link: when `CREATE MEMORY DATA TABLESPACE` omits `CHECKPOINT PATH`, Altibase uses
+the paths from `MEM_DB_DIR`.
+
+Backup link: include every configured `MEM_DB_DIR` value in physical backup and
+restore manifests.
 
 Check SQL:
 
 ```sql
-SELECT name, storedcount,
-       value1, value2, value3, value4,
-       value5, value6, value7, value8
+SELECT NAME,
+       STOREDCOUNT,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name = 'MEM_DB_DIR';
+WHERE NAME = 'MEM_DB_DIR';
 ```
 
 ### Property Item: `LOG_DIR`
@@ -1355,38 +1537,67 @@ Meaning: path for log files.
 
 Default: `$ALTIBASE_HOME/logs`.
 
-Dynamic Change Support: read-only.
+Data type and attribute: string; read-only; multi-value.
+
+Dynamic Change Support: read-only; static path planning and restart are required.
 
 Range: path value; multiple values can be configured where supported.
+
+Operational note: treat every configured `LOG_DIR` value as backup and recovery
+evidence. Ask for archive mode, log retention objective, and current recovery
+requirements before advising deletion, relocation, or cleanup.
 
 Check SQL:
 
 ```sql
-SELECT name, storedcount,
-       value1, value2, value3, value4,
-       value5, value6, value7, value8
+SELECT NAME,
+       STOREDCOUNT,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name = 'LOG_DIR';
+WHERE NAME = 'LOG_DIR';
 ```
 
 ### Property Item: `LOGANCHOR_DIR`
 
 Meaning: pathnames for log anchor files.
 
-Default: `$ALTIBASE_HOME/logs`.
+Default: `$ALTIBASE_HOME/logs`. By default, all three log anchor paths use this
+default directory.
 
-Dynamic Change Support: read-only.
+Data type and attribute: string; read-only; multi-value.
 
-Range: three log anchor file paths are required.
+Dynamic Change Support: read-only. `LOGANCHOR_DIR` is not an online `ALTER SYSTEM`
+setting.
+
+Range and count: exactly three log anchor file paths are required.
+
+Operational note: log anchors are backup-critical metadata. Include every configured
+`LOGANCHOR_DIR` value in physical backup and recovery planning. Restore historical
+`loganchor*` files only when the recovery scenario requires historical metadata, such
+as incomplete recovery or recovering metadata that current log anchors no longer hold.
 
 Check SQL:
 
 ```sql
-SELECT name, storedcount,
-       value1, value2, value3, value4,
-       value5, value6, value7, value8
+SELECT NAME,
+       STOREDCOUNT,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name = 'LOGANCHOR_DIR';
+WHERE NAME = 'LOGANCHOR_DIR';
 ```
 
 ### Property Item: `LOG_FILE_SIZE`
@@ -1515,7 +1726,7 @@ Defaults:
 - `DOUBLE_WRITE_DIRECTORY`: none.
 - `DOUBLE_WRITE_DIRECTORY_COUNT`: `2`.
 
-Dynamic Change Support: read-only; plan directory placement before startup and database storage rollout.
+Dynamic Change Support: read-only; plan directory placement before startup and database storage rollout. Do not generate online change SQL.
 
 Range or values:
 
@@ -1527,12 +1738,22 @@ Behavior: double write files can be placed on different disks. Because each flus
 Check SQL:
 
 ```sql
-SELECT name, storedcount,
-       value1, value2, value3, value4,
-       value5, value6, value7, value8
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN ('DOUBLE_WRITE_DIRECTORY', 'DOUBLE_WRITE_DIRECTORY_COUNT')
-ORDER BY name;
+WHERE NAME IN ('DOUBLE_WRITE_DIRECTORY', 'DOUBLE_WRITE_DIRECTORY_COUNT')
+ORDER BY NAME;
 ```
 
 ### Property Item: `DRDB_FD_MAX_COUNT_PER_DATAFILE`
@@ -1598,9 +1819,9 @@ Caution: this property applies to disk-table LOB storage. Memory tables use `MEM
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name = 'DISK_LOB_COLUMN_IN_ROW_SIZE';
+WHERE NAME = 'DISK_LOB_COLUMN_IN_ROW_SIZE';
 ```
 
 ### Property Item: `MEMORY_LOB_COLUMN_IN_ROW_SIZE`
@@ -1626,9 +1847,9 @@ Caution: this property applies to memory-table LOB storage. Disk tables use `DIS
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name = 'MEMORY_LOB_COLUMN_IN_ROW_SIZE';
+WHERE NAME = 'MEMORY_LOB_COLUMN_IN_ROW_SIZE';
 ```
 
 ### Property Item: `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE`
@@ -1652,9 +1873,9 @@ Related items: `CHAR`, `VARCHAR`, `NCHAR`, `NVARCHAR`, `BYTE`, `VARBYTE`, `NIBBL
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name = 'MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE';
+WHERE NAME = 'MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE';
 ```
 
 ### Property Item: `LOB_OBJECT_BUFFER_SIZE`
@@ -1823,6 +2044,10 @@ WHERE name = 'REDUCE_TEMP_MEMORY_ENABLE';
 
 Meaning: defaults used when `SYS_TBS_DISK_DATA` is created and when data files are added without explicit size clauses.
 
+Dynamic Change Support: read-only single-value defaults. They are not dynamic
+`ALTER SYSTEM` or `ALTER SESSION` properties. For a specific add/resize operation,
+use explicit tablespace or datafile DDL instead of relying on later default changes.
+
 Properties:
 
 - `SYS_DATA_FILE_INIT_SIZE`: initial size of `system001.dbf` and default initial size for later added data files; default `100 * 1024 * 1024`; range `[8 * 8KB, 32GB]`; read-only.
@@ -1835,20 +2060,24 @@ Caution: if a data file reaches `SYS_DATA_FILE_MAX_SIZE` and other data files do
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   'SYS_DATA_FILE_INIT_SIZE',
   'SYS_DATA_FILE_MAX_SIZE',
   'SYS_DATA_FILE_NEXT_SIZE',
   'SYS_DATA_TBS_EXTENT_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 ```
 
 ### Property Item Group: System disk temporary tablespace file defaults
 
 Meaning: defaults used when `SYS_TBS_DISK_TEMP` is created and when temporary data files are added without explicit size clauses.
+
+Dynamic Change Support: read-only single-value defaults. They are not dynamic
+`ALTER SYSTEM` or `ALTER SESSION` properties. Use explicit temporary datafile clauses
+for a known size or autoextend policy.
 
 Properties:
 
@@ -1862,20 +2091,23 @@ Caution: use the installed server's `V$PROPERTY` when a customer environment or 
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   'SYS_TEMP_FILE_INIT_SIZE',
   'SYS_TEMP_FILE_MAX_SIZE',
   'SYS_TEMP_FILE_NEXT_SIZE',
   'SYS_TEMP_TBS_EXTENT_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 ```
 
 ### Property Item Group: System disk undo tablespace file defaults
 
 Meaning: defaults used when `SYS_TBS_DISK_UNDO` is created and when undo data files are added without explicit size clauses.
+
+Dynamic Change Support: read-only single-value defaults. They are not dynamic
+`ALTER SYSTEM` or `ALTER SESSION` properties.
 
 Properties:
 
@@ -1889,20 +2121,25 @@ Caution: `SYS_TBS_DISK_UNDO` is the single system disk undo tablespace used only
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   'SYS_UNDO_FILE_INIT_SIZE',
   'SYS_UNDO_FILE_MAX_SIZE',
   'SYS_UNDO_FILE_NEXT_SIZE',
   'SYS_UNDO_TBS_EXTENT_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 ```
 
 ### Property Item Group: User disk data tablespace file defaults
 
 Meaning: defaults used when user disk data tablespace files are created or added without explicit size or extent clauses.
+
+Dynamic Change Support: read-only single-value defaults. They are not dynamic
+`ALTER SYSTEM` or `ALTER SESSION` properties. Generate explicit `DATAFILE`, `SIZE`,
+`AUTOEXTEND`, `NEXT`, `MAXSIZE`, and `EXTENTSIZE` clauses when the customer needs a
+specific storage layout.
 
 Properties:
 
@@ -1914,20 +2151,24 @@ Properties:
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   'USER_DATA_FILE_INIT_SIZE',
   'USER_DATA_FILE_MAX_SIZE',
   'USER_DATA_FILE_NEXT_SIZE',
   'USER_DATA_TBS_EXTENT_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 ```
 
 ### Property Item Group: User temporary tablespace file defaults
 
 Meaning: defaults used when user temporary tablespace files are created or added without explicit size or extent clauses.
+
+Dynamic Change Support: read-only single-value defaults. They are not dynamic
+`ALTER SYSTEM` or `ALTER SESSION` properties. Generate explicit temporary datafile
+clauses when the customer's workload or storage policy requires a specific size.
 
 Properties:
 
@@ -1941,15 +2182,15 @@ Caution: selected sources state a minimum of two pages for `USER_TEMP_TBS_EXTENT
 Check SQL:
 
 ```sql
-SELECT name, value1, min, max
+SELECT NAME, ATTR, MIN, MAX, VALUE1
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   'USER_TEMP_FILE_INIT_SIZE',
   'USER_TEMP_FILE_MAX_SIZE',
   'USER_TEMP_FILE_NEXT_SIZE',
   'USER_TEMP_TBS_EXTENT_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 ```
 
 ### Property Item: `TABLE_BACKUP_FILE_BUFFER_SIZE`

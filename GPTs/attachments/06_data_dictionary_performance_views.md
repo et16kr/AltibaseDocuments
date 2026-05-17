@@ -220,46 +220,53 @@ Use `META_VERSION` when an upgrade, migration, or metadata compatibility questio
 ### Check Properties
 
 ```sql
-SELECT name,
-       storedcount,
-       attr,
-       min,
-       max,
-       value1,
-       value2,
-       value3,
-       value4,
-       value5,
-       value6,
-       value7,
-       value8
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   '<PROPERTY_NAME_1>',
   '<PROPERTY_NAME_2>'
 )
-ORDER BY name;
+ORDER BY NAME;
 ```
 
-`STOREDCOUNT` is the number of configured values for the property. Multi-value properties can use `VALUE1` through `VALUE8`.
+`STOREDCOUNT` is the number of configured values for the property. Multi-value
+properties can use `VALUE1` through `VALUE8`; do not collapse them into a single
+generic value when answering path questions.
 
 For multi-value path properties:
 
 ```sql
-SELECT name,
-       storedcount,
-       value1,
-       value2,
-       value3,
-       value4,
-       value5,
-       value6,
-       value7,
-       value8
+SELECT NAME,
+       STOREDCOUNT,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN ('MEM_DB_DIR', 'LOGANCHOR_DIR')
-ORDER BY name;
+WHERE NAME IN ('MEM_DB_DIR', 'LOGANCHOR_DIR', 'LOG_DIR')
+ORDER BY NAME;
 ```
+
+Use this exact form for `MEM_DB_DIR` and `LOGANCHOR_DIR` answers. `MEM_DB_DIR` can
+have one to eight configured paths, and the documented default count is two values of
+`$ALTIBASE_HOME/dbs`. `LOGANCHOR_DIR` requires exactly three log anchor file paths, and
+by default all three use `$ALTIBASE_HOME/logs`.
 
 For dynamic property change checks, always query before and after the change in the same session or maintenance window:
 
@@ -342,9 +349,9 @@ FROM V$REPEXEC;
 Storage defaults used by generated DDL:
 
 ```sql
-SELECT name, value1
+SELECT NAME, VALUE1
 FROM V$PROPERTY
-WHERE name IN (
+WHERE NAME IN (
   'USER_DATA_FILE_INIT_SIZE',
   'USER_DATA_FILE_NEXT_SIZE',
   'USER_DATA_FILE_MAX_SIZE',
@@ -354,7 +361,7 @@ WHERE name IN (
   'MEM_MAX_DB_SIZE',
   'VOLATILE_MAX_DB_SIZE'
 )
-ORDER BY name;
+ORDER BY NAME;
 
 SELECT id, name, type, state, datafile_count, total_page_count, page_size
 FROM V$TABLESPACES
@@ -3052,10 +3059,22 @@ Key columns: `NAME`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `VALUE1`, `VALUE2`, `V
 Representative SQL:
 
 ```sql
-SELECT name, storedcount, attr, min, max, value1, value2, value3
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
 FROM V$PROPERTY
-WHERE name IN ('QUERY_TIMEOUT', 'SQL_PLAN_CACHE_SIZE', 'TIME_ZONE')
-ORDER BY name;
+WHERE NAME IN ('QUERY_TIMEOUT', 'SQL_PLAN_CACHE_SIZE', 'TIME_ZONE')
+ORDER BY NAME;
 ```
 
 ### Object Block: `V$TABLE` and `V$ALLCOLUMN`

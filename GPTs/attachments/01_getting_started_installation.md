@@ -224,7 +224,7 @@ During server installation, collect these values:
 
 - `ALTIBASE_HOME`: installation directory containing `bin`, `conf`, `lib`, packages, and scripts.
 - Installation type: `Full Installation` for a new install, `Patch Installation` for a patch over an existing base installation.
-- Database name.
+- Database name: maps to `DB_NAME`; it defaults to `mydb`, must match the database name used at creation time, and is read-only after creation.
 - Connection port number. The default example in the manuals is `20300`.
 - Maximum memory database size.
 - Buffer area size for disk database pages.
@@ -233,11 +233,33 @@ During server installation, collect these values:
 - Archive logging mode: `archivelog` or `noarchivelog`.
 - Database character set.
 - National character set.
-- Disk database directory.
-- Memory database directory.
+- Disk database directory: maps to `DEFAULT_DISK_DB_DIR`, whose documented default is `$ALTIBASE_HOME/dbs`; it must be configured even if disk database features are not used.
+- Memory database directory: maps to `MEM_DB_DIR`, a read-only multi-value path property. In the documented 7.3 property block it can use one to eight paths, the default count is two, and both defaults are `$ALTIBASE_HOME/dbs`.
 - Archive log directory.
-- Transaction log directory.
-- Log anchor file directories.
+- Transaction log directory: maps to `LOG_DIR`, whose documented default is `$ALTIBASE_HOME/logs`.
+- Log anchor file directories: maps to `LOGANCHOR_DIR`, a read-only multi-value path property. Exactly three log anchor file paths must be specified, and by default all three use `$ALTIBASE_HOME/logs`.
+
+After creating or starting the database, verify the identity and path properties with
+`V$PROPERTY` before relying on installation notes or memory:
+
+```sql
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1,
+       VALUE2,
+       VALUE3,
+       VALUE4,
+       VALUE5,
+       VALUE6,
+       VALUE7,
+       VALUE8
+FROM V$PROPERTY
+WHERE NAME IN ('DB_NAME', 'DEFAULT_DISK_DB_DIR', 'MEM_DB_DIR', 'LOG_DIR', 'LOGANCHOR_DIR')
+ORDER BY NAME;
+```
 
 ## Files Created or Updated by Installation
 
