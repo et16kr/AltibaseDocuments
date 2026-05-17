@@ -18,7 +18,7 @@ FCA-J016	Done	docs	Property catalog security replication network and DB Link	Ext
 FCA-J017	Done	docs	Dictionary and meta table catalog	Extract dictionary table, meta table, object metadata, privilege, PSM, trigger, job, and schema lookup items.
 FCA-J018	Done	docs	Performance view operational catalog	Extract performance view names, purposes, version availability, operational grouping, query timing, and safe check SQL items.
 FCA-J019	Done	docs	View column and metadata guardrail catalog	Extract key column coverage, patch-sensitive column limits, installed-metadata checks, and view-column guardrail rows.
-FCA-J020	ToDo	docs	Error catalog storage backup recovery and tablespace	Extract storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
+FCA-J020	Done	docs	Error catalog storage backup recovery and tablespace	Extract storage, backup, recovery, datafile, log, log-anchor, archive, lock, and tablespace error items.
 FCA-J021	ToDo	docs	Error catalog SQL datatype JSON LOB and regular expression	Extract SQL parser, DDL, constraint, datatype, conversion, JSON, Temporary LOB, LOB, and regular-expression error items.
 FCA-J022	ToDo	docs	Error catalog client network replication and tools	Extract client, network, SSL/TLS, replication, DB Link, iSQL, iLoader, utility, APRE, CLI/ODBC, and Log Analyzer error items.
 FCA-J023	ToDo	docs	Error catalog Spatial and remaining grouped-code guardrails	Extract Spatial and remaining low-frequency grouped-code error items, including exact-code guardrails where sources are incomplete.
