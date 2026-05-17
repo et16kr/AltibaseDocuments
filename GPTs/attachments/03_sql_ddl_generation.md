@@ -506,6 +506,118 @@ Table DDL item blocks:
 - Foreign key: references a parent primary or unique key and should normally have an index on the child key when parent deletes or updates are frequent.
 - Check constraint: enforce simple deterministic row rules; avoid incomplete date constants and unsupported expressions.
 
+### Source Detail: Object Taxonomy and DDL Matrices
+
+Use this block when the customer asks for item-level DDL limits, data type
+conversion safety, or audit object coverage. These are source-backed DDL reference
+rules, not generic Oracle behavior.
+
+Schema object taxonomy:
+
+- A schema is a logical group of database objects owned by one user and managed with
+  SQL statements.
+- Schema objects include `Table`, `Partitioned Table`, `Partitioned Index`,
+  `Temporary Table`, `Queue Table`, `Constraint`, `Index`, `View`,
+  `Materialized View`, `Sequence`, `Synonym`, stored procedure or function,
+  `Type Set`, database trigger, database link, external procedure or function, and
+  library.
+- A `non-schema object` is managed at database level rather than as an ordinary
+  user-owned schema object.
+- Non-schema objects include `Directory`, `Replication`, `Tablespace`, `User`, and
+  `Job`; these are managed at database level rather than as ordinary user-owned
+  schema objects.
+
+Table compression details for `table_compression_clause`:
+
+| Item | Source-backed rule |
+| --- | --- |
+| Dictionary rows | Each compressed column gets an automatically generated dictionary table. `MAXROWS` controls the maximum rows in that dictionary table; if omitted, the default is `2^64-1` in the selected source summary. |
+| CTAS boundary | Do not combine `table_compression_clause` with `CREATE TABLE ... AS SELECT` in one statement. |
+| Constraint boundary | `PRIMARY KEY`, `UNIQUE`, and `TIMESTAMP` columns cannot be compressed. |
+| `CHAR`, `VARCHAR`, `BYTE` | Minimum compressed column size `6`. |
+| `NCHAR`, `NVARCHAR (UTF-8)` | Minimum compressed column size `6`. |
+| `NCHAR`, `NVARCHAR (UTF-16)` | Minimum compressed column size `3`. |
+| `NIBBLE` | Minimum compressed column size `13`. |
+| `BIT`, `VARBIT` | Minimum compressed column size `25`. |
+| `DATE` | Source table lists `DATE` as valid with no minimum-size value shown. |
+
+`ALTER TABLE ... MODIFY COLUMN` conversion guard:
+
+| Before type family | Safe target pattern from the source matrix |
+| --- | --- |
+| `char`, `varchar`, `nchar`, `nvarchar` | Character-family and numeric-family targets are matrix-supported when data satisfies the conversion conditions. Changing to `date` requires `TOLERATE DATA LOSS` and the stored strings must match `DEFAULT_DATE_FORMAT`. |
+| Numeric types: `bigint`, `double`, `float`, `integer`, `number`, `numeric`, `real`, `smallint` | Same-family or range-safe numeric changes follow the matrix; conversion to character-family targets can require `TOLERATE DATA LOSS` when the character column length may not hold the formatted value. Check the target range before numeric narrowing. |
+| `date` | `date` to `date` is supported. Changing `date` to character-family targets requires `TOLERATE DATA LOSS`; formatted output follows `DEFAULT_DATE_FORMAT`. |
+| `blob` and `clob` | Do not infer ordinary type modification from Oracle LOB rules. The selected matrix does not provide broad LOB-to-non-LOB conversion support. |
+| `byte` | `byte` to `byte` is supported. |
+| `nibble` | `nibble` to `nibble` is supported. |
+| `bit`, `varbit` | Bit-family conversions are matrix-supported where the source matrix marks `O`; do not infer numeric conversion. |
+| `geometry` | `geometry` to `geometry` is supported. `SRID` is a 4-byte integer; after changing `SRID`, only rows whose stored values match that `SRID` are selected. |
+
+`MODIFY COLUMN` response requirements:
+
+- Preserve `MODIFY COLUMN`, `TOLERATE DATA LOSS`, `DEFAULT_DATE_FORMAT`, and `SRID`
+  when those facts affect the answer.
+- Explain that `O` means the conversion can proceed without `TOLERATE DATA LOSS`
+  if the source condition is satisfied, while triangle-marked conversions require
+  `TOLERATE DATA LOSS` plus customer acceptance of possible non-null data loss.
+- Ask for the current column definition, sample bad values, row count, constraints,
+  indexes, and target version before generating production conversion DDL.
+
+`COMMENT ON` metadata details:
+
+- Use `COMMENT ON TABLE [owner.]table_or_view IS 'comment'` or
+  `COMMENT ON COLUMN [owner.]table_or_view.column_name IS 'comment'`.
+- `comment` can be up to `4000 bytes`.
+- Delete an existing comment with an empty string: `COMMENT ON ... IS ''`.
+- Verify comments in `SYSTEM_.SYS_COMMENTS_` using `USER_NAME`, `TABLE_NAME`,
+  `COLUMN_NAME`, and `COMMENTS`.
+
+Direct key index matrix for `DIRECTKEY [MAXSIZE integer]`; the source table labels
+the full-size column as `Full Key` and the prefix-capable column as `Partial Key`:
+
+| Type | Full-key `MAXSIZE` | Partial key support |
+| --- | ---: | --- |
+| `BIGINT` | `8` | `X` |
+| `DOUBLE` | `8` | `X` |
+| `INTEGER` | `4` | `X` |
+| `REAL` | `4` | `X` |
+| `SMALLINT` | `2` | `X` |
+| `FLOAT`, `FLOAT(p)` | `23`; `3 + ((p + 2) / 2)` | `X` |
+| `NUMBER`, `NUMBER(p)`, `NUMBER(p,s)` | `23`; `3 + ((p + 2) / 2)` | `X` |
+| `NUMERIC`, `NUMERIC(p)`, `NUMERIC(p,s)`, `DECIMAL` | `23`; `3 + ((p + 2) / 2)` | `X` |
+| `CHAR(M)` | `M + 2` | `O` |
+| `VARCHAR(M)` | `M + 2` | `O` |
+| `NCHAR(M)` | `(M * 2) + 2` for UTF16; `(M * 3) + 2` for UTF8 | `O` |
+| `NVARCHAR(M)` | `(M * 2) + 2` for UTF16; `(M * 3) + 2` for UTF8 | `O` |
+| `DATE` | `8` | `X` |
+| `BIT(M)` | `(M / 8) + 4` | `X` |
+| `VARBIT(M)` | `(M / 8) + 4` | Source table leaves the partial-key marker blank. |
+| `BYTE(M)` | `M + 2` | `X` |
+| `NIBBLE(M)` | `(M / 2) + 1` | Source table leaves the partial-key marker blank. |
+
+Direct key restrictions:
+
+- Omitted `MAXSIZE` defaults to `8 bytes`.
+- If the value is larger than `MAXSIZE` and the type supports partial keys, Altibase
+  stores the prefix corresponding to `MAXSIZE` and creates the direct key index.
+- If the value is larger than `MAXSIZE` and the type does not support partial keys,
+  direct key index creation fails.
+- In a composite index, the first column is used as the direct key.
+- Direct key indexes cannot be created on compressed columns, encrypted columns, or
+  disk-resident indexes.
+
+Audit operation and object matrix:
+
+| Audit form | Source-backed operations or objects |
+| --- | --- |
+| Operation audit | `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MOVE`, `MERGE`, `ENQUEUE`, `DEQUEUE`, `LOCK`, `EXEC`, `EXECUTE`, `COMMIT`, `ROLLBACK`, `SAVEPOINT`, `CONNECT`, `DISCONNECT`, `ALTER SESSION`, `ALTER SYSTEM`; `ALL` covers this operation list. |
+| Object audit operations | `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MOVE`, `MERGE`, and `LOCK` on `TABLE`; `ENQUEUE` and `DEQUEUE` on `QUEUE`; `EXEC` or `EXECUTE` on `PROCEDURE`; `ALL` covers the valid object-operation matrix. |
+| `object_name` targets | Tables, views, queues, sequences, stored procedures, and stored functions. |
+| DDL audit | Use `DDL [BY user_name]` for DDL audit conditions. |
+| Audit log frequency | `BY ACCESS` records each matching statement or operation; `BY SESSION` records once in a one-prepare, n-execute unit and is the default. |
+| Boundary | `BY ACCESS` and `BY SESSION` are not supported for `CONNECT`, `DISCONNECT`, or `DDL`. |
+
 ### Queue Syntax
 
 ```text

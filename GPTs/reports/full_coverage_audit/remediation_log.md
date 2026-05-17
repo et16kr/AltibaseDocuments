@@ -1031,3 +1031,12 @@ Each entry should include:
   10 `Retrieval-weak` rows remain assigned to later retrieval-routing jobs, and the 33
   `Guardrail` plus 3 `Out-of-scope` rows must keep their missing-input or
   source-boundary reasons during later audit work.
+
+### FCA-J041
+
+- Changed files: `GPTs/attachments/03_sql_ddl_generation.md`, `GPTs/attachments/04_sql_dml_oracle_compatibility.md`, `GPTs/attachments/05_data_types_properties.md`, `source_item_catalog.tsv`, `source_to_attachment_matrix.tsv`, `missing_item_register.md`, and this remediation log.
+- Product coverage changes: remediated 81 scoped `Missing` rows for SQL DDL matrices, SQL DML/Oracle-compatible conversion rules, data type storage sizes, Temporary LOB and JSON examples, release-note property/view deltas, and direct-path/index/lock/I/O/thread/transaction property details.
+- Disposition changes: the 81 touched rows now use `coverage_status=Covered`, `audit_job=FCA-J041`, and attachment anchors in the scoped files. No `Guardrail` or `Out-of-scope` disposition was added.
+- Source policy: used repository-local selected sources only, with Korean release-note and 7.3 property precedence where English extraction differed, including `TRANSACTION_SEGMENT_COUNT` range `[1, 16384]` and read-only startup scope.
+- Evidence: scoped literal-token check across the 81 rows returned `rows with absent literal tokens 0`; detailed evidence commands are recorded in the touched catalog and matrix rows.
+- Validation: standard verification results are recorded in the final job output for `FCA-J041`.

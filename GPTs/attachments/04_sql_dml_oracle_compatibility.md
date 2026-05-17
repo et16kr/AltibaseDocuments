@@ -444,6 +444,95 @@ SELECT CAST('3.14159265359' AS DOUBLE) AS pi
 FROM dual;
 ```
 
+### Source Detail: NULL, Conversion, Literals, and Format Masks
+
+Use this block for Oracle-overlap answers where generic Oracle conversion rules would
+be unsafe.
+
+`NULL` rules:
+
+- `NULL` means no value exists; it is not the same as `0` or a blank string.
+- Except for `NVL()` and `IS NULL` or `IS NOT NULL`, operations involving `NULL`
+  produce `NULL`.
+- `NULL` can appear in any data type unless the column is constrained by `NOT NULL`
+  or `PRIMARY KEY`.
+- For anti-joins, avoid `NOT IN` when the right side may contain `NULL`; prefer a
+  null-safe `NOT EXISTS` rewrite.
+
+`implicit data type conversion` rules:
+
+| Case | Source-backed behavior |
+| --- | --- |
+| Same data type comparison | Values are compared directly. |
+| Different data type comparison | One operand is converted so comparison can proceed; character data types are converted to the other operand's type, not the reverse. |
+| Numeric and character comparison or arithmetic | Character data is converted to numeric data when possible. |
+| Date and character comparison | Character data is converted to `DATE`; the data must match the active date format. |
+| Function arguments | Arguments are converted to the data type defined for the function argument. |
+| `INSERT` and `UPDATE` | Input data is converted to the target column data type. |
+| Decimal-precision character or numeric to binary floating point | Value loss can occur; test significant digits instead of assuming Oracle output is identical. |
+| Invalid conversion | The operation is invalidated and can raise conversion errors. |
+
+Implicit conversion matrix coverage:
+
+- Character family `char`, `varchar`, `nchar`, and `nvarchar` converts among the
+  character family and to numeric and `date` targets where the source data satisfies
+  the conversion conditions.
+- `clob` is not a general implicit bridge to ordinary scalar types; do not infer
+  Oracle CLOB conversion behavior without an Altibase function or exact target source.
+- Numeric family `bigint`, `decimal`, `double`, `float`, `integer`, `number`,
+  `numeric`, `real`, and `smallint` converts among numeric types and to character
+  family targets where the matrix marks `O`.
+- `date` converts to character family targets and to `date`.
+- Binary family conversions are narrow: `blob` to `blob`; `byte` and `varbyte` among
+  `blob`, `byte`, and `varbyte` where marked; `nibble` to `nibble`; `bit` and
+  `varbit` within the bit family where marked.
+- `geometry` converts to `geometry`; do not infer scalar conversion.
+
+Explicit conversion syntax:
+
+```sql
+datatype 'string or constant literal'
+datatype 'literal'
+CHAR '157.27'
+```
+
+Also use SQL conversion functions and `CAST(expr AS data_type)` for explicit
+`type casting`. `CAST` does not cover `BLOB` or `CLOB`; use source-listed LOB
+conversion functions where supported by the target version.
+
+String literal notation:
+
+- Use single quotes for string literals.
+- Escape a single quote by writing two single quotes. Example: `'GILDONG'''` stores
+  `GILDONG'`.
+- For dynamic remote SQL strings such as `REMOTE_TABLE(...)`, preserve nested
+  single-quote escaping rather than replacing it with double quotes.
+
+Numeric format elements for `TO_CHAR` and `TO_NUMBER`:
+
+| Element | Use or boundary |
+| --- | --- |
+| `,`, `.`, `$`, `0`, `9` | Ordinary grouping, decimal, currency, zero, and digit placeholders. A comma cannot appear at the beginning, at the end, or to the right of the decimal point; use only one decimal point. |
+| `FM`, `B`, `C`, `D`, `G`, `L` | Fill mode, blank integer part, ISO currency, decimal character, group separator, and local currency. |
+| `EEEE` | Scientific notation; place at the right end, do not combine with comma, and do not use in `TO_NUMBER`. |
+| `MI`, `PR`, `S` | Sign controls. `MI` and `PR` must be rightmost and cannot be combined with each other or with `S`; `S` can be at the beginning or end and cannot be combined with `MI` or `PR`. |
+| `RN` | Roman numerals; input range is `1` through `3999`; do not combine with other elements or use in `TO_NUMBER`. |
+| `V` | Shift decimal digits; do not use with a decimal point or in `TO_NUMBER`. |
+| `XXXX` | Hex output; use without other elements, input must be greater than `0`, non-integers are rounded, and lowercase `xxxx` returns lowercase letters. |
+
+Date format elements for `TO_CHAR` and `TO_DATE`:
+
+| Family | Elements |
+| --- | --- |
+| AM/PM and century/day | `AM`, `PM`, `SCC`, `CC`, `D`, `DD`, `DDD`, `DAY`, `DY` |
+| Time and fractional seconds | `HH`, `HH12`, `HH24`, `MI`, `SS`, `SSSSS`, `SSSSSS`, `SSSSSSSS`, `FF[1..6]`; catalog alias `FF [1..6]` |
+| Month, quarter, and week | `MM`, `MON`, `MONTH`, `Q`, `WW`, `WW2`, `W`, `IW` |
+| Gregorian year | `Y,YYY`, `SYYYY`, `YYYY`, `YYY`, `YY`, `Y`, `RR`, `RRRR` |
+| ISO year | `IYYY`, `IYY`, `IY`, `I` |
+
+Date format punctuation can include hyphen, slash, comma, period, colon, and single
+quotation mark.
+
 ### Expression Item: Operator Precedence
 
 For logical conditions, Altibase evaluates comparison operators before `NOT`, then `AND`, then `OR`. Operators with the same precedence are processed left to right. Use parentheses when translating Oracle SQL that mixes `AND` and `OR`.
@@ -1161,6 +1250,48 @@ Use these only when targeting Altibase or when replacing Oracle-specific logic:
 - System and session helpers: `USER_ID`, `USER_NAME`, `SESSION_ID`, `SYS_CONTEXT`, `SYS_GUID_STR`, `HOST_NAME`.
 - Queue/message helpers: `MSG_CREATE_QUEUE`, `MSG_DROP_QUEUE`, `MSG_SND_QUEUE`, `MSG_RCV_QUEUE`, `SENDMSG`.
 - Raw and encoding helpers: `RAW_CONCAT`, `RAW_SIZEOF`, `SUBRAW`, `BASE64_ENCODE`, `BASE64_DECODE`, `QUOTE_PRINTABLE_ENCODE`, `QUOTE_PRINTABLE_DECODE`.
+
+### Function Item: LOB Conversion and Empty LOB
+
+`TO_CLOB` and `TO_BLOB` are Altibase 8.1 verified source conversion functions.
+
+```text
+TO_CLOB(expr)
+TO_BLOB(expr)
+```
+
+- `TO_CLOB(expr)` converts an input value to `CLOB`.
+- `TO_BLOB(expr)` converts an input value to `BLOB`.
+- These calls can create transaction Temporary LOBs in 8.1 workflows; check
+  `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`,
+  `MEMORY_TEMPLOB_PIECE_SIZE`, and `V$TEMPORARY_LOBS` when LOB conversion fails or
+  memory use is the issue.
+- Do not use these as 7.1 or 7.3 features unless the customer provides exact
+  target-version proof.
+
+Examples:
+
+```sql
+SELECT TO_CLOB('test clob') FROM dual;
+SELECT to_clob('test clob') FROM dual;
+
+CREATE TABLE tab_blob (i1 BLOB);
+INSERT INTO tab_blob VALUES (TO_BLOB(1234));
+INSERT INTO tab_blob VALUES (to_blob(1234));
+```
+
+`EMPTY_BLOB()` and `EMPTY_CLOB()` are cross-version source-listed functions:
+
+```text
+EMPTY_BLOB()
+EMPTY_CLOB()
+```
+
+- Use in `INSERT` or `UPDATE` to initialize a LOB column to an empty LOB state.
+- The empty state is not `NULL`; a column initialized with `EMPTY_CLOB()` or
+  `EMPTY_BLOB()` such as `empty_clob()` is found by `IS NOT NULL`, not by `IS NULL`.
+- Use this distinction when converting Oracle code that treats empty LOB, `NULL`,
+  and empty string as interchangeable.
 
 ## 8.1 JSON Functions
 

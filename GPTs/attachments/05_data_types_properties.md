@@ -130,6 +130,35 @@ json_type_8_1 ::=
   JSON [IN ROW size]
 ```
 
+## Source Storage Size Reference
+
+Use this table when a customer asks for storage-byte calculations, direct key
+planning, compression eligibility, or exact type-size boundaries. The actual record
+size also includes header information, and the source notes that header size varies by
+operating system.
+
+| Type form | Length or precision | Source storage-size rule |
+| --- | --- | --- |
+| `CHAR(M)` | `1` through `32000` bytes | `M + 2` |
+| `VARCHAR(M)` | `1` through `32000` bytes | `length + 2`; `length = L` when stored in the variable area and `length = M` when stored in the fixed area. |
+| `NCHAR(M)` | `1` through `16000` for UTF16; `1` through `10666` for UTF8 | `M * 2 + 2` for UTF16; `M * 3 + 2` for UTF8. |
+| `NVARCHAR(M)` | `1` through `16000` for UTF16; `1` through `10666` for UTF8 | `length * 2 + 2` for UTF16; `length * 3 + 2` for UTF8; `length = L` in the variable area and `length = M` in the fixed area. |
+| `NUMERIC`, `DECIMAL`, `NUMBER(p,s)` fixed decimal forms | precision `1` through `38`; scale `-84` through `128` where applicable | `3 + ((precision) + 2) / 2`; compact source token `3+((precision)+2)/2`; default precision is `38` and default scale is `0` for fixed decimal forms. |
+| `NUMBER`, `FLOAT`, `FLOAT(p)` floating decimal forms | default precision `38`; `FLOAT(p)` precision `1` through `38` | `3 + ((precision) + 2) / 2`; compact source token `3+((precision)+2)/2`; these are floating-point numeric forms in the source table. |
+| `DOUBLE` | native C `double` | `8` bytes |
+| `REAL` | native C `float` | `4` bytes |
+| `BIGINT` | native integer | `8` bytes |
+| `INTEGER` | native integer | `4` bytes |
+| `SMALLINT` | native integer | `2` bytes |
+| `DATE` | date/time type | `8` bytes |
+| `BLOB`, `CLOB` (`BLOB/CLOB`) | LOB size | `1` through `4294967295` bytes; compact source token `1 ~ 4294967295` |
+| `BYTE` | `1` through `32000` bytes | `M + 2` |
+| `VARBYTE` | `1` through `32000` bytes | `length + 2`; `length = L` in the variable area and `length = M` in the fixed area. |
+| `NIBBLE` | `1` through `254` nibbles | `M / 2 + 1` |
+| `BIT` | `1` through `64000` bits | `M / 8 + 4` |
+| `VARBIT` | `1` through `64000` bits | `length / 8 + 4`; `length = L` in the variable area and `length = M` in the fixed area. |
+| `GEOMETRY` | `8` through `104857600` | `length + 40` |
+
 ## Storage Modifiers
 
 ### Modifier Item: `FIXED`
@@ -588,6 +617,76 @@ Cleanup SQL for session Temporary LOB:
 ALTER SESSION SET FREE TEMPORARY LOB;
 ```
 
+#### Temporary LOB Source Examples
+
+Transaction Temporary LOB example:
+
+```sql
+CREATE TABLE t1(c1 CLOB);
+AUTOCOMMIT OFF;
+
+INSERT INTO t1 VALUES (TO_CLOB('ABCD'));
+
+SELECT type, open_count
+FROM V$TEMPORARY_LOBS;
+-- TYPE = 0, OPEN_COUNT = 1
+
+COMMIT;
+
+SELECT type, open_count
+FROM V$TEMPORARY_LOBS;
+-- No rows selected.
+```
+
+Session Temporary LOB example:
+
+```sql
+CREATE OR REPLACE PACKAGE pkg1
+AS
+    v1 CLOB;
+    PROCEDURE proc1;
+END;
+/
+
+CREATE OR REPLACE PACKAGE BODY pkg1
+AS
+    PROCEDURE proc1
+    AS
+        v2 CLOB;
+    BEGIN
+        v1 := 'pkg spec session clob';
+        v2 := 'pkg body session clob';
+        PRINTLN(v1);
+        PRINTLN(v2);
+    END;
+END;
+/
+
+SELECT type, open_count
+FROM V$TEMPORARY_LOBS;
+-- No rows selected.
+
+EXEC pkg1.proc1;
+
+SELECT type, open_count
+FROM V$TEMPORARY_LOBS;
+-- TYPE = 1, OPEN_COUNT = 2
+
+ALTER SESSION SET FREE TEMPORARY LOB;
+
+SELECT type, open_count
+FROM V$TEMPORARY_LOBS;
+-- No rows selected.
+```
+
+Interpretation:
+
+- `TYPE = 0` means transaction Temporary LOB; `COMMIT` clears it.
+- `TYPE = 1` means session Temporary LOB; clear it with
+  `ALTER SESSION SET FREE TEMPORARY LOB` or by ending the session.
+- If `V$TEMPORARY_LOBS` is absent, ask for the exact Altibase version and verify that
+  the system is 8.1 or later in the selected source scope before using these checks.
+
 ### Type Item: `GEOMETRY`
 
 Purpose: spatial data type supported by Altibase SQL.
@@ -651,6 +750,40 @@ JSON path elements:
 - `[]`: array element access.
 - `*`: wildcard.
 - `?(logical-expr)`: filter expression.
+
+JSON path expression source example:
+
+```json
+{
+  "name": "Hong Gildong",
+  "age": 22,
+  "class": [
+    "Mathmatics",
+    "Science"
+  ],
+  "address": {
+    "city": "Seoul",
+    "country": "Korea"
+  }
+}
+```
+
+| JSON path expression | Result |
+| --- | --- |
+| `$` | `{"name":"Hong Gildong", "age":22, "class":["Mathmatics", "Science"], "address":{"city":"Seoul", "country":"Korea" }}` |
+| `$.name` | `"Hong Gildong"` |
+| `$.address.city` | `"Seoul"` |
+| `$.class[0]` | `"Mathmatics"` |
+| `$.class[1]` | `"Science"` |
+| `$.class[*]` | `["Mathmatics", "Science"]` |
+| `$.age?(@>20)` | `22` |
+| `$.age?(@<20)` | no result in the source example |
+
+JSON path restrictions to preserve in generated answers:
+
+- JSON path expressions must be supplied as strings.
+- Do not use bind variables, `NULL`, table columns, SQL functions, or user-defined
+  functions as JSON path expressions unless a later exact target source says so.
 
 Example:
 
@@ -2967,6 +3100,313 @@ WHERE name IN (
 )
 ORDER BY name;
 ```
+
+### Property Item Group: Direct Path, Index, Lock, I/O, Thread, and Transaction Properties
+
+Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless a
+row says `7.1 only`.
+
+Catalog literal version/category aliases preserved for retrieval:
+`7.1, 7.3, Altibase 8.1 verified source`, `D Database initialization`,
+`P Performance`, `B Backup and recovery`, and `T Transaction`.
+
+Use this group for properties that were previously inventory-only in the attachment
+set. Every row should be answered with the exact target version and current value from
+`V$PROPERTY`; do not infer a 7.1-only lock-manager property into 7.3 or 8.1.
+
+Change and validation pattern:
+
+```sql
+SELECT name, value1, value8, attr, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'BULKIO_PAGE_COUNT_FOR_DIRECT_PATH_INSERT',
+  'DIRECT_PATH_BUFFER_PAGE_COUNT',
+  'DISK_INDEX_UNBALANCED_SPLIT_RATE',
+  'MEMORY_INDEX_BUILD_RUN_SIZE',
+  'MEMORY_INDEX_BUILD_VALUE_LENGTH_THRESHOLD',
+  'MEMORY_INDEX_UNBALANCED_SPLIT_RATE',
+  'LOCK_MGR_CACHE_NODE',
+  'LOCK_NODE_CACHE_COUNT',
+  'CM_BUFFER_MAX_PENDING_LIST',
+  'DATABASE_IO_TYPE',
+  'DATAFILE_WRITE_UNIT_SIZE',
+  'DB_FILE_MULTIPAGE_READ_COUNT',
+  'DIRECT_IO_ENABLED',
+  'LOG_IO_TYPE',
+  'LOG_BUFFER_TYPE',
+  'SECONDARY_BUFFER_ENABLE',
+  'SECONDARY_BUFFER_FILE_DIRECTORY',
+  'SECONDARY_BUFFER_FLUSHER_CNT',
+  'SECONDARY_BUFFER_SIZE',
+  'SECONDARY_BUFFER_TYPE',
+  'TRX_UPDATE_MAX_LOGSIZE',
+  'AGER_WAIT_MAXIMUM',
+  'AGER_WAIT_MINIMUM',
+  'CM_DISPATCHER_SOCK_POLL_TYPE',
+  'DEDICATED_THREAD_CHECK_INTERVAL',
+  'DEDICATED_THREAD_INIT_COUNT',
+  'DEDICATED_THREAD_MAX_COUNT',
+  'DEDICATED_THREAD_MODE',
+  'FAST_UNLOCK_LOG_ALLOC_MUTEX',
+  'INDEX_BUILD_THREAD_COUNT',
+  'INDEX_INITRANS',
+  'INDEX_MAXTRANS',
+  'LFG_GROUP_COMMIT_INTERVAL_USEC',
+  'LFG_GROUP_COMMIT_RETRY_USEC',
+  'LFG_GROUP_COMMIT_UPDATE_TX_COUNT',
+  'MEM_INDEX_KEY_REDISTRIBUTION',
+  'MEM_INDEX_KEY_REDISTRIBUTION_STANDARD_RATE',
+  'MULTIPLEXING_CHECK_INTERVAL',
+  'MULTIPLEXING_MAX_THREAD_COUNT',
+  'MULTIPLEXING_THREAD_COUNT',
+  'PARALLEL_LOAD_FACTOR',
+  'REFINE_PAGE_COUNT',
+  'STATEMENT_LIST_PARTIAL_SCAN_COUNT',
+  'TABLESPACE_LOCK_ENABLE',
+  'TABLE_INITRANS',
+  'TABLE_LOCK_ENABLE',
+  'TABLE_LOCK_MODE',
+  'TABLE_MAXTRANS',
+  'TEMP_STATS_WATCH_TIME',
+  'THREAD_CPU_AFFINITY',
+  'THREAD_REUSE_ENABLE',
+  'TIMED_STATISTICS',
+  'TIMER_RUNNING_LEVEL',
+  'TIMER_THREAD_RESOLUTION',
+  'TRANSACTION_SEGMENT_COUNT',
+  'TRANSACTION_TABLE_SIZE'
+)
+ORDER BY name;
+```
+
+For read-write rows, use `ALTER SYSTEM SET property_name = value` or
+`ALTER SESSION SET property_name = value` only where the row says session scope is
+source-backed. For read-only rows, treat the value as startup, property-file, or
+database-create scoped unless the row records a narrower source-backed method.
+
+Direct-path, index-build, and lock-node properties:
+
+| Property | Unit | Default | Range or values | Mutability and method | Answer-ready meaning and caution |
+| --- | --- | --- | --- | --- | --- |
+| `BULKIO_PAGE_COUNT_FOR_DIRECT_PATH_INSERT` | count | `128` | `[128, 12800]` | Read-write; `ALTER SYSTEM` while running. | Pages simultaneously written to disk for direct-path `INSERT`. Tune only for measured direct-path load behavior. |
+| `DIRECT_PATH_BUFFER_PAGE_COUNT` | count | `1024` | `[1024, 2^32-1]` | Read-write; `ALTER SYSTEM` while running. | Pages in the direct-path `INSERT` buffer. Check direct-path load memory and rollback value before increasing. |
+| `DISK_INDEX_UNBALANCED_SPLIT_RATE` | percentage | `90` | `[50, 99]` | Read-write; `ALTER SYSTEM` while running. | Disk B+tree leaf split ratio for the last child node; default behavior splits keys `90:10`. |
+| `MEMORY_INDEX_BUILD_RUN_SIZE` | byte | `131072` | `[1024, 2^32-1]` | Read-write; `ALTER SYSTEM` while running. | In-memory sorting area size for building memory indexes. The 7.3 release note changed the default from `32768` to `131072`. |
+| `MEMORY_INDEX_BUILD_VALUE_LENGTH_THRESHOLD` | byte | `64` | 7.3 source `[0, 2^64-1]`; 8.1 release note changed the maximum to `4294967295`. | Read-write; `ALTER SYSTEM` while running in the selected 7.3 source. | Maximum key-value length used for intermediate sorting while building memory indexes; values below the threshold are used directly in intermediate sorting. |
+| `MEMORY_INDEX_UNBALANCED_SPLIT_RATE` | percentage | `50` | `[50, 99]` | Read-write in the source table; verify the target server before online change. | Memory B+tree leaf split ratio for the last child node; tune only with index split evidence. |
+| `LOCK_MGR_CACHE_NODE` | none | `1` | `[0, 2]` | Read-only; not modifiable during server operation. | Table lock-node cache type: `0` no cache, `1` linked-list cache, `2` array cache fixed at `64`. |
+| `LOCK_NODE_CACHE_COUNT` | count | `2` | `[0, 1024]` | Read-only; startup-scoped. | Number of table lock nodes cached when `LOCK_MGR_CACHE_NODE=1`. |
+
+I/O, log, secondary buffer, and transaction-log protection properties:
+
+| Property | Unit | Default | Range or values | Mutability and method | Answer-ready meaning and caution |
+| --- | --- | --- | --- | --- | --- |
+| `CM_BUFFER_MAX_PENDING_LIST` | none | `512` | `[1, 512]` | Read-only; startup-scoped. | Maximum communication buffer blocks allocated in one session to prevent sudden memory growth. |
+| `DATABASE_IO_TYPE` | none | `0` | `[0, 1]` | Read-only; startup-scoped. | Database-file I/O method: `0` buffered I/O, `1` direct I/O. Check filesystem and OS support before changing. |
+| `DATAFILE_WRITE_UNIT_SIZE` | count | `1024` | `[1, 1024]` | Read-write; `ALTER SYSTEM` while running. | Default data unit size when a data file is created. |
+| `DB_FILE_MULTIPAGE_READ_COUNT` | pages | `8` | `[1, 128]` | Read-write; `ALTER SYSTEM` while running. | Number of pages read at a time for disk-table full scans; source cautions the value should align with extent-size behavior. |
+| `DIRECT_IO_ENABLED` | none | `1` | `[0, 1]` | Read-only; startup-scoped. | Indicates whether database I/O can use direct disk access: `0` disabled, `1` enabled. |
+| `LOG_IO_TYPE` | none | `1` | `[0, 1]` | Read-only; startup-scoped. | Log write I/O mode: `0` buffered I/O, `1` direct I/O. |
+| `LOG_BUFFER_TYPE` | none | `0` | `[0, 1]` | Read-only; cannot be changed while the system is running. | Log buffer type: `0` OS kernel log buffer, `1` process-memory log buffer. |
+| `SECONDARY_BUFFER_ENABLE` | none | `0` | `[0, 1]` | Read-only; startup-scoped. | Enables secondary buffer flushing to SSD before disk: `0` disabled, `1` enabled. |
+| `SECONDARY_BUFFER_FILE_DIRECTORY` | path | empty string | none | Read-only; startup-scoped. | Directory path for the secondary buffer file; the file name is fixed as `sbuffer.sbf`. Empty means secondary buffer is disabled. |
+| `SECONDARY_BUFFER_FLUSHER_CNT` | count | `2` | `[1, 16]` | Read-only; startup-scoped. | Number of flushers that flush secondary-buffer data pages to disk. |
+| `SECONDARY_BUFFER_SIZE` | byte | `0` | `[0, 32GB]` | Read-only; startup-scoped. | Secondary buffer file size. `0` disables secondary buffer even if `SECONDARY_BUFFER_ENABLE=1`. |
+| `SECONDARY_BUFFER_TYPE` | none | `2` | `[0, 2]` | Read-only; startup-scoped. | Page type stored in secondary buffer: `0` all pages, `1` dirty pages, `2` clean pages. |
+| `TRX_UPDATE_MAX_LOGSIZE` | byte | `10 MB` in the Korean 7.3 source | `[0, 2^64-1]` | Read-write; `ALTER SYSTEM` or `ALTER SESSION` while running. | If one DML statement generates logs larger than this value, Altibase aborts the transaction. `0` removes the log-size limit. Use as a batch-safety guard, not a generic performance knob. |
+
+Thread, service, group commit, and transaction-capacity properties:
+
+| Property | Unit | Default | Range or values | Mutability and method | Answer-ready meaning and caution |
+| --- | --- | --- | --- | --- | --- |
+| `AGER_WAIT_MAXIMUM` | microsecond | `1000000` | `[0, 2^32-1]` | Read-only; startup-scoped. | Maximum wait time for the garbage collector, also called the Ager. |
+| `AGER_WAIT_MINIMUM` | microsecond | `200000` | `[0, 2^32-1]` | Read-only; startup-scoped. | Minimum wait time for the garbage collector, also called the Ager. |
+| `CM_DISPATCHER_SOCK_POLL_TYPE` | none | `3` | `[1, 2, 3]` | Verify target attribute before changing. | Dispatcher socket-detection system call: `1` `SELECT`, `2` `POLL`, `3` `EPOLL`; `EPOLL` is Linux-specific in the release-note change context. |
+| `DEDICATED_THREAD_CHECK_INTERVAL` | second | `3600` | `[0, 2^64-1]` | Read-only; startup-scoped. | Interval for terminating idle service threads in dedicated thread mode; valid only when `DEDICATED_THREAD_MODE=1`. |
+| `DEDICATED_THREAD_INIT_COUNT` | count | `1` | `[0, 65535]` | Read-only; startup-scoped. | Initial service thread count in dedicated thread mode; valid only when `DEDICATED_THREAD_MODE=1`. |
+| `DEDICATED_THREAD_MAX_COUNT` | count | `1` | `[0, 65535]` | Read-only; startup-scoped. | Maximum service thread count in dedicated thread mode; valid only when `DEDICATED_THREAD_MODE=1`. |
+| `DEDICATED_THREAD_MODE` | none | `0` | `[0, 1]` | Read-only; startup-scoped. | `1` runs service threads in dedicated mode; `0` runs multiplexing mode. |
+| `FAST_UNLOCK_LOG_ALLOC_MUTEX` | none | `1` | `[0, 1]` | Read-only; startup-scoped. | Controls whether multiple server threads can access the log buffer concurrently. |
+| `INDEX_BUILD_THREAD_COUNT` | count | physical core count | `[1, 512]` | Read-write; verify online change on target. | Number of index-building threads created when an index is rebuilt at runtime; 7.1 release note changed default basis from logical to physical cores. |
+| `INDEX_INITRANS` | count | `8` | `[0, 50]` | Read-only; startup-scoped. | Initial `TTS` (`Touched Transaction Slots`) count in an index page; 7.3 release note changed max from `30` to `50`. |
+| `INDEX_MAXTRANS` | count | `50` | `50` | Read-only; startup-scoped. | Maximum `TTS` count in an index page; 7.3 release note changed default and max from `30` to `50`. |
+| `LFG_GROUP_COMMIT_INTERVAL_USEC` | microsecond | `1000` | `[0, 2^32-1]` | Read-only; startup-scoped. | Group commit interval since the last log-write disk I/O before writing commit logs. |
+| `LFG_GROUP_COMMIT_RETRY_USEC` | microsecond | `100` | `[0, 60000000]` | Read-only; startup-scoped. | Wait/retry interval when the group commit interval has not elapsed. |
+| `LFG_GROUP_COMMIT_UPDATE_TX_COUNT` | count | `80` | `[0, 2^32-1]` | Read-only; startup-scoped. | Group commit trigger based on uncommitted update transactions; check `UPDATE_TX_COUNT` in `V$LFG`. |
+| `MEM_INDEX_KEY_REDISTRIBUTION` | none | `1` | `[0, 1]` | Source attribute says read-only, while the description says `ALTER SYSTEM` while running; verify target before changing. | Redistributes memory index keys; useful for many reverse index keys, many leaf splits, or index ranges much larger than the database. |
+| `MEM_INDEX_KEY_REDISTRIBUTION_STANDARD_RATE` | percentage | `50` | `[10, 90]` | Source attribute says read-only, while the description says `ALTER SYSTEM` while running; verify target before changing. | Minimum unused-space ratio for memory index key redistribution; ignored when `MEM_INDEX_KEY_REDISTRIBUTION=0`. |
+| `MULTIPLEXING_CHECK_INTERVAL` | microsecond | `200000` | `[100000, 10000000]` | Read-write; verify online change on target. | Interval at which the thread manager checks sessions, updates statistics, and adds or deletes service threads. |
+| `MULTIPLEXING_MAX_THREAD_COUNT` | count | `1024` | `[1, 1024]` | Read-write; verify online change on target. | Maximum multiplex threads. Queuing can create threads above this value. |
+| `MULTIPLEXING_THREAD_COUNT` | count | logical core count | `[1, 1024]` | Read-only; cannot be changed after server startup. | Minimum shared service threads kept running. |
+| `PARALLEL_LOAD_FACTOR` | count | `2N` where `N` is logical core count | `[1, 512]` | Read-only; restart/startup-scoped. | Number of database refinement and index rebuild threads created during server restart. |
+| `REFINE_PAGE_COUNT` | pages | `50` | `[0, 2^32-1]` | Read-only; startup-scoped. | Pages processed by database refinement at startup for old versioning records not handled by the Ager before the previous shutdown. |
+| `STATEMENT_LIST_PARTIAL_SCAN_COUNT` | rows | `0` | `[0, 2^32-1]` | Read-write; `ALTER SYSTEM` while running. | Maximum statement rows returned for `V$STATEMENT`, `V$SQLTEXT`, or `V$PLANTEXT` queries. `0` returns all matching rows. |
+| `TABLESPACE_LOCK_ENABLE` | none | `1` | `[0, 1]` | Read-write; `ALTER SYSTEM` while running. | Tablespace lock level: `1` supports tablespace locks, `0` does not; disabling can speed simple DML but changes locking behavior. |
+| `TABLE_INITRANS` | count | `2` | `[0, 120]` | Read-only; startup-scoped. | Initial `TTS` count maintained in a table page. |
+| `TABLE_LOCK_ENABLE` | none | `1` | `[0, 1]` | Read-write; `ALTER SYSTEM` while running. | Table lock control: `0` supports record locks but not table locks, `1` supports both table and record locks. |
+| `TABLE_LOCK_MODE` | none | `0` | `[0, 1]` | Read-only; startup-scoped. | Table partition lock mode; valid only when `TABLE_LOCK_ENABLE=1`. |
+| `TABLE_MAXTRANS` | count | `120` | `[0, 120]` | Read-only; startup-scoped. | Maximum `TTS` count maintained for one table page. |
+| `TEMP_STATS_WATCH_TIME` | seconds | `10` | `[0, 2^32-1]` | Read-write; `ALTER SYSTEM` while running. | Temporary-table operation elapsed-time threshold for registering statistics. |
+| `THREAD_CPU_AFFINITY` | none | `0` | `[0, 1]` | Read-only; startup-scoped. | Binds service threads to the same CPU core when enabled. |
+| `THREAD_REUSE_ENABLE` | none | `1` | `[0, 1]` | Read-only; startup-scoped. | Reuse internal server threads: `0` creates new threads, `1` reuses waiting threads. |
+| `TIMED_STATISTICS` | none | `0` | `[0, 1]` | Read-write; verify online change on target. | Measures wait-event and SQL-operation elapsed time. Enabling can negatively affect performance. |
+| `TIMER_RUNNING_LEVEL` | none | platform-specific: `1` ordinary platforms, `2` IBM-AIX, `3` x86-linux and Amd64-linux | `[1, 3]` | Read-only; startup-scoped. | Timer method. Do not force `3` on unsupported platforms; the server can warn in `altibase_boot.log`, reset to default, and restart. |
+| `TIMER_THREAD_RESOLUTION` | microsecond | `1000` | `[50, 10000000]` | Read-write; verify online change on target. | Timer interval used when `TIMER_RUNNING_LEVEL=1`. |
+| `TRANSACTION_SEGMENT_COUNT` | count | `256` | Korean 7.3 source `[1, 16384]` | Read-only; server-start scoped. | Number of transaction segments in undo tablespaces. If reduced while unresolved distributed transactions remain, restart can fail because old undo space is inaccessible. |
+| `TRANSACTION_TABLE_SIZE` | transaction count | `1024` | `[16,16384]` | Read-only; database-create scoped. | Simultaneous transaction capacity. Values should increase or decrease by `2n` size; decreasing requires recreating the database. |
+
+7.1-only deprecated spin-lock manager properties:
+
+| Property | Unit | Default | Range or values | Mutability and method | Answer-ready meaning and caution |
+| --- | --- | --- | --- | --- | --- |
+| `LOCK_MGR_DETECTDEADLOCK_INTERVAL` | seconds | `3` | `[0, 10]` | Read-write in 7.1 source. | Deadlock detection interval for spin-lock mode. No longer supported after spin lock mode deprecation from Altibase `7.1.0.3.2`; do not use for 7.3 or 8.1. |
+| `LOCK_MGR_MAX_SLEEP` | microsecond | `1000` | `[0, 1000000]` | Read-write in 7.1 source. | Maximum sleep time after lock acquisition retry failure in spin-lock mode; deprecated from `7.1.0.3.2`. |
+| `LOCK_MGR_MIN_SLEEP` | microsecond | `50` | `[0, 1000000]` | Read-write in 7.1 source. | Sleep time after lock acquisition retry failure in spin-lock mode; deprecated from `7.1.0.3.2`. |
+| `LOCK_MGR_SPIN_COUNT` | frequency | `1000` | `[0, 3000]` | Read-write in 7.1 source. | Retry count after lock acquisition failure in spin-lock mode; deprecated from `7.1.0.3.2`. |
+| `LOCK_MGR_TYPE` | none | `0` | 7.1 source range `[0, 1]`; description also records `2` as light mutex added in `7.1.0.3.2`. | Read-only; cannot be changed while the server is running. | Table lock manager type: `0` mutex mode, `1` spin-lock mode, and `2` light mutex in the later 7.1 description. |
+
+### Property Item Group: Release-Note Property and View Deltas
+
+Use this block when the customer asks what changed in the selected 7.1, 7.3, or 8.1
+release notes for server properties, meta tables, or performance views. It preserves
+the release-note groups `new properties`, `changed properties`, and
+`deleted properties`. Detailed
+property values still route to the individual property blocks and detailed
+dictionary/view columns route to `06_data_dictionary_performance_views.md`.
+
+Altibase 7.1.0.1.2 release-note deltas:
+
+- New properties: `ACCESS_LIST_FILE`, `DBLINK_RECOVERY_MAX_LOGFILE`,
+  `DELAYED_FLUSH_LIST_PCT`, `DELAYED_FLUSH_PROTECTION_TIME_MSEC`, `ILOADER_ARRAY`,
+  `ILOADER_COMMIT`, `ILOADER_ERRORS`, `ILOADER_PARALLEL`, `IPCDA_CHANNEL_COUNT`,
+  `IPCDA_DATABLOCK_SIZE`, `IPCDA_FILEPATH`, `LB_MSGLOG_FLAG`, `LB_MSGLOG_COUNT`,
+  `LB_MSGLOG_FILE`, `LB_MSGLOG_SIZE`, `LOCK_MGR_CACHE_NODE`,
+  `LOCK_MGR_DETECTDEADLOCK_INTERVAL`, `LOCK_MGR_MAX_SLEEP`, `LOCK_MGR_MIN_SLEEP`,
+  `LOCK_MGR_SPIN_COUNT`, `LOCK_MGR_TYPE`, `LOCK_NODE_CACHE_COUNT`,
+  `LOG_CREATE_METHOD`, `MEM_INDEX_KEY_REDISTRIBUTION`,
+  `MEM_INDEX_KEY_REDISTRIBUTION_STANDARD_RATE`, `MSG_QUEUE_PERMISSION`,
+  `OPTIMIZER_AUTO_STATS`, `OPTIMIZER_DELAYED_EXECUTION`,
+  `OPTIMIZER_PERFORMANCE_VIEW`, `PSM_CURSOR_OPEN_LIMIT`,
+  `PSM_CHAR_DEFAULT_PRECISION`, `PSM_NCHAR_UTF8_DEFAULT_PRECISION`,
+  `PSM_NCHAR_UTF16_DEFAULT_PRECISION`, `PSM_NVARCHAR_UTF8_DEFAULT_PRECISION`,
+  `PSM_NVARCHAR_UTF16_DEFAULT_PRECISION`,
+  `PSM_PARAM_AND_RETURN_WITHOUT_PRECISION_ENABLE`, `PSM_VARCHAR_DEFAULT_PRECISION`,
+  `REPLICATION_DDL_ENABLE_LEVEL`, `REPLICATION_SQL_APPLY_ENABLE`,
+  `REPLICATION_IB_PORT_NO`, `RESULT_CACHE_ENABLE`, `RESULT_CACHE_MEMORY_MAXIMUM`,
+  `TOP_RESULT_CACHE_MODE`, `TABLE_LOCK_MODE`, `THREAD_REUSE_ENABLE`,
+  `USER_LOCK_POOL_INIT_SIZE`, `USER_LOCK_REQUEST_CHECK_INTERVAL`,
+  `USER_LOCK_REQUEST_LIMIT`, and `USER_LOCK_REQUEST_TIMEOUT`.
+- Changed properties: `CM_DISPATCHER_SOCKET_POLL_TYPE` added `EPOLL` type `3`
+  with Linux default changed from `1` to `3`; `DEFAULT_THREAD_STACK_SIZE` default
+  changed from `3145728` bytes to `10485760`, min from `65536` to `1048576`, max
+  from `10485760` to `134217728`; `DBLINK_GLOBAL_TRANSACTION_LEVEL` max changed
+  from `1` to `2` with `2` for `Two-Phase Commit (2PC) Level`;
+  `EXECUTOR_FAST_SIMPLE_QUERY` default changed from `0` to `1`;
+  `INDEX_BUILD_THREAD_COUNT` default basis changed from logical CPU count to physical
+  core count; `NORMALFORM_MAXIMUM` default changed from `128` to `2048`;
+  `OPTIMIZER_AUTO_STATS` default changed from `2` to `0`;
+  `REPLICATION_SYNC_TUPLE_COUNT` changed from `50000` rows to `500000` rows;
+  `REPLICATION_LOG_BUFFER_SIZE` default changed from `30` to `0`;
+  `REPLICATION_PREFETCH_LOGFILE_COUNT` default changed from `0` to `3`;
+  `REPLICATION_ACK_XLOG_COUNT` changed from read-only to writable;
+  `REPLICATION_TRANSACTION_POOL_SIZE` default changed from `1` to `2`;
+  `XA_INDOUBT_TX_TIMEOUT` default changed from `20` to `60`.
+- Deleted properties: `CHAR_DEFAULT_PRECISION`, `NCHAR_DEFAULT_PRECISION`,
+  `VARCHAR_DEFAULT_PRECISION`, `NVARCHAR_DEFAULT_PRECISION`,
+  `DATAPORT_FILE_DIRECTORY`, `DATAPORT_IMPORT_COMMIT_UNIT`,
+  `DATAPORT_IMPORT_STATEMENT_UNIT`, `DR_ENABLE`, `DR_RM_PORT_NO`, `DR_PORT_NO`,
+  `DR_CONNECT_TIMEOUT`, `DR_RECEIVE_TIMEOUT`, `DR_SENDER_SLEEP_TIME`,
+  `DR_SENDER_NEXT_CONNECTION_TIMEOUT`, `DR_HBT_DETECT_TIME`,
+  `DR_HBT_DETECT_HIGHWATER_MARK`, `DR_CONNECT_RECEIVE_TIMEOUT`,
+  `DR PREFETCH_LOGFILE_COUNT`, `DR_KEEP_ALIVE_CNT`, `DR_MAX_LOGFILE`,
+  `DR_STANDBY_WAIT_TIMEOUT`, `IPC_PORT_NO`, `MAX_THREAD_COUNT`, `SHM_DB_KEY`,
+  `SHM_PAGE_COUNT_PER_KEY`, `SHM_POLICY`, `SHM_MAX_SIZE`, `SHM_STARTUP_SIZE`,
+  `SHM_CHUNK_SIZE`, `SHM_CHUNK_ALIGN_SIZE`, and `STARTUP_SHM_CHUNK_SIZE`.
+- Deleted meta table: `SYS_DATA_PORTS_`.
+- New performance views: `V$ACCESS_LIST`,
+  `V$DBLINK_NOTIFIER_TRANSACTION_INFO`, `V$RESERVED_WORDS`, and `V$SNAPSHOT`.
+- Modified performance views: `V$DBLINK_LINKER_DATA_SESSION_INFO` added
+  `LOCAL_TRANSACTION_ID`; `V$DBLINK_REMOTE_STATMENT_INFO` added
+  `GLOBAL_TRANSACTION_ID`; `V$DBLINK_REMOTE_TRANSACTION_INFO` added `XID` and
+  `GLOBAL_TRANSACTION_ID`; `V$DBLINK_GLOBAL_TRANSACTION_INFO` added
+  `GLOBAL_TRANSACTION_ID`; `V$MUTEX` added `THREAD_ID`; `V$REPGAP` changed
+  `REP_LAST_SN` and `REP_SN` meanings to log-record identifiers; `V$REPSENDER` and
+  `V$REPSENDER_PARALLEL` added `STATUS` values `7: FAILBACK EAGER`,
+  `8: FAILBACK FLUSH`, and `9: IDLE`.
+
+Altibase 7.3.0.0.1 release-note deltas:
+
+- New properties: `DISK_INDEX_BUILD_SORT_AREA_SIZE`,
+  `DBLINK_GLOBAL_TRANSACTION_LEVEL`, `IB_CONCHKSPIN`, `IB_ENABLE`, `IB_LATENCY`,
+  `IB_LISTENER_DISABLE`, `IB_MAX_LISTEN`, `IB_PORT_NO`, `INIT_TOTAL_WA_SIZE`,
+  `IPCDA_SEM_KEY`, `IPCDA_SHM_KEY`, `IPC_SHM_KEY`, `IPC_SEM_KEY`,
+  `JOB_MSGLOG_COUNT`, `JOB_MSGLOG_FILE`, `JOB_MSGLOG_FLAG`, `JOB_MSGLOG_SIZE`,
+  `LISTAGG_PRECISION`, `MATHEMATICS_TEMP_MEMORY_MAXIMUM`, `NETWORK_ERROR_LOG_FILE`,
+  `PSM_MAX_DDL_REFERENCE_DEPTH`, `REGEXP_MODE`, `REPLICATION_DDL_SYNC`,
+  `REPLICATION_DDL_SYNC_TIMEOUT`, `REPLICATION_GAP_UNIT`, `REPLICATION_IB_LATENCY`,
+  `REPLICATION_IB_PORT_NO`, `REPLICATION_META_ITEM_COUNT_DIFF_ENABLE`,
+  `REPLICATION_RECEIVER_APPLIER_YIELD_COUNT`, `REPLICATION_SENDER_IP`,
+  `SERIAL_EXECUTE_MODE`, `SERVICE_THREAD_RECV_TIMEOUT`, `SSL_CIPHER_SUITES`,
+  `SSL_LOAD_CONFIG`, `ST_MSGLOG_COUNT`, `ST_MSGLOG_FILE`, `ST_MSGLOG_FLAG`,
+  `ST_MSGLOG_SIZE`, and `VARRAY_MEMORY_MAXIMUM`.
+- Changed properties: `ARCHIVE_FULL_ACTION` changed from read-only to changeable and
+  added setting `2`; `CM_MSGLOG_FLAG` default changed to `3`;
+  `EXECUTE_STMT_MEMORY_MAXIMUM` default changed from `1073741824` to `2147483648`;
+  `HASH_AREA_SIZE` minimum changed from `512K` to `3M`; `INDEX_INITRANS` max changed
+  from `30` to `50`; `INDEX_MAXTRANS` default and max changed from `30` to `50`;
+  `LOB_CACHE_THRESHOLD` max changed from `8192` to `524288`;
+  `MEMORY_INDEX_BUILD_RUN_SIZE` default changed from `32768` to `131072`;
+  `MM_MSGLOG_FILE` default changed to `1`; `PSM_CHAR_DEFAULT_PRECISION` changed from
+  `32767` to `32000`; `PSM_NCHAR_UTF16_DEFAULT_PRECISION` changed from `16383` to
+  `16000`; `PSM_NCHAR_UTF8_DEFAULT_PRECISION` changed from `10921` to `10666`;
+  `PSM_NVARCHAR_UTF16_DEFAULT_PRECISION` changed from `16383` to `16000`;
+  `PSM_NVARCHAR_UTF8_DEFAULT_PRECISION` changed from `10921` to `10666`;
+  `PSM_VARCHAR_DEFAULT_PRECISION` changed from `32767` to `32000`;
+  `REPLICATION_EAGER_PARALLEL_FACTOR` minimum changed from `1` to `2`;
+  `SERVER_MSGLOG_FLAG` default changed from `7` to `15`; `TOTAL_WA_SIZE` minimum
+  changed to `0`; `TRANSACTION_SEGMENT_COUNT` maximum changed from `512` to `16384`.
+- Deleted properties: `GLOBAL_TRANSACTION_LEVEL`, `LOCK_MGR_TYPE`,
+  `LOCK_MGR_SPIN_COUNT`, `LOCK_MGR_MIN_SLEEP`, `LOCK_MGR_MAX_SLEEP`,
+  `LOCK_MGR_DETECTDEADLOCK_INTERVAL`, `TEMP_MAX_PAGE_COUNT`, and
+  `TRANSACTION_START_MODE`.
+- New meta tables: `SYS_GEOMETRIES_`, `SYS_GEOMETRY_COLUMNS_`,
+  `SYS_REPL_RECEIVER_`, `SYS_REPL_TABLE_OID_IN_USE_`, and `USER_SRS_`.
+- Modified meta tables: `SYS_REPLICATIONS_` added `REMOTE_LAST_DDL_XSN`;
+  `SYS_REPL_HOSTS_` added `CONN_TYPE` and `IB_LATENCY`; `SYS_REPL_OLD_COLUMNS_`
+  added `MT_SRID`; `SYS_REPL_OLD_ITEMS_` added `REMOTE_USER_NAME`,
+  `REMOTE_TABLE_NAME`, `REMOTE_PARTITION_NAME`, `PARTITION_COUNT`,
+  `PARTITION_METHOD`, `PARTITION_ORDER`, `PARTITION_MIN_VALUE`,
+  `PARTITION_MAX_VALUE`, and `INVALID_MAX_SN`.
+- Deleted meta tables: `STO_COLUMNS_`, `STO_DATUMS_`, `STO_ELLIPSOIDS_`,
+  `STO_GEOCCS_`, `STO_GEOGCS_`, `STO_PRIMEMS_`, `STO_PROJCS_`,
+  `STO_PROJECTIONS_`, `STO_SRS_`, and `STO_USER_COLUMNS_`.
+- New performance views: `V$LIBRARY`, `V$PROCINFO`, `V$QUEUE_DELETE_OFF`,
+  `V$REPL_REMOTE_META_CHECKS`, `V$REPL_REMOTE_META_COLUMNS`,
+  `V$REPL_REMOTE_META_INDEX_COLUMNS`, `V$REPL_REMOTE_META_INDICES`,
+  `V$REPL_REMOTE_META_ITEMS`, and `V$REPL_REMOTE_META_REPLICATIONS`.
+- Deleted performance views: `V$ST_ANGULAR_UNIT`, `V$ST_AREA_UNIT`, and
+  `V$ST_LINEAR_UNIT`.
+
+Altibase 8.1.0.0.1 release-note deltas:
+
+- New properties: `CHECKPOINT_SCALE_SINGLE_DW_BUFFER_SIZE`,
+  `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`,
+  `REPLICATION_SSL_PORT_NO`, `PSM_CASE_SENSITIVE_MODE`, `TEMPORARY_LOB_ENABLE`,
+  `TRCLOG_EXPLAIN_TYPE`, and `TRCLOG_JSON_PLAN_INDENT_DEPTH`.
+- Changed properties: `CHECKPOINT_INTERVAL_IN_LOG` default changed from `100` to
+  `10`; `FAST_START_LOGFILE_TARGET` default changed from `100` to `10`;
+  `LOG_CREATE_METHOD` default changed from `0` to `1`; `LOG_FILE_SIZE` default
+  changed from `10485760` to `104857600` and maximum changed from
+  `18446744073709551615` to `4294967295`; `MEMORY_INDEX_BUILD_RUN_SIZE` maximum
+  changed from `18446744073709551615` to `4294967295`;
+  `MEMORY_INDEX_BUILD_VALUE_LENGTH_THRESHOLD` maximum changed from
+  `18446744073709551615` to `4294967295`; `OPTIMIZER_FEATURE_ENABLE` default changed
+  from `7.3.0.0.1` to `8.1.0.0.1`.
+- Deleted property: `INSPECTION_LARGE_HEAP_THRESHOLD`.
+- Meta tables: no added, deleted, or changed meta tables are listed.
+- New performance views: `V$LOCK_TABLE_STATS`, `V$MEM_STABLE`, and
+  `V$TEMPORARY_LOBS`.
 
 ### Property Item: `TRCLOG_EXPLAIN_TYPE`
 
