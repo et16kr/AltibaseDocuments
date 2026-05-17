@@ -35,7 +35,7 @@ FCA-J033	Done	docs	Utilities and operation tools catalog	Extract utility command
 FCA-J034	Done	docs	Migration and Oracle compatibility catalog	Extract Migration Center, Adapter for Oracle, conversion, unsupported objects, report, PSM review, validation, and Oracle-difference items.
 FCA-J035	Done	docs	DB Link and external connectors catalog	Extract DB Link, Hadoop, linker, connector setup, DB Link views/properties, third-party procedure, and validation items.
 FCA-J036	Done	docs	Kubernetes AKU and cloud catalog	Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
-FCA-J037	ToDo	docs	Spatial NiFi Tableau and miscellaneous integration catalog	Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
+FCA-J037	Done	docs	Spatial NiFi Tableau and miscellaneous integration catalog	Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
 FCA-J038	ToDo	docs	Technical documents and cross-family support catalog	Extract source-backed items from selected technical documents and cross-family support files that are not fully owned by earlier catalog jobs.
 FCA-J039	ToDo	docs	Catalog consolidation and QA	Validate source item catalog schema, stable IDs, duplicate rows, controlled vocabulary values, source-family completeness, and evidence fields before matrix mapping.
 FCA-J040	ToDo	docs	Source-to-attachment matrix build	Map every catalog row to an attachment owner, initial coverage disposition, attachment anchor, guardrail reason, and evidence command.
