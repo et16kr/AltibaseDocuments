@@ -411,3 +411,35 @@ Each entry should include:
 - Coverage status changes: key column groups were mapped to existing answer-ready anchors in `06_data_dictionary_performance_views.md`; guardrails were registered for exact performance-view layout, exact `SYS_*` layout, `SYS_REPL_ITEMS_.IS_CONDITION_SYNCED`, 8.1 checkpoint-scale columns, 7.1-only reserved spatial-unit views, replication runtime object-ID resolution, and `V$USAGE` statistics prerequisites.
 - Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers` passed with 971 catalog rows and 0 matrix rows; scoped TSV counts confirmed 21 FCA-J019 rows with 14 `Covered` and 7 `Guardrail` statuses; `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate` passed with 20 upload attachments; the review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
 - Residual risk: exhaustive per-view, per-column proof for every supported patch remains an installed-metadata guardrail, not an unresolved `Missing` or `Retrieval-weak` row from this job.
+
+### FCA-J020
+
+- Changed files: `source_item_catalog.tsv` and this remediation log.
+- Product coverage changes: cataloged the `error_message_reference` storage, backup,
+  recovery, datafile, log, log-anchor, archive, lock, checkpoint, incremental-backup,
+  multiplex-directory, and tablespace exact-code slice only. No customer-facing
+  attachment text or original source documents were edited.
+- Catalog totals added by this job: 194 rows total; 6 `Covered`, 188
+  `Covered-by-routing`, 0 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: selected Korean Altibase 7.1, Altibase 7.3, and Altibase 8.1
+  verified-source Error Message Reference entries were matched by exact reference code
+  and symbol. The 7.3 Korean manual is the representative `source_path`; each row's
+  evidence records matching 7.1, 7.3, and 8.1 line locators plus the existing
+  `07_error_messages_troubleshooting.md` exact-code map or dedicated block line.
+- Coverage status changes: dedicated rows were mapped to answer-ready blocks for
+  deadlock, lock timeout, tablespace free space, `AUTOEXTEND` off, tablespace not
+  found, and tablespace has objects. The remaining scoped entries were mapped to
+  existing grouped exact-code blocks for datafile/file-system storage, backup/recovery
+  log and `RESETLOGS`, checkpoint/incremental backup/multiplex paths, and tablespace
+  state/type/DDL errors.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1165 catalog rows and 0 matrix rows; scoped TSV counts confirmed 194
+  FCA-J020 rows with 6 `Covered` and 188 `Covered-by-routing` statuses. Standard
+  repository verification passed: `git diff --check`, `bash review/scripts/run_review_stage.sh validate`,
+  and the review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: no new `Missing`, `Guardrail`, `Out-of-scope`, or `Retrieval-weak`
+  rows were added by FCA-J020. Exact production recovery or destructive tablespace
+  actions still require the customer inputs and stop conditions already recorded in
+  `07_error_messages_troubleshooting.md`.
