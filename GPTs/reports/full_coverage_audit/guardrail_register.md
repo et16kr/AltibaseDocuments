@@ -21,6 +21,18 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J030 JDBC Java Spring And Hibernate Runtime Guardrail
+
+FCA-J030 cataloged one JDBC/Java/Spring/Hibernate guardrail row. The selected manuals
+and approved third-party guides provide driver, URL, property, failover, Adapter,
+Spring, and Hibernate configuration evidence, but production runtime success still
+depends on the exact installed driver, Java and framework versions, target database
+driver, topology, security settings, and live output.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-OTHER-XVER-000225 | Guardrail | jdbc_java | cross-version | GPTs/reports/gap_register.md | Gap Register > GAP-J002-012 and GAP-J002-014 > JDBC Java runtime and live connector validation boundary | Requires exact Altibase server version/patch, JDBC driver jar and `java -jar` output, Java runtime, Spring/Hibernate/pool versions, URL/properties, Adapter version, target JDBC driver, failover topology, SSL/TLS configuration, and live error/log/output before asserting runtime success. | Ask for the exact Altibase server version/patch, JDBC driver jar name and `java -jar $ALTIBASE_HOME/lib/Altibase.jar` output, Java runtime, Spring Boot/Spring Data/Hibernate/Hikari versions, JDBC URL/properties, Adapter for JDBC version and target driver, failover topology, SSL/TLS settings, and full error/log/output before declaring compatibility, root cause, or failover behavior. | GPTs/attachments/11_java_jdbc_spring.md | FCA-J030 | `GAP-J002-012`; `GAP-J002-014`; Korean JDBC and Adapter manuals; approved Spring Data JPA guides; catalog row SRC-OTHER-XVER-000225. |
+
 ### FCA-J029 PSM And External Procedure Runtime Guardrail
 
 FCA-J029 cataloged one PSM/external procedure guardrail row. The selected manuals

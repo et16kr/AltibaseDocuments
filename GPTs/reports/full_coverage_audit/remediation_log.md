@@ -699,3 +699,40 @@ Each entry should include:
   scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
 - Residual risk: this job did not remediate customer-facing text and added no new
   unresolved `Missing`, `Guardrail`, `Out-of-scope`, or `Retrieval-weak` rows.
+
+### FCA-J030
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged the `jdbc_java` source-family slice for JDBC
+  driver packaging, JDBC URLs, connection properties, failover, DataSource and pool
+  validation, JDBC API behavior, Java compatibility, Spring Boot, Hibernate, and
+  Adapter for JDBC setup, properties, utilities, constraints, and runbooks. No
+  original manuals or customer-facing attachments were edited.
+- Catalog rows added by this job: 38 rows total; 37 `Covered`, 0
+  `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Version scope: 7.1-specific driver packaging uses the Korean Altibase 7.1 JDBC
+  manual; 7.3-specific driver packaging uses the Korean Altibase 7.3 JDBC manual; the
+  statement-cache properties use the Korean trunk JDBC manual with established
+  `Altibase 8.1 verified source` wording; cross-version Java compatibility uses
+  `Technical Documents/kor/JavaCompatibility.md`; Adapter rows use Korean Adapter for
+  JDBC manuals; Spring and Hibernate rows use the approved Korean third-party guides.
+- Source evidence: each row records a repository-local source locator plus attachment
+  evidence in `11_java_jdbc_spring.md`. The guardrail row is registered as
+  `SRC-OTHER-XVER-000225` and captures live JDBC/Spring/Hibernate/Adapter runtime
+  validation inputs required before asserting production compatibility or failover
+  behavior.
+- Coverage status changes: the scoped source items were mapped to existing
+  answer-ready anchors in `11_java_jdbc_spring.md`. No new `Missing`,
+  `Out-of-scope`, or `Retrieval-weak` rows were added.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 1909 catalog rows and 0 matrix rows; scoped TSV assertions confirmed 38
+  FCA-J030 rows with 37 `Covered` and 1 `Guardrail` status. Standard repository
+  verification passed: `git diff --check`,
+  `bash review/scripts/run_review_stage.sh validate`, and the review-report severity
+  scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: no customer-facing attachment text was changed. The runtime
+  guardrail remains intentional and requires exact version, driver, framework,
+  topology, target-driver, SSL/TLS, and live-output evidence before definitive
+  customer answers about production runtime success.
