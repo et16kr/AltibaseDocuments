@@ -21,6 +21,15 @@ Accepted guardrail reasons include:
 
 ## Active Guardrails
 
+### FCA-J017 Dictionary And Meta Table Guardrail
+
+FCA-J017 cataloged one `Guardrail` row for a source-version conflict in the General Reference 2 meta-table inventory. Answers must use the installed-metadata check instead of assuming the table exists on Altibase 8.1.
+
+| source_item_id | status | source_family | version_scope | source_path | source_heading | guardrail_reason | safest_next_check | attachment_target | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-DICT-XVER-000052 | Guardrail | general_reference_2_dictionary_views | cross-version | Manuals/Altibase_7.3/kor/General_Reference-2.The Data Dictionary.md | General Reference 2 > Data Dictionary > Meta Tables > SYS_REPL_TABLE_OID_IN_USE_ | Listed in the 7.1 and 7.3 Korean General Reference 2 meta-table lists but absent from the checked Altibase 8.1 verified-source Korean list while the 8.1 release notes state no meta tables were added, deleted, or changed; do not assume 8.1 availability from memory. | Ask for exact Altibase version and patch level, then query `SYSTEM_.SYS_TABLES_` and `SYSTEM_.SYS_COLUMNS_` for `SYS_REPL_TABLE_OID_IN_USE_` before relying on the table or any columns in generated SQL. | GPTs/attachments/06_data_dictionary_performance_views.md | FCA-J017 | source locators: dictionary_view_inventory.md Source Drift Notes and Meta Table Inventory Groups; Korean General Reference 2 lists 7.1/7.3 include `SYS_REPL_TABLE_OID_IN_USE_`, checked 8.1 list does not; rg -n 'SYS_REPL_TABLE_OID_IN_USE_' GPTs/attachments/06_data_dictionary_performance_views.md |
+
+
 ### FCA-J005 Installation And Getting-Started Guardrails
 
 FCA-J005 cataloged 2 `Guardrail` rows. These are acceptable only when answers ask for

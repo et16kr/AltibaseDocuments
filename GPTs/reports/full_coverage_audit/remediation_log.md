@@ -381,3 +381,13 @@ Each entry should include:
   `Retrieval-weak` rows were added by FCA-J016. Exact production changes for
   replication, SSL/TLS, DB Link, and access-control properties still require the
   customer inputs and installed-server checks recorded in the attachment cautions.
+
+### FCA-J017
+
+- Changed files: `source_item_catalog.tsv`, `guardrail_register.md`, and this remediation log.
+- Product coverage changes: cataloged General Reference 2 dictionary/meta-table rows only; no customer-facing attachment text was changed and no original source documents were edited.
+- Catalog totals added by this job: 73 rows total; 45 `Covered`, 27 `Covered-by-routing`, 0 `Missing`, 1 `Guardrail`, 0 `Out-of-scope`, and 0 `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.1, 7.3, and Altibase 8.1 verified-source General Reference 2 meta-table lists, with the matching English 7.3 General Reference 2 list used only to normalize English summaries.
+- Coverage status changes: meta-table access/change/schema safety rules and answer-ready object/cookbook blocks were mapped to `06_data_dictionary_performance_views.md`; inventory-only table-purpose rows were marked `Covered-by-routing`; `SYS_REPL_TABLE_OID_IN_USE_` was registered as a guardrail because of the 7.1/7.3 versus 8.1 source-list conflict.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers` passed with 818 catalog rows and 0 matrix rows; `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate` passed with 20 upload attachments; the review-report severity scan showed `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: this job catalogs meta-table name/purpose coverage. Exhaustive per-column and patch-sensitive dictionary layout proof remains governed by `GAP-J002-006` and installed metadata checks using `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `V$TABLE`, and `V$ALLCOLUMN`.
