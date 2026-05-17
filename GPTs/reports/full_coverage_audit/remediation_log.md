@@ -212,3 +212,37 @@ Each entry should include:
 - Residual risk: later remediation jobs must close or route
   `SRC-SQL-XVER-000043` before final full-coverage readiness can have no unresolved
   `Missing` dispositions.
+
+### FCA-J010
+
+- Changed files: `source_item_catalog.tsv` and this remediation log.
+- Product coverage changes: cataloged SQL Reference DML, predicate, expression,
+  operator, regular-expression, object-name, and non-JSON built-in-function rows
+  only; no customer-facing attachment text was changed and no original source
+  documents were edited. JSON, LOB, and broader Oracle-difference rows remain scoped
+  to FCA-J011.
+- Catalog totals added by this job: 37 rows total; 26 `Covered`, 11
+  `Covered-by-routing`, 0 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 7.3 SQL Reference statement, object-name, DML,
+  condition, expression/operator, regular-expression, and SQL-function sections;
+  Korean Altibase 7.1 SQL Reference for the 7.1.0.7.7 PCRE2 boundary; and Altibase
+  8.1 verified-source Korean SQL Reference checks for version-sensitive function
+  evidence, checked against existing answer-ready anchors in
+  `GPTs/attachments/04_sql_dml_oracle_compatibility.md`.
+- Coverage status changes: DML classification, object-name rules,
+  SELECT/INSERT/UPDATE/DELETE/MOVE/MERGE/RETURNING, set operators,
+  expression/operator rules, logical/comparison/membership/pattern conditions,
+  REGEXP_MODE and PCRE2 routing, non-JSON function family inventories, exact syntax
+  blocks for ordered-set/statistical/window/conditional/regex functions,
+  ROWNUM/sequence notes, queue DML, and DML hint routing were mapped to existing
+  attachment anchors.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 353 catalog rows and 0 matrix rows; scoped TSV required-cell,
+  duplicate-ID, status, version-scope, and guardrail-reason checks passed;
+  `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate`
+  passed with 20 upload attachments; review-report severity scan showed
+  `Verdict: Pass` for R00-R27 and no actionable severity rows.
+- Residual risk: this job intentionally did not catalog JSON, LOB, or broader
+  Oracle-difference rows because FCA-J011 owns those. No new `Missing` or
+  `Retrieval-weak` rows were added by FCA-J010.
