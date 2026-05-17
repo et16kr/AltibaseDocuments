@@ -23,7 +23,7 @@
 Use this compact index before scanning tuning, plan, statistics, monitoring, and SNMP sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact plan-node, hint, wait, optimizer, or monitoring API block.
 
 - Aliases and customer wording: performance tuning, optimizer, explain plan, transformed plan, plan tree, full table scan, index scan, join method, statistics, hints, SQL plan cache, result cache, server tuning, monitoring API, SNMP, lock wait, wait event, query processing model.
-- Exact-token anchors: `EXPLAIN PLAN`, `DBMS_STATS`, `DBMS_SQL_PLAN_CACHE`, `full table scan`, `FIXED KEY RANGE`, `VARIABLE KEY RANGE`, `Logical Plan Generator`, `Physical Plan Generator`, `Query Rewriter`, `SQL hints`, `/*+ hint */`, `USE_HASH`, `USE_SORT`, `NO_USE_HASH`, `NO_INDEX`, `TEMP_TBS_MEMORY`, `TEMP_TBS_DISK`, `ALTIBASE_MONITOR`, `altisnmpd`, `libodbccli.a`.
+- Exact-token anchors: `EXPLAIN PLAN`, `DBMS_STATS`, `DBMS_SQL_PLAN_CACHE`, `full table scan`, `FIXED KEY RANGE`, `VARIABLE KEY RANGE`, `Logical Plan Generator`, `Physical Plan Generator`, `Query Rewriter`, `Common Subexpression Elimination`, `Constant Filter`, `View Merging`, `Subquery Unnesting`, `Predicate Pushdown`, `Transitive Predicate Generation`, `View Materialization`, `Index availability`, `LIKE`, `BETWEEN`, `IN`, `OR`, `IS NULL`, `GROUP-CUBE`, `GROUP-ROLLUP`, `WINDOW  SORT`, `WINDOW SORT`, `WINDOW-SORT`, `OVER clause`, `SQL hints`, `/*+ hint */`, `USE_HASH`, `USE_SORT`, `NO_USE_HASH`, `NO_INDEX`, `TEMP_TBS_MEMORY`, `TEMP_TBS_DISK`, `ALTIBASE_MONITOR`, `altisnmpd`, `libodbccli.a`.
 - Answer route: use this file for tuning interpretation, optimizer flow, plan nodes, hints, Monitoring API, and SNMP setup; use `06_data_dictionary_performance_views.md` for exact view and column check SQL; use `05_data_types_properties.md` for optimizer and cache property defaults.
 - Safety route: do not promise a tuning fix from a single plan token; ask for SQL text, plan output, bind values if relevant, statistics state, object DDL, target version, and observed waits or metrics.
 
@@ -295,6 +295,18 @@ Optimizer input block: `Query Rewriter`
 
 - Rewrites the parse tree into an equivalent form that is easier to optimize.
 - Common transformations include common subexpression elimination, constant filter precedence, view merging, subquery unnesting, predicate pushdown, transitive predicate generation, and view materialization.
+
+Query transformation reference:
+
+| Transformation | Source-backed behavior | Related hint or answer caution |
+| --- | --- | --- |
+| `Common Subexpression Elimination` | Removes duplicated or subsumed conditions from the `WHERE` clause when the rewritten expression is semantically equivalent. | Do not remove predicates manually unless the rewritten SQL is proven equivalent; compare transformed plan and result semantics. |
+| `Constant Filter` | Treats predicates whose truth is independent of table values, such as `1 = 1`, `1 <> 1`, host-variable checks, or an uncorrelated `EXISTS` subquery, as one-time filters. A false constant filter can avoid table access. | Useful for schema-only `CREATE TABLE AS SELECT ... WHERE 1 <> 1` patterns and guard predicates, but application bind values still need validation. |
+| `View Merging` | Merges a simple view containing only predicates and joins into the main query unless `NO_MERGE` is used. | Related hint: `NO_MERGE`. Validate view semantics before forcing or blocking merge behavior. |
+| `Subquery Unnesting` | Rewrites a nested subquery in the `WHERE` clause into an unnested join form when valid. | Related hints: `UNNEST`, `NO_UNNEST`. Require SQL text, predicates, and plan output before applying a hint. |
+| `Predicate Pushdown` | Pushes predicates into user views, outer-join inputs, set-operation views, or join-related view inputs when cost and mathematical equivalence allow it. | Related hints: `NO_PUSH_SELECT_VIEW`, `PUSH_SELECT_VIEW`, `PUSH_PRED`. For outer joins, keep result equivalence explicit; moving a `WHERE` predicate into `ON` can change results unless the original predicate remains where required. |
+| `Transitive Predicate Generation` | Adds an equivalent single-table predicate from a join predicate plus an existing single-table predicate, for example adding `T2.a1 = 1` from `T1.i1 = T2.a1` and `T1.i1 = 1`. | Added predicates can reduce a table result set and improve index use, but should be checked against the actual plan. |
+| `View Materialization` | Temporarily stores a view result when the same view result is reused during query processing, avoiding repeated execution of the view query. | It can conflict with predicate pushdown; forcing pushdown against a repeatedly used grouped view can be slower. Ask for the SQL, view definition, plan, row counts, and statistics before recommending a hint or rewrite. |
 
 Optimizer input block: `Logical Plan Generator`
 
@@ -991,6 +1003,74 @@ Data type conversion path tuning rule:
 - Character-to-numeric comparisons use a conversion path through character and numeric families. Do not rely on implicit conversion for production predicates; bind values and literals should match the target column type.
 - `DATE`, `INTERVAL`, `CHAR`, and `VARCHAR` conversions should be treated as potential index and CPU-cost risks until the plan confirms the intended `INDEX RANGE SCAN`.
 
+Index availability by comparison operator:
+
+| Operator class | Operators | Index availability | Source-backed caution |
+| --- | --- | --- | --- |
+| Simple comparison | `=`, `!=`, `<`, `<=`, `>`, `>=` | `O` | Still depends on predicate shape and data type conversion. |
+| Range comparison | `BETWEEN`, `NOT BETWEEN` | `O` | Keep the indexed column unmodified. |
+| Member comparison | `IN`, `NOT IN` | `O` | Large lists still need plan and selectivity evidence. |
+| Pattern comparison | `LIKE` | `O` | Prefix pattern can use an index, such as `T1.i1 LIKE abc%`; leading wildcard cannot, such as `T1.i1 LIKE %abc`. |
+| Pattern comparison | `NOT LIKE` | `X` | Do not infer index use from the presence of an index. |
+| Null comparison | `IS NULL`, `IS NOT NULL` | `O` | Confirm with plan output and predicate detail. |
+| Existence comparison | `EXISTS`, `NOT EXISTS`, `UNIQUE`, `NOT UNIQUE` | `X` | These are not direct indexed-column comparison operators. |
+| Quantified `ANY` | `=ANY`, `!=ANY`, `<ANY`, `<=ANY`, `>ANY`, `>=ANY` | `O` | Validate subquery and predicate shape. |
+| Quantified `ALL` | `=ALL`, `!= ALL`, `< ALL`, `<= ALL`, `> ALL`, `>= ALL` | `O` | Validate subquery and predicate shape. |
+
+Geometry comparison index availability:
+
+| Geometry operator | Index availability | Caution |
+| --- | --- | --- |
+| `CONTAINS`, `CROSSES`, `DISJOINT`, `DISTANCE`, `EQUALS`, `INTERSECTS`, `OVERLAPS`, `TOUCHES`, `WITHIN` | `O` | Uses a geometry-column index only when an `R-Tree` index exists. |
+| `ISEMPTY`, `ISSIMPLE`, `NOT CONTAINS`, `NOT CROSSES`, `NOT EQUALS`, `NOT OVERLAPS`, `NOT RELATE`, `NOT TOUCHES`, `NOT WITHIN`, `RELATE` | `X` | Do not claim spatial index use for these forms from a generic geometry predicate. |
+
+Predicate-shape requirements for index use:
+
+| Requirement | Index-usable example | Not index-usable example |
+| --- | --- | --- |
+| The comparison operator must be index-usable. | `T1.i1 = 1` | `T1.i1 NOT LIKE a` |
+| The predicate must contain a column. | `T1.i1 = 1` | `1 = 3` |
+| The indexed column must not be wrapped in an operation. | `T1.i1 = 1 + 1` | `T1.i1 + 1 = 3` |
+| Only one side of the operator should contain the indexed column expression. | `(T1.i1, T1.i2) = (1, 1)`; `T1.i1 = T2.i1` | `(T1.i1, 1) = (1, T1.i2)`; `T1.i1 = T1.i2` |
+| The column type or value should not be converted. | `T1.i1 = SMALLINT'1'` | `T1.i1 = 1.0` |
+
+Data type index-availability matrix:
+
+Use `O` for index available, `O*` for index available with key-column conversion and slower comparison risk, `X` for not available, and `-` for not applicable. The row is the indexed key type and the column is the compared value type.
+
+| KEY \ VALUE | `CHAR` | `VARCHAR` | `SMALLINT` | `INTEGER` | `BIGINT` | `NUMERIC` | `FLOAT` | `REAL` | `DOUBLE` | `DATE` | `BLOB` | `NIBBLE` | `BYTE` | `GEOMETRY` |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `CHAR` | `O` | `O*` | `X` | `X` | `X` | `X` | `X` | `X` | `X` | `X` | `-` | `-` | `-` | `-` |
+| `VARCHAR` | `O` | `O` | `X` | `X` | `X` | `X` | `X` | `X` | `X` | `X` | `-` | `-` | `-` | `-` |
+| `SMALLINT` | `X` | `X` | `O` | `O*` | `O*` | `O*` | `O*` | `O*` | `O*` | `-` | `-` | `-` | `-` | `-` |
+| `INTEGER` | `X` | `X` | `O` | `O` | `O*` | `O*` | `O*` | `O*` | `O*` | `-` | `-` | `-` | `-` | `-` |
+| `BIGINT` | `X` | `X` | `O` | `O` | `O` | `O*` | `O*` | `O*` | `O*` | `-` | `-` | `-` | `-` | `-` |
+| `NUMERIC` | `O` | `O` | `O` | `O` | `O` | `O` | `O` | `O*` | `O*` | `-` | `-` | `-` | `-` | `-` |
+| `FLOAT` | `O` | `O` | `O` | `O` | `O` | `O*` | `O` | `O*` | `O*` | `-` | `-` | `-` | `-` | `-` |
+| `REAL` | `X` | `X` | `O*` | `O*` | `O*` | `O*` | `O*` | `O` | `O*` | `-` | `-` | `-` | `-` | `-` |
+| `DOUBLE` | `O` | `O` | `O` | `O` | `O` | `O` | `O` | `O` | `O` | `-` | `-` | `-` | `-` | `-` |
+| `DATE` | `O` | `O` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `O` | `-` | `-` | `-` | `-` |
+| `BLOB` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `O` | `-` | `-` | `-` |
+| `NIBBLE` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `O` | `-` | `-` |
+| `BYTE` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `O` | `-` |
+| `GEOMETRY` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `-` | `O` |
+
+Numeric-family conversion rule:
+
+| Compared families | Internal comparison family |
+| --- | --- |
+| Integer vs integer | Integer |
+| Integer vs real | Real |
+| Integer vs non-native exponential numeric | Exponential numeric |
+| Real vs integer | Real |
+| Real vs real | Real |
+| Real vs non-native exponential numeric | Real |
+| Exponential numeric vs integer | Exponential numeric |
+| Exponential numeric vs real | Real |
+| Exponential numeric vs exponential numeric | Exponential numeric |
+
+Character family: `CHAR` and `VARCHAR` comparisons can use an index when the predicate shape is otherwise index-usable. Numeric family: integer types `BIGINT`, `INTEGER`, `SMALLINT`, real types `DOUBLE`, `REAL`, and non-native numeric types `NUMERIC`, `DECIMAL`, `NUMBER(p)`, `NUMBER(p,s)`, `FLOAT`, and `NUMBER` can compare across the family. Even when an index scan remains possible, a key-column conversion such as `bigint_col = NUMERIC'1'` is slower than a no-conversion predicate such as `bigint_col = BIGINT'1'`.
+
 Searchable conversion checks:
 
 ```text
@@ -1463,6 +1543,22 @@ Plan node block: `GROUP-AGGREGATION`
 - Key fields: `ITEM_SIZE`, `GROUP_COUNT`, `BUCKET_COUNT` or `DISK_PAGE_COUNT`, `ACCESS`, `COST`.
 - Tuning signal: large group count or disk temporary use can indicate expensive aggregate processing.
 
+Plan node block: `GROUP-CUBE`
+
+- Purpose: processes `GROUP BY CUBE` and groups by every possible combination of the listed grouping columns.
+- Output form: `GROUP-CUBE ( ACCESS: acc_num, COST: cost )`.
+- Key fields: `ACCESS` is the number of record accesses; `COST` is estimated cost.
+- Adjacent grouping/cache nodes may expose `ITEM_SIZE`, `ITEM_COUNT`, `BUCKET_COUNT`, or `DISK_PAGE_COUNT`; check those neighboring nodes before changing memory or temporary-space settings.
+- Tuning signal: cube aggregation can expand grouping work quickly. Ask for the exact `GROUP BY CUBE` list, row counts, indexes, statistics, and temporary-space symptoms before suggesting rewrite or memory changes.
+
+Plan node block: `GROUP-ROLLUP`
+
+- Purpose: processes `GROUP BY ROLLUP` and returns grouped aggregate information for the hierarchy implied by the `GROUP BY` list.
+- Output form: `GROUP-ROLLUP ( ACCESS: acc_num, COST: cost )`.
+- Key fields: `ACCESS` is the number of record accesses; `COST` is estimated cost.
+- Adjacent grouping/cache nodes may expose `ITEM_SIZE`, `ITEM_COUNT`, `BUCKET_COUNT`, or `DISK_PAGE_COUNT`; check those neighboring nodes before changing memory or temporary-space settings.
+- Tuning signal: rollup aggregation adds subtotal work over the grouped set. Compare row counts, grouping order, and temp usage before replacing it with manual `UNION ALL` or hints.
+
 Plan node block: `AGGREGATION`
 
 - Purpose: performs aggregate operations on records in the same group.
@@ -1516,6 +1612,13 @@ Plan node block: `SET-INTERSECT`
 - Purpose: implements `INTERSECT`.
 - Key fields: `ITEM_SIZE`, `ITEM_COUNT`, `BUCKET_COUNT` or `DISK_PAGE_COUNT`, `ACCESS`, `COST`.
 - Tuning signal: stores intermediate results; reduce input size before set operations where possible.
+
+Plan node block: `WINDOW SORT`
+
+- Purpose: processes window functions from an analytic `OVER` clause.
+- Output form: `WINDOW SORT ( ITEM_SIZE: item_size, ITEM_COUNT: item_count, ACCESS: acc_num, SORT_COUNT: sort_count, COST: cost )`; the source heading can appear as `WINDOW  SORT`, and result-cache routing may also spell the node as `WINDOW-SORT`.
+- Key fields: `ITEM_SIZE` is stored-record size, `ITEM_COUNT` is stored-record count, `ACCESS` is access count for stored rows, `SORT_COUNT` is the number of sorted records, and `COST` is estimated cost.
+- Tuning signal: check `PARTITION BY`, `ORDER BY`, frame clause, row count, index order, and temporary-space pressure before recommending SQL rewrite or memory changes.
 
 Plan node block: `VIEW`
 

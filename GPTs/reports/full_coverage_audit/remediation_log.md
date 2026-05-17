@@ -1075,3 +1075,37 @@ Each entry should include:
   passed; `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
   attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
   actionable `Blocker`, `High`, `Medium`, or `Low` rows.
+
+### FCA-J043
+
+- Changed files: `GPTs/attachments/08_performance_tuning_monitoring.md`,
+  `GPTs/attachments/09_replication_ha_cdc.md`, `source_item_catalog.tsv`,
+  `source_to_attachment_matrix.tsv`, `missing_item_register.md`,
+  `retrieval_weakness_register.md`, and this remediation log.
+- Product coverage changes: remediated 8 scoped `Missing` rows and 3 scoped
+  `Retrieval-weak` rows for performance tuning, Log Analyzer CDC, XLog structure/API
+  details, CDC sample execution, and Replication Manager 1.2/1.3 release details.
+- Attachment changes: `08_performance_tuning_monitoring.md` now has answer-ready
+  query transformation coverage for `Common Subexpression Elimination`, `Constant
+  Filter`, `View Merging`, `Subquery Unnesting`, `Predicate Pushdown`, `Transitive
+  Predicate Generation`, and `View Materialization`; source-backed comparison
+  operator, geometry operator, predicate-shape, and data type index-availability
+  matrices; and dedicated `GROUP-CUBE`, `GROUP-ROLLUP`, and `WINDOW SORT` plan-node
+  blocks. `09_replication_ha_cdc.md` now has answer-ready `ALA_InitializeAPI`,
+  `ALA_DestroyAPI`, `ALA_EnableLogging`, `ALA_DisableLogging`, XLog structure
+  composition, `ALA_IsNullValue`, `ReplToAltiSample`, and Replication Manager 1.2/1.3
+  release-note blocks.
+- Disposition changes: the 11 touched catalog and matrix rows now use
+  `coverage_status=Covered`, `audit_job=FCA-J043`, and answer-ready attachment
+  anchors. No `Guardrail` or `Out-of-scope` disposition was added.
+- Source evidence: Korean Altibase 7.3 Performance Tuning Guide query transformation,
+  index access, data type conversion, and plan-node sections; Korean Altibase 7.3 Log
+  Analyzer User's Manual API, XLog structure, null-check, and sample sections; Korean
+  Replication Manager 1.2 and 1.3 release notes. Detailed evidence commands are
+  recorded in the touched catalog and matrix rows.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers` passed; `catalog-qa` and `matrix-qa` passed; scoped
+  literal-token check passed for all 11 FCA-J043 rows; scoped unresolved-row checks
+  found no `Missing` or `Retrieval-weak` rows for attachments `06`, `08`, `09`, or
+  `18`. Standard repository verification is recorded in the final `FCA-J043` job
+  output.

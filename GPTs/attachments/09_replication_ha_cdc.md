@@ -37,11 +37,12 @@ Use this compact index before scanning topology, state, SQL, CDC, RepMgr, TLS, a
 
 Use this compact index when the user asks about CDC, Log Analyzer, Replication Manager, replication SSL, ordinary TLS, ports, certificates, or replication network diagnosis. Preserve these tokens literally in answers when the topic matches.
 
-- Log Analyzer CDC: `FOR ANALYSIS`, `FOR ANALYSIS PROPAGATION`, `XLog Sender`, `XLog Collector`, `Log Analysis API`, `Handshake`, `ALA_FAILURE`, `ALA_ErrorMgr`, `ALA_GetErrorCode`, `ALA_GetErrorLevel`, `ALA_GetErrorMessage`, `ALA_ERROR_FATAL`, `ALA_ERROR_ABORT`, `ALA_ERROR_INFO`, `ALA_DestroyXLogCollector`, `ALA_Handshake`, `ALA_FreeXLog`, `Autocommit`, `alaAPI.h`, `alaTypes.h`, `libala_sl.x`, `libala.x`.
+- Log Analyzer CDC: `FOR ANALYSIS`, `FOR ANALYSIS PROPAGATION`, `XLog Sender`, `XLog Collector`, `Log Analysis API`, `Handshake`, `ALA_FAILURE`, `ALA_ErrorMgr`, `ALA_GetErrorCode`, `ALA_GetErrorLevel`, `ALA_GetErrorMessage`, `ALA_ERROR_FATAL`, `ALA_ERROR_ABORT`, `ALA_ERROR_INFO`, `ALA_InitializeAPI`, `ALA_DestroyAPI`, `ALA_EnableLogging`, `ALA_DisableLogging`, `SQLAllocEnv`, `SQLFreeEnv`, `analysis.log`, `aFileSize`, `aMaxFileNumber`, `ALA_DestroyXLogCollector`, `ALA_Handshake`, `ALA_FreeXLog`, `ALA_IsNullValue`, `ALA_Value`, `aOutIsNull`, `ALA_TRUE`, `ALA_FALSE`, `ALA_GetIsNullValue`, `Autocommit`, `alaAPI.h`, `alaTypes.h`, `libala_sl.x`, `libala.x`.
+- XLog structures and sample: `ALA_XLogHeader`, `mType`, `mTID`, `mSN`, `mSyncSN`, `mRestartSN`, `mTableOID`, `ALA_XLogPrimaryKey`, `ALA_XLogColumn`, `ALA_XLogSavepoint`, `ALA_XLogLOB`, `$$IMPLICIT`, `$$PSM_SVP`, `$ALTIBASE_HOME/sample/ALA/Altibase/ReplToAltiSample.c`, `CREATE REPLICATION ALA1 FOR ANALYSIS`, `WITH '127.0.0.1', 47146`, `./ReplToAltiSample`, `ALTER REPLICATION ALA1 START`.
 - CDC transport: `WITH 'collector_ip', collector_port`, `WITH UNIX_DOMAIN`, `$ALTIBASE_HOME/trc/rp-replication_name`, `REPLICATION_RECEIVE_TIMEOUT`, `REPLICATION_LOG_BUFFER_SIZE`, `archive log mode`, `START AT SN`, `QUICKSTART`.
 - Replication SSL and ports: `Altibase 8.1 verified source`, `USING SSL`, `REPLICATION_SSL_PORT_NO`, `REPLICATION_PORT_NO`, `REPLICATION_IB_PORT_NO`, `SSL_PORT_NO`, `TCP`, `SSL`, `IB`, `Unsigned Integer`, `read-only`, `single value`.
 - Replication network diagnostics: `v$repreceiver`, `insert_success_count`, `pstack`, `recvXlog`, `sendCmBlock`, `netstat -nrv`, `sendq`, `recvq`, `tcpdump`, `wireshark`, `REPLICATION_HBT_DETECT_TIME`, `TCP Dup ACK`.
-- Replication Manager: `Replication Manager`, `1.4`, `August 31, 2023`, `BUG-50573`, `JRE`, `6`, `8`, `Altibase 4.3.9`, `ReplicationManager_1.4.0-win32.win32.x86.zip`, `ReplicationManager_1.4.0-linux.gtk.x86.zip`, `JDBC driver`, `DB Connections`, `Replication Pairs`, `Map`, `Properties`.
+- Replication Manager: `Replication Manager`, `1.2`, `Feburary 18, 2019`, `BUG-46683`, `BUG-46677`, `Sync`, `ReplicationManager-linux.gtk.x86.zip`, `ReplicationManager-win32.win32.x86.zip`, `1.3`, `April 6, 2022`, `BUG-47926`, `BUG-47927`, `BUG-49483`, `BUG-46876`, `BUG-49500`, `CVE-2021-44832`, `java.util.logging`, `1.4`, `August 31, 2023`, `BUG-50573`, `JRE`, `6`, `8`, `Altibase 4.3.9`, `ReplicationManager_1.4.0-win32.win32.x86.zip`, `ReplicationManager_1.4.0-linux.gtk.x86.zip`, `JDBC driver`, `DB Connections`, `Replication Pairs`, `Map`, `Properties`.
 
 ## Altibase Replication and Scope Overview
 - **Active-Active Replication**: Altibase supports replication topologies through XLog-based Sender and Receiver processing. Active-Active use requires explicit write ownership, conflict avoidance or conflict policy design, replication gap monitoring, and failover/failback planning. Do not promise fixed latency or automatic conflict-free behavior.
@@ -1939,6 +1940,24 @@ Version and runtime block:
 - Replication Manager is documented for Altibase 4.3.9 or later. Because one tool can connect to multiple Altibase server versions, import a JDBC driver file that matches each target Altibase server version.
 - Replication Manager 1.2 release notes add multi-IP database support. Replication Manager 1.3 release notes add easier `Create Full-mesh Replications`, `Join to Full-mesh`, and external help-link behavior.
 
+Replication Manager 1.2 release-note block:
+
+- Release: `Replication Manager` `1.2`, dated `Feburary 18, 2019` in the selected release note.
+- Hardware minimum: `800MHz Pentium III`, `512 MB` memory, `50MB` free disk space plus separate JRE storage, and `1024 * 768` screen resolution.
+- Platform packages: Linux/glibc x86 GTK package `ReplicationManager-linux.gtk.x86.zip`; Windows x86 Win32 package `ReplicationManager-win32.win32.x86.zip`.
+- Runtime baseline: Java `6` or later and `Altibase 4.3.9` or later.
+- New feature token: `BUG-46683`, multi-IP database support. The Korean release-note token `다중 IP` is normalized here as multi-IP.
+- Fixed bug token: `BUG-46677`, GUI update after `Sync`.
+
+Replication Manager 1.3 release-note block:
+
+- Release: `Replication Manager` `1.3`, dated `April 6, 2022`.
+- Hardware minimum: `800 MHz Pentium III`, `512 MB` memory, `50 MB` free disk space excluding JRE, and `1024 * 768` screen resolution.
+- Runtime baseline: Java Development Kit or Java Runtime Environment `6` or later, Windows x86 Win32 or Linux x86 GTK, and `Altibase 4.3.9` or later.
+- Package names: `ReplicationManager-win32.win32.x86.zip` and `ReplicationManager-linux.gtk.x86.zip`.
+- New feature tokens: `BUG-47926` for easier `Create full-mesh replications`, `BUG-47927` for easier joining of a new DB to a full-mesh replication object, and `BUG-49483` replacing embedded help with a `github` link.
+- Fixed bug tokens: `BUG-46876` for a partition-table display issue and `BUG-49500` changing the logging system from Log4j to JUL `java.util.logging` for `CVE-2021-44832`.
+
 Replication Manager 1.4 package block:
 
 - Release: `Replication Manager` `1.4`, dated `August 31, 2023`.
@@ -2110,6 +2129,95 @@ API function blocks:
 - Conversion: `ALA_GetInternalNumericInfo`, `ALA_GetAltibaseText`, `ALA_GetAltibaseSQL`, `ALA_GetODBCCValue`.
 - Error handling: `ALA_ClearErrorMgr`, `ALA_GetErrorCode`, `ALA_GetErrorLevel`, `ALA_GetErrorMessage`.
 
+API environment function block: `ALA_InitializeAPI`
+
+```c
+ALA_RC ALA_InitializeAPI(
+      ALA_BOOL       aUseAltibaseODBCDriver,
+      ALA_ErrorMgr * aOutErrorMgr);
+```
+
+- Purpose: creates the environment required to call the `Log Analysis API`.
+- Arguments: `aUseAltibaseODBCDriver` states whether the Altibase ODBC Driver is used; `aOutErrorMgr` receives error-manager information.
+- Return: `ALA_SUCCESS` or `ALA_FAILURE`.
+- Call-order rule: do not call another Log Analyzer API except `ALA_ClearErrorMgr()` before successful `ALA_InitializeAPI()`.
+- Failure rule: if `ALA_InitializeAPI()` fails, do not use the Log Analysis API.
+- ODBC ordering: when the application uses the Altibase ODBC Driver, call `SQLAllocEnv()` before `ALA_InitializeAPI(ALA_TRUE, ...)`.
+
+API environment function block: `ALA_DestroyAPI`
+
+```c
+ALA_RC ALA_DestroyAPI(
+        ALA_BOOL      aUseAltibaseODBCDriver,
+        ALA_ErrorMgr * aOutErrorMgr);
+```
+
+- Purpose: removes the environment created by `ALA_InitializeAPI()`.
+- Arguments: `aUseAltibaseODBCDriver` states whether the Altibase ODBC Driver is used; `aOutErrorMgr` receives error-manager information.
+- Return: `ALA_SUCCESS` or `ALA_FAILURE`.
+- Call-order rule: after this function is called, do not use another Log Analyzer API regardless of the return value.
+- ODBC ordering: when the application uses the Altibase ODBC Driver, call `ALA_DestroyAPI(ALA_TRUE, ...)` before `SQLFreeEnv()`.
+
+ODBC environment ordering pattern:
+
+```c
+SQLHENV sEnv = NULL;
+
+(void)SQLAllocEnv(&sEnv);
+(void)ALA_InitializeAPI(ALA_TRUE, NULL);
+
+/* Altibase ODBC API and Log Analysis API calls */
+
+(void)ALA_DestroyAPI(ALA_TRUE, NULL);
+(void)SQLFreeEnv(sEnv);
+```
+
+API logging function block: `ALA_EnableLogging`
+
+```c
+ALA_RC ALA_EnableLogging(
+      const SChar  * aLogDirectory,
+      const SChar  * aLogFileName,
+      UInt           aFileSize,
+      UInt           aMaxFileNumber,
+      ALA_ErrorMgr * aOutErrorMgr);
+```
+
+- Purpose: enables logging for problem tracking. If this function is not called, Log Analyzer does not perform this API logging.
+- Arguments: `aLogDirectory` is the log directory; `aLogFileName` is the log-file name; `aFileSize` is the log-file size threshold; `aMaxFileNumber` is the maximum number of old log files retained excluding the current file; `aOutErrorMgr` receives error-manager information.
+- Return: `ALA_SUCCESS` or `ALA_FAILURE`.
+- Rotation rule: when `analysis.log` reaches `aFileSize`, a file whose header number is `1` is renamed to `analysis.log-1`, a new `analysis.log` is created with the next header number, and the header number cycles from `1` through `aMaxFileNumber`.
+- Retention rule: only the current log file plus the last `aMaxFileNumber` recorded log files are retained.
+- Length rule: combined log directory and log-file string length is at most `1024` bytes including `NULL`.
+- Cautions: calling `ALA_EnableLogging()` while logging is already enabled causes an error; calling another Log Analysis API while this function is running can produce unintended results; an abnormal log-file header causes the file to be deleted and recreated; if `aFileSize` is `0`, the log file can grow without bound depending on system resources.
+
+API logging function block: `ALA_DisableLogging`
+
+```c
+ALA_RC ALA_DisableLogging(
+      ALA_ErrorMgr * aOutErrorMgr);
+```
+
+- Purpose: disables Log Analyzer API logging.
+- Return: `ALA_SUCCESS` or `ALA_FAILURE`.
+- Cautions: calling it before logging has been enabled causes an error; calling another Log Analysis API while this function is running can produce unintended results.
+
+Logging example pattern:
+
+```c
+(void)ALA_InitializeAPI(ALA_FALSE, NULL);
+(void)ALA_EnableLogging(".",
+                        "analysis.log",
+                        10 * 1024 * 1024,
+                        10,
+                        NULL);
+
+/* Log Analysis API calls */
+
+(void)ALA_DisableLogging(NULL);
+(void)ALA_DestroyAPI(ALA_FALSE, NULL);
+```
+
 XLog Collector runtime options:
 
 - `ALA_CreateXLogCollector()` binds the collector to an XLog Sender name, socket information, `aXLogPoolSize`, `aUseCommittedTxBuffer`, and `aACKPerXLogCount`.
@@ -2217,6 +2325,29 @@ XLog Sender cautions:
 - `SET HOST` takes effect after the XLog Sender is restarted.
 - `FLUSH` can time out if the XLog Collector does not send ACK.
 
+Log Analyzer sample: Replication to DBMS
+
+- Sample path: `$ALTIBASE_HOME/sample/ALA/Altibase/ReplToAltiSample.c`.
+- Sample purpose: a CDC-to-Altibase DBMS sample based on committed transactions only.
+- Sample constants preserve the XLog Sender name `ALA1`, log file `ALA1.log`, `SOCKET_TYPE` `TCP`, `PEER_IP` `127.0.0.1`, XLog Collector listen port `47146`, target Altibase DBMS IP `127.0.0.1`, and target Altibase DBMS port `43146`.
+- Safe run order: create the XLog Sender, start the sample XLog Collector, then start the Sender.
+
+```sql
+CREATE REPLICATION ALA1 FOR ANALYSIS
+WITH '127.0.0.1', 47146
+FROM ala.ala_t1 TO ala.ala_t1;
+```
+
+```sh
+./ReplToAltiSample
+```
+
+```sql
+ALTER REPLICATION ALA1 START;
+```
+
+Before adapting the sample, ask for the exact Altibase version, selected Log Analyzer source compatibility, source and target table DDL, primary key, collector host/port, target ODBC DSN or connection settings, and whether the application can run with `Autocommit` off.
+
 Log Analyzer failure-handling answer block:
 
 ```text
@@ -2224,6 +2355,39 @@ If a Log Analysis API function returns `ALA_FAILURE`, do not guess from the fail
 ```
 
 ## XLog Types
+
+XLog structure reference:
+
+| Structure | Members to preserve | Meaning and caution |
+| --- | --- | --- |
+| `ALA_Value` | `length`, `value` | Internal Altibase data length and internal value pointer. Use API conversion or null-check functions instead of interpreting internal values directly. |
+| `ALA_XLogHeader` | `mType`, `mTID`, `mSN`, `mSyncSN`, `mRestartSN`, `mTableOID` | Header fields for XLog type, transaction ID, SN, reserved or internal restart fields, and table OID. Determine the XLog kind from `mType`. |
+| `ALA_XLogPrimaryKey` | `mPKColCnt`, `mPKColArray` | Primary-key value array. There is no primary-key column ID array in this structure; obtain primary-key column IDs from `ALA_Table.mPKColumnArray[sIndex]->mColumnID` through metadata from `ALA_GetTableInfo()` or `ALA_GetTableInfoByName()`. |
+| `ALA_XLogColumn` | `mColCnt`, `mCIDArray`, `mBColArray`, `mAColArray` | Column count, column ID array, before-image values, and after-image values. |
+| `ALA_XLogSavepoint` | `mSPNameLen`, `mSPName` | Savepoint name length and name. `mSPName` starting with `$$IMPLICIT` is an implicit savepoint; `mSPName` equal to `$$PSM_SVP` is a PSM savepoint. |
+| `ALA_XLogLOB` | `mLobLocator`, `mLobColumnID`, `mLobOffset`, `mLobOldSize`, `mLobNewSize`, `mLobPieceLen`, `mLobPiece` | LOB locator, column ID, offset, old/new sizes, piece length, and piece bytes. For `LOB_PARTIAL_WRITE`, `mLobOffset` is relative to the `LOB_PREPARE4WRITE` offset. For `LOB_TRIM`, `mLobOffset` is the byte start position of trimmed LOB data. |
+| `ALA_XLog` | `mHeader`, `mPrimaryKey`, `mColumn`, `mSavepoint`, `mLOB`, `mPrev`, `mNext` | XLog object containing the header plus optional primary-key, column, savepoint, and LOB structures. `mPrev` and `mNext` are internal. |
+
+XLog structure composition by type:
+
+| XLog type | Included fields |
+| --- | --- |
+| `COMMIT` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`. |
+| `ABORT` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`. |
+| `INSERT` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`, `mTableOID`; Column: `mColCnt`, `mCIDArray`, `mAColArray`. |
+| `UPDATE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`, `mTableOID`; Primary Key: `mPKColCnt`, `mPKColArray`; Column: `mColCnt`, `mCIDArray`, `mBColArray`, `mAColArray`. |
+| `DELETE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`, `mTableOID`; Primary Key: `mPKColCnt`, `mPKColArray`. |
+| `SP_SET` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; Savepoint: `mSPNameLen`, `mSPName`. |
+| `SP_ABORT` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; Savepoint: `mSPNameLen`, `mSPName`. |
+| `LOB_CURSOR_OPEN` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`, `mTableOID`; Primary Key: `mPKColCnt`, `mPKColArray`; LOB: `mLobLocator`, `mLobColumnID`. |
+| `LOB_CURSOR_CLOSE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; LOB: `mLobLocator`. |
+| `LOB_PREPARE4WRITE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; LOB: `mLobLocator`, `mLobOffset`, `mLobOldSize`, `mLobNewSize`. |
+| `LOB_PARTIAL_WRITE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; LOB: `mLobLocator`, `mLobOffset`, `mLobPieceLen`, `mLobPiece`. |
+| `LOB_FINISH2WRITE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; LOB: `mLobLocator`. |
+| `KEEP_ALIVE` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`. |
+| `REPL_STOP` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`. |
+| `LOB_TRIM` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; LOB: `mLobLocator`, `mLobOffset`. |
+| `CHANGE_META` | Header: `mType`, `mTID`, `mSN`, `mSyncSN`; `mSN` is the last sequence number of processed change logs, while `mTID` and `mSyncSN` have no user-facing meaning for this event. |
 
 Transaction-related XLog types:
 
@@ -2260,6 +2424,23 @@ XLOG_TYPE_LOB_CURSOR_CLOSE
 ```
 
 ## ODBC C Conversion Blocks
+
+Function: `ALA_IsNullValue`
+
+```c
+ALA_RC ALA_IsNullValue(
+        ALA_Column     * aColumn,
+        ALA_Value      * aValue,
+        ALA_BOOL       * aOutIsNull,
+        ALA_ErrorMgr   * aOutErrorMgr );
+```
+
+- Purpose: determines whether an internal XLog `ALA_Value` is `NULL`.
+- Arguments: `aColumn` is column metadata, `aValue` is the column value, `aOutIsNull` receives the null result, and `aOutErrorMgr` receives error-manager information.
+- Return: `ALA_SUCCESS` or `ALA_FAILURE`.
+- Result interpretation: `aOutIsNull` is `ALA_TRUE` when the value is `NULL`; `ALA_FALSE` when it is not `NULL`.
+- Caution: an XLog `NULL` value uses Altibase internal format and cannot be interpreted directly. Use `ALA_IsNullValue()` before conversion or application-side comparison.
+- Source sample caution: the sample comment says `ALA_GetIsNullValue()` is not released; do not generate customer code that calls `ALA_GetIsNullValue()`.
 
 Function:
 

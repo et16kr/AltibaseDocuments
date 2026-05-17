@@ -43,13 +43,25 @@ answer-ready blocks.
 
 ### FCA-J024 Performance Plan Node Retrieval Weaknesses
 
-FCA-J024 cataloged three documented plan-node items that are present only as token-level
-or result-cache list coverage in `08_performance_tuning_monitoring.md`. Later retrieval
-remediation should add aliases or dedicated plan-node blocks and then update the catalog
-rows to `Covered-by-routing` or `Covered`.
+Resolved by `FCA-J043`. `SRC-OTHER-XVER-000149`, `SRC-OTHER-XVER-000150`, and
+`SRC-OTHER-XVER-000168` now have dedicated `Plan Node Reference` blocks in
+`08_performance_tuning_monitoring.md` and the active catalog/matrix rows are
+`Covered` with `audit_job=FCA-J043`.
 
-| source_item_id | current_attachment_anchor | weak_retrieval_aliases | expected_routing_target | benchmark_or_grep_evidence | remediation_owner_job | validation_evidence |
-| --- | --- | --- | --- | --- | --- | --- |
-| SRC-OTHER-XVER-000149 | `08_performance_tuning_monitoring.md` > `Result Cache` | `GROUP-CUBE`, `GROUP BY CUBE`, plan node, cube aggregation | `08_performance_tuning_monitoring.md` > `Plan Node Reference` | Korean Performance Tuning Guide 7.3 lines 3959-4009 document `GROUP-CUBE`; `rg -n 'GROUP-CUBE\|GROUP BY CUBE' GPTs/attachments/08_performance_tuning_monitoring.md` shows token-level result-cache coverage only. | FCA-J046 or FCA-J043 | FCA-J024 catalog check and standard validation passed. |
-| SRC-OTHER-XVER-000150 | `08_performance_tuning_monitoring.md` > `Result Cache` | `GROUP-ROLLUP`, `GROUP BY ROLLUP`, plan node, rollup aggregation | `08_performance_tuning_monitoring.md` > `Plan Node Reference` | Korean Performance Tuning Guide 7.3 lines 4009-4053 document `GROUP-ROLLUP`; `rg -n 'GROUP-ROLLUP\|GROUP BY ROLLUP' GPTs/attachments/08_performance_tuning_monitoring.md` shows token-level result-cache coverage only. | FCA-J046 or FCA-J043 | FCA-J024 catalog check and standard validation passed. |
-| SRC-OTHER-XVER-000168 | `08_performance_tuning_monitoring.md` > `Result Cache` | `WINDOW  SORT`, `WINDOW-SORT`, `OVER` clause, analytic plan node | `08_performance_tuning_monitoring.md` > `Plan Node Reference` | Korean Performance Tuning Guide 7.3 lines 5432-5481 document `WINDOW  SORT`; `rg -n 'WINDOW\|WINDOW-SORT\|WINDOW  SORT' GPTs/attachments/08_performance_tuning_monitoring.md` shows token-level result-cache coverage only. | FCA-J046 or FCA-J043 | FCA-J024 catalog check and standard validation passed. |
+## Resolved Retrieval Weaknesses
+
+### FCA-J043 Views Performance Replication And Security
+
+- Resolved 3 scoped `Retrieval-weak` plan-node rows by adding dedicated
+  `GROUP-CUBE`, `GROUP-ROLLUP`, and `WINDOW SORT` plan-node blocks and strengthening
+  the retrieval alias index in `08_performance_tuning_monitoring.md`.
+- Updated `source_item_catalog.tsv` and `source_to_attachment_matrix.tsv` to
+  `Covered` with `audit_job=FCA-J043` and attachment anchors for the same rows.
+- Evidence: attachment exact-token checks and source locators are recorded in the
+  catalog and matrix rows.
+
+Resolved source item IDs:
+
+- `SRC-OTHER-XVER-000149`
+- `SRC-OTHER-XVER-000150`
+- `SRC-OTHER-XVER-000168`

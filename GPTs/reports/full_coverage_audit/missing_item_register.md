@@ -75,15 +75,10 @@ the exact CLI and ACI header/library/link flags.
 
 ### FCA-J024 Performance Tuning And Optimizer Missing Rows
 
-FCA-J024 cataloged two source-backed Performance Tuning Guide items whose exact
-source detail is not yet represented as answer-ready attachment blocks. Later
-performance remediation should either add the missing item blocks or split them into
-more granular covered rows.
-
-| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-OTHER-XVER-000124 | performance_tuning | cross-version | Manuals/Altibase_7.3/kor/Performance Tuning Guide.md | Performance Tuning Guide > Query Transformation | Answer-ready descriptions, caveats, examples, and related hints for `Common Subexpression Elimination`, `Constant Filter`, `View Merging`, `Subquery Unnesting`, `Predicate Pushdown`, `Transitive Predicate Generation`, and `View Materialization`. | GPTs/attachments/08_performance_tuning_monitoring.md | Add a compact optimizer transformation reference block that preserves each transformation name, purpose, safe rewrite boundary, related hints, and when a customer must provide SQL text and plan evidence before applying it. | FCA-J024 | source locators: Korean Performance Tuning Guide 7.3 lines 1038-1283; `rg -n 'Common Subexpression\|Constant Filter\|View Merging\|Subquery Unnesting\|Predicate Pushdown\|Transitive Predicate\|View Materialization' GPTs/attachments/08_performance_tuning_monitoring.md` shows incomplete answer-ready transformation coverage. |
-| SRC-OTHER-XVER-000133 | performance_tuning | cross-version | Manuals/Altibase_7.3/kor/Performance Tuning Guide.md | Performance Tuning Guide > Access Methods > Indexes and comparison operators | Full source-backed comparison-operator and data-type index-availability matrix, including operator classes, index availability, remarks, and cautions for type conversion and predicate form. | GPTs/attachments/08_performance_tuning_monitoring.md | Add an index-availability matrix or grouped item block for the Performance Tuning Guide comparison-operator and data-type rules; until then, do not infer operator-specific index usability beyond the existing general type-conversion caution. | FCA-J024 | source locators: Korean Performance Tuning Guide 7.3 lines 1600-2309; `rg -n 'Index availability\|Comparison Operator\|LIKE\|BETWEEN\|IS NULL' GPTs/attachments/08_performance_tuning_monitoring.md` shows no full operator/index matrix. |
+Resolved by `FCA-J043`. `SRC-OTHER-XVER-000124` and
+`SRC-OTHER-XVER-000133` are no longer active `Missing` rows; the active catalog and
+matrix rows now point to `08_performance_tuning_monitoring.md` answer-ready blocks for
+query transformations and index availability.
 
 ### FCA-J014 Property Catalog Memory Log Cache And Capacity Missing Rows
 
@@ -294,22 +289,37 @@ FCA-J015 cataloged scoped optimizer, normalization, lock, timeout, autocommit, s
 
 ### FCA-J027 CDC Log Analyzer And RepMgr Missing Rows
 
-FCA-J027 cataloged CDC Log Analyzer and Replication Manager source rows. The rows
-below are source-backed and in scope, but the current attachments do not yet contain
-answer-ready blocks with the exact function details, XLog structure fields, sample
-program path, or detailed 1.2/1.3 Replication Manager release BUG tokens needed for
-safe customer answers.
-
-| source_item_id | source_family | version_scope | source_path | source_heading | missing_item | expected_attachment | required_remediation | audit_job | evidence |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SRC-API-XVER-000028 | log_analyzer | cross-version | Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md | Log Analysis API reference > environment and logging APIs | Answer-ready details for `ALA_InitializeAPI`, `ALA_DestroyAPI`, `ALA_EnableLogging`, and `ALA_DisableLogging`, including ODBC environment ordering and log rotation parameters. | GPTs/attachments/09_replication_ha_cdc.md | Add a compact API block preserving `SQLAllocEnv`, `SQLFreeEnv`, `aFileSize`, `aMaxFileNumber`, and log-file rotation cautions; until then do not infer logging rotation behavior from function names only. | FCA-J027 | source locator: Korean Log Analyzer 7.3 lines 2389-2663; catalog row SRC-API-XVER-000028. |
-| SRC-OTHER-XVER-000207 | log_analyzer | cross-version | Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md | Log Analyzer User's Manual > XLog > XLog structures and per-type composition | Exact `ALA_XLogHeader`, primary-key, column, savepoint, LOB structure fields and per-XLog-type field composition. | GPTs/attachments/09_replication_ha_cdc.md | Add searchable structure tables for `ALA_XLogHeader`, `ALA_XLogPrimaryKey`, `ALA_XLogColumn`, `ALA_XLogSavepoint`, `ALA_XLogLOB`, plus per-type composition and savepoint token notes. | FCA-J027 | source locator: Korean Log Analyzer 7.3 lines 1609-1915; catalog row SRC-OTHER-XVER-000207. |
-| SRC-API-XVER-000035 | log_analyzer | cross-version | Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md | Log Analysis API reference > ALA_IsNullValue | `ALA_IsNullValue()` null-detection function for internal `ALA_Value` values is not represented in the attachment. | GPTs/attachments/09_replication_ha_cdc.md | Add an API block for `ALA_IsNullValue()` preserving `aOutIsNull`, `ALA_TRUE`, `ALA_FALSE`, and the warning that internal NULL values cannot be interpreted directly. | FCA-J027 | source locator: Korean Log Analyzer 7.3 lines 4837-4898; catalog row SRC-API-XVER-000035. |
-| SRC-OTHER-XVER-000208 | log_analyzer | cross-version | Manuals/Altibase_7.3/kor/Log Analyzer User's Manual.md | Log Analyzer User's Manual > Sample Code : Replication to DBMS | Sample CDC program path and minimal sample run sequence are not represented with exact tokens. | GPTs/attachments/09_replication_ha_cdc.md | Add a sample block for `$ALTIBASE_HOME/sample/ALA/Altibase/ReplToAltiSample.c`, `CREATE REPLICATION ALA1 FOR ANALYSIS`, `./ReplToAltiSample`, and `ALTER REPLICATION ALA1 START`. | FCA-J027 | source locator: Korean Log Analyzer 7.3 lines 5521-5578; catalog row SRC-OTHER-XVER-000208. |
-| SRC-REL-PATCH-000020 | replication_manager | patch-specific | ReleaseNotes/kor/Altibase_Replication_Manager_1_2_Release_Notes.md | Altibase Replication Manager 1.2 Release Notes > new feature and fixed bug | Detailed 1.2 release BUG tokens and package names are not answer-ready in the attachment. | GPTs/attachments/09_replication_ha_cdc.md | Add a release-note block preserving `1.2`, `Feburary 18, 2019`, `BUG-46683`, `BUG-46677`, `Sync`, and the exact 1.2 package names. | FCA-J027 | source locator: Korean Replication Manager 1.2 release notes lines 1-105; catalog row SRC-REL-PATCH-000020. |
-| SRC-REL-PATCH-000021 | replication_manager | patch-specific | ReleaseNotes/kor/Altibase_Replication_Manager_1_3_Release_Notes.md | Replication Manager 1.3 Release Notes > new features and fixed bugs | Detailed 1.3 release BUG tokens and the Log4j-to-JUL change are not answer-ready in the attachment. | GPTs/attachments/09_replication_ha_cdc.md | Add a release-note block preserving `1.3`, `April 6, 2022`, `BUG-47926`, `BUG-47927`, `BUG-49483`, `BUG-46876`, `BUG-49500`, `CVE-2021-44832`, and `java.util.logging`. | FCA-J027 | source locator: Korean Replication Manager 1.3 release notes lines 1-170; catalog row SRC-REL-PATCH-000021. |
+Resolved by `FCA-J043`. The Log Analyzer and Replication Manager rows
+`SRC-API-XVER-000028`, `SRC-OTHER-XVER-000207`, `SRC-API-XVER-000035`,
+`SRC-OTHER-XVER-000208`, `SRC-REL-PATCH-000020`, and `SRC-REL-PATCH-000021` are no
+longer active `Missing` rows; the active catalog and matrix rows now point to
+`09_replication_ha_cdc.md` answer-ready API, XLog structure, sample, and RepMgr
+release-note blocks.
 
 ## Resolved Missing Items
+
+### FCA-J043 Views Performance Replication And Security
+
+- Resolved 8 scoped `Missing` rows for attachments `08` and `09` by adding
+  answer-ready optimizer transformation details, comparison-operator and data-type
+  index-availability matrices, Log Analyzer environment/logging API blocks, XLog
+  structure composition, `ALA_IsNullValue`, CDC sample sequence, and Replication
+  Manager 1.2/1.3 release-note blocks.
+- Updated `source_item_catalog.tsv` and `source_to_attachment_matrix.tsv` to
+  `Covered` with `audit_job=FCA-J043` and attachment anchors for the same rows.
+- Evidence: attachment exact-token checks and source locators are recorded in the
+  catalog and matrix rows.
+
+Resolved source item IDs:
+
+- `SRC-OTHER-XVER-000124`
+- `SRC-OTHER-XVER-000133`
+- `SRC-API-XVER-000028`
+- `SRC-OTHER-XVER-000207`
+- `SRC-API-XVER-000035`
+- `SRC-OTHER-XVER-000208`
+- `SRC-REL-PATCH-000020`
+- `SRC-REL-PATCH-000021`
 
 ### FCA-J041 SQL Data Types and Properties
 
