@@ -28,7 +28,7 @@ FCA-J026	Done	docs	Replication and HA catalog	Extract topology, state, mode, DDL
 FCA-J027	Done	docs	CDC Log Analyzer and RepMgr catalog	Extract CDC API, XLog, ACK/restart, Log Analyzer, Replication Manager, GUI-replacement, release, and diagnostic items.
 FCA-J028	Done	docs	Security SSL TLS and network catalog	Extract certificate, TLS, replication SSL, client/server, network property, port, access-list, and diagnostic items.
 FCA-J029	Done	docs	PSM and external procedure catalog	Extract PSM, package, trigger, library, external procedure, type mapping, deployment, compile, and runtime-evidence items.
-FCA-J030	ToDo	docs	JDBC Java Spring and Hibernate catalog	Extract JDBC URLs, driver classes, Java compatibility, Adapter for JDBC, Spring, Hibernate, failover, property, and API items.
+FCA-J030	Done	docs	JDBC Java Spring and Hibernate catalog	Extract JDBC URLs, driver classes, Java compatibility, Adapter for JDBC, Spring, Hibernate, failover, property, and API items.
 FCA-J031	ToDo	docs	C CLI ODBC and Precompiler catalog	Extract CLI, ODBC, Altibase C Interface, Precompiler, DSN, diagnostics, LOB, JSON LOB, compile, and runtime items.
 FCA-J032	ToDo	docs	iSQL and iLoader catalog	Extract iSQL session commands, host variables, load/export workflows, iLoader options, files, examples, and diagnostics.
 FCA-J033	ToDo	docs	Utilities and operation tools catalog	Extract utility commands, options, outputs, diagnostics, dataCompJ, dump tools, AKU-related utility, and installed-tool guardrail items.
