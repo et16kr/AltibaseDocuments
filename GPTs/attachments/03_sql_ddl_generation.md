@@ -754,7 +754,7 @@ replication_table_non_ssl ::=
   CREATE [LAZY | EAGER] REPLICATION [IF NOT EXISTS] replication_name
   [AS MASTER | AS SLAVE]
   [OPTIONS option_list]
-  WITH 'remote_host_ip_or_name', remote_replication_port [USING TCP | USING IB ib_latency]
+  WITH 'replication_host_ip', replication_host_port_no [USING TCP | USING IB ib_latency]
        [...]
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
@@ -800,7 +800,7 @@ replication_propagation ::=
   { FOR PROPAGABLE LOGGING | FOR PROPAGATION }
   [AS MASTER | AS SLAVE]
   [OPTIONS option_list]
-  WITH 'remote_host_ip_or_name', remote_replication_port [USING TCP | USING SSL | USING IB ib_latency]
+  WITH 'replication_host_ip', replication_host_port_no [USING TCP | USING SSL | USING IB ib_latency]
        [...]
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
@@ -815,7 +815,7 @@ replication_ssl_8_1 ::=
   [FOR PROPAGABLE LOGGING | FOR PROPAGATION]
   [AS MASTER | AS SLAVE]
   [OPTIONS option_list]
-  WITH 'remote_host_ip_or_name', remote_ssl_replication_port USING SSL
+  WITH 'replication_host_ip', replication_host_port_no USING SSL
        [...]
   FROM [owner.]local_table [PARTITION local_partition]
   TO   [owner.]remote_table [PARTITION remote_partition]
@@ -867,9 +867,13 @@ Generation notes:
 
 - Only `SYS` can execute replication-related statements.
 - `IF NOT EXISTS` for `CREATE REPLICATION` and `IF EXISTS` for `DROP REPLICATION` are available in Altibase 8.1 verified source. Omit them for 7.1 and 7.3; `CREATE REPLICATION IF NOT EXISTS` also does not verify that an existing replication object has the desired endpoints or target items.
-- The replication object name must be the same on both servers.
+- `CREATE REPLICATION` creates a local-to-remote replication connection. Replication is one-to-one between tables: one local table maps to only one table on the other side.
+- The `replication_name` must be the same on both servers.
+- `AS MASTER` and `AS SLAVE` select the Master-Slave conflict-resolution scheme; use the Replication Manual for the conflict behavior before generating production DDL.
 - `option_list` can include source-backed replication options such as `RECOVERY`, `OFFLINE`, `GROUPING`, `PARALLEL`, `GAPLESS`, `RECEIVE_ONLY`, and `META_LOGGING`. Do not combine options blindly; for example, `RECOVERY` and `OFFLINE` are mutually exclusive, `RECEIVE_ONLY` excludes EAGER mode and DDL replication, and `GAPLESS`, `GROUPING`, and `PARALLEL` are LAZY-oriented features.
-- The port in `WITH 'host', port` is the remote server's replication receiver port. For ordinary replication, check `REPLICATION_PORT_NO` on the remote server.
+- `replication_host_ip` is the remote server IP address or resolvable host name.
+- `replication_host_port_no` is the remote server Receiver thread port for the selected communication method, not the ordinary client `PORT_NO`.
+- The port in `WITH 'replication_host_ip', replication_host_port_no` is the remote server's replication receiver port. For ordinary TCP replication, check `REPLICATION_PORT_NO` on the remote server.
 - Non-SSL replication and SSL replication are separate generation cases. Do not mix ordinary TCP ports and SSL replication ports in the same example.
 - If `USING` is omitted, ordinary TCP replication is used. `USING TCP` can be shown for clarity, but it is not required.
 - `USING IB ib_latency` is only for InfiniBand environments. Use the peer `REPLICATION_IB_PORT_NO`, and verify `IB_ENABLE`.
@@ -881,9 +885,10 @@ Generation notes:
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
-- `ADD HOST`, `DROP HOST`, and `SET HOST` are host-list operations. Stop ordinary replication before host-list changes; for Log Analyzer, host changes apply only to TCP/IP XLog Collector endpoints, not `WITH UNIX_DOMAIN`.
+- `ADD HOST`, `DROP HOST`, `DROP HOST ALL`, and `SET HOST` are host-list operations. Stop ordinary replication before host-list changes; for Log Analyzer, host changes apply only to TCP/IP XLog Collector endpoints, not `WITH UNIX_DOMAIN`.
+- After `DROP HOST ALL`, replication cannot start again until host information is added or receive-only mode is deliberately enabled.
 - `SET RECEIVE_ONLY ON` requires first removing all host information with `DROP HOST ALL` and resetting restart information with `RESET`; when turning receive-only off, supply the peer host again with `SET RECEIVE_ONLY OFF WITH ...`.
-- Offline replication clauses are recovery operations for applying unsent Active-server logs from copied log paths. Generate them only after confirming `META_LOGGING`, source log availability, SQL Apply requirements, and the Active/Standby role.
+- Offline replication clauses are recovery operations for applying unsent Active-server logs from copied log paths. Generate `OPTIONS OFFLINE`, `SET OFFLINE ENABLE`, `BUILD OFFLINE META`, `START WITH OFFLINE`, `RESET OFFLINE META`, and `SET OFFLINE DISABLE` only after confirming `META_LOGGING`, source log availability, SQL apply mode requirements, `V$REPOFFLINE_STATUS`, and the Active/Standby role.
 
 ### Property SQL Syntax
 

@@ -2217,6 +2217,7 @@ Use this when the workload uses iLoader or `APPEND`/direct-path insert. Rising `
 
 ```sql
 SELECT replication_name,
+       host_count,
        is_started,
        xsn,
        item_count,
@@ -2234,7 +2235,7 @@ FROM SYSTEM_.SYS_REPLICATIONS_
 ORDER BY replication_name;
 ```
 
-`IS_STARTED` values are `0` suspended and `1` active. `REPL_MODE` values include `0` lazy and `2` eager. `OPTIONS` is a bit-style decimal flag: `1` recovery, `2` offline, `4` gapless, `8` parallel applier, `16` transaction grouping, `256` meta logging, and, on versions that expose it, `512` receive-only. On 7.1 systems, treat receive-only as 7.1.0.8.5 patch-level material and verify the exact patch/meta version plus observed metadata before decoding `512`, because earlier 7.1 dictionary layouts may not list the receive-only flag.
+`IS_STARTED` values are `0` suspended and `1` active. `CONFLICT_RESOLUTION` values are `0` default, `1` Master Server, and `2` Slave Server. `REPL_MODE` values include `0` LAZY MODE and `2` EAGER MODE. `HOST_COUNT` should match the rows visible in `SYSTEM_.SYS_REPL_HOSTS_`; `ITEM_COUNT` should match the target rows visible in `SYSTEM_.SYS_REPL_ITEMS_`. `REMOTE_FAULT_DETECT_TIME` records when the remote server fault was detected and is used by EAGER failback logic. `OPTIONS` is a bit-style decimal flag: `1` recovery, `2` offline, `4` gapless, `8` parallel applier, `16` transaction grouping, `256` meta logging, and, on versions that expose it, `512` receive-only. On 7.1 systems, treat receive-only as 7.1.0.8.5 patch-level material and verify the exact patch/meta version plus observed metadata before decoding `512`, because earlier 7.1 dictionary layouts may not list the receive-only flag.
 
 `ROLE` maps replication objects to their source-backed purpose:
 
@@ -2443,7 +2444,7 @@ FROM V$REPSENDER
 ORDER BY rep_name;
 ```
 
-`STATUS` values include `0` stop, `1` run, `2` retry, `6` sync, and `9` idle. `NET_ERROR_FLAG` value `1` indicates a network error.
+`START_FLAG` values include `0` NORMAL, `1` QUICK, `2` SYNC, `3` SYNC_ONLY, `4` SYNC RUN, `5` SYNC END, `6` RECOVERY from Replication, `7` OFFLINE, and `8` PARALLEL. `STATUS` values include `0` stop, `1` run, `2` retry, `3` failback normal, `4` failback master, `5` failback slave, `6` sync, `7` failback eager, `8` failback flush, and `9` idle. `NET_ERROR_FLAG` value `1` indicates a network error. `REPL_MODE` is the user-specified mode; `ACT_REPL_MODE` is the actual current mode and can differ, for example when an EAGER replication temporarily behaves as LAZY while a replication gap exists after failure.
 
 For parallel Sender threads:
 
@@ -4505,18 +4506,19 @@ FROM V$DIRECT_PATH_INSERT;
 
 Purpose: store replication definitions, peer or collector hosts, replicated items, and Log Analyzer XLog Sender metadata.
 
-Key columns: `REPLICATION_NAME`, `IS_STARTED`, `XSN`, `ITEM_COUNT`, `CONFLICT_RESOLUTION`, `REPL_MODE`, `ROLE`, `OPTIONS`, `INVALID_RECOVERY`, `REMOTE_XSN`, `HOST_NO`, `HOST_IP`, `PORT_NO`, `CONN_TYPE`, `LOCAL_USER_NAME`, `LOCAL_TABLE_NAME`, `LOCAL_PARTITION_NAME`, `REMOTE_USER_NAME`, `REMOTE_TABLE_NAME`, `REMOTE_PARTITION_NAME`, `REPLICATION_UNIT`, `INVALID_MAX_SN`.
+Key columns: `REPLICATION_NAME`, `HOST_COUNT`, `IS_STARTED`, `XSN`, `ITEM_COUNT`, `CONFLICT_RESOLUTION`, `REPL_MODE`, `ROLE`, `OPTIONS`, `INVALID_RECOVERY`, `REMOTE_FAULT_DETECT_TIME`, `REMOTE_XSN`, `HOST_NO`, `HOST_IP`, `PORT_NO`, `CONN_TYPE`, `IB_LATENCY`, `LOCAL_USER_NAME`, `LOCAL_TABLE_NAME`, `LOCAL_PARTITION_NAME`, `REMOTE_USER_NAME`, `REMOTE_TABLE_NAME`, `REMOTE_PARTITION_NAME`, `REPLICATION_UNIT`, `INVALID_MAX_SN`.
 
 When to query: use these tables before interpreting replication health, CDC/Log Analyzer state, replication DDL, or peer endpoint questions. `ROLE IN (1, 4)` identifies Log Analyzer XLog Sender definitions.
 
 Representative SQL:
 
 ```sql
-SELECT replication_name, is_started, xsn, item_count, repl_mode, role, options
+SELECT replication_name, host_count, is_started, xsn, item_count,
+       conflict_resolution, repl_mode, role, options, remote_fault_detect_time
 FROM SYSTEM_.SYS_REPLICATIONS_
 ORDER BY replication_name;
 
-SELECT replication_name, host_no, host_ip, port_no, conn_type
+SELECT replication_name, host_no, host_ip, port_no, conn_type, ib_latency
 FROM SYSTEM_.SYS_REPL_HOSTS_
 ORDER BY replication_name, host_no;
 ```
@@ -4525,9 +4527,9 @@ ORDER BY replication_name, host_no;
 
 Purpose: show replication gap, synchronization progress, Sender state, Receiver state, network error flag, apply counters, target-column apply mode, and parallel Sender/Receiver thread state.
 
-Views: `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSYNC`, `V$REPSENDER`, `V$REPSENDER_PARALLEL`, `V$REPRECEIVER`, `V$REPRECEIVER_PARALLEL`, `V$REPRECEIVER_PARALLEL_APPLY`, `V$REPRECEIVER_COLUMN`.
+Views: `V$REPGAP`, `V$REPGAP_PARALLEL`, `V$REPSYNC`, `V$REPSENDER`, `V$REPSENDER_PARALLEL`, `V$REPOFFLINE_STATUS`, `V$REPRECEIVER`, `V$REPRECEIVER_PARALLEL`, `V$REPRECEIVER_PARALLEL_APPLY`, `V$REPRECEIVER_COLUMN`.
 
-Key columns: `REP_NAME`, `REP_GAP`, `REP_GAP_SIZE`, `READ_FILE_NO`, `READ_OFFSET`, `SYNC_TABLE`, `SYNC_PARTITION`, `SYNC_RECORD_COUNT`, `STATUS`, `NET_ERROR_FLAG`, `XSN`, `COMMIT_XSN`, `APPLY_XSN`, `PARALLEL_ID`, `PARALLEL_APPLIER_INDEX`, `INSERT_FAILURE_COUNT`, `UPDATE_FAILURE_COUNT`, `DELETE_FAILURE_COUNT`, `APPLY_MODE`.
+Key columns: `REP_NAME`, `REP_GAP`, `REP_GAP_SIZE`, `READ_FILE_NO`, `READ_OFFSET`, `SYNC_TABLE`, `SYNC_PARTITION`, `SYNC_RECORD_COUNT`, `START_FLAG`, `STATUS`, `NET_ERROR_FLAG`, `XSN`, `COMMIT_XSN`, `REPL_MODE`, `ACT_REPL_MODE`, `APPLY_XSN`, `SUCCESS_TIME`, `PARALLEL_ID`, `PARALLEL_APPLIER_INDEX`, `INSERT_FAILURE_COUNT`, `UPDATE_FAILURE_COUNT`, `DELETE_FAILURE_COUNT`, `APPLY_MODE`.
 
 When to query: use these views for lag, synchronization progress, Sender network state, Receiver apply failures, parallel replication, and Log Analyzer XLog Sender runtime checks.
 
@@ -4542,7 +4544,8 @@ SELECT rep_name, sync_table, sync_partition, sync_record_count
 FROM V$REPSYNC
 ORDER BY rep_name, sync_table, sync_partition;
 
-SELECT rep_name, status, net_error_flag, xsn, commit_xsn, sender_ip, peer_ip
+SELECT rep_name, start_flag, status, net_error_flag, xsn, commit_xsn,
+       repl_mode, act_repl_mode, sender_ip, peer_ip
 FROM V$REPSENDER
 ORDER BY rep_name;
 ```
