@@ -33,7 +33,7 @@ FCA-J031	Done	docs	C CLI ODBC and Precompiler catalog	Extract CLI, ODBC, Altibas
 FCA-J032	Done	docs	iSQL and iLoader catalog	Extract iSQL session commands, host variables, load/export workflows, iLoader options, files, examples, and diagnostics.
 FCA-J033	Done	docs	Utilities and operation tools catalog	Extract utility commands, options, outputs, diagnostics, dataCompJ, dump tools, AKU-related utility, and installed-tool guardrail items.
 FCA-J034	Done	docs	Migration and Oracle compatibility catalog	Extract Migration Center, Adapter for Oracle, conversion, unsupported objects, report, PSM review, validation, and Oracle-difference items.
-FCA-J035	ToDo	docs	DB Link and external connectors catalog	Extract DB Link, Hadoop, linker, connector setup, DB Link views/properties, third-party procedure, and validation items.
+FCA-J035	Done	docs	DB Link and external connectors catalog	Extract DB Link, Hadoop, linker, connector setup, DB Link views/properties, third-party procedure, and validation items.
 FCA-J036	ToDo	docs	Kubernetes AKU and cloud catalog	Extract container, Kubernetes, AKU, image, environment, lifecycle, replication/TLS caution, and operational caveat items.
 FCA-J037	ToDo	docs	Spatial NiFi Tableau and miscellaneous integration catalog	Extract Spatial SQL, GEOMETRY, altiShapeLoader, NiFi, Tableau, JDBC setting, third-party guide, and validation items.
 FCA-J038	ToDo	docs	Technical documents and cross-family support catalog	Extract source-backed items from selected technical documents and cross-family support files that are not fully owned by earlier catalog jobs.
