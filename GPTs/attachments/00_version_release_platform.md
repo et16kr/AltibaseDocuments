@@ -14,6 +14,15 @@
 - What upgrade risks apply to database binary versions, metadata, client protocol, and replication protocol?
 - What quick SQL should be used to check the running product version, meta version, protocols, and 8.1 feature properties?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning the long release and platform sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact version, patch, platform, or upgrade block.
+
+- Aliases and customer wording: version comparison, release notes, supported platforms, OS and CPU matrix, server support, client support, Windows client-only, database binary version, metadata version, communication protocol, replication protocol, upgrade risk, migration risk, patch caveat.
+- Exact-token anchors: `V$VERSION`, `product_version`, `meta_version`, `protocol_version`, `repl_protocol_version`, `JSON`, `Temporary LOB`, `KADA`, `Kafka`, `ABM`, `abm`, `OpenSSL 3.0.8`, `TLS 1.3`, `JDBC 4.2`, `AKU`, `REPLICATION_SSL_PORT_NO`.
+- Answer route: start here for release identity, supported platform, protocol, and feature-introduction questions, then route implementation details to the attachment that owns the feature.
+- Cross-file routing: installation and patch rollback use `01_getting_started_installation.md`; property defaults and ranges use `05_data_types_properties.md`; replication compatibility uses `09_replication_ha_cdc.md`; TLS details use `18_security_ssl_tls.md`; connector and tool procedures use `11_java_jdbc_spring.md` through `19_spatial_nifi_tableau_misc.md`.
+
 ## Source Documents
 
 - Altibase 7.1 Release Notes.
@@ -441,6 +450,15 @@ ORDER BY name;
 
 ## Minor Patch & Release Notes Caveats
 - **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific Altibase release notes (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
+
+## Attachment Cross-References
+
+- `01_getting_started_installation.md`: installer, package, first-run, startup, shutdown, and patch rollback procedures.
+- `02_administration_operations.md`: operational upgrade prerequisites, backup, recovery, and rollback safety checks.
+- `05_data_types_properties.md`: version-sensitive properties, data types, JSON, Temporary LOB, and range/default details.
+- `09_replication_ha_cdc.md`: replication protocol compatibility, DDL synchronization, receive-only, and replication SSL operations.
+- `11_java_jdbc_spring.md`, `12_c_cli_odbc_precompiler.md`, and `18_security_ssl_tls.md`: client protocol, driver, Java, ODBC/CLI, OpenSSL, and TLS details.
+- `14_utilities_operation_tools.md`, `17_kubernetes_aku_cloud.md`, and `19_spatial_nifi_tableau_misc.md`: release-note-routed tool, AKU, KADA/Kafka/ABM, Spatial, NiFi, Tableau, and miscellaneous integration topics.
 
 ## Residual Scope
 

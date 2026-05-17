@@ -14,6 +14,15 @@
 - What checks should be run before and after operational SQL?
 - What differs between memory tablespaces, disk tablespaces, volatile tablespaces, archive log mode, and noarchive log mode?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning the long administration runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact account, backup, recovery, tablespace, datafile, or log-anchor block.
+
+- Aliases and customer wording: administration, operations, runbook, backup, restore, recover, incomplete recovery, media recovery, archive log mode, noarchive log mode, loganchor, checkpoint image, datafile rename, tablespace resize, user and role administration, privileges, storage lifecycle, destructive operation.
+- Exact-token anchors: `SYS`, `SYSTEM_`, `SYS_TBS_MEM_DIC`, `SYS_TBS_MEM_DATA`, `SYS_TBS_DISK_DATA`, `SYS_TBS_DISK_TEMP`, `SYS_TBS_DISK_UNDO`, `CREATE_LSN_FILENO`, `CURRSIZE`, `OPENED`, `BEGIN BACKUP`, `END BACKUP`, `ALTER DATABASE RECOVER DATABASE`, `ALTER DATABASE db_name META RESETLOGS`, `ALTER DATABASE dbname SERVICE`, `RESETLOGS`, `DROP TABLESPACE`, `DISCARD`, `REUSE`.
+- Answer route: use this file for operational decision steps and safety checks; use `03_sql_ddl_generation.md` for generated SQL syntax and examples; use `06_data_dictionary_performance_views.md` for object, space, backup, log, and state verification queries.
+- Stop condition: for destructive actions or recovery, require version, startup phase, database mode, target object or file, backup status, archive-log state, replication state, downtime window, and rollback plan before giving production-ready steps.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Administrator's Manual.

@@ -16,6 +16,15 @@
 - Convert Oracle-style DDL into Altibase DDL while preserving object names and checking Altibase-specific storage clauses.
 - Generate post-DDL verification SQL for meta tables, performance views, and properties.
 
+## Retrieval Alias Index
+
+Use this compact index before scanning syntax families and examples. It is intentionally redundant with later headings so lexical retrieval can land on the exact DDL, DCL, administrative SQL, or replication SQL block.
+
+- Aliases and customer wording: generate DDL, create tablespace, volatile tablespace, memory tablespace, disk tablespace, temporary tablespace, add datafile, add partition, table compression, LOB storage clause, create index, create sequence, create user, grant privilege, create replication, alter replication, backup SQL, recovery SQL.
+- Exact-token anchors: `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `ALTER TABLE ADD PARTITION`, `table_compression_clause`, `LOB(column_name)`, `CREATE INDEX`, `CREATE SEQUENCE`, `CREATE USER`, `GRANT`, `ALTER SYSTEM`, `ALTER SESSION`, `replication_host_ip`, `replication_host_port_no`, `IF EXISTS`, `IF NOT EXISTS`.
+- Answer route: use this file for syntax and copy-ready SQL generation; use `02_administration_operations.md` for operational preconditions and recovery cautions; use `05_data_types_properties.md` for property meanings and mutability; use `09_replication_ha_cdc.md` for replication state, topology, and compatibility.
+- Safety route: when DDL can commit prior DML or destroy/reuse storage, include the DDL transaction caveat and route to the operational stop conditions in `02_administration_operations.md`.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 SQL Reference; General Reference 1 and 2.

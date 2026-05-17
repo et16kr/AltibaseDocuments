@@ -50,6 +50,53 @@ gap. Keep concrete source paths and internal labels in support reports only. Cus
 attachments must remain English-normalized and must use `Altibase 8.1 verified source`
 for 8.1 customer-facing labels.
 
+## J018 Retrieval Structure Design Note
+
+Job `J018` adds a compact retrieval-routing layer to the upload attachment set without
+changing the 20-file boundary or broadening any Altibase product behavior. The
+benchmark evidence showed that lexical contexts were usually full but still missed or
+diluted exact token blocks, so the structural fix is to place a short
+`Retrieval Alias Index` near the top of every upload attachment.
+
+Each index uses the same shape:
+
+- customer aliases and alternative wording that should route to the file;
+- exact literal tokens that must remain searchable and answer-preserved;
+- the owning answer route for the file;
+- cross-file routing for neighboring domains;
+- missing-input or stop-condition guidance where unsafe or environment-specific
+  answers require customer evidence.
+
+This is a retrieval and documentation-structure change only. It does not add new
+source claims; product facts, SQL grammar, numeric limits, property behavior, error
+cause/action, and operational cautions remain owned by the source-backed blocks later
+in each attachment.
+
+## J018 Retrieval Routing Matrix
+
+| Attachment | Retrieval aliases strengthened | Primary cross-routes |
+| --- | --- | --- |
+| `00_version_release_platform.md` | release notes, supported platforms, protocol versions, upgrade risk, patch caveats | `01`, `05`, `09`, `18`, tool and connector attachments |
+| `01_getting_started_installation.md` | install, first database, startup phases, shutdown modes, patch rollback, PSM catalog loading | `00`, `02`, `03`, `05`, `07`, `13` |
+| `02_administration_operations.md` | backup, restore, recover, archive log, loganchor, tablespaces, accounts, privileges, destructive operation | `03`, `06`, `07`, `13` |
+| `03_sql_ddl_generation.md` | DDL, DCL, tablespace, partition, LOB storage, user, privilege, replication SQL, property SQL | `02`, `04`, `05`, `06`, `09` |
+| `04_sql_dml_oracle_compatibility.md` | Oracle SQL rewrite, DML, functions, regex, queue DML, JSON SQL, identifier differences | `03`, `05`, `08`, `10`, `15` |
+| `05_data_types_properties.md` | data types, property defaults/ranges, `V$PROPERTY`, dynamic/static changes, path and security properties | `03`, `06`, `08`, `09`, `18` |
+| `06_data_dictionary_performance_views.md` | dictionary tables, performance views, object checks, wait/lock/session, replication and monitoring checks | `05`, `08`, `09`, `18` |
+| `07_error_messages_troubleshooting.md` | exact error codes, `altierr`, SQLCODE, cause/action, logs, startup, SQL, replication, SSL, tool errors | `02`, `03`, `09`, `11`, `12`, `13`, `14`, `18` |
+| `08_performance_tuning_monitoring.md` | execution plans, plan nodes, hints, statistics, plan cache, result cache, Monitoring API, SNMP | `05`, `06`, `07`, `10` |
+| `09_replication_ha_cdc.md` | replication topology/state, LAZY/EAGER, CDC, Log Analyzer, RepMgr, replication SSL, network diagnostics | `03`, `06`, `16`, `18` |
+| `10_psm_stored_external_procedures.md` | PSM, procedures, functions, packages, triggers, user-defined types, external procedures | `03`, `04`, `05`, `12` |
+| `11_java_jdbc_spring.md` | JDBC URL, driver class/JAR, Java compatibility, Spring, Hibernate, failover, JDBC SSL, Adapter for JDBC | `05`, `16`, `18` |
+| `12_c_cli_odbc_precompiler.md` | CLI, ODBC, ACI, APRE, DSN, diagnostics, LOB APIs, embedded SQL | `07`, `13`, `18` |
+| `13_isql_iloader_basic_tools.md` | iSQL, iLoader, scripts, host variables, export/import, FORM files, bad/log files, LOB files | `02`, `07`, `14`, `19` |
+| `14_utilities_operation_tools.md` | `aexport`, `altiComp`, `dataCompJ`, dump tools, `altierr`, `checkServer`, `server`, AKU utility | `09`, `13`, `17` |
+| `15_migration_oracle_compatibility.md` | Migration Center, Adapter for Oracle, Oracle conversion, validation, `oraAdapter`, JSON migration | `03`, `04`, `05`, `14`, `19` |
+| `16_dblink_external_connectors.md` | DB Link, AltiLinker, Hadoop/Sqoop, DBeaver, Hibernate, OpenLDAP, GoldenGate, connector CDC/TLS boundaries | `03`, `06`, `09`, `11`, `12`, `18` |
+| `17_kubernetes_aku_cloud.md` | Kubernetes, Pod, Deployment, StatefulSet, AKU lifecycle, dynamic Pod IP, abnormal termination | `09`, `14`, `18` |
+| `18_security_ssl_tls.md` | SSL/TLS, certificates, JDBC/ODBC/iSQL TLS, ciphers, FIPS, ordinary-vs-replication port separation | `09`, `11`, `12`, `13`, `16` |
+| `19_spatial_nifi_tableau_misc.md` | Spatial SQL, `GEOMETRY`, SRID, shapefile import/export, NiFi, Tableau, JDBC fields | `05`, `13`, `15`, `18` |
+
 ## Source Policy For This Matrix
 
 - Default supported answer scope: Altibase 7.1, 7.3, and 8.1.

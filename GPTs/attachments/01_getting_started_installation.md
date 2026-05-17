@@ -15,6 +15,15 @@
 - Which customer inputs are required before giving final platform, package, startup, or shutdown guidance?
 - What version-specific installation differences matter for 7.1, 7.3, and 8.1?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning the installation runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact first-start, environment, startup, shutdown, or patch block.
+
+- Aliases and customer wording: install Altibase, server package, client package, post-install, first database, create database, startup phases, ordinary users cannot connect, shutdown modes, license file, patch rollback, APatch, PSM catalog loading.
+- Exact-token anchors: `$ALTIBASE_HOME`, `$ALTIBASE_HOME/conf/altibase_user.env`, `$ALTIBASE_HOME/conf/license`, `$ALTIBASE_HOME/install/pre_install.sh`, `$ALTIBASE_HOME/install/post_install.sh`, `post_install.sh dbcreate`, `server create`, `server start`, `server stop`, `server downgrade`, `isql`, `catproc.sql`, `PRE-PROCESS`, `PRE_PROCESS`, `PROCESS`, `CONTROL`, `META`, `SERVICE`.
+- Answer route: use this file for package and first-run sequencing; use `02_administration_operations.md` when the question moves from first start into backup, recovery, storage, accounts, privileges, or tablespace operation.
+- Missing-input trigger: before copy-ready installation or patch commands, ask for exact Altibase version and patch, server or client package target, OS and CPU architecture, `ALTIBASE_HOME`, port, character sets, license state, and whether installer database-creation properties were supplied.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Getting Started Guide; Altibase 7.1 Installation Guide; Altibase 7.1 Release Notes; Supported Platforms.
@@ -723,6 +732,15 @@ server start
 isql -s 127.0.0.1 -u sys -p manager
 server stop
 ```
+
+## Attachment Cross-References
+
+- `00_version_release_platform.md`: supported platform, release-note, binary version, metadata version, and patch prerequisite decisions before installation or upgrade.
+- `02_administration_operations.md`: ongoing startup/shutdown operation, account administration, backup, recovery, tablespace, datafile, and log-anchor work after first start.
+- `03_sql_ddl_generation.md`: generated `CREATE DATABASE`, startup-phase SQL, property SQL, and administrative SQL examples when the customer asks for syntax.
+- `05_data_types_properties.md`: property defaults and path settings such as `DB_NAME`, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, and `SERVER_MSGLOG_DIR`.
+- `07_error_messages_troubleshooting.md`: installer, startup, listener, license, package, and first-run failure evidence handling.
+- `13_isql_iloader_basic_tools.md`: iSQL connection, script execution, and output checks after installation.
 
 ## Residual Scope
 

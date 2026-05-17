@@ -18,6 +18,15 @@
 - Which dictionary and performance view checks are version-sensitive in 8.1?
 - How should a GPT answer data dictionary questions in the user's language while preserving SQL names and object names literally?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning dictionary and performance-view cookbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact object, column, view, wait, lock, backup, replication, audit, or monitoring check SQL block.
+
+- Aliases and customer wording: data dictionary, meta table, performance view, system view, object lookup, column lookup, property check, session wait, lock wait, transaction wait, tablespace free space, backup history, replication status, Monitoring API mapping, SNMP metric.
+- Exact-token anchors: `SYSTEM_.SYS_TABLES_`, `SYS_COLUMNS_`, `SYS_INDICES_`, `SYS_CONSTRAINTS_`, `V$PROPERTY`, `V$VERSION`, `V$SESSION`, `V$STATEMENT`, `V$LOCK`, `V$TRANS`, `V$WAIT`, `SID`, `TX_ID`, `TRANS_ID`, `WAIT_CLASS`, `WAIT_FOR_TRANS_ID`, `V$ACCESS_LIST`, `V$REPSENDER`, `V$REPRECEIVER`, `START_FLAG`, `NET_ERROR_FLAG`, `QUERY`, `UPDATE_TX_COUNT`, `GC_ALREADY_SYNC_COUNT`, `OPTIMIZER_PERFORMANCE_VIEW`.
+- Answer route: use this file for verification SQL and column names; use `05_data_types_properties.md` for property semantics; use `08_performance_tuning_monitoring.md` for tuning interpretation; use `09_replication_ha_cdc.md` for replication operations and unsafe state changes.
+- Safety route: performance views are read-only inspection surfaces for customer answers; do not recommend direct DML against `SYSTEM_.SYS_*` meta tables.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 General Reference 2.

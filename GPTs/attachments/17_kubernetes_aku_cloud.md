@@ -18,6 +18,15 @@
 - How can I verify that AKU synchronization and replication reset completed?
 - What cautions apply to abnormal Pod termination, master Pod failure, and accumulated replication logs?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning Kubernetes and AKU runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact Pod, Deployment, StatefulSet, Service, AKU lifecycle, replication, or cleanup block.
+
+- Aliases and customer wording: Altibase on Kubernetes, container deployment, Pod, Deployment, StatefulSet, headless Service, ConfigMap, PVC, startupProbe, AKU, scale up, scale down, Pod termination, master Pod failure, dynamic Pod IP, Kubernetes replication.
+- Exact-token anchors: `Pod`, `Deployment`, `StatefulSet`, `Service`, `ConfigMap`, `PersistentVolumeClaim`, `podManagementPolicy: OrderedReady`, `publishNotReadyAddresses: true`, `startupProbe`, `/tmp/aku_start_completed`, `terminationGracePeriodSeconds`, `MODE=daemon`, `MODE=replication`, `AKU_SERVER_COUNT`, `REPLICATIONS`, `aku -p start`, `aku -p end`, `aku -p clean`, `AKU_REPLICATION_RESET_AT_END`.
+- Answer route: use this file for Kubernetes object patterns and AKU lifecycle; use `09_replication_ha_cdc.md` for replication object SQL and unsafe state changes; use `14_utilities_operation_tools.md` for utility command context; use `18_security_ssl_tls.md` for TLS/certificate placement.
+- Stop condition: before production or cleanup commands, ask for Altibase version, Kubernetes version, image, storage class, replica count, target tables, backup status, replication state, downtime window, and recovery plan.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Installation Guide, Administrator's Manual, Replication Manual, Utilities Manual, and Altibase AKU Sample Guide for Kubernetes.

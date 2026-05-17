@@ -14,6 +14,15 @@
 - Which Oracle-style functions, expressions, operators, and predicates are available, and which Altibase differences should be checked?
 - How should 8.1 JSON functions such as `JSON_VALUE` and `JSON_QUERY` be used?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning DML and function families. It is intentionally redundant with later headings so lexical retrieval can land on the exact DML, expression, queue, JSON, or Oracle-difference block.
+
+- Aliases and customer wording: Oracle SQL compatibility, SELECT rewrite, INSERT SELECT, multiple delete, multiple update, MERGE, row limiting, queue ENQUEUE, queue DEQUEUE, regex function, JSON function, JSON path, outer join, full outer join, semi join, anti join, identifier case, quoted name.
+- Exact-token anchors: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `RETURNING`, `RETURN`, `TOP`, `LIMIT`, `NON-AUTOCOMMIT`, `multiple_update`, `multiple_delete`, `FIFO`, `LIFO`, `WAIT`, `NOWAIT`, `JSON_VALUE`, `JSON_QUERY`, `JSON_EXISTS`, `JSON_VALID`, `IS JSON`, `POSIX Basic Regular Expression`, `occurrence`, `replace_string`, `arg1`, `expr1`, `A-Z`, `a-z`, `0-9`, `D$`, `X$`.
+- Answer route: use this file for executable DML and Oracle-difference answers; use `03_sql_ddl_generation.md` for object creation and storage clauses; use `05_data_types_properties.md` for data type limits and JSON/Temporary LOB prerequisites; use `15_migration_oracle_compatibility.md` for tool-assisted migration.
+- Version route: answer JSON SQL from the Altibase 8.1 verified source baseline, and do not generate JSON functions for 7.1 or 7.3 unless the customer provides a supported compatibility layer.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 SQL Reference; General Reference 1 for `REGEXP_MODE`.
@@ -1518,6 +1527,15 @@ Say:
 ```text
 `JSON_ARRAY`, `JSON_OBJECT`, `JSON_EXISTS`, `JSON_QUERY`, `JSON_VALUE`, `JSON_VALID`, and `IS JSON` are Altibase 8.1 features in the Altibase 8.1 verified source. For 7.1 or 7.3, do not generate these functions unless the customer has a custom compatibility layer.
 ```
+
+## Attachment Cross-References
+
+- `03_sql_ddl_generation.md`: DDL, DCL, tablespace, table, index, queue definition, user, privilege, and replication SQL syntax.
+- `05_data_types_properties.md`: data type limits, LOB, JSON, Temporary LOB, property, and session-setting details.
+- `06_data_dictionary_performance_views.md`: check SQL for objects, columns, queues, plan cache, and version-sensitive views or columns.
+- `08_performance_tuning_monitoring.md`: plan interpretation, hints, statistics, join methods, and optimizer tuning.
+- `10_psm_stored_external_procedures.md`: PSM, package, trigger, anonymous block, dynamic SQL, and external procedure syntax.
+- `15_migration_oracle_compatibility.md`: Migration Center, Adapter for Oracle, and broader Oracle-to-Altibase conversion workflow.
 
 ## Residual Scope
 

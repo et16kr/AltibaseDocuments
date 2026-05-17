@@ -17,6 +17,15 @@
 - How should replication compatibility, protocol version, network diagnostics, and replication gaps be checked?
 - Which target objects, columns, storage combinations, topology states, and mode/option combinations are eligible for replication?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning topology, state, SQL, CDC, RepMgr, TLS, and network runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact replication mode, state, property, view, or unsafe-operation block.
+
+- Aliases and customer wording: replication basics, HA, Active-Active, Master-Slave Scheme, User-Oriented Scheme, LAZY, EAGER, replication gap, sender, receiver, XLog, Restart SN, SQL apply, DDL synchronization, failback, CDC, Log Analyzer, RepMgr, Replication Manager, replication SSL, network diagnostics.
+- Exact-token anchors: `Local Server`, `Remote Server`, `Sender`, `Receiver`, `XLog`, `Restart SN`, `Replication Gap`, `ACT_REPL_MODE`, `REPL_MODE`, `XSN`, `restartXSN`, `START_FLAG`, `STATUS`, `NET_ERROR_FLAG`, `FOR ANALYSIS`, `ALA_FAILURE`, `Handshake`, `PROPAGATION`, `QUICKSTART`, `Autocommit`, `v$repreceiver`, `sendq`, `recvq`, `tcpdump`, `wireshark`, `USING SSL`, `REPLICATION_SSL_PORT_NO`.
+- Answer route: use this file for replication and CDC operations; use `03_sql_ddl_generation.md` for generated `CREATE REPLICATION` syntax; use `06_data_dictionary_performance_views.md` for check SQL; use `18_security_ssl_tls.md` only for ordinary client/server TLS or the replication SSL certificate boundary.
+- Stop condition: before `ALTER REPLICATION`, `RESET`, failback, DDL synchronization, offline replication, or receive-only changes, require version, protocol, topology, archive-log and backup status, replication gap, affected objects, and rollback plan.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Replication Manual; Altibase 7.1 Log Analyzer User's Manual; Replication Manager User's Manual and release notes.

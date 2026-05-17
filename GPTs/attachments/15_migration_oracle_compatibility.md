@@ -14,6 +14,15 @@
 - How are Oracle objects, defaults, character lengths, and JSON columns converted?
 - When should `oraAdapter` be used, and how is DDL handled while it is applying Altibase changes to Oracle?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning migration, adapter, and Oracle-difference sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact Migration Center, oraAdapter, conversion, validation, or rewrite block.
+
+- Aliases and customer wording: Oracle migration, Migration Center, schema migration, data migration, DB to DB, DB to File, Prepare, Build, Reconcile, Run, Data Validation, empty string, PSM conversion, partition conversion, oraAdapter, Adapter for Oracle, Oracle differences, Altibase to Altibase logical migration.
+- Exact-token anchors: `Migration Center`, `7.19`, `Prepare`, `Build`, `Reconcile`, `Run`, `Data Validation`, `Write to CSV`, `Oracle Database 10gR2`, `Oracle Database 12.2.0.1.0`, `Altibase 6.5.1`, `Altibase Log Analysis API`, `oraAdapter`, `Primary Key`, `aexport`, `DBMS_METADATA`, `JSON`.
+- Answer route: use this file for migration planning and tool workflow; use `03_sql_ddl_generation.md` for converted DDL; use `04_sql_dml_oracle_compatibility.md` for SQL rewrites; use `05_data_types_properties.md` for data type and JSON limits; use `14_utilities_operation_tools.md` for `aexport`.
+- Missing-input trigger: before production migration steps, ask for source Oracle version, target Altibase version, source and target character sets, storage design, object list, PSM use, downtime window, backup/rollback plan, and whether applications continue writing.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Adapter for Oracle User's Manual; Migration Center User's Manual.

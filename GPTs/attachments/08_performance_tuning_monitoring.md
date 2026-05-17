@@ -18,6 +18,15 @@
 - How should SNMP, `ALTIBASE-MIB`, `altiPropertyTable`, `altiStatus`, and `altiTrap` be explained?
 - What is safe to say about the Altibase 8.1 JSON-format execution plan?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning tuning, plan, statistics, monitoring, and SNMP sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact plan-node, hint, wait, optimizer, or monitoring API block.
+
+- Aliases and customer wording: performance tuning, optimizer, explain plan, transformed plan, plan tree, full table scan, index scan, join method, statistics, hints, SQL plan cache, result cache, server tuning, monitoring API, SNMP, lock wait, wait event, query processing model.
+- Exact-token anchors: `EXPLAIN PLAN`, `DBMS_STATS`, `DBMS_SQL_PLAN_CACHE`, `full table scan`, `FIXED KEY RANGE`, `VARIABLE KEY RANGE`, `Logical Plan Generator`, `Physical Plan Generator`, `Query Rewriter`, `SQL hints`, `/*+ hint */`, `USE_HASH`, `USE_SORT`, `NO_USE_HASH`, `NO_INDEX`, `TEMP_TBS_MEMORY`, `TEMP_TBS_DISK`, `ALTIBASE_MONITOR`, `altisnmpd`, `libodbccli.a`.
+- Answer route: use this file for tuning interpretation, optimizer flow, plan nodes, hints, Monitoring API, and SNMP setup; use `06_data_dictionary_performance_views.md` for exact view and column check SQL; use `05_data_types_properties.md` for optimizer and cache property defaults.
+- Safety route: do not promise a tuning fix from a single plan token; ask for SQL text, plan output, bind values if relevant, statistics state, object DDL, target version, and observed waits or metrics.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Performance Tuning Guide; SQL Reference; Stored Procedures Manual; General Reference data dictionary manual; General Reference property manual; Monitoring API Developer's Guide; SNMP Agent Guide.

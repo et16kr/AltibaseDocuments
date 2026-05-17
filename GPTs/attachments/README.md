@@ -79,9 +79,11 @@ syntax ambiguous, keep that portion in English and explain it in the user's lang
 Until final cleanup, each attachment should keep these sections:
 
 - `Applicable Versions`
-- `Source Documents`
 - `Questions This File Can Answer`
+- `Retrieval Alias Index`
+- `Source Documents`
 - `Core Guidance`
+- `Attachment Cross-References`
 - `Version Differences`
 - `Residual Scope Notes`
 
@@ -89,6 +91,12 @@ Use compact, searchable item blocks for large reference tables. Use BNF-like tex
 SQL syntax diagrams. Use Mermaid only when it helps explain graphs, flows, states,
 architecture, topology, or sequences. Replace UI screenshots with procedural text and
 clear input or value descriptions.
+
+`Retrieval Alias Index` is a compact lexical-routing block near the top of each upload
+attachment. It should repeat customer wording, exact literal tokens, owning answer
+routes, cross-file routes, and missing-input triggers without adding new product
+behavior. Keep these blocks short; the goal is to point retrieval to the precise
+answer section, not to duplicate the full reference content.
 
 ## Mermaid And Visual Conversion Policy
 

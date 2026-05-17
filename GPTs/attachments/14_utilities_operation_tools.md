@@ -17,6 +17,15 @@
 - What are `altiAudit`, `altiMon`, `altierr`, `altiProfile`, dump-family tools, `checkServer`, and `server` used for?
 - Where is Replication Manager GUI workflow guidance covered?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning utility command blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact migration, comparison, synchronization, monitoring, diagnostic, or dump-family block.
+
+- Aliases and customer wording: utility, aexport, logical migration, altiComp, data comparison, data synchronization, dataCompJ, XML configuration, dumptrc, dumpla, dumpddf, altierr, altimon, altiMon, altiAudit, altiProfile, checkServer, server command, AKU utility.
+- Exact-token anchors: `aexport`, `altiComp`, `dataCompJ`, `SYNC`, `SU`, `SI`, `MI`, `SD`, `Connections`, `Options`, `TablePairs`, `Materialized View`, `altierr`, `dumptrc`, `dumpla`, `dumpddf`, `checkServer`, `server`, `aku -p start`, `aku -p end`, `aku -p clean`, `ERR-00015`, `ERR-91144`.
+- Answer route: use this file for utilities and diagnostics; use `13_isql_iloader_basic_tools.md` for iSQL and iLoader; use `17_kubernetes_aku_cloud.md` for Kubernetes AKU lifecycle; use `09_replication_ha_cdc.md` for Replication Manager topology and operation context.
+- Stop condition: before `SYNC`, `aku -p clean`, generated import scripts, or corrective utility commands, require version, target host, port, database role, backup status, replication status, downtime window, and rollback plan.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Utilities Manual; dataCompJ User's Manual where applicable.

@@ -19,6 +19,15 @@
 - How does OpenLDAP `back-sql` connect to Altibase through ODBC metadata mapping?
 - How should Oracle GoldenGate for Big Data target Altibase through its JDBC Handler?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning DB Link and connector sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact DB Link, AltiLinker, Hadoop, DBeaver, Hibernate, OpenLDAP, GoldenGate, CDC, or TLS boundary block.
+
+- Aliases and customer wording: DB Link, database link, AltiLinker, remote database, Hadoop Connector, Sqoop, DBeaver, Hibernate, OpenLDAP back-sql, GoldenGate JDBC Handler, external connector, connector TLS, CDC connector boundary.
+- Exact-token anchors: `DBLINK_ENABLE`, `ALTILINKER_ENABLE`, `ALTILINKER_PORT_NO`, `AltiLinker`, `V$DBLINK_ALTILINKER_STATUS`, `V$DBLINK_DATABASE_LINK_INFO`, `REMOTE_TABLE`, `REMOTE_EXECUTE_IMMEDIATE`, `sqoop import`, `sqoop export`, `--connection-manager com.altibase.sqoop.manager.AltibaseManager`, `AltibaseDialect`, `Altibase.jdbc.driver.AltibaseDriver`, `DB Connections`, `Replication Pairs`, `FOR ANALYSIS`, `XLog Sender`, `Log Analysis API`, `gg.handler.jdbcwriter.DriverClass`.
+- Answer route: use this file for connector workflow and DB Link; use `11_java_jdbc_spring.md` for generic JDBC URL and framework properties; use `18_security_ssl_tls.md` for TLS setup; use `09_replication_ha_cdc.md` for CDC/Log Analyzer and Replication Manager operations.
+- Missing-input trigger: ask for Altibase version, remote DBMS, JDBC driver version, Java version, target host and port, transaction level, connector version, SSL/TLS requirement, and firewall context before production integration commands.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 DB Link User's Manual; Hadoop Connector User's Manual; Altibase 7.1 General Reference; Korean Altibase 3rd Party Connector Guide for 7.1-or-later and GoldenGate baseline statements.
@@ -1639,6 +1648,15 @@ Oracle GoldenGate failures:
 - Confirm `gg.handler.jdbcwriter.DriverClass`, `gg.handler.jdbcwriter.connectionURL`, `gg.handler.jdbcwriter.userName`, `gg.handler.jdbcwriter.password`, and `gg.classpath`.
 - Confirm the Altibase target user and table names in the `MAP` clause are double-quoted.
 - For missing, truncated, or rounded values, check the source-documented Oracle-to-Altibase data type compatibility cautions before changing connector settings.
+
+## Attachment Cross-References
+
+- `03_sql_ddl_generation.md`: DB Link SQL and generated object/privilege SQL when syntax details are needed.
+- `06_data_dictionary_performance_views.md`: DB Link, AltiLinker, connector, session, and object verification views.
+- `09_replication_ha_cdc.md`: Log Analyzer CDC, XLog Sender, XLog Collector, Replication Manager, and replication network operations.
+- `11_java_jdbc_spring.md`: JDBC URL, driver class, driver JAR, connection attributes, Spring, and Hibernate application settings.
+- `12_c_cli_odbc_precompiler.md`: ODBC DSN, OpenLDAP ODBC mapping, and C/ODBC diagnostic details.
+- `18_security_ssl_tls.md`: ordinary client/server TLS, certificates, ciphers, truststores, and port separation.
 
 ## Residual Scope
 

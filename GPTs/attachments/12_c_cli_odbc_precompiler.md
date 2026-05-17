@@ -18,6 +18,15 @@
 - What are the core Altibase C Interface calls for direct SQL and prepared statements?
 - How are APRE embedded SQL programs precompiled, connected, committed, and linked?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning CLI, ODBC, C Interface, and Precompiler sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact API, connection string, LOB, diagnostic, or APRE block.
+
+- Aliases and customer wording: CLI, ODBC, C Interface, ACI, APRE, embedded SQL, precompiler, DSN, SQLDriverConnect, diagnostics, SQLSTATE, autocommit, commit, rollback, LOB locator, file LOB, empty LOB, JSON LOB cleanup, ODBC SSL.
+- Exact-token anchors: `SQLDriverConnect`, `SQLConnect`, `SQLAllocHandle`, `SQLExecDirect`, `SQLPrepare`, `SQLExecute`, `SQLFetch`, `SQLGetDiagRec`, `DSN=ALTIBASE;LongDataCompat=ON`, `ALTIBASE_HDB_ODBC_64bit`, `BLOB`, `CLOB`, `GEOMETRY`, `SQLCA`, `SQLEmptyLob()`, `SQLGetLobLength2()`, `GET DIAGNOSTICS`, `EXEC SQL`, `COMMIT`, `ROLLBACK`.
+- Answer route: use this file for C-facing API and compile guidance; use `18_security_ssl_tls.md` for server/client TLS setup; use `07_error_messages_troubleshooting.md` for exact native error-code cause/action; use `13_isql_iloader_basic_tools.md` when the task is tool-based export/import rather than application code.
+- Missing-input trigger: for compile-ready C or APRE guidance, ask for Altibase version, client package version, OS, compiler, driver manager, `SQLLEN` size, connection method, character set, SSL/TLS requirement, autocommit mode, and LOB sizes.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 CLI User's Manual; ODBC User's Manual; Altibase C Interface Manual; Precompiler User's Manual.

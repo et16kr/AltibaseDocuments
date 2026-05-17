@@ -17,6 +17,15 @@
 - How should external libraries be deployed, validated, and troubleshot?
 - How do 8.1 Temporary LOB rules affect PSM variables and collections?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning PSM, package, trigger, type, and external procedure sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact procedure, function, anonymous block, type, pragma, or external library block.
+
+- Aliases and customer wording: stored procedure, stored function, PSM, anonymous block, trigger body, package, package body, user-defined type, associative array, varray, cursor, ref cursor, dynamic SQL, exception, pragma, external procedure, external library, C external function.
+- Exact-token anchors: `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE PACKAGE`, `CREATE PACKAGE BODY`, `RETURN`, `DETERMINISTIC`, `AUTHID`, `NOCOPY`, `ASSOCIATIVE ARRAY`, `VARRAY`, `TYPESET`, `OPEN FOR`, `END;`, `CREATE LIBRARY`, `LANGUAGE C`, `EXTERNAL NAME`, `PRAGMA AUTONOMOUS_TRANSACTION`, `PRAGMA EXCEPTION_INIT`, `DBMS_OUTPUT`.
+- Answer route: use this file for PSM generation and external procedure deployment; use `04_sql_dml_oracle_compatibility.md` for SQL inside PSM; use `05_data_types_properties.md` for type limits; use `12_c_cli_odbc_precompiler.md` for C interface details outside the external procedure contract.
+- Safety route: external procedure answers must ask for target OS, Altibase version, compiler/runtime ABI, library path, parameter types, and deployment privileges before production commands.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Stored Procedures Manual; External Procedures Manual; SQL Reference; General Reference.

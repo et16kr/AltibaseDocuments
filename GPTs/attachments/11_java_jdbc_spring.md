@@ -17,6 +17,15 @@
 - How is Adapter for JDBC installed, configured, started, stopped, and constrained?
 - How should common JDBC SQLSTATE values be interpreted during troubleshooting?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning JDBC, Spring, Hibernate, and Adapter sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact URL, driver, connection attribute, Java version, API, or framework block.
+
+- Aliases and customer wording: JDBC URL, driver class, Altibase.jar, Altibase42.jar, Maven dependency, Spring Boot, Hibernate dialect, connection pool, failover, SSL JDBC, truststore, LOB handling, generated keys, Java compatibility, Adapter for JDBC, SQLSTATE troubleshooting.
+- Exact-token anchors: `jdbc:Altibase://host:port/database`, `Altibase.jdbc.driver.AltibaseDriver`, `Altibase.jar`, `Altibase42.jar`, `AltibaseDialect`, `hibernate-community-dialects`, `lob_null_select=off`, `fetch_enough=0`, `time_zone=DB_TZ`, `failover`, `(database1:20300, database2:20300)`, `Connection.isValid()`, `AltibaseJDBCType`, `reuse_resultset`, `stmt_cache_enable`.
+- Answer route: use this file for JDBC and Java framework configuration; use `18_security_ssl_tls.md` for certificate and cipher procedure; use `16_dblink_external_connectors.md` for connector workflows that happen to use JDBC; use `05_data_types_properties.md` for server-side property semantics.
+- Missing-input trigger: before production Java guidance, ask for Altibase server version, JDBC driver patch, Java version, framework version, host, port, database name, SSL/TLS requirement, failover topology, and connection pool.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 JDBC User's Manual; Adapter for JDBC User's Manual.

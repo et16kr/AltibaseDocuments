@@ -17,6 +17,15 @@
 - How do I handle CSV, custom delimiters, character sets, LOB data, date formats, bad rows, `structout`, `-displayquery`, `-partition`, `-geom WKB`, `-replication`, and performance options?
 - Which secure login and generated-file permission settings matter for iSQL and iLoader?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning iSQL and iLoader cookbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact command option, script, host-variable, load-mode, LOB, bad-row, or result-code block.
+
+- Aliases and customer wording: iSQL connect, iSQL script, iSQL output, host variables, PREPARE, object inspection, transaction command, iLoader export, iLoader import, load mode, CSV delimiter, FORM file, bad file, log file, errors limit, LOB file, geom WKB, replication load, secure login.
+- Exact-token anchors: `isql`, `CONNECT`, `-s`, `-u`, `-p`, `-f`, `-silent`, `PREPARE`, `HOST VARIABLE`, `-bad`, `-log`, `-errors`, `-KEEP_SYSDBA`, `APPEND`, `REPLACE`, `TRUNCATE`, `structout`, `-displayquery`, `-partition`, `-geom WKB`, `-replication`, `employees.dat`, `employees.fmt`, `t1.dat`, `t1.fmt`.
+- Answer route: use this file for direct iSQL/iLoader commands; use `14_utilities_operation_tools.md` for `aexport`, `altiComp`, `dataCompJ`, dump tools, and `altierr`; use `02_administration_operations.md` for backup/recovery decisions; use `07_error_messages_troubleshooting.md` for failed-load error handling.
+- Safety route: before production import, ask for version, target table, load mode, row count, character set, delimiter, LOB handling, replication impact, backup status, and retry plan.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 iSQL User's Manual; iLoader User's Manual.

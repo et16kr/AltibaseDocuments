@@ -15,6 +15,15 @@
 - How is Altibase 8.1 replication SSL configured with `USING SSL` and `REPLICATION_SSL_PORT_NO`?
 - How can SSL/TLS sessions be verified, restricted, monitored, or closed?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning TLS and certificate sections. It is intentionally redundant with later headings so lexical retrieval can land on the exact server SSL, client SSL, JDBC/ODBC/ADO.NET/iSQL, replication SSL, FIPS, port, or monitoring block.
+
+- Aliases and customer wording: SSL, TLS, certificate, server authentication, mutual authentication, client certificate, truststore, keystore, OpenSSL, Heartbleed, FIPS, cipher suite, JDBC SSL, ODBC SSL, iSQL SSL, replication SSL, ordinary TLS, TLS port separation.
+- Exact-token anchors: `SSL_ENABLE`, `SSL_PORT_NO`, `SSL_MAX_LISTEN`, `SSL_CLIENT_AUTHENTICATION`, `SSL_CERT`, `SSL_KEY`, `SSL_CA`, `SSL_CAPATH`, `SSL_CIPHER_LIST`, `SSL_CIPHER_SUITES`, `SSL_LOAD_CONFIG`, `ALTIBASE_SSL_LOAD_CONFIG=1`, `ALTIBASE_SSL_PORT_NO`, `CONNTYPE=SSL;PORT=20443`, `COMM_NAME`, `ALTER DATABASE database_name SESSION CLOSE session_number`, `USING SSL`, `REPLICATION_SSL_PORT_NO`, `REPLICATION_PORT_NO`, `OPENSSL_NO_HEARTBEATS`.
+- Answer route: use this file for certificate and TLS procedure; use `11_java_jdbc_spring.md` for JDBC URL attributes, `12_c_cli_odbc_precompiler.md` for ODBC/CLI connection keys, `13_isql_iloader_basic_tools.md` for iSQL/tool invocation, and `09_replication_ha_cdc.md` for replication topology and state.
+- Missing-input trigger: for production TLS changes, ask for exact Altibase version, client interface, server and client OS, OpenSSL version, authentication mode, certificate files, ciphers, target ports, and whether the connection is ordinary client/server or replication.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 SSL/TLS User's Guide; General Reference; iSQL and utility guidance where SSL ports are relevant.

@@ -18,6 +18,15 @@
 - What do properties such as `LOG_FILE_SIZE`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, and `REPLICATION_SSL_PORT_NO` mean?
 - What exact optimizer, `NORMALFORM_MAXIMUM`, lock escalation, timeout, autocommit, session locale, plan cache, result cache, and DDL-safety values should be preserved in a customer answer?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning data type and property blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact default, range, mutability, value-count, dynamic-change, or check-SQL block.
+
+- Aliases and customer wording: property default, property range, static property, dynamic property, environment variable precedence, `V$PROPERTY` check, data type limit, JSON type, Temporary LOB, result cache, plan cache, lock escalation, autocommit, session locale, database path, log path, replication property, TLS property.
+- Exact-token anchors: `V$PROPERTY`, `NAME`, `VALUE1`, `VALUE8`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `DB_NAME`, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `SERVER_MSGLOG_DIR`, `LOG_FILE_SIZE`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `NORMALFORM_MAXIMUM`, `NLS_TERRITORY`, `ACCESS_LIST_FILE`, `V$ACCESS_LIST`, `PERMIT`, `DENY`, `REPLICATION_SSL_PORT_NO`, `2097152`, `2^31`, `2^32 + 1`, `16777216`, `2147483648`.
+- Answer route: use this file for meanings, defaults, ranges, mutability, restart requirements, and property SQL; use `06_data_dictionary_performance_views.md` for view-column verification; use `03_sql_ddl_generation.md` only for generated `ALTER SYSTEM` or `ALTER SESSION` forms.
+- Missing-input trigger: for property change advice, ask for exact version, current `V$PROPERTY` row, whether the property is file, environment, system, or session scoped, and whether restart or recreation is acceptable.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 General Reference 1.

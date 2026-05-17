@@ -15,6 +15,15 @@
 - How should unresolved `stERR_*`, `sdERR_*`, overlapping `0x510xx`, or other exact-code gaps be handled without inventing a cause?
 - How should an error response be formatted so the answer is consistent in any user language?
 
+## Retrieval Alias Index
+
+Use this compact index before scanning troubleshooting blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact error code, SQLCODE, module symbol, cause/action, or evidence-preservation block.
+
+- Aliases and customer wording: error message, SQLCODE, ODBC return code, altierr lookup, startup failure, communication failure, lock timeout, deadlock, tablespace error, backup error, recovery error, SQL syntax error, property error, replication error, SSL error, utility error, APRE error.
+- Exact-token anchors: `altierr`, `ERR-`, `0x31010`, `0x31011`, `0x31012`, `0x31013`, `0x31014`, `0x31017`, `0x4102E`, `0x0001F`, `0x311B1`, `0x31293`, `0x4107C`, `ERR-91144`, `ERR-61186`, `mmERR_ABORT_INSUFFICIENT_PRIV`, `qpERR_ABORT_QCI_NotPermittedUser`, `qpERR_ABORT_QDP_INSUFFICIENT_PRIVILEGES`, `Unable to bind the INET socket`, `deadlock`, `long-term lock`.
+- Answer route: use this file for exact-code response format, cause/action, and first checks; route generated SQL to `03_sql_ddl_generation.md`, operational recovery to `02_administration_operations.md`, driver/API detail to `11_java_jdbc_spring.md`, `12_c_cli_odbc_precompiler.md`, `13_isql_iloader_basic_tools.md`, and `14_utilities_operation_tools.md`, replication to `09_replication_ha_cdc.md`, and TLS to `18_security_ssl_tls.md`.
+- Missing-input trigger: if the exact code, message, Altibase version, log excerpt, command, SQL text, or object name is missing, ask for it and give only the safest source-backed next check.
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 Error Message Reference.
