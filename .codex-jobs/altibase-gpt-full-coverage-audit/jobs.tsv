@@ -5,7 +5,7 @@ FCA-J003	Done	docs	Catalog schema and extraction scripts	Define the source item 
 FCA-J004	Done	docs	Release notes patch notes and platform catalog	Extract release, patch, feature, platform, upgrade, and exact version-boundary items into the source item catalog.
 FCA-J005	Done	docs	Installation and getting-started catalog	Extract installation, environment setup, database creation, startup, shutdown, licensing, and first-check items.
 FCA-J006	Done	docs	Administrator backup recovery archive and storage catalog	Extract backup, recovery, archive log, storage, server-mode, media-failure, and protected-operation items.
-FCA-J007	ToDo	docs	Administrator tablespace account privilege catalog	Extract tablespace, datafile, user, role, privilege, account, schema administration, and validation-check items.
+FCA-J007	Done	docs	Administrator tablespace account privilege catalog	Extract tablespace, datafile, user, role, privilege, account, schema administration, and validation-check items.
 FCA-J008	ToDo	docs	SQL Reference DDL storage table index catalog	Extract tablespace, datafile, table, partition, index, constraint, LOB storage, queue, and related DDL grammar items.
 FCA-J009	ToDo	docs	SQL Reference DCL admin replication destructive catalog	Extract DCL, user/privilege SQL, administrative SQL, replication SQL, Log Analyzer SQL, destructive SQL, privileges, and safety-boundary items.
 FCA-J010	ToDo	docs	SQL Reference DML expression and function catalog	Extract DML, predicates, expressions, built-in functions, regular expression, object-name, and syntax restriction items.
