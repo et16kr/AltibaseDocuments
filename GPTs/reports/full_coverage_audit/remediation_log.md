@@ -246,3 +246,37 @@ Each entry should include:
 - Residual risk: this job intentionally did not catalog JSON, LOB, or broader
   Oracle-difference rows because FCA-J011 owns those. No new `Missing` or
   `Retrieval-weak` rows were added by FCA-J010.
+
+### FCA-J011
+
+- Changed files: `source_item_catalog.tsv`, `missing_item_register.md`, and this
+  remediation log.
+- Product coverage changes: cataloged SQL Reference JSON functions and `IS JSON`,
+  General Reference 1 JSON data type, Temporary LOB, LOB storage modifier rules,
+  Oracle outer-join and semi/anti-join compatibility, and LOB helper functions only;
+  no customer-facing attachment text was changed and no original source documents
+  were edited.
+- Catalog totals added by this job: 15 rows total; 12 `Covered`, 1
+  `Covered-by-routing`, 2 `Missing`, 0 `Guardrail`, 0 `Out-of-scope`, and 0
+  `Retrieval-weak`.
+- Source evidence: Korean Altibase 8.1 verified-source SQL Reference JSON function
+  and `IS JSON` sections; Korean Altibase 8.1 verified-source General Reference 1
+  JSON type and Temporary LOB sections; Korean Altibase 7.3 General Reference 1
+  `FIXED`, `VARIABLE`, `IN ROW`, `BLOB`, and `CLOB` sections; Korean Altibase 7.1,
+  7.3, and 8.1 verified-source SQL Reference `EMPTY_BLOB` and `EMPTY_CLOB`
+  sections; and Korean Altibase 7.3 SQL Reference join sections.
+- Coverage status changes: JSON type and path-expression restrictions, Temporary
+  LOB lifecycle and checks, storage modifier rules, individual JSON function syntax
+  and defaults, `IS JSON`, SQL/JSON migration routing, and Oracle-style outer join
+  routing were mapped to existing answer-ready anchors. Two new `Missing` rows were
+  registered because `TO_CLOB`/`TO_BLOB` and `EMPTY_BLOB`/`EMPTY_CLOB` are only
+  indexed or mentioned in lifecycle lists, not represented as answer-ready function
+  blocks.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py check --require-registers`
+  passed with 368 catalog rows and 0 matrix rows; `git diff --check` passed;
+  `bash review/scripts/run_review_stage.sh validate` passed with 20 upload
+  attachments; review-report severity scan showed `Verdict: Pass` for R00-R27 and no
+  actionable severity rows.
+- Residual risk: later remediation jobs must close or route `SRC-SQL-8.1-000015`
+  and `SRC-SQL-XVER-000089` before final full-coverage readiness can have no
+  unresolved `Missing` dispositions.

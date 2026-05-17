@@ -22,6 +22,16 @@ Each entry should record:
 
 ## Active Missing Items
 
+### FCA-J011 SQL Reference JSON LOB Oracle Difference Missing Rows
+
+FCA-J011 cataloged 2 unresolved `Missing` rows for source-backed LOB helper function
+details that are not yet answer-ready in `04_sql_dml_oracle_compatibility.md`.
+
+| source_item_id | source_family | version_scope | source_path | source_heading | missing_fields | attachment_target | required_remediation | audit_job | evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SRC-SQL-8.1-000015 | sql_reference | 8.1 | Manuals/Altibase_trunk/kor/SQL Reference.md | SQL Reference > SQL functions > TO_CLOB and TO_BLOB | Answer-ready function blocks for `TO_CLOB(expr)` and `TO_BLOB(expr)`, including purpose, syntax, examples `to_clob('test clob')` and `to_blob(1234)`, 8.1 scope, Temporary LOB routing, and `V$TEMPORARY_LOBS` follow-up. | GPTs/attachments/04_sql_dml_oracle_compatibility.md | Add conversion-function item blocks under SQL Function Compatibility or a LOB helper section, and cross-link the Temporary LOB guidance in `05_data_types_properties.md`. | FCA-J011 | source locator: Manuals/Altibase_trunk/kor/SQL Reference.md lines 22831-22870 and General Reference 1 lines 2638-2649; attachment grep finds only function-index and Temporary LOB creation-case mentions |
+| SRC-SQL-XVER-000089 | sql_reference | cross-version | Manuals/Altibase_7.3/kor/SQL Reference.md | SQL Reference > SQL functions > EMPTY_BLOB and EMPTY_CLOB | Answer-ready function block for `EMPTY_BLOB()` and `EMPTY_CLOB()`, preserving `INSERT`, `UPDATE`, empty-state behavior, invisible data, `NOT NULL`, and the `empty_clob()` example. | GPTs/attachments/04_sql_dml_oracle_compatibility.md | Add a compact LOB helper function item that distinguishes empty LOB values from SQL `NULL` and routes broader LOB data type restrictions to `05_data_types_properties.md`. | FCA-J011 | source locator: Manuals/Altibase_7.1/kor/SQL Reference.md line 23756, Manuals/Altibase_7.3/kor/SQL Reference.md line 23853, and Manuals/Altibase_trunk/kor/SQL Reference.md line 24528; attachment grep finds only function-index mentions |
+
 ### FCA-J009 SQL Reference DCL Admin Replication Missing Rows
 
 FCA-J009 cataloged 1 unresolved `Missing` row for a source-backed audit-control
