@@ -1,6 +1,6 @@
 id	status	kind	title	goal
 J001	Done	docs	Failure inventory and remediation map	Turn the 2026-05-17 root-cause analysis into a source-backed remediation inventory that maps failed benchmark questions to attachment files, missing tokens, and customer answer patterns.
-J002	ToDo	docs	Customer answer contract and GPT instructions	Update the GPT answer contract so beginner and veteran customers receive complete source-backed answers with exact tokens, version boundaries, and safe escalation behavior.
+J002	Done	docs	Customer answer contract and GPT instructions	Update the GPT answer contract so beginner and veteran customers receive complete source-backed answers with exact tokens, version boundaries, and safe escalation behavior.
 J003	ToDo	docs	Exact token gap inventory	Source-check required tokens classed as absent or weakly retrievable, then write a prioritized token and syntax gap inventory before editing attachments.
 J004	ToDo	docs	Core identity path and storage properties	Strengthen core, identity, path, memory-directory, database-file, log-anchor, and storage property blocks for defaults, counts, mutability, and startup/restart behavior.
 J005	ToDo	docs	Memory disk volatile and log limit properties	Strengthen memory, disk, volatile, log-size, plan-cache, result-cache, and capacity-limit property blocks with exact defaults, ranges, units, and exceeded-limit behavior.
