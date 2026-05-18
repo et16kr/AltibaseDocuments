@@ -27,6 +27,8 @@ SOURCE_MANIFEST = ROOT / "GPTs/source_pack/source_manifest.tsv"
 SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
 CONFLICT_REGISTER = ROOT / "GPTs/reports/source_conflict_register.md"
 STAGE_01_SCOPE = ROOT / "GPTs/reports/stage_01_readiness_remediation_scope.tsv"
+CROSSWALK = ROOT / "GPTs/reports/source_pack_to_korean_aligned_english_crosswalk.tsv"
+AGENT_GAP_REGISTER = ROOT / "GPTs/reports/agent_playbook_gap_register.md"
 
 BASELINE_MARKDOWN = [
     BASELINE_DIR / "admin_operations_baseline.md",
@@ -38,6 +40,13 @@ BASELINE_MARKDOWN = [
     BASELINE_DIR / "performance_source_index_baseline.md",
     BASELINE_DIR / "replication_manager_baseline.md",
 ]
+
+REMEDIATION_BASELINE_FILES = {
+    "S1R-J002": BASELINE_DIR / "stored_external_procedures_baseline.md",
+    "S1R-J003": BASELINE_DIR / "monitoring_log_analyzer_baseline.md",
+    "S1R-J004": BASELINE_DIR / "performance_source_index_baseline.md",
+    "S1R-J005": BASELINE_DIR / "replication_manager_baseline.md",
+}
 
 REQUIRED_MARKDOWN_BLOCK_IDS = {
     "KAE-BLOCK-000277",
@@ -141,6 +150,10 @@ class MarkdownBlock:
 
 def clean(value: object) -> str:
     return "" if value is None else str(value).strip()
+
+
+def parts(value: str) -> list[str]:
+    return [item for item in value.split(";") if item]
 
 
 def rel(path: Path) -> str:
@@ -616,6 +629,175 @@ def validate_stage1_remediation_scope(
     )
 
 
+def validate_remediation_baseline_files(
+    errors: list[str],
+    checks: list[CheckResult],
+) -> None:
+    included_paths = {path.resolve() for path in BASELINE_MARKDOWN}
+    missing_from_validator = [
+        f"{job}:{rel(path)}"
+        for job, path in REMEDIATION_BASELINE_FILES.items()
+        if path.resolve() not in included_paths
+    ]
+    missing_on_disk = [
+        f"{job}:{rel(path)}"
+        for job, path in REMEDIATION_BASELINE_FILES.items()
+        if not path.exists()
+    ]
+
+    if missing_from_validator:
+        errors.append(
+            "S1R remediation baseline files missing from BASELINE_MARKDOWN: "
+            + "; ".join(missing_from_validator)
+        )
+    if missing_on_disk:
+        errors.append(
+            "S1R remediation baseline files missing on disk: "
+            + "; ".join(missing_on_disk)
+        )
+
+    checks.append(
+        CheckResult(
+            "S1R remediation baseline file coverage",
+            "Pass",
+            ", ".join(
+                f"{job}={rel(path)}"
+                for job, path in sorted(REMEDIATION_BASELINE_FILES.items())
+            ),
+        )
+    )
+
+
+def validate_stage1_crosswalk_closure(
+    errors: list[str],
+    checks: list[CheckResult],
+    scope_rows: list[dict[str, str]],
+    crosswalk_rows: list[dict[str, str]],
+    manifest_by_id: dict[str, dict[str, str]],
+) -> None:
+    crosswalk_by_source = {
+        row["source_id"]: row
+        for row in crosswalk_rows
+        if row.get("crosswalk_row_type") == "source_pack_source"
+    }
+    conf8_counts: Counter[str] = Counter()
+    conf9_nonblocking = 0
+
+    for scope_row in scope_rows:
+        source_id = scope_row.get("source_id", "")
+        conflict_id = scope_row.get("conflict_id", "")
+        route_block = scope_row.get("baseline_block_id", "")
+        route_status = scope_row.get("current_routing_status", "")
+        assigned_job = scope_row.get("assigned_remediation_job", "")
+        crosswalk_row = crosswalk_by_source.get(source_id)
+
+        if not crosswalk_row:
+            errors.append(f"{source_id}: missing from source-pack to baseline crosswalk")
+            continue
+
+        baseline_blocks = set(parts(crosswalk_row.get("baseline_block_ids", "")))
+        if route_block not in manifest_by_id:
+            errors.append(f"{source_id}: route block {route_block} missing from baseline manifest")
+        if route_block not in baseline_blocks:
+            errors.append(f"{source_id}: crosswalk missing route block {route_block}")
+
+        if conflict_id == "CONF-000008":
+            conf8_counts[assigned_job] += 1
+            if route_status not in {"aligned_baseline", "exact_source_pack_route"}:
+                errors.append(f"{source_id}: unresolved CONF-000008 route status {route_status!r}")
+            if "CONF-000008" in parts(crosswalk_row.get("conflict_or_recheck_ids", "")):
+                errors.append(f"{source_id}: crosswalk still carries CONF-000008 after remediation")
+            if crosswalk_row.get("downstream_candidate_use") == "not_ready_pending_alignment":
+                errors.append(f"{source_id}: crosswalk still has not-ready downstream candidate use")
+            if crosswalk_row.get("stage2_routing_status") == "blocked_pending_baseline_alignment":
+                errors.append(f"{source_id}: crosswalk still has blocked Stage 2 routing")
+            if crosswalk_row.get("downstream_candidate_use") != "candidate_ready_for_stage2_routing":
+                errors.append(
+                    f"{source_id}: expected candidate_ready_for_stage2_routing, "
+                    f"found {crosswalk_row.get('downstream_candidate_use')!r}"
+                )
+            if crosswalk_row.get("stage2_routing_status") != "ready_for_guarded_playbook_drafting":
+                errors.append(
+                    f"{source_id}: expected ready_for_guarded_playbook_drafting, "
+                    f"found {crosswalk_row.get('stage2_routing_status')!r}"
+                )
+            if "Only pending Korean-aligned English inventory rows" in crosswalk_row.get(
+                "no_baseline_or_blocker_reason", ""
+            ):
+                errors.append(f"{source_id}: stale pending-baseline blocker reason remains")
+            if crosswalk_row.get("last_verified_job") != assigned_job:
+                errors.append(
+                    f"{source_id}: expected crosswalk last_verified_job {assigned_job}, "
+                    f"found {crosswalk_row.get('last_verified_job')!r}"
+                )
+
+        elif conflict_id == "CONF-000009":
+            if route_status != "nonblocking_exclusion":
+                errors.append(f"{source_id}: unresolved CONF-000009 route status {route_status!r}")
+            if "CONF-000009" not in parts(crosswalk_row.get("conflict_or_recheck_ids", "")):
+                errors.append(f"{source_id}: nonblocking exclusion lacks CONF-000009 guardrail")
+            if crosswalk_row.get("downstream_candidate_use") != "nonblocking_exclusion":
+                errors.append(f"{source_id}: expected nonblocking_exclusion downstream candidate use")
+            if crosswalk_row.get("stage2_routing_status") != "excluded_nonblocking_english_only_media":
+                errors.append(f"{source_id}: expected excluded nonblocking English-only media route")
+            if "authoritative customer-facing route" not in crosswalk_row.get(
+                "no_baseline_or_blocker_reason", ""
+            ):
+                errors.append(f"{source_id}: nonblocking exclusion lacks customer-facing guardrail")
+            conf9_nonblocking += 1
+
+    stale_conf8 = sorted(
+        row["source_id"]
+        for row in crosswalk_rows
+        if "CONF-000008" in parts(row.get("conflict_or_recheck_ids", ""))
+    )
+    if stale_conf8:
+        errors.append(
+            "CONF-000008 remains in crosswalk conflict_or_recheck_ids for: "
+            + ", ".join(stale_conf8[:20])
+        )
+
+    checks.append(
+        CheckResult(
+            "S1R-J006 crosswalk blocker closure",
+            "Pass",
+            (
+                f"CONF-000008 rows by job {dict(sorted(conf8_counts.items()))}; "
+                f"blocked rows=0; CONF-000009 nonblocking exclusions={conf9_nonblocking}"
+            ),
+        )
+    )
+
+
+def validate_agent_gap_register(
+    errors: list[str],
+    checks: list[CheckResult],
+) -> None:
+    text = AGENT_GAP_REGISTER.read_text(encoding="utf-8")
+    if "| APG-S1-J012-001 | Open |" in text:
+        errors.append("APG-S1-J012-001 remains Open after CONF-000008 remediation")
+    if "| APG-S1-J012-002 | Open |" in text:
+        errors.append("APG-S1-J012-002 remains Open instead of nonblocking")
+    for stale_phrase in ("not_ready_pending_alignment", "blocked_pending_baseline_alignment"):
+        if stale_phrase in text:
+            errors.append(f"agent playbook gap register still contains stale phrase {stale_phrase!r}")
+    required_phrases = [
+        "No open Stage 2 blockers remain for `CONF-000008` or `CONF-000009`.",
+        "CONF-000009 remains a nonblocking exclusion guardrail",
+    ]
+    for phrase in required_phrases:
+        if phrase not in text:
+            errors.append(f"agent playbook gap register missing closure phrase: {phrase}")
+
+    checks.append(
+        CheckResult(
+            "Stage 2 gap register blocker closure",
+            "Pass",
+            "CONF-000008 closed; CONF-000009 retained as nonblocking exclusion guardrail",
+        )
+    )
+
+
 def validate_markdown_blocks(
     errors: list[str],
     checks: list[CheckResult],
@@ -737,8 +919,7 @@ def run_diff_check() -> tuple[bool, str]:
             "--check",
             "--",
             "GPTs/korean_aligned_english",
-            "GPTs/reports/stage_01_readiness_remediation_scope.tsv",
-            "GPTs/reports/source_conflict_register.md",
+            "GPTs/reports",
         ],
         cwd=ROOT,
         text=True,
@@ -759,6 +940,7 @@ def validate(write_report: bool = False) -> tuple[list[str], list[CheckResult]]:
     aid_list = read_tsv(AID_TIER_MANIFEST)
     shard_list = read_tsv(SOURCE_TO_SHARD)
     scope_rows = read_tsv(STAGE_01_SCOPE)
+    crosswalk_rows = read_tsv(CROSSWALK)
     conflict_rows = parse_conflict_register(CONFLICT_REGISTER)
 
     source_rows = {row["source_id"]: row for row in source_list}
@@ -790,6 +972,15 @@ def validate(write_report: bool = False) -> tuple[list[str], list[CheckResult]]:
         release_text,
     )
     validate_stage1_remediation_scope(errors, checks, scope_rows, manifest_by_id)
+    validate_remediation_baseline_files(errors, checks)
+    validate_stage1_crosswalk_closure(
+        errors,
+        checks,
+        scope_rows,
+        crosswalk_rows,
+        manifest_by_id,
+    )
+    validate_agent_gap_register(errors, checks)
 
     referenced_conflicts = validate_markdown_blocks(
         errors,
@@ -820,7 +1011,7 @@ def validate(write_report: bool = False) -> tuple[list[str], list[CheckResult]]:
             CheckResult(
                 "Whitespace diff check",
                 "Pass" if diff_ok else "Fail",
-                f"`git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_readiness_remediation_scope.tsv GPTs/reports/source_conflict_register.md` -> {diff_output}",
+                f"`git diff --check -- GPTs/korean_aligned_english GPTs/reports` -> {diff_output}",
             )
         )
         report_text = render_report(errors, checks, diff_result=(diff_ok, diff_output))
@@ -885,7 +1076,7 @@ def render_report(
             "",
             "## Conflict Register Outcome",
             "",
-            "`GPTs/reports/source_conflict_register.md` remains the active register. `CONF-000001` through `CONF-000003` preserve accepted AID/source limitations and Korean-leakage constraints. `CONF-000004` through `CONF-000007` remain open recheck gates for admin operations, SQL/reference, client/tool integration, and release/patch/AID routing. `CONF-000008` is resolved for Stage 1 routing after the S1R-J002 through S1R-J005 aligned baseline and exact source-pack routes. No unregistered baseline conflict or recheck marker was found.",
+            "`GPTs/reports/source_conflict_register.md` remains the active register. `CONF-000001` through `CONF-000003` preserve accepted AID/source limitations and Korean-leakage constraints. `CONF-000004` through `CONF-000007` remain open recheck gates for admin operations, SQL/reference, client/tool integration, and release/patch/AID routing. `CONF-000008` is resolved for Stage 1 routing after the S1R-J002 through S1R-J005 aligned baseline and exact source-pack routes. `CONF-000009` remains a nonblocking English-only media exclusion guardrail. No unregistered baseline conflict or recheck marker was found.",
             "",
             "## Self-Review Notes",
             "",
@@ -900,7 +1091,7 @@ def render_report(
             "```bash",
             "python3 GPTs/korean_aligned_english/scripts/validate_alignment.py --write-report",
             "rg -n -P \"\\p{Hangul}\" GPTs/korean_aligned_english --glob '*.md' || true",
-            "git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_readiness_remediation_scope.tsv GPTs/reports/source_conflict_register.md",
+            "git diff --check -- GPTs/korean_aligned_english GPTs/reports",
             "```",
         ]
     )

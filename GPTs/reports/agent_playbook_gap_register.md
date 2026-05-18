@@ -2,7 +2,8 @@
 
 Job: `S1-J012`
 Created: 2026-05-18
-Status: Stage 2 preflight input
+Updated: `S1R-J006`
+Status: Stage 2 preflight input; Stage 1 remediation closure metadata applied
 
 ## Reconfirmed Requirement And Boundary
 
@@ -11,6 +12,12 @@ Status: Stage 2 preflight input
 readiness. This register records only Stage 2 blockers discovered while mapping
 source-pack rows to Korean-aligned English baseline rows and AID downstream
 dispositions.
+
+`S1R-J006` updates only the integration metadata for the completed Stage 1
+remediation jobs. It closes or downgrades `CONF-000008` and `CONF-000009` routing
+based on already-recorded aligned baselines, exact source-pack routes, and
+nonblocking exclusions; it does not add source evidence or weaken Korean-authority
+policy.
 
 ## Cross-Check Summary
 
@@ -22,23 +29,23 @@ Evidence source:
 | Included source-pack rows checked | 941 |
 | AID tier rows checked | 28 |
 | Crosswalk rows written | 952 |
-| Source-pack rows with aligned or AID-reuse downstream route | 879 |
-| Source-pack rows pending aligned baseline route | 51 |
-| Source-pack rows excluded from baseline with reason | 2 |
-| Source-pack support-evidence rows with no baseline required | 9 |
+| Source-pack rows with aligned, AID-reuse, or exact source-pack downstream route | 930 |
+| Source-pack rows still pending aligned remediation route | 0 |
+| Source-pack rows excluded from baseline with nonblocking reason | 2 |
+| Source-pack support-evidence rows outside customer playbook content | 10 |
 | AID upload-content candidates with downstream disposition | 5 of 5 |
 
 The crosswalk preserves stable source IDs, source-pack block IDs, baseline block IDs,
 alignment status, planned downstream use, and conflict or recheck IDs for Stage 2.
 Rows marked as guarded candidates are usable only with their recorded recheck
-guardrails; they are not evidence of exhaustive readiness.
+guardrails; they are not evidence of exhaustive readiness. No open Stage 2 blockers remain for `CONF-000008` or `CONF-000009`.
 
-## Stage 2 Blockers
+## Stage 2 Blocker Closure
 
 | Gap ID | Status | Severity | Source IDs | Baseline IDs | Conflict ID | Stage 2 Blocker | Required Stage 2 Handling |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| APG-S1-J012-001 | Open | Medium | `SRC-000024`; `SRC-000031`; `SRC-000032`; `SRC-000035`; `SRC-000037`; `SRC-000039`; `SRC-000042`; `SRC-000055`; `SRC-000062`; `SRC-000063`; `SRC-000066`; `SRC-000067`; `SRC-000069`; `SRC-000071`; `SRC-000073`; `SRC-000075`; `SRC-000088`; `SRC-000095`; `SRC-000096`; `SRC-000098`; `SRC-000100`; `SRC-000102`; `SRC-000105`; `SRC-000119`; `SRC-000126`; `SRC-000127`; `SRC-000129`; `SRC-000131`; `SRC-000133`; `SRC-000136`; `SRC-000149`; `SRC-000156`; `SRC-000157`; `SRC-000159`; `SRC-000162`; `SRC-000165`; `SRC-000179`; `SRC-000186`; `SRC-000187`; `SRC-000189`; `SRC-000191`; `SRC-000193`; `SRC-000196`; `SRC-000203`; `SRC-000204`; `SRC-000210`; `SRC-000211`; `SRC-000217`; `SRC-000218`; `SRC-000224`; `SRC-000225` | `KAE-BLOCK-000018`; `KAE-BLOCK-000020`; `KAE-BLOCK-000021`; `KAE-BLOCK-000026`; `KAE-BLOCK-000031` through `KAE-BLOCK-000037`; `KAE-BLOCK-000153`; `KAE-BLOCK-000155`; `KAE-BLOCK-000156`; `KAE-BLOCK-000160`; `KAE-BLOCK-000164`; `KAE-BLOCK-000167`; `KAE-BLOCK-000168`; `KAE-BLOCK-000209`; `KAE-BLOCK-000212` through `KAE-BLOCK-000214`; `KAE-BLOCK-000216`; `KAE-BLOCK-000219`; `KAE-BLOCK-000220`; `KAE-BLOCK-000224`; `KAE-BLOCK-000225`; `KAE-BLOCK-000236`; `KAE-BLOCK-000237` | `CONF-000008` | Stored/external procedures, Log Analyzer, Monitoring API/SNMP, Performance Tuning, source indexes including 7.1 Sharding, and Replication Manager have selected source-pack rows but only pending baseline inventory rows. | Stage 2 must either create aligned working baseline or write playbooks that route directly to exact source-pack blocks with explicit recheck status. Do not claim complete playbook coverage for these domains from the baseline alone. |
-| APG-S1-J012-002 | Open | Low | `SRC-000109`; `SRC-000169` | `KAE-BLOCK-000169`; `KAE-BLOCK-000226` | `CONF-000009` | Two English-only stored-procedure media sources are selected in the source pack but excluded from the Korean-aligned baseline until Korean authority or approved auxiliary use is recorded. | Stage 2 must not copy these media examples into customer-facing playbooks as authoritative behavior. Use paired Korean/English manuals or source-pack rows with labels unless the authority or auxiliary-label decision is recorded. |
+| APG-S1-J012-001 | Closed | Info | `GPTs/reports/stage_01_readiness_remediation_scope.tsv` rows for `CONF-000008` | `KAE-BLOCK-000277` through `KAE-BLOCK-000286`; `KAE-BLOCK-000287` for Replication Manager release-note boundaries | `CONF-000008` | S1R-J002 through S1R-J005 added aligned working routes or exact source-pack routes for stored/external procedures, Log Analyzer, Monitoring API/SNMP, Performance Tuning, source indexes including 7.1 Sharding, and Replication Manager. | Stage 2 may use those routes for guarded drafting only. Exact syntax, APIs, command options, topology, runtime state, and production procedures still require target-version source blocks plus customer environment evidence. |
+| APG-S1-J012-002 | Nonblocking | Low | `SRC-000109`; `SRC-000169` | `KAE-BLOCK-000279` | `CONF-000009` | The two English-only stored-procedure media sources have no selected Korean authority and are deliberately excluded from authoritative customer-facing baseline use. | CONF-000009 remains a nonblocking exclusion guardrail. Keep these rows out of authoritative playbooks, attachments, and upload-package text unless a later job records Korean authority or approved auxiliary use; if cited as evidence, preserve the English-only extraction-aid label. |
 
 ## AID Downstream Disposition Check
 
@@ -63,5 +70,7 @@ marks them as `evidence_only_no_baseline_required`.
   source-pack shard row, or to an evidence-only disposition for support reports.
 - Missing AID rows: none found; all 28 AID tier rows are present, and all 5
   upload-content candidates have a downstream disposition.
-- Overbroad ready claims: avoided. Rows with open conflict or recheck entries are
+- S1R-J006 closure check: pass. `CONF-000008` no longer has open Stage 2 blocker
+  rows, and `CONF-000009` is visible as a nonblocking English-only exclusion.
+- Overbroad ready claims: avoided. Rows with open conflict or recheck entries remain
   marked as guarded candidates, not final readiness.

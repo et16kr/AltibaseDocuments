@@ -3,7 +3,8 @@
 - Job: `S1-J013`
 - Date: 2026-05-18
 - Scope: Stage 1 source-pack and Korean-aligned English baseline readiness only
-- Verdict: Not ready for Stage 2
+- Updated: `S1R-J006`
+- Verdict: Ready for guarded Stage 2 routing; not final upload readiness
 
 ## Boundary Reconfirmation
 
@@ -13,21 +14,26 @@ crosswalk, conflict, and validation evidence. It did not edit
 `GPTs/upload_package/`, or modify `.codex-jobs/` workflow runtime files.
 
 The project-file edit gate was clear before edits: the only pre-existing dirty path
-was `.codex-jobs/altibase-gpt-stage-01-source-pack-baseline/jobs.tsv`, which is
+was `.codex-jobs/altibase-gpt-stage-01-readiness-remediation/jobs.tsv`, which is
 orchestrator-managed and outside this job's edit scope.
 
 ## Readiness Decision
 
-Stage 1 preservation and validation mechanics pass, but Stage 1 is not ready for
-Stage 2 because the integration crosswalk records selected source-pack rows that
-still have no aligned or AID-reuse downstream working route.
+Stage 1 preservation and validation mechanics pass. S1R-J006 closed the Stage 2
+routing blockers by refreshing the crosswalk, conflict register, and gap register
+after S1R-J002 through S1R-J005 added aligned baseline routes, exact source-pack
+routes, or explicit nonblocking exclusions.
 
-Readiness blockers:
+Stage 2 may begin guarded playbook routing from the recorded baselines and exact
+source-pack blocks. This is not final upload-package readiness and does not remove
+the open item-level recheck guardrails for exhaustive or production-ready claims.
 
-| Blocker | Severity | Evidence | Required action |
+Closure outcome:
+
+| Item | Severity | Evidence | Required handling |
 | --- | --- | --- | --- |
-| `CONF-000008` / `APG-S1-J012-001` | Medium | `51` selected source-pack rows are `not_ready_pending_alignment` and `blocked_pending_baseline_alignment` in `GPTs/reports/source_pack_to_korean_aligned_english_crosswalk.tsv`. Affected families include stored/external procedures, Log Analyzer, Monitoring API/SNMP, Performance Tuning, source indexes including 7.1 Sharding, and Replication Manager. | Before Stage 2 claims playbook coverage for these domains, create aligned working baseline or write Stage 2 playbook source notes that route directly to exact source-pack blocks with explicit recheck status. |
-| `CONF-000009` / `APG-S1-J012-002` | Low | `2` selected English-only stored-procedure media sources are excluded from the Korean-aligned baseline until Korean authority or an approved auxiliary label is recorded. | Do not copy these examples into customer-facing playbooks as authoritative Altibase behavior unless the authority or auxiliary-label decision is recorded. |
+| `CONF-000008` / `APG-S1-J012-001` | Info | S1R-J006 crosswalk validation confirms all remediation-scope rows now route through `KAE-BLOCK-000277` through `KAE-BLOCK-000286`, with `KAE-BLOCK-000287` preserving Replication Manager release-note boundaries. | Closed as a Stage 1 routing blocker. Stage 2 may draft from these routes only with exact source-section checks and missing-input prompts. |
+| `CONF-000009` / `APG-S1-J012-002` | Low | `SRC-000109` and `SRC-000169` remain excluded through `KAE-BLOCK-000279` because no selected Korean authority exists for the English-only media extraction rows. | Nonblocking exclusion. Do not copy these examples into customer-facing playbooks, attachments, or upload-package text as authoritative behavior unless Korean authority or approved auxiliary use is recorded. |
 
 Rows with `candidate_with_open_recheck_guardrail` are usable only for guarded
 drafting and source-routed checks. They do not prove exhaustive or production-ready
@@ -41,9 +47,9 @@ coverage.
 | Exact extraction | Pass | `source_to_shard_manifest.tsv` has `941` rows with `validation_status=pass`; all selected rows map to one of `16` shards. `validate_source_pack.py --check` reported `941` selected sources, `16` shards, and `8,767` exclusions. |
 | Upload-intended source-pack shards | Not an upload package | All `941` shard manifest rows have `upload_intended=no`; direct GPT Knowledge upload of the source pack remains out of scope until a later upload-package job intentionally selects or transforms content. |
 | AID tiering | Pass | `aid_tier_manifest.tsv` validates with `28` rows: `5` upload-content candidates, `18` evidence-only authority rows, and `5` accepted limitations. There are no `aid_tier=conflict` or `aid_tier=recheck` rows; final AID upload-package composition still remains guarded by `CONF-000007`. |
-| Korean-aligned English baseline validation | Pass with recorded limits | `baseline_manifest.tsv` has `276` rows: `4` aligned, `1` AID reuse, `255` pending inventory rows, and `16` excluded rows. `validate_alignment.py --write-report` passed and refreshed `alignment_validation.md` to record `9` conflict-register rows with `6` open rows. |
-| Source-pack to baseline crosswalk | Not ready | The crosswalk has `952` rows: `150` ready for guarded playbook drafting, `739` guarded by open recheck before exhaustive playbook use, `51` blocked pending baseline alignment, `10` evidence-only support rows, and `2` excluded until source authority or auxiliary label is recorded. |
-| Conflict/recheck status | Not ready | `source_conflict_register.md` contains accepted limitations and residual risks plus `6` open rows. `CONF-000008` and `CONF-000009` are direct Stage 2 readiness blockers; `CONF-000004` through `CONF-000007` remain open guardrails against exhaustive or production-ready claims. |
+| Korean-aligned English baseline validation | Pass with recorded limits | `baseline_manifest.tsv` has `287` rows: `14` aligned, `1` AID reuse, `255` pending inventory rows, and `17` excluded rows. `validate_alignment.py --write-report` passes with S1R-J002 through S1R-J005 remediation baseline files included in the validation set. |
+| Source-pack to baseline crosswalk | Ready for guarded routing | The crosswalk has `952` rows: `201` ready for guarded playbook drafting, `739` guarded by open recheck before exhaustive playbook use, `10` evidence-only support rows, and `2` nonblocking English-only media exclusions. |
+| Conflict/recheck status | Guarded | `source_conflict_register.md` contains accepted limitations and residual risks plus `4` open rows. `CONF-000008` is resolved, `CONF-000009` is an accepted nonblocking limitation, and `CONF-000004` through `CONF-000007` remain open guardrails against exhaustive or production-ready claims. |
 
 ## Known Limitations
 
@@ -64,33 +70,31 @@ coverage.
 | --- | --- |
 | `bash review/scripts/run_review_remediation_cycle.sh status` | Pass; all review/remediation stages were `Done`. |
 | `rg -n $'\t(Reviewing|Remediating|ReReviewing|Fail)$' review/review_remediation_cycle_status.tsv` | Pass; no active or failed cycle rows. |
-| `git status --short` | Pre-edit gate clear except orchestrator-managed `.codex-jobs/altibase-gpt-stage-01-source-pack-baseline/jobs.tsv`. |
-| `python3 GPTs/source_pack/scripts/validate_source_pack.py --check` | Pass; validated `941` selected sources, `16` shards, and `8,767` exclusions. |
-| `python3 GPTs/korean_aligned_english/scripts/build_baseline_manifest.py --check` | Pass; manifest current with `271` generated rows plus `5` validated extension rows. |
-| `python3 GPTs/source_pack/scripts/validate_aid_tier_manifest.py` | Pass; validated `28` AID tier rows and `5` upload candidates. |
-| `python3 GPTs/korean_aligned_english/scripts/validate_alignment.py --write-report` | Pass; validated Stage 1 alignment and refreshed stale conflict-register coverage evidence. |
-| `git diff --check -- GPTs/source_pack GPTs/korean_aligned_english GPTs/reports` | Pass; no whitespace errors. |
-| `rg -n "not-ready\|Not ready\|recheck\|conflict\|missing\|unverified" GPTs/source_pack GPTs/korean_aligned_english GPTs/reports \|\| true` | Completed with expected matches in the readiness report, conflict/gap registers, validators, and exact source-pack text. Matches are evidence that blockers and guardrails remain visible, not a pass-to-ready signal. |
+| `git status --short` | Pre-edit gate clear except orchestrator-managed `.codex-jobs/altibase-gpt-stage-01-readiness-remediation/jobs.tsv`. |
+| `python3 GPTs/korean_aligned_english/scripts/validate_alignment.py --write-report` | Pass; validated `287` baseline manifest rows, S1R-J002 through S1R-J005 remediation baseline file coverage, crosswalk blocker closure, gap-register closure, conflict-register coverage, and whitespace. |
+| Remediated-scope crosswalk scan | Pass; all `53` scoped rows avoid pending or blocked routing states. |
+| `CONF-000008` / `CONF-000009` next-action scan | Pass; both rows retain exact next action and downstream guardrail text. |
+| Remediation baseline file reference scan | Pass; `validate_alignment.py` references all S1R-J002 through S1R-J005 baseline files. |
+| Aligned extension Markdown block scan | Pass; all `10` S1R aligned manifest extension rows have Markdown block references. |
+| `git diff --check -- GPTs/korean_aligned_english GPTs/reports` | Pass; no whitespace errors. |
 
 ## Self-Review
 
-- Unsupported ready claims: none. The report states `Not ready for Stage 2` because
-  the crosswalk contains blocked routing rows.
-- Missing blockers: recorded `CONF-000008` and `CONF-000009` as readiness blockers;
-  preserved `CONF-000004` through `CONF-000007` as open recheck guardrails.
-- Stale evidence: fixed by rerunning `validate_alignment.py --write-report`, which
-  updated the alignment validation conflict-register row count from `7` to `9`.
+- Unsupported ready claims: none. The report states readiness only for guarded Stage
+  2 routing, not exhaustive playbook coverage or final upload readiness.
+- Blocker closure: `CONF-000008` is closed in the crosswalk and gap register.
+  `CONF-000009` remains visible as a nonblocking English-only exclusion.
+- Guardrail preservation: `CONF-000004` through `CONF-000007` remain open recheck
+  rows for exact, exhaustive, production-ready, or environment-dependent claims.
 
 ## Next Required Action
 
-Resolve the Stage 2 routing blockers before declaring Stage 1 ready:
+Proceed to Stage 2 playbook planning with the recorded source routes and guardrails:
 
-1. For `CONF-000008`, create aligned baseline/playbook source notes or exact
-   source-pack routing for the `51` pending source rows.
-2. For `CONF-000009`, locate Korean authority or record an approved English-only
-   auxiliary disposition for the two stored-procedure media examples.
-3. Rerun the source-pack, AID tier, baseline, crosswalk, and conflict validation
-   checks.
-4. Update this readiness report only after the crosswalk has no
-   `not_ready_pending_alignment` or unresolved excluded-authority rows blocking
-   Stage 2 routing.
+1. Use the crosswalk and baseline manifest to select exact source-pack blocks before
+   generating customer-facing procedures, SQL, APIs, command lines, or test cases.
+2. Preserve `CONF-000004` through `CONF-000007` as open recheck gates for exhaustive
+   tables, production operations, patch-specific behavior, AID upload composition,
+   and live environment claims.
+3. Keep `CONF-000009` excluded from authoritative customer-facing content unless
+   Korean authority or approved auxiliary use is later recorded.
