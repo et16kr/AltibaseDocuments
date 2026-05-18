@@ -21,6 +21,10 @@
     exclusion route is recorded.
 - Completion target: `customer_agent_enablement_stage_01_readiness.md` must be
   updated by `S1R-J007` with an explicit `ready/pass` or remaining-blocker verdict.
+- Validation coverage: if any job creates a new
+  `GPTs/korean_aligned_english/*.md` baseline file, it must also update
+  `GPTs/korean_aligned_english/scripts/validate_alignment.py` so the new file is
+  included in baseline Markdown validation.
 
 ## Jobs
 
@@ -50,6 +54,8 @@
 - `bash -n run-all.sh` passes.
 - `CONF-000008` and `CONF-000009` are either resolved or preserved as explicit
   remaining blockers with exact next action.
+- All new baseline files are covered by `validate_alignment.py`, and new appended
+  `KAE-BLOCK-*` rows use non-conflicting IDs after the existing manifest rows.
 - Stage 2 must not be declared safe unless the crosswalk has no
   `not_ready_pending_alignment`, `blocked_pending_baseline_alignment`, or unresolved
   excluded-authority rows blocking Stage 2 routing.
