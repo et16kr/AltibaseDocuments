@@ -1351,3 +1351,32 @@ Each entry should include:
 - Skipped checks: no full 270-question live benchmark was launched because this job
   changed only the GPT instruction layer and did not change attachment product
   content, retrieval aliases, catalog dispositions, or benchmark expectations.
+
+### FCA-J050
+
+- Changed files: `validation_answerability_results.md` and this remediation log.
+- Product coverage changes: none. No customer-facing attachment text, catalog
+  disposition, matrix disposition, register row, original manual, or source document was
+  changed.
+- Source-to-attachment validation: `check --require-registers`, `catalog-qa`,
+  `matrix-qa`, and `guardrail-audit` passed for `2153` catalog rows and `2153` matrix
+  rows. Active `Retrieval-weak` rows are `0`; active `Missing` rows are `115`, all
+  `patch_notes` rows mapped to `GPTs/attachments/00_version_release_platform.md`.
+- Benchmark validation: full benchmark schema validation passed for `270` questions;
+  targeted instruction manifest validation passed; answer runner and judge/report
+  self-tests passed; full 270-question lexical dry-run wrote `270` records with
+  `errors=0`; targeted instruction-aware dry-run wrote `14` records with `errors=0`.
+- Targeted live answerability: ran `14` high-risk failed/protected/exact-token questions
+  through `targeted_calibration_j019_instruction` with `mode=live`, `provider=command`,
+  `model=codex-exec`, and `context_mode=lexical`. Result was `6/14` passed, pass rate
+  `42.9%`, critical fact coverage `81.8%`, required token preservation `93.1%`,
+  unsupported-claim rate `0.0%`, and `4` protected-topic blockers. The same 14 IDs in
+  the locked latest full run had `2/14` passed, critical fact coverage `73.3%`, required
+  token preservation `91.6%`, and `6` protected-topic blockers.
+- Remaining targeted blockers: `PROP-112`, `SQL-129`, `OPS-116`, and `VPM-125` still
+  have protected-topic blockers; `PROP-101`, `SQL-108`, `REPL-121`, and `TOOL-010`
+  remain failed for high/medium non-protected findings.
+- Skipped checks: no full 270-question live benchmark was launched because the
+  source-to-attachment closure gate is already blocked by `115` active patch-note
+  `Missing` rows, the targeted live sample still returns `blocking_gaps`, and the full
+  live run would require 270 provider calls before the result could be final.
