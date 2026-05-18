@@ -1380,3 +1380,39 @@ Each entry should include:
   source-to-attachment closure gate is already blocked by `115` active patch-note
   `Missing` rows, the targeted live sample still returns `blocking_gaps`, and the full
   live run would require 270 provider calls before the result could be final.
+
+### FCA-J051
+
+- Changed files: `final_full_coverage_audit.md` and this remediation log.
+- Product coverage changes: none. No customer-facing attachment text, catalog
+  disposition, matrix disposition, register row, original manual, or source document was
+  changed.
+- Final decision: `Blocked`. Final sign-off is not granted because
+  `source_item_catalog.tsv` and `source_to_attachment_matrix.tsv` still contain `115`
+  unresolved `Missing` rows.
+- Coverage summary: `2153` catalog rows and `2153` matrix rows validated. Current
+  dispositions are `1162` `Covered`, `840` `Covered-by-routing`, `33` `Guardrail`,
+  `3` `Out-of-scope`, `115` `Missing`, and `0` `Retrieval-weak`.
+- Remaining closure blocker: all unresolved rows are `patch_notes` / `patch-specific`
+  / `version note` rows mapped to
+  `GPTs/attachments/00_version_release_platform.md`, covering
+  `SRC-PATCH-PATCH-000001` through `SRC-PATCH-PATCH-000115`; the source split is
+  `96` Altibase 7.1 patch-note files and `19` Altibase 7.3 patch-note files.
+- Guardrail and retrieval status: `guardrail-audit` passed for `36` guarded rows
+  (`33` `Guardrail` and `3` `Out-of-scope`), each with source-boundary and
+  missing-input or safest-next-check patterns. Active `Retrieval-weak` rows are `0`.
+- Benchmark evidence: the locked latest full run
+  `altibase_answerability_20260517_205641` remains `blocking_gaps` with `101/270`
+  passed, `85.1%` critical fact coverage, `90.1%` required token preservation, and
+  `32` protected-topic blockers. The `FCA-J050` targeted live run remains
+  `blocking_gaps` with `6/14` passed and `4` protected-topic blockers.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers`, `catalog-qa`, `matrix-qa`, and `guardrail-audit` passed;
+  `git diff --check` passed; `bash review/scripts/run_review_stage.sh validate`
+  passed with 20 upload attachments; review-report severity scan showed only
+  `Verdict: Pass` lines for R00-R27 and no actionable `Blocker`, `High`, `Medium`, or
+  `Low` rows.
+- Skipped checks: no full 270-question live benchmark was launched because the
+  machine-checkable full coverage closure gate is already blocked by `115` active
+  patch-note `Missing` rows, and a full live rerun would require 270 provider calls
+  before it could produce a final readiness pass.
