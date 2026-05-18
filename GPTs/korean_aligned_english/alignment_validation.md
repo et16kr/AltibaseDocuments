@@ -25,7 +25,7 @@ No baseline validation blockers were found. Existing open conflict/recheck rows 
 | Baseline Markdown block traceability | Pass | 34 KAE blocks; 33 high-risk blocks checked |
 | Korean prose leakage scan | Pass | 0 Hangul matches in customer-facing baseline Markdown |
 | Unsupported Oracle/generic inference scan | Pass | No disallowed inference phrases found; anti-inference guardrails present |
-| Conflict and recheck register coverage | Pass | 7 rows; statuses {'accepted_limitation': 2, 'accepted_residual_risk': 1, 'open': 4} |
+| Conflict and recheck register coverage | Pass | 9 rows; statuses {'accepted_limitation': 2, 'accepted_residual_risk': 1, 'open': 6} |
 | Whitespace diff check | Pass | `git diff --check -- GPTs/korean_aligned_english GPTs/reports/source_conflict_register.md` -> no whitespace errors |
 
 ## Conflict Register Outcome
