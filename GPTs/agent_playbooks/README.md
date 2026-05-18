@@ -1,14 +1,13 @@
 # Stage 2 Agent Playbooks
 
 - Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`,
-  `S2-J006`, and `S2-J007`
+  `S2-J006`, `S2-J007`, and `S2-J008`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
   service-development SQL generation playbooks, application connectivity
-  playbooks, protected administration playbooks, and tools/integration
-  playbooks
-- Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`, and
-  `S2-J006` playbook routes plus completed `S2-J007` tools and integration
-  routes
+  playbooks, protected administration playbooks, tools/integration playbooks,
+  and troubleshooting/performance playbooks
+- Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`,
+  `S2-J006`, `S2-J007`, and `S2-J008` playbook routes
 
 ## Boundary
 
@@ -162,6 +161,30 @@ integrations` so required tokens such as `iSQL`, `iLoader`, `dataCompJ`,
 `aexport`, `Migration Center`, `oraAdapter`, `CREATE DATABASE LINK`,
 `com.altibase.sqoop.manager.AltibaseManager`, `aku -p start`, `GEOMETRY`,
 `NiFi`, and `Tableau` cannot be silently dropped.
+
+## S2-J008 Design Note
+
+`S2-J008` promotes the errors and troubleshooting route from a placeholder to a
+guarded playbook for exact error code, symbol, and message handling; log and
+symptom triage; required customer evidence; monitoring route selection;
+dictionary and performance-view checks; performance tuning first checks; and
+escalation stop points. The playbook intentionally separates safe first checks
+from definitive diagnosis: when exact error text, logs, object definitions,
+runtime state, target version, patch level, or rollback evidence are missing,
+it asks for the missing evidence and provides the safest source-backed next
+check instead of inventing a root cause.
+
+The route cites Error Message Reference, General Reference, Performance Tuning
+Guide, Log Analyzer, Monitoring API, SNMP Agent, Utilities Manual, and classified
+AID `llm-reference` sources. Because `CONF-000004`, `CONF-000005`,
+`CONF-000006`, `CONF-000007`, and `CONF-000008` remain active Stage 2 gates,
+production recovery, restart, replication reset, object rebuild, property
+change, SNMP read-write change, profiling, and exhaustive error or view tables
+still require target-version source blocks plus customer evidence. The validator
+now checks troubleshooting-domain tokens such as `altierr`, `SQLSTATE`,
+`altibase_boot.log`, `V$SESSION`, `V$STATEMENT`, `Monitoring API`, `SNMP`,
+`altiProfile`, `TIMED_STATISTICS`, `QUERY_PROF_FLAG`, and
+`Escalation Stop Points`.
 
 ## Validation
 
