@@ -92,6 +92,32 @@ CODE_ARTIFACT_TYPES = {
     "validation_checks",
 }
 
+DOMAIN_REQUIRED_TOKENS = {
+    "Java and JDBC": [
+        "JDBC",
+        "Altibase.jdbc.driver.AltibaseDriver",
+        "jdbc:Altibase://",
+        "Altibase.jar",
+        "Altibase42.jar",
+        "Spring",
+        "Hibernate",
+        "Adapter for JDBC",
+    ],
+    "ODBC and C clients": [
+        "ODBC",
+        "CLI",
+        "ACI",
+        "Precompiler",
+        "APRE",
+        "SQLAllocHandle",
+        "SQLDriverConnect",
+        "SQLGetDiagRec",
+        "$ALTIBASE_HOME/include/sqlcli.h",
+        "libodbccli.a",
+        "libapre.a",
+    ],
+}
+
 PLAYBOOK_ID_RE = re.compile(r"APB-\d{6}\Z")
 SOURCE_ID_RE = re.compile(r"(?:SRC|AID|AID-SRC)-\d{6}\Z")
 SOURCE_BLOCK_RE = re.compile(r"BLOCK-\d{6}\Z")
@@ -234,6 +260,10 @@ def check_playbook_file(row: dict[str, str], errors: list[str]) -> None:
             errors.append(f"{label}: protected playbook must mention rollback or cleanup")
         if "stop" not in lower_text:
             errors.append(f"{label}: protected playbook must include stop conditions")
+
+    for token in DOMAIN_REQUIRED_TOKENS.get(row["domain"], []):
+        if token not in text:
+            errors.append(f"{label}: playbook file is missing domain token: {token}")
 
 
 def check_known_list(

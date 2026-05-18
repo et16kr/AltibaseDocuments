@@ -1,9 +1,10 @@
 # Stage 2 Agent Playbooks
 
 - Job: `S2-J002` scaffold, extended by `S2-J003`
-- Scope: manifest schema, validation scaffolding, source-routing plan, and
-  service-development SQL generation playbooks
-- Status: scaffolded with completed `S2-J003` playbook routes
+- Scope: manifest schema, validation scaffolding, source-routing plan,
+  service-development SQL generation playbooks, and application connectivity
+  playbooks
+- Status: scaffolded with completed `S2-J003` and `S2-J004` playbook routes
 
 ## Boundary
 
@@ -66,6 +67,27 @@ stop conditions.
 The validator now checks non-planned playbook files for their playbook ID, title,
 required sections, manifest source IDs, source-pack block refs, Korean-aligned
 baseline block IDs, guardrail IDs, and fenced generated-artifact examples.
+
+## S2-J004 Design Note
+
+`S2-J004` promotes the Java/JDBC and ODBC/C-client routes from placeholders to
+source-backed connectivity playbooks. The playbooks preserve the route split
+created by `S2-J002`: `java_jdbc.md` owns JDBC URLs, driver selection, Java
+compatibility, Spring, Hibernate, Adapter for JDBC, TLS, failover, tracing, and
+connection checks; `odbc_c_clients.md` owns ODBC DSNs, CLI, ACI,
+Precompiler/APRE, compile/link/runtime checks, unixODBC, SQLSTATE diagnostics,
+and C/C++ build snippets.
+
+The manifest now cites exact repository source IDs plus classified AID
+`llm-reference` routes for development/API and framework diagnostics. Because
+`CONF-000006` and `CONF-000007` remain open, both playbooks produce guarded
+first drafts only; compile-ready code, exhaustive option tables, patch-specific
+behavior, live connector compatibility, and production diagnostics still
+require exact source-block or customer runtime evidence.
+
+The validator now includes domain-token checks for the completed connectivity
+playbooks so required tokens such as `JDBC`, `ODBC`, `CLI`, `ACI`, and
+`Precompiler` cannot be silently dropped from the files.
 
 ## Validation
 
