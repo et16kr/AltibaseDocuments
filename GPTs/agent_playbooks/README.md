@@ -1,13 +1,15 @@
 # Stage 2 Agent Playbooks
 
 - Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`,
-  `S2-J006`, `S2-J007`, `S2-J008`, and `S2-J009`
+  `S2-J006`, `S2-J007`, `S2-J008`, `S2-J009`, and `S2-J010`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
   service-development SQL generation playbooks, application connectivity
   playbooks, protected administration playbooks, tools/integration playbooks,
-  troubleshooting/performance playbooks, and AID/version/release/patch routing
+  troubleshooting/performance playbooks, AID/version/release/patch routing,
+  and coding-agent/GPT instruction notes
 - Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`,
-  `S2-J006`, `S2-J007`, `S2-J008`, and `S2-J009` playbook routes
+  `S2-J006`, `S2-J007`, `S2-J008`, `S2-J009` playbook routes, and
+  `S2-J010` instruction notes
 
 ## Boundary
 
@@ -207,6 +209,22 @@ domain, including AID tier labels, `Altibase 8.1 verified source`, `BUG-*`,
 `TASK-*`, `database binary version`, `meta version`, `CM protocol version`,
 `replication protocol version`, and the relevant `CONF-*` guardrails.
 
+## S2-J010 Design Note
+
+`S2-J010` adds two cross-cutting instruction notes:
+`coding_agent_instruction_note.md` for repository-local coding agents and
+`gpt_service_development_instruction_note.md` for direct GPT
+service-development answers. These notes do not add new playbook manifest
+routes. They define how agents and GPTs select the existing domain playbooks,
+route to source IDs and source-pack or Korean-aligned baseline blocks, ask
+for missing inputs, separate runnable artifacts from explanation, validate
+generated SQL/DDL/DCL, code, commands, configuration, scripts, validation SQL,
+and tests, and stop before unsupported or generic database assumptions.
+
+The validator now checks that both instruction notes exist and preserve the
+required source-routing, missing-input, validation, artifact-class, and stop
+condition tokens.
+
 ## Validation
 
 Run:
@@ -218,4 +236,5 @@ python3 GPTs/agent_playbooks/scripts/validate_playbooks.py
 The validator checks manifest schema, duplicate playbook IDs, path boundaries,
 required domain placeholders, ID and block-reference formats, known source and
 baseline references when populated, forbidden `GPTs/attachments/` or
-`GPTs/upload_package/` edits, and file existence for non-planned playbook rows.
+`GPTs/upload_package/` edits, file existence for non-planned playbook rows, and
+required instruction-note tokens.

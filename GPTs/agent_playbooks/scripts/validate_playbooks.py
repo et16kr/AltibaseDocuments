@@ -19,6 +19,10 @@ SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
 BASELINE_MANIFEST = ROOT / "GPTs/korean_aligned_english/baseline_manifest.tsv"
 AID_TIER_MANIFEST = ROOT / "GPTs/reports/aid_tier_manifest.tsv"
 CONFLICT_REGISTER = ROOT / "GPTs/reports/source_conflict_register.md"
+INSTRUCTION_NOTE_PATHS = [
+    PLAYBOOK_DIR / "coding_agent_instruction_note.md",
+    PLAYBOOK_DIR / "gpt_service_development_instruction_note.md",
+]
 
 MANIFEST_COLUMNS = [
     "playbook_id",
@@ -91,6 +95,31 @@ CODE_ARTIFACT_TYPES = {
     "validation_sql",
     "validation_checks",
 }
+
+INSTRUCTION_NOTE_REQUIRED_TOKENS = [
+    "## Source Routing",
+    "## Missing Input Prompts",
+    "## Validation",
+    "## Stop Conditions",
+    "## Forbidden Generic Assumptions",
+    "source ID",
+    "source-pack block",
+    "Korean-aligned",
+    "playbook_manifest.tsv",
+    "missing input",
+    "validation",
+    "stop condition",
+    "SQL",
+    "DDL",
+    "DCL",
+    "code",
+    "commands",
+    "configuration",
+    "scripts",
+    "validation SQL",
+    "test",
+    "generic database assumptions",
+]
 
 DOMAIN_REQUIRED_TOKENS = {
     "Installation and startup": [
@@ -369,6 +398,22 @@ def check_forbidden_git_edits(errors: list[str]) -> None:
         )
 
 
+def check_instruction_notes(errors: list[str]) -> None:
+    for path in INSTRUCTION_NOTE_PATHS:
+        label = rel(path)
+        if not path.exists():
+            errors.append(f"Required instruction note missing: {label}")
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        for token in INSTRUCTION_NOTE_REQUIRED_TOKENS:
+            if token not in text:
+                errors.append(f"{label}: instruction note is missing required token: {token}")
+
+        if "```" not in text:
+            errors.append(f"{label}: instruction note must include a fenced structure template")
+
+
 def check_path(row: dict[str, str], errors: list[str]) -> None:
     label = row["playbook_id"]
     path_text = row["path"]
@@ -579,6 +624,7 @@ def main() -> int:
     if rows:
         errors.extend(validate_rows(rows))
 
+    check_instruction_notes(errors)
     check_forbidden_git_edits(errors)
 
     if errors:
