@@ -1,12 +1,12 @@
 # Source Pack Baseline
 
-Job: `S1-J002`
-Status: repository source manifest baseline
+Job: `S1-J004`
+Status: repository and AID source-pack baseline
 
 ## Boundary
 
-This directory records the deterministic Stage 1 repository-local source selection
-baseline. The manifest builder considers these repository source roots:
+This directory records the deterministic Stage 1 source selection and exact
+source-pack baseline. The manifest builder considers these repository source roots:
 
 - `Manuals/`
 - `ReleaseNotes/`
@@ -14,11 +14,13 @@ baseline. The manifest builder considers these repository source roots:
 - `Technical Documents/`
 - `3rd Party Guide for Altibase/`
 
-The builder does not treat every file under `GPTs/reports/` as source. Reports are
-included only when the builder lists them as approved support evidence with a concrete
-reason in `source_manifest.tsv`. Requirements, readiness drafts, transient review
-notes, and generated validation logs remain outside the source candidate universe
-unless a later job explicitly promotes them with an evidence reason.
+The manifest builder also materializes file-level AID upload-content candidates from
+the approved AID tiering evidence. It does not treat every file under `GPTs/reports/`
+as source. Reports are included only when the builder lists them as approved support
+evidence with a concrete reason in `source_manifest.tsv`. Requirements, readiness
+drafts, transient review notes, and generated validation logs remain outside the
+source candidate universe unless a later job explicitly promotes them with an
+evidence reason.
 
 ## Selection Rule
 
@@ -43,4 +45,16 @@ Check that committed manifests match the deterministic builder output:
 
 ```bash
 python3 GPTs/source_pack/scripts/build_source_manifest.py --check
+```
+
+Generate the exact source-pack shards and source-to-shard mapping:
+
+```bash
+python3 GPTs/source_pack/scripts/build_source_pack.py --write
+```
+
+Check that committed source-pack shards and mapping are current:
+
+```bash
+python3 GPTs/source_pack/scripts/build_source_pack.py --check
 ```

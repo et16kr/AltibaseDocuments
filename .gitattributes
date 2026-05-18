@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Source-pack shards preserve original Markdown bytes, including whitespace and marker-like source text.
+GPTs/source_pack/source_pack_shard_*.md -diff -whitespace
