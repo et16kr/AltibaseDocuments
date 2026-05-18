@@ -1,13 +1,13 @@
 # Stage 2 Agent Playbooks
 
 - Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`,
-  `S2-J006`, `S2-J007`, and `S2-J008`
+  `S2-J006`, `S2-J007`, `S2-J008`, and `S2-J009`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
   service-development SQL generation playbooks, application connectivity
   playbooks, protected administration playbooks, tools/integration playbooks,
-  and troubleshooting/performance playbooks
+  troubleshooting/performance playbooks, and AID/version/release/patch routing
 - Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`,
-  `S2-J006`, `S2-J007`, and `S2-J008` playbook routes
+  `S2-J006`, `S2-J007`, `S2-J008`, and `S2-J009` playbook routes
 
 ## Boundary
 
@@ -185,6 +185,27 @@ now checks troubleshooting-domain tokens such as `altierr`, `SQLSTATE`,
 `altibase_boot.log`, `V$SESSION`, `V$STATEMENT`, `Monitoring API`, `SNMP`,
 `altiProfile`, `TIMED_STATISTICS`, `QUERY_PROF_FLAG`, and
 `Escalation Stop Points`.
+
+## S2-J009 Design Note
+
+`S2-J009` adds `APB-000017` as a cross-domain routing playbook for AID-derived
+content, release notes, patch notes, version-history rows, technical version
+documents, Replication Manager release notes, and accepted limitations. The new
+playbook does not change any domain procedure. It decides when a domain
+playbook may use a source route, when a source recheck is required, and when an
+AID row must remain evidence-only or an accepted limitation.
+
+The route preserves the Stage 1 AID tiering decisions from
+`GPTs/reports/aid_tier_manifest.tsv`: upload-content candidates may support
+guarded working content, evidence-only authority rows remain audit or trace
+evidence by default, and accepted limitations stay labeled limitations. It also
+keeps the global 20 Markdown file upload limit visible for later package work
+and explicitly avoids a blanket AID Korean-to-English rewrite pass.
+
+The validator now checks required tokens for the AID/version/release/patch
+domain, including AID tier labels, `Altibase 8.1 verified source`, `BUG-*`,
+`TASK-*`, `database binary version`, `meta version`, `CM protocol version`,
+`replication protocol version`, and the relevant `CONF-*` guardrails.
 
 ## Validation
 

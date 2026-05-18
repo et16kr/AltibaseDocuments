@@ -243,6 +243,36 @@ DOMAIN_REQUIRED_TOKENS = {
         "ARCHIVE_DIR",
         "ADMIN_MODE",
     ],
+    "AID, version, release, and patch routing": [
+        "AID-000001",
+        "AID-000005",
+        "AID-000006",
+        "AID-000015",
+        "AID-000022",
+        "AID-SRC-000423",
+        "AID-SRC-000438",
+        "upload_content_candidate",
+        "evidence_only_authority",
+        "accepted_limitation",
+        "Korean-source-verified",
+        "Link-validated Korean-source-verified",
+        "English-only source",
+        "source_limitation",
+        "llm-reference/",
+        "Altibase 8.1 verified source",
+        "BUG-*",
+        "TASK-*",
+        "database binary version",
+        "meta version",
+        "CM protocol version",
+        "replication protocol version",
+        "global 20 Markdown file",
+        "CONF-000004",
+        "CONF-000005",
+        "CONF-000006",
+        "CONF-000007",
+        "CONF-000009",
+    ],
 }
 
 PLAYBOOK_ID_RE = re.compile(r"APB-\d{6}\Z")
@@ -312,6 +342,10 @@ def baseline_block_ids() -> set[str]:
 def guardrail_ids() -> set[str]:
     text = CONFLICT_REGISTER.read_text(encoding="utf-8")
     return set(re.findall(r"\bCONF-\d{6}\b", text))
+
+
+def aid_tier_rows_by_id() -> dict[str, dict[str, str]]:
+    return {row["aid_source_id"]: row for row in read_tsv(AID_TIER_MANIFEST)}
 
 
 def check_forbidden_git_edits(errors: list[str]) -> None:
@@ -391,6 +425,22 @@ def check_playbook_file(row: dict[str, str], errors: list[str]) -> None:
     for token in DOMAIN_REQUIRED_TOKENS.get(row["domain"], []):
         if token not in text:
             errors.append(f"{label}: playbook file is missing domain token: {token}")
+
+    if row["domain"] == "AID, version, release, and patch routing":
+        aid_rows = aid_tier_rows_by_id()
+        for source_id in split_semicolon(row["source_ids"]):
+            if source_id.startswith("AID-") and not source_id.startswith("AID-SRC-"):
+                tier_row = aid_rows.get(source_id)
+                if tier_row is None:
+                    errors.append(f"{label}: AID tier source is not in aid_tier_manifest: {source_id}")
+                    continue
+                for field in ("aid_tier", "allowed_downstream_use", "required_label"):
+                    value = tier_row[field]
+                    if value and value not in text:
+                        errors.append(
+                            f"{label}: playbook file is missing AID {field} "
+                            f"from aid_tier_manifest for {source_id}: {value}"
+                        )
 
 
 def check_known_list(
