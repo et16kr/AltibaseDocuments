@@ -1,11 +1,12 @@
 # Stage 2 Agent Playbooks
 
-- Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, and `S2-J005`
+- Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`, and
+  `S2-J006`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
   service-development SQL generation playbooks, application connectivity
   playbooks, and protected administration playbooks
-- Status: scaffolded with completed `S2-J003`, `S2-J004`, and `S2-J005`
-  playbook routes
+- Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`, and
+  `S2-J006` playbook routes
 
 ## Boundary
 
@@ -109,6 +110,31 @@ properties, backup/recovery, security/TLS, and the protected-administration gate
 so critical operational tokens such as `CREATE DATABASE`, `SHUTDOWN ABORT`,
 `V$PROPERTY`, `ALTER DATABASE BACKUP DATABASE`, `SSL_ENABLE`, and
 `DROP TABLESPACE` cannot be silently dropped from completed playbooks.
+
+## S2-J006 Design Note
+
+`S2-J006` promotes the replication and CDC route from a placeholder to a guarded
+playbook for replication topology, DDL drafts, state and sync checks, conflict
+handling, Log Analyzer CDC, Replication Manager workflows, client Fail-Over
+routing, and Altibase 8.1 verified source replication SSL separation. The
+playbook preserves separate source routes for the `replication_manual`,
+`log_analyzer`, and `replication_manager` families and keeps ordinary
+client/server TLS separate from `CREATE REPLICATION ... USING SSL` with
+`REPLICATION_SSL_PORT_NO`.
+
+The route intentionally generates first drafts and evidence bundles rather than
+production-ready replication operations. State-changing commands such as
+`ALTER REPLICATION`, `QUICKSTART`, `RESET`, `DROP REPLICATION`, DDL
+synchronization, Log Analyzer starts, Replication Manager destructive GUI
+actions, and replication SSL setup require exact target-version source blocks,
+customer topology, object definitions, runtime state, logs, validation checks,
+and rollback or recovery evidence.
+
+The validator now includes domain-token checks for the completed replication and
+CDC playbook so required tokens such as `CREATE REPLICATION`,
+`ALTER REPLICATION`, `V$REPSENDER`, `V$REPRECEIVER`, `Log Analyzer`,
+`Replication Manager`, `USING SSL`, and `REPLICATION_SSL_PORT_NO` cannot be
+silently dropped.
 
 ## Validation
 
