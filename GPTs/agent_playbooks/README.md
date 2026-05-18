@@ -1,12 +1,14 @@
 # Stage 2 Agent Playbooks
 
-- Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`, and
-  `S2-J006`
+- Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`,
+  `S2-J006`, and `S2-J007`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
   service-development SQL generation playbooks, application connectivity
-  playbooks, and protected administration playbooks
+  playbooks, protected administration playbooks, and tools/integration
+  playbooks
 - Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`, and
-  `S2-J006` playbook routes
+  `S2-J006` playbook routes plus completed `S2-J007` tools and integration
+  routes
 
 ## Boundary
 
@@ -135,6 +137,31 @@ CDC playbook so required tokens such as `CREATE REPLICATION`,
 `ALTER REPLICATION`, `V$REPSENDER`, `V$REPRECEIVER`, `Log Analyzer`,
 `Replication Manager`, `USING SSL`, and `REPLICATION_SSL_PORT_NO` cannot be
 silently dropped.
+
+## S2-J007 Design Note
+
+`S2-J007` promotes the tools and migration/integration routes from placeholders
+to guarded playbooks. `tools.md` owns iSQL, iLoader, utilities, `dataCompJ`,
+dump tools, `altiComp`, `aexport`, logs, bad files, generated scripts, exact
+command options, and AID utility extracts. `migration_integrations.md` owns
+Migration Center, Adapter for Oracle, DB Link, Hadoop/Sqoop,
+Kubernetes/AKU, Spatial and altiShapeLoader, NiFi, Tableau, and AID
+integration routes.
+
+Both playbooks preserve exact command names, option tokens, input and output
+file names, expected output tokens, and source-pack/KAE/AID routes. Because the
+covered tools can load data, delete destination objects, synchronize tables,
+change replication state, run third-party connectors, or depend on live
+compatibility evidence, they generate guarded first drafts and validation
+checklists rather than final production commands when customer environment,
+patch-level, installed help, source/target object, rollback, or third-party
+version evidence is missing.
+
+The validator now includes domain-token checks for `Tools` and `Migration and
+integrations` so required tokens such as `iSQL`, `iLoader`, `dataCompJ`,
+`aexport`, `Migration Center`, `oraAdapter`, `CREATE DATABASE LINK`,
+`com.altibase.sqoop.manager.AltibaseManager`, `aku -p start`, `GEOMETRY`,
+`NiFi`, and `Tableau` cannot be silently dropped.
 
 ## Validation
 
