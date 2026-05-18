@@ -58,3 +58,10 @@ Check that committed source-pack shards and mapping are current:
 ```bash
 python3 GPTs/source_pack/scripts/build_source_pack.py --check
 ```
+
+Validate the committed source pack, exact extracted source blocks, size/token gates,
+and generated Stage 1 notes:
+
+```bash
+python3 GPTs/source_pack/scripts/validate_source_pack.py --check
+```
