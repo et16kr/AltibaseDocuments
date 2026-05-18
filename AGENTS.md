@@ -14,15 +14,85 @@ The active loop is:
 5. Commit the stage when the report reaches `Verdict: Pass` with no actionable
    `Blocker`, `High`, `Medium`, or `Low` findings.
 
+## GPT Customer And Agent Enablement Objective
+
+The current top-level product objective is recorded in
+`GPTs/reports/customer_agent_enablement_requirements.md`.
+
+This repository is no longer only preparing compact GPT upload attachments. The target
+is an Altibase GPT knowledge system that lets first-time overseas customers,
+customer-owned LLMs, and coding agents perform source-backed Altibase work and build
+Altibase-backed services with minimal or no Altibase technical-support intervention
+for topics covered by the selected repository-local source corpus and the adjacent
+AID corpus at `~/AID`.
+
+The system should use three complementary knowledge layers plus one final upload
+package:
+
+- `GPTs/source_pack/`: a source-preserving knowledge pack that keeps selected Markdown
+  source content without silent omission, with source IDs, source boundaries,
+  authority labels, and validation.
+- `GPTs/agent_playbooks/`: task-oriented playbooks for customers, LLMs, and coding
+  agents to generate, configure, execute, validate, troubleshoot, and test
+  source-backed Altibase work.
+- `GPTs/attachments/`: answer-ready customer reference files that remain concise,
+  English-normalized, retrieval-friendly, and guarded for safe synthesis.
+- `GPTs/upload_package/`: the actual GPT Knowledge upload package assembled from the
+  source-preserving, playbook, and answer-ready layers.
+
+Coding-agent and customer-LLM support is in scope. Documentation should preserve the
+inputs, commands, SQL, application code, configuration, files, APIs, checks, expected
+outputs, risks, cleanup/rollback notes, and stop conditions needed for
+Altibase-backed service design and implementation, DBA work, DDL/DCL generation, SQL
+generation, environment/property configuration, ODBC/CLI/C Interface/Precompiler/JDBC
+connections, iSQL/iLoader/utilities, backup/recovery, replication, TLS/security,
+migration, integrations, troubleshooting, and test-case generation.
+
+SQL/DDL/DCL generation is an important example, not the boundary of the requirement.
+GPTs and coding agents should be able to generate guarded, source-backed first drafts
+of the practical artifacts an SI engineer, developer, or DBA needs to build and
+operate an Altibase-backed service.
+
+If an answer or generated artifact depends on exact customer environment, runtime
+state, patch level, platform, log excerpt, object definition, installed tool output,
+unsupported behavior, or live validation, ask for that missing input and provide the
+safest source-backed next check instead of inventing a definitive answer.
+
+The `~/AID` workspace is also in scope. It contains Korean-source-updated English
+documentation, source-stabilization evidence, semantic coverage reports, and an
+`llm-reference/` package intended for GPTs, Codex, and other LLMs. Treat AID content as
+a high-value English working source while preserving its own Korean-source-verified,
+English-only auxiliary, source-limitation, attachment, and coverage classifications.
+Do not schedule a blanket Korean-to-English rewrite pass for AID unless AID evidence
+or spot checks identify a specific unresolved gap; AID still requires inventory,
+source preservation, classification preservation, conflict checks, packaging,
+retrieval testing, playbook integration, and readiness validation.
+Classify AID material before packaging: stabilized English and source-backed
+`llm-reference/` files are upload-content candidates; Korean source files, manifests,
+coverage matrices, and review reports are evidence-only by default; accepted
+`source_limitation` or excluded low-information content must remain recorded
+limitations; conflicts or weak evidence require a recheck record before upload use.
+If AID content conflicts with the selected Altibase manual corpus, record the conflict
+and resolve it using the active Korean-authoritative source policy.
+
+The final GPT Knowledge upload package must be 20 Markdown files or fewer including
+AID-derived content. This is a global upload limit, not 20 files for repository-local
+manuals plus additional files for AID. Auxiliary manifests, reports, scripts, and
+validation artifacts may exist outside the upload package, but anything intended for
+GPT Knowledge upload counts toward the same limit. Files outside `GPTs/upload_package/`
+are not final upload files unless they are intentionally copied or transformed into
+that package and listed in the final upload manifest.
+
 ## GPT Attachment Objective
 
-`GPTs/attachments/` is intended to be an encyclopedia-grade consolidated reference
-for overseas customers who may have no prior Altibase knowledge.
+`GPTs/attachments/` is intended to be an encyclopedia-grade answer-ready reference
+layer for overseas customers who may have no prior Altibase knowledge.
 
-The 20 Markdown files are packaging units for GPT upload, not a high-frequency FAQ
-subset. They should preserve answerability for the selected Altibase manuals, release
-notes, technical documents, tool manuals, third-party guides, and approved supporting
-source inventory already present in this repository.
+The final uploaded Markdown files are packaging units for GPT upload, not a
+high-frequency FAQ subset. They should preserve answerability for the selected
+Altibase manuals, release notes, technical documents, tool manuals, third-party
+guides, AID-derived source and reference content, and approved supporting source
+inventory already present in this repository.
 
 Within supported Altibase 7.1, 7.3, and 8.1 scope, a manual/source-backed question
 should be answerable from the attachment set without replying only that the detail is
