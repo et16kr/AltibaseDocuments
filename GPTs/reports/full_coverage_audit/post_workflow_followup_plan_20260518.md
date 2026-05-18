@@ -141,9 +141,14 @@ selected sources:
 | Version and patch boundaries | Preserve the version/patch where behavior exists, changes, or is unsupported; do not generalize 7.1, 7.3, and 8.1 behavior without source evidence. |
 | Guardrails and accepted omissions | Record why a detail is excluded, unsafe, customer-specific, unsupported, or better answered by asking for missing input. |
 
+Standalone policy artifact:
+
+- `GPTs/reports/full_coverage_audit/replacement_grade_reference_policy_20260518.md`
+
 The two source-replacement samples below are examples that exposed the policy need.
-They are not the whole standard. `PWF-J002A` must turn this direction into a standalone
-policy document, and `PWF-J016A` must apply it across all source families.
+They are not the whole standard and must not be used as the only acceptance threshold.
+The standalone policy applies across all selected source families, and `PWF-J016A`
+must apply it across the full attachment set.
 
 ## Korean Source Replacement Samples
 
@@ -373,7 +378,7 @@ were too large for reliable exact-token review and recovery.
 | --- | --- |
 | `PWF-J001` | Lock the latest benchmark evidence without remediation. |
 | `PWF-J002` | Design patch-note closure before attachment edits. |
-| `PWF-J002A` | Define the replacement-grade policy for customer Q&A, LLM retrieval, coding-agent implementation, and test-case generation across all source families. |
+| `PWF-J002A` | Define `replacement_grade_reference_policy_20260518.md` as the replacement-grade policy for customer Q&A, LLM retrieval, coding-agent implementation, and test-case generation across all source families. |
 | `PWF-J003` through `PWF-J014` | Close or justify `SRC-PATCH-PATCH-000001` through `SRC-PATCH-PATCH-000115` in small batches. |
 | `PWF-J015` | Remediate or justify the sampled SSL/TLS appendix replacement gap before final closure validation. |
 | `PWF-J016` | Validate full source-to-attachment closure with `Missing=0` and `Retrieval-weak=0`. |
@@ -419,8 +424,9 @@ Do not lower thresholds or rewrite benchmark questions to make the benchmark pas
 ## Suggested Next Immediate Action
 
 Create and execute the workflow from `PWF-J001` onward after this draft is committed.
-The early part of the workflow now includes `PWF-J002A`, so the replacement-grade
-policy is established before patch-note and domain remediation scale out.
+The early part of the workflow now includes `PWF-J002A`, so
+`replacement_grade_reference_policy_20260518.md` is established before patch-note and
+domain remediation scale out.
 
 Do not split off the later remediation waves until `PWF-J016A` has produced the
 cross-document replacement-grade gap register. That register is the handoff that
