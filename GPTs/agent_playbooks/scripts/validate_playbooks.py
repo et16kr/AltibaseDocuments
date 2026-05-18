@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the Stage 2 agent playbook manifest scaffold."""
+"""Validate the Stage 2 agent playbook and scenario-test scaffold."""
 
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[3]
 PLAYBOOK_DIR = ROOT / "GPTs/agent_playbooks"
 MANIFEST_PATH = PLAYBOOK_DIR / "playbook_manifest.tsv"
 README_PATH = PLAYBOOK_DIR / "README.md"
+SCENARIO_PATH = PLAYBOOK_DIR / "test_scenarios.md"
+RUBRIC_PATH = PLAYBOOK_DIR / "scenario_judge_rubric.md"
 SOURCE_MANIFEST = ROOT / "GPTs/source_pack/source_manifest.tsv"
 SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
 BASELINE_MANIFEST = ROOT / "GPTs/korean_aligned_english/baseline_manifest.tsv"
@@ -119,6 +121,64 @@ INSTRUCTION_NOTE_REQUIRED_TOKENS = [
     "validation SQL",
     "test",
     "generic database assumptions",
+]
+
+REQUIRED_SCENARIOS = {
+    "SCN-001": "Minimal Altibase-Backed Service Plan",
+    "SCN-002": "Application Connection Code And Configuration",
+    "SCN-003": "Disk Tablespace DDL With Validation SQL",
+    "SCN-004": "User And Privilege Setup",
+    "SCN-005": "GPT Copy/Paste Implementation Artifacts",
+    "SCN-006": "ODBC DSN Configuration And Verification",
+    "SCN-007": "JDBC Example With Version Caveats",
+    "SCN-008": "iSQL Script With Spool And Log Handling",
+    "SCN-009": "iLoader Load And Export Workflow",
+    "SCN-010": "Safe Property Change",
+    "SCN-011": "Exact Error Diagnosis",
+    "SCN-012": "Backup And Recovery Check",
+    "SCN-013": "Replication Setup Draft",
+    "SCN-014": "TLS Client/Server Basics",
+    "SCN-015": "Utility Or Migration Workflow",
+    "SCN-016": "Positive And Negative SQL Tests",
+}
+
+SCENARIO_REQUIRED_FIELDS = [
+    "Input Prompt:",
+    "Expected Source IDs:",
+    "Expected Artifacts:",
+    "Applicability:",
+    "Required Exact Tokens:",
+    "Forbidden Generic Assumptions:",
+    "Missing Inputs:",
+    "Expected Files/Code/SQL/Commands/Configuration/Tests:",
+    "Validation Checks:",
+    "Stop Conditions:",
+    "Scenario Scoring Rubric:",
+    "Pass Threshold:",
+    "Pass/Fail Result Placeholder:",
+]
+
+RUBRIC_REQUIRED_TOKENS = [
+    "Required Source IDs",
+    "Required Exact Tokens",
+    "Forbidden Generic Assumptions",
+    "Missing-Input Prompts",
+    "Generated Artifacts",
+    "Validation Steps",
+    "Stop Conditions",
+    "Pass Threshold",
+    "Blocker Failures",
+    "85/100",
+    "source IDs",
+    "exact tokens",
+    "forbidden generic assumption",
+    "missing-input prompts",
+    "generated artifacts",
+    "validation steps",
+    "stop conditions",
+    "Oracle",
+    "generic JDBC",
+    "generic ODBC",
 ]
 
 DOMAIN_REQUIRED_TOKENS = {
@@ -414,6 +474,82 @@ def check_instruction_notes(errors: list[str]) -> None:
             errors.append(f"{label}: instruction note must include a fenced structure template")
 
 
+def scenario_sections(text: str) -> dict[str, str]:
+    matches = list(re.finditer(r"^### (SCN-\d{3}): .*$", text, re.MULTILINE))
+    sections: dict[str, str] = {}
+    for index, match in enumerate(matches):
+        scenario_id = match.group(1)
+        start = match.start()
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
+        sections[scenario_id] = text[start:end]
+    return sections
+
+
+def check_scenarios(errors: list[str]) -> None:
+    label = rel(SCENARIO_PATH)
+    if not SCENARIO_PATH.exists():
+        errors.append(f"Required scenario file missing: {label}")
+        return
+
+    text = SCENARIO_PATH.read_text(encoding="utf-8")
+    sections = scenario_sections(text)
+    known_sources = source_ids()
+
+    for scenario_id, title in REQUIRED_SCENARIOS.items():
+        heading = f"### {scenario_id}: {title}"
+        section = sections.get(scenario_id)
+        if section is None or heading not in section:
+            errors.append(f"{label}: missing required scenario heading: {heading}")
+            continue
+
+        for field in SCENARIO_REQUIRED_FIELDS:
+            if field not in section:
+                errors.append(f"{label}: {scenario_id} missing required field: {field}")
+
+        source_refs = re.findall(r"\b(?:SRC|AID|AID-SRC)-\d{6}\b", section)
+        if not source_refs:
+            errors.append(f"{label}: {scenario_id} must list expected source IDs")
+        for source_ref in source_refs:
+            if source_ref not in known_sources:
+                errors.append(f"{label}: {scenario_id} references unknown source ID: {source_ref}")
+
+        if "85/100 and no blocker" not in section:
+            errors.append(f"{label}: {scenario_id} must preserve pass threshold text")
+        if "Not run" not in section:
+            errors.append(f"{label}: {scenario_id} must include pass/fail placeholder")
+
+    unexpected = sorted(set(sections) - set(REQUIRED_SCENARIOS))
+    if unexpected:
+        errors.append(f"{label}: unexpected scenario IDs: {'; '.join(unexpected)}")
+
+    lower_text = text.lower()
+    for token in (
+        "direct GPT",
+        "coding-agent",
+        "forbidden generic assumptions",
+        "missing-input prompts",
+        "validation checks",
+        "stop conditions",
+    ):
+        if token.lower() not in lower_text:
+            errors.append(f"{label}: scenario suite missing required global token: {token}")
+
+
+def check_scenario_rubric(errors: list[str]) -> None:
+    label = rel(RUBRIC_PATH)
+    if not RUBRIC_PATH.exists():
+        errors.append(f"Required scenario judge rubric missing: {label}")
+        return
+
+    text = RUBRIC_PATH.read_text(encoding="utf-8")
+    for token in RUBRIC_REQUIRED_TOKENS:
+        if token not in text:
+            errors.append(f"{label}: rubric missing required token: {token}")
+
+    if "```" not in text:
+        errors.append(f"{label}: rubric must include a fenced result record template")
+
+
 def check_path(row: dict[str, str], errors: list[str]) -> None:
     label = row["playbook_id"]
     path_text = row["path"]
@@ -625,6 +761,8 @@ def main() -> int:
         errors.extend(validate_rows(rows))
 
     check_instruction_notes(errors)
+    check_scenarios(errors)
+    check_scenario_rubric(errors)
     check_forbidden_git_edits(errors)
 
     if errors:

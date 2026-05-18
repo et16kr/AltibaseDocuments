@@ -1,15 +1,15 @@
 # Stage 2 Agent Playbooks
 
 - Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, `S2-J005`,
-  `S2-J006`, `S2-J007`, `S2-J008`, `S2-J009`, and `S2-J010`
+  `S2-J006`, `S2-J007`, `S2-J008`, `S2-J009`, `S2-J010`, and `S2-J011`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
   service-development SQL generation playbooks, application connectivity
   playbooks, protected administration playbooks, tools/integration playbooks,
   troubleshooting/performance playbooks, AID/version/release/patch routing,
-  and coding-agent/GPT instruction notes
+  coding-agent/GPT instruction notes, and scenario-test rubric
 - Status: scaffolded with completed `S2-J003`, `S2-J004`, `S2-J005`,
   `S2-J006`, `S2-J007`, `S2-J008`, `S2-J009` playbook routes, and
-  `S2-J010` instruction notes
+  `S2-J010` instruction notes, plus `S2-J011` scenario tests
 
 ## Boundary
 
@@ -225,6 +225,22 @@ The validator now checks that both instruction notes exist and preserve the
 required source-routing, missing-input, validation, artifact-class, and stop
 condition tokens.
 
+## S2-J011 Design Note
+
+`S2-J011` adds `test_scenarios.md` and `scenario_judge_rubric.md` as the
+Stage 2 scenario-test contract for direct GPT and coding-agent outputs. The
+scenario suite covers the minimum service planning, SQL/DDL/DCL, connectivity,
+tooling, protected-operation, troubleshooting, replication, TLS, migration,
+and positive/negative SQL test cases required by
+`customer_agent_enablement_requirements.md`.
+
+The scenario files do not add new Altibase behavior. They judge outputs
+against existing playbook routes, expected source IDs, exact tokens, forbidden
+generic assumptions, missing-input prompts, generated artifacts, validation
+steps, stop conditions, and per-scenario pass thresholds. The validator now
+checks that every minimum scenario and every required rubric category remains
+present.
+
 ## Validation
 
 Run:
@@ -236,5 +252,6 @@ python3 GPTs/agent_playbooks/scripts/validate_playbooks.py
 The validator checks manifest schema, duplicate playbook IDs, path boundaries,
 required domain placeholders, ID and block-reference formats, known source and
 baseline references when populated, forbidden `GPTs/attachments/` or
-`GPTs/upload_package/` edits, file existence for non-planned playbook rows, and
-required instruction-note tokens.
+`GPTs/upload_package/` edits, file existence for non-planned playbook rows,
+required instruction-note tokens, required scenario coverage, scenario source
+ID validity, and required judge-rubric categories.
