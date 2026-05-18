@@ -19,14 +19,15 @@ No baseline validation blockers were found. Existing open conflict/recheck rows 
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Baseline manifest schema and status values | Pass | 279 rows; statuses {'aid_reuse': 1, 'aligned': 6, 'excluded': 17, 'pending': 255} |
-| Generated inventory currentness | Pass | 271 S1-J006 generated rows matched; 8 extension rows retained |
+| Baseline manifest schema and status values | Pass | 282 rows; statuses {'aid_reuse': 1, 'aligned': 9, 'excluded': 17, 'pending': 255} |
+| Generated inventory currentness | Pass | 271 S1-J006 generated rows matched; 11 extension rows retained |
 | AID reuse classification preservation | Pass | 28 AID tier rows; upload candidates=5; AID-SRC counts {'English-only source': 126, 'Korean-source-verified': 167, 'Korean-source-verified; Link-validated Korean-source-verified; English-only source; source_limitation labels preserved': 16, 'Link-validated Korean-source-verified': 129} |
-| Baseline Markdown block traceability | Pass | 37 KAE blocks; 35 high-risk blocks checked |
+| S1R-J003 remediation scope routing | Pass | 18 Monitoring API, SNMP Agent, and Log Analyzer rows checked; statuses {'aligned_baseline': 18} |
+| Baseline Markdown block traceability | Pass | 40 KAE blocks; 38 high-risk blocks checked |
 | Korean prose leakage scan | Pass | 0 Hangul matches in customer-facing baseline Markdown |
 | Unsupported Oracle/generic inference scan | Pass | No disallowed inference phrases found; anti-inference guardrails present |
 | Conflict and recheck register coverage | Pass | 9 rows; statuses {'accepted_limitation': 3, 'accepted_residual_risk': 1, 'open': 5} |
-| Whitespace diff check | Pass | `git diff --check -- GPTs/korean_aligned_english GPTs/reports/source_conflict_register.md` -> no whitespace errors |
+| Whitespace diff check | Pass | `git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_readiness_remediation_scope.tsv GPTs/reports/source_conflict_register.md` -> no whitespace errors |
 
 ## Conflict Register Outcome
 
@@ -45,7 +46,7 @@ The following checks are part of this job's verification set:
 ```bash
 python3 GPTs/korean_aligned_english/scripts/validate_alignment.py --write-report
 rg -n -P "\p{Hangul}" GPTs/korean_aligned_english --glob '*.md' || true
-git diff --check -- GPTs/korean_aligned_english GPTs/reports/source_conflict_register.md
+git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_readiness_remediation_scope.tsv GPTs/reports/source_conflict_register.md
 ```
 
 Recorded `git diff --check` outcome: Pass (no whitespace errors).

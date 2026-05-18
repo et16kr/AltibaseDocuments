@@ -26,6 +26,7 @@ AID_TIER_MANIFEST = ROOT / "GPTs/reports/aid_tier_manifest.tsv"
 SOURCE_MANIFEST = ROOT / "GPTs/source_pack/source_manifest.tsv"
 SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
 CONFLICT_REGISTER = ROOT / "GPTs/reports/source_conflict_register.md"
+STAGE_01_SCOPE = ROOT / "GPTs/reports/stage_01_readiness_remediation_scope.tsv"
 
 BASELINE_MARKDOWN = [
     BASELINE_DIR / "admin_operations_baseline.md",
@@ -33,12 +34,16 @@ BASELINE_MARKDOWN = [
     BASELINE_DIR / "client_tool_integration_baseline.md",
     BASELINE_DIR / "release_patch_technical_aid_baseline.md",
     BASELINE_DIR / "stored_external_procedures_baseline.md",
+    BASELINE_DIR / "monitoring_log_analyzer_baseline.md",
 ]
 
 REQUIRED_MARKDOWN_BLOCK_IDS = {
     "KAE-BLOCK-000277",
     "KAE-BLOCK-000278",
     "KAE-BLOCK-000279",
+    "KAE-BLOCK-000280",
+    "KAE-BLOCK-000281",
+    "KAE-BLOCK-000282",
 }
 
 BASELINE_COLUMNS = build_baseline_manifest.BASELINE_COLUMNS
@@ -309,6 +314,9 @@ def validate_manifest(
         "KAE-BLOCK-000277",
         "KAE-BLOCK-000278",
         "KAE-BLOCK-000279",
+        "KAE-BLOCK-000280",
+        "KAE-BLOCK-000281",
+        "KAE-BLOCK-000282",
     }
     missing_extensions = sorted(required_extensions.difference(manifest_by_id))
     if missing_extensions:
@@ -443,6 +451,65 @@ def validate_conflicts(
     )
 
 
+def validate_stage1_remediation_scope(
+    errors: list[str],
+    checks: list[CheckResult],
+    scope_rows: list[dict[str, str]],
+    manifest_by_id: dict[str, dict[str, str]],
+) -> None:
+    expected_routes = {
+        "Log Analyzer User's Manual.md": "KAE-BLOCK-000280",
+        "Monitoring API Developer's Guide.md": "KAE-BLOCK-000281",
+        "SNMP Agent Guide.md": "KAE-BLOCK-000282",
+    }
+    checked = 0
+    status_counts: Counter[str] = Counter()
+
+    for row in scope_rows:
+        if row.get("conflict_id") != "CONF-000008":
+            continue
+        if row.get("assigned_remediation_job") != "S1R-J003":
+            continue
+        if row.get("source_family") not in {"log_analyzer", "monitoring_api_snmp"}:
+            continue
+
+        checked += 1
+        source_path = row.get("source_path", "")
+        status = row.get("current_routing_status", "")
+        status_counts[status] += 1
+
+        expected_block = ""
+        for filename, route_block in expected_routes.items():
+            if source_path.endswith(filename):
+                expected_block = route_block
+                break
+
+        if not expected_block:
+            errors.append(f"S1R-J003 row has unexpected source path: {source_path}")
+            continue
+        if row.get("baseline_block_id") != expected_block:
+            errors.append(
+                f"{row.get('source_id')}: expected {expected_block} routing, found {row.get('baseline_block_id')}"
+            )
+        if status != "aligned_baseline":
+            errors.append(
+                f"{row.get('source_id')}: S1R-J003 routing is still blocking or unsupported: {status!r}"
+            )
+        if expected_block not in manifest_by_id:
+            errors.append(f"{row.get('source_id')}: route block {expected_block} missing from baseline_manifest.tsv")
+
+    if checked != 18:
+        errors.append(f"S1R-J003 CONF-000008 scope row count changed: expected 18, found {checked}")
+
+    checks.append(
+        CheckResult(
+            "S1R-J003 remediation scope routing",
+            "Pass",
+            f"{checked} Monitoring API, SNMP Agent, and Log Analyzer rows checked; statuses {dict(sorted(status_counts.items()))}",
+        )
+    )
+
+
 def validate_markdown_blocks(
     errors: list[str],
     checks: list[CheckResult],
@@ -518,7 +585,7 @@ def validate_markdown_blocks(
     missing_markdown_blocks = sorted(REQUIRED_MARKDOWN_BLOCK_IDS.difference(markdown_block_ids))
     if missing_markdown_blocks:
         errors.append(
-            "missing required stored/external procedure Markdown blocks: "
+            "missing required aligned extension Markdown blocks: "
             + ", ".join(missing_markdown_blocks)
         )
 
@@ -564,6 +631,7 @@ def run_diff_check() -> tuple[bool, str]:
             "--check",
             "--",
             "GPTs/korean_aligned_english",
+            "GPTs/reports/stage_01_readiness_remediation_scope.tsv",
             "GPTs/reports/source_conflict_register.md",
         ],
         cwd=ROOT,
@@ -584,6 +652,7 @@ def validate(write_report: bool = False) -> tuple[list[str], list[CheckResult]]:
     source_list = read_tsv(SOURCE_MANIFEST)
     aid_list = read_tsv(AID_TIER_MANIFEST)
     shard_list = read_tsv(SOURCE_TO_SHARD)
+    scope_rows = read_tsv(STAGE_01_SCOPE)
     conflict_rows = parse_conflict_register(CONFLICT_REGISTER)
 
     source_rows = {row["source_id"]: row for row in source_list}
@@ -614,6 +683,7 @@ def validate(write_report: bool = False) -> tuple[list[str], list[CheckResult]]:
         manifest_by_id,
         release_text,
     )
+    validate_stage1_remediation_scope(errors, checks, scope_rows, manifest_by_id)
 
     referenced_conflicts = validate_markdown_blocks(
         errors,
@@ -644,7 +714,7 @@ def validate(write_report: bool = False) -> tuple[list[str], list[CheckResult]]:
             CheckResult(
                 "Whitespace diff check",
                 "Pass" if diff_ok else "Fail",
-                f"`git diff --check -- GPTs/korean_aligned_english GPTs/reports/source_conflict_register.md` -> {diff_output}",
+                f"`git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_readiness_remediation_scope.tsv GPTs/reports/source_conflict_register.md` -> {diff_output}",
             )
         )
         report_text = render_report(errors, checks, diff_result=(diff_ok, diff_output))
@@ -724,7 +794,7 @@ def render_report(
             "```bash",
             "python3 GPTs/korean_aligned_english/scripts/validate_alignment.py --write-report",
             "rg -n -P \"\\p{Hangul}\" GPTs/korean_aligned_english --glob '*.md' || true",
-            "git diff --check -- GPTs/korean_aligned_english GPTs/reports/source_conflict_register.md",
+            "git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_readiness_remediation_scope.tsv GPTs/reports/source_conflict_register.md",
             "```",
         ]
     )
