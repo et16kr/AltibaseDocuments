@@ -19,13 +19,13 @@ No baseline validation blockers were found. Existing open conflict/recheck rows 
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Baseline manifest schema and status values | Pass | 276 rows; statuses {'aid_reuse': 1, 'aligned': 4, 'excluded': 16, 'pending': 255} |
-| Generated inventory currentness | Pass | 271 S1-J006 generated rows matched; 5 extension rows retained |
+| Baseline manifest schema and status values | Pass | 279 rows; statuses {'aid_reuse': 1, 'aligned': 6, 'excluded': 17, 'pending': 255} |
+| Generated inventory currentness | Pass | 271 S1-J006 generated rows matched; 8 extension rows retained |
 | AID reuse classification preservation | Pass | 28 AID tier rows; upload candidates=5; AID-SRC counts {'English-only source': 126, 'Korean-source-verified': 167, 'Korean-source-verified; Link-validated Korean-source-verified; English-only source; source_limitation labels preserved': 16, 'Link-validated Korean-source-verified': 129} |
-| Baseline Markdown block traceability | Pass | 34 KAE blocks; 33 high-risk blocks checked |
+| Baseline Markdown block traceability | Pass | 37 KAE blocks; 35 high-risk blocks checked |
 | Korean prose leakage scan | Pass | 0 Hangul matches in customer-facing baseline Markdown |
 | Unsupported Oracle/generic inference scan | Pass | No disallowed inference phrases found; anti-inference guardrails present |
-| Conflict and recheck register coverage | Pass | 9 rows; statuses {'accepted_limitation': 2, 'accepted_residual_risk': 1, 'open': 6} |
+| Conflict and recheck register coverage | Pass | 9 rows; statuses {'accepted_limitation': 3, 'accepted_residual_risk': 1, 'open': 5} |
 | Whitespace diff check | Pass | `git diff --check -- GPTs/korean_aligned_english GPTs/reports/source_conflict_register.md` -> no whitespace errors |
 
 ## Conflict Register Outcome

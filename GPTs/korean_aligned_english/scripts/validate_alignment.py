@@ -32,7 +32,14 @@ BASELINE_MARKDOWN = [
     BASELINE_DIR / "sql_reference_baseline.md",
     BASELINE_DIR / "client_tool_integration_baseline.md",
     BASELINE_DIR / "release_patch_technical_aid_baseline.md",
+    BASELINE_DIR / "stored_external_procedures_baseline.md",
 ]
+
+REQUIRED_MARKDOWN_BLOCK_IDS = {
+    "KAE-BLOCK-000277",
+    "KAE-BLOCK-000278",
+    "KAE-BLOCK-000279",
+}
 
 BASELINE_COLUMNS = build_baseline_manifest.BASELINE_COLUMNS
 
@@ -299,6 +306,9 @@ def validate_manifest(
         "KAE-BLOCK-000274",
         "KAE-BLOCK-000275",
         "KAE-BLOCK-000276",
+        "KAE-BLOCK-000277",
+        "KAE-BLOCK-000278",
+        "KAE-BLOCK-000279",
     }
     missing_extensions = sorted(required_extensions.difference(manifest_by_id))
     if missing_extensions:
@@ -500,6 +510,18 @@ def validate_markdown_blocks(
             )
 
     combined_text = "\n".join(path.read_text(encoding="utf-8") for path in BASELINE_MARKDOWN)
+    markdown_block_ids = {
+        block.heading.split(":", 1)[0].strip()
+        for block in all_blocks
+        if block.heading.startswith("KAE-BLOCK-")
+    }
+    missing_markdown_blocks = sorted(REQUIRED_MARKDOWN_BLOCK_IDS.difference(markdown_block_ids))
+    if missing_markdown_blocks:
+        errors.append(
+            "missing required stored/external procedure Markdown blocks: "
+            + ", ".join(missing_markdown_blocks)
+        )
+
     required_guardrails = [
         "Do not infer",
         "Do not generate Oracle-only",
