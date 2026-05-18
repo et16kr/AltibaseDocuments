@@ -1,76 +1,97 @@
 # Agent Playbook Gap Register
 
-Job: `S1-J012`
-Created: 2026-05-18
-Updated: `S1R-J006`
-Status: Stage 2 preflight input; Stage 1 remediation closure metadata applied
+- Created: 2026-05-18
+- Updated: 2026-05-19
+- Current job: `S2-J012`
+- Status: Stage 2 playbook validation gap register
 
 ## Reconfirmed Requirement And Boundary
 
-`S1-J012` performs the Stage 1 integration cross-check only. It does not create
-`GPTs/agent_playbooks/`, edit customer-facing attachments, or declare final
-readiness. This register records only Stage 2 blockers discovered while mapping
-source-pack rows to Korean-aligned English baseline rows and AID downstream
-dispositions.
+`S2-J012` validates Stage 2 playbook source routes, baseline routes, crosswalks, and
+remaining gaps. It does not edit original sources, `GPTs/attachments/`, or
+`GPTs/upload_package/`, and it does not create missing domain playbooks outside the
+crosswalk and validation-report scope.
 
-`S1R-J006` updates only the integration metadata for the completed Stage 1
-remediation jobs. It closes or downgrades `CONF-000008` and `CONF-000009` routing
-based on already-recorded aligned baselines, exact source-pack routes, and
-nonblocking exclusions; it does not add source evidence or weaken Korean-authority
-policy.
+This register extends the Stage 1 `S1-J012` / `S1R-J006` gap record. Stage 1 remains
+ready/pass for guarded Stage 2 routing. `CONF-000008` stays closed only as a Stage 1
+routing blocker, and `CONF-000009` stays a nonblocking exclusion guardrail.
 
-## Cross-Check Summary
+## Current Validation Snapshot
 
-Evidence source:
-`GPTs/reports/source_pack_to_korean_aligned_english_crosswalk.tsv`.
+Evidence sources:
+
+- `GPTs/agent_playbooks/playbook_manifest.tsv`
+- `GPTs/reports/source_pack_to_playbook_crosswalk.tsv`
+- `GPTs/reports/korean_aligned_english_to_playbook_crosswalk.tsv`
+- `GPTs/source_pack/source_manifest.tsv`
+- `GPTs/source_pack/source_to_shard_manifest.tsv`
+- `GPTs/korean_aligned_english/baseline_manifest.tsv`
+- `GPTs/reports/aid_tier_manifest.tsv`
 
 | Check | Result |
 | --- | --- |
-| Included source-pack rows checked | 941 |
-| AID tier rows checked | 28 |
-| Crosswalk rows written | 952 |
-| Source-pack rows with aligned, AID-reuse, or exact source-pack downstream route | 930 |
-| Source-pack rows still pending aligned remediation route | 0 |
-| Source-pack rows excluded from baseline with nonblocking reason | 2 |
-| Source-pack support-evidence rows outside customer playbook content | 10 |
-| AID upload-content candidates with downstream disposition | 5 of 5 |
+| Manifest rows | 17 |
+| Manifest rows at `validation_status=pass` | 16 |
+| Manifest rows at `validation_status=planned` | 1 |
+| Required domains with a manifest route or recorded gap | 14 of 14 |
+| Source-to-playbook crosswalk rows | 444 |
+| Unique source-pack source IDs in source-to-playbook crosswalk | 265 |
+| Korean-aligned English-to-playbook crosswalk rows | 127 |
+| Unique baseline block IDs in baseline-to-playbook crosswalk | 86 |
+| AID tier route IDs recorded separately from source-pack source IDs | 12 |
 
-The crosswalk preserves stable source IDs, source-pack block IDs, baseline block IDs,
-alignment status, planned downstream use, and conflict or recheck IDs for Stage 2.
-Rows marked as guarded candidates are usable only with their recorded recheck
-guardrails; they are not evidence of exhaustive readiness. No open Stage 2 blockers remain for `CONF-000008` or `CONF-000009`.
+Rows marked with residual risks are usable only for guarded first drafts. They do
+not authorize exhaustive, production-ready, patch-definitive, live-environment, or
+final-upload claims.
 
-## Stage 2 Blocker Closure
+## Not-Ready Blockers
 
-| Gap ID | Status | Severity | Source IDs | Baseline IDs | Conflict ID | Stage 2 Blocker | Required Stage 2 Handling |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| APG-S1-J012-001 | Closed | Info | `GPTs/reports/stage_01_readiness_remediation_scope.tsv` rows for `CONF-000008` | `KAE-BLOCK-000277` through `KAE-BLOCK-000286`; `KAE-BLOCK-000287` for Replication Manager release-note boundaries | `CONF-000008` | S1R-J002 through S1R-J005 added aligned working routes or exact source-pack routes for stored/external procedures, Log Analyzer, Monitoring API/SNMP, Performance Tuning, source indexes including 7.1 Sharding, and Replication Manager. | Stage 2 may use those routes for guarded drafting only. Exact syntax, APIs, command options, topology, runtime state, and production procedures still require target-version source blocks plus customer environment evidence. |
-| APG-S1-J012-002 | Nonblocking | Low | `SRC-000109`; `SRC-000169` | `KAE-BLOCK-000279` | `CONF-000009` | The two English-only stored-procedure media sources have no selected Korean authority and are deliberately excluded from authoritative customer-facing baseline use. | CONF-000009 remains a nonblocking exclusion guardrail. Keep these rows out of authoritative playbooks, attachments, and upload-package text unless a later job records Korean authority or approved auxiliary use; if cited as evidence, preserve the English-only extraction-aid label. |
+| Gap ID | Status | Severity | Scope | Evidence | Required handling |
+| --- | --- | --- | --- | --- | --- |
+| APG-S2-J012-001 | Open | Medium | `APB-000014` / Test generation | `playbook_manifest.tsv` keeps `APB-000014` at `validation_status=planned`; it has baseline block routes but no source IDs, no source-pack block IDs, and no `GPTs/agent_playbooks/test_generation.md` playbook file. The scenario-test suite exists in `test_scenarios.md`, but that is not a source-backed generated-test playbook. | Before declaring complete Stage 2 playbook readiness, create a source-ID-backed test-generation playbook or record an explicit readiness decision that test generation remains deferred. Until then, use the existing scenario tests only as validation scenarios, not as a customer-facing test-generation playbook. |
+
+## Accepted Limitations
+
+| Gap ID | Status | Severity | Scope | Evidence | Required handling |
+| --- | --- | --- | --- | --- | --- |
+| APG-S2-J012-002 | Accepted limitation | Low | AID source limitations, untranslated extraction-aid snippets, and English-only stored-procedure media exclusions | Carries forward `CONF-000001`, `CONF-000003`, and `CONF-000009`. `CONF-000009` keeps `SRC-000109` and `SRC-000169` excluded from authoritative customer-facing playbook, attachment, and upload-package text. | Preserve source-limitation labels, avoid copying Korean prose from extraction aids into customer-facing playbooks, and keep excluded English-only media rows out of authoritative generated artifacts unless a later source-authority decision changes the route. |
+
+## Residual Risks
+
+| Gap ID | Status | Severity | Scope | Evidence | Required handling |
+| --- | --- | --- | --- | --- | --- |
+| APG-S2-J012-003 | Open guardrail | Medium | Exact item-level admin, SQL/reference, client/tool, release/patch/AID, and `CONF-000008` remediation-scope claims | Carries forward `CONF-000002`, `CONF-000004`, `CONF-000005`, `CONF-000006`, `CONF-000007`, and the Stage 1 routing-closed but item-level guarded `CONF-000008`. These guardrails appear in the playbook manifest and both crosswalks. | Use playbooks only for guarded first drafts unless exact source blocks, target version, patch level, installed tool output, runtime state, logs, object definitions, validation evidence, and rollback or cleanup evidence are available for the requested artifact. |
+
+## Downstream Stage 3/4 Work
+
+| Gap ID | Status | Severity | Scope | Evidence | Required handling |
+| --- | --- | --- | --- | --- | --- |
+| APG-S2-J012-004 | Open downstream work | Low | Answer-ready attachment integration, scenario execution, AID upload composition, and final upload package assembly | Stage 2 now has source and baseline crosswalks, but the final GPT Knowledge package still must be assembled later under the global 20 Markdown file limit. Scenario rows are defined with `Not run` placeholders. AID upload-content candidates remain governed by `CONF-000007`. | Stage 3/4 jobs must decide attachment integration, run or judge scenario coverage where required, preserve AID labels, choose final upload files, and revalidate the final package before upload readiness. |
+
+## Carry-Forward Stage 1 Gap Closure
+
+| Gap ID | Status | Severity | Source IDs | Baseline IDs | Conflict ID | Stage 2 handling |
+| --- | --- | --- | --- | --- | --- | --- |
+| APG-S1-J012-001 | Closed | Info | `GPTs/reports/stage_01_readiness_remediation_scope.tsv` rows for `CONF-000008` | `KAE-BLOCK-000277` through `KAE-BLOCK-000286`; `KAE-BLOCK-000287` for Replication Manager release-note boundaries | `CONF-000008` | Stage 2 may route through these baselines only with exact source IDs, source-pack blocks, missing-input prompts, customer evidence, and recheck guardrails. |
+| APG-S1-J012-002 | Nonblocking | Low | `SRC-000109`; `SRC-000169` | `KAE-BLOCK-000279` | `CONF-000009` | Keep these rows excluded from authoritative customer-facing playbooks, attachments, and upload-package text unless later Korean authority or approved auxiliary use is recorded. |
 
 ## AID Downstream Disposition Check
 
 | AID tier row | Disposition |
 | --- | --- |
-| `AID-000001` | Maps to `KAE-BLOCK-000276`; upload-content candidate after file-level source-manifest selection; guarded by `CONF-000007` for final AID package composition. |
-| `AID-000002` | Maps to `KAE-BLOCK-000276`; upload-content candidate after file-level source-manifest selection; guarded by `CONF-000007`. |
-| `AID-000003` | Maps to `KAE-BLOCK-000276`; auxiliary-labeled English-only material; must preserve `CONF-000002` and `CONF-000007`. |
-| `AID-000004` | Maps to `KAE-BLOCK-000276`; primary AID llm-reference working source with preserved labels; guarded by `CONF-000007`. |
-| `AID-000005` | Maps to `KAE-BLOCK-000276`; upload-package candidate for later review; counts against the global 20 Markdown upload limit if selected. |
+| `AID-000001` | Upload-content candidate after file-level source-manifest selection; preserve Korean-source-verified or link-validated labels. |
+| `AID-000002` | Upload-content candidate after file-level source-manifest selection; preserve Korean-core FAQE verification labels. |
+| `AID-000003` | English-only auxiliary upload-content candidate; preserve `CONF-000002` and source-confidence labels. |
+| `AID-000004` | Primary AID `llm-reference/` working source with preserved labels. |
+| `AID-000005` | AID GPT upload-package candidate for later review; counts against the global 20 Markdown file limit if selected. |
 
-## Evidence-Only Non-Blockers
+## Self-Review Notes
 
-`SRC-000478` through `SRC-000486` are selected support-evidence rows under
-`GPTs/reports/`. They have no Korean-aligned English baseline block because they are
-audit and classification evidence, not customer-facing baseline content. The crosswalk
-marks them as `evidence_only_no_baseline_required`.
-
-## S1-J012 Self-Review Notes
-
-- Stale source IDs: none found in the crosswalk; every source-pack row resolves to a
-  source-pack shard row, or to an evidence-only disposition for support reports.
-- Missing AID rows: none found; all 28 AID tier rows are present, and all 5
-  upload-content candidates have a downstream disposition.
-- S1R-J006 closure check: pass. `CONF-000008` no longer has open Stage 2 blocker
-  rows, and `CONF-000009` is visible as a nonblocking English-only exclusion.
-- Overbroad ready claims: avoided. Rows with open conflict or recheck entries remain
-  marked as guarded candidates, not final readiness.
+- Not-ready blockers: `APB-000014` is the only planned, source-pack-unitemized
+  playbook row found by `S2-J012`.
+- Accepted limitations: `CONF-000009` remains visible and nonblocking; no playbook
+  row uses `SRC-000109` or `SRC-000169` as a source route.
+- Residual risks: open guardrails are intentionally preserved in the manifest and
+  crosswalks instead of being downgraded to readiness claims.
+- Downstream work: final attachment/upload-package integration and scenario execution
+  remain outside this job.

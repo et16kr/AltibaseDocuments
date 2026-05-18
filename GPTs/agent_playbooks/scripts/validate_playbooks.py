@@ -16,11 +16,17 @@ MANIFEST_PATH = PLAYBOOK_DIR / "playbook_manifest.tsv"
 README_PATH = PLAYBOOK_DIR / "README.md"
 SCENARIO_PATH = PLAYBOOK_DIR / "test_scenarios.md"
 RUBRIC_PATH = PLAYBOOK_DIR / "scenario_judge_rubric.md"
+VALIDATION_REPORT_PATH = PLAYBOOK_DIR / "playbook_validation.md"
 SOURCE_MANIFEST = ROOT / "GPTs/source_pack/source_manifest.tsv"
 SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
 BASELINE_MANIFEST = ROOT / "GPTs/korean_aligned_english/baseline_manifest.tsv"
 AID_TIER_MANIFEST = ROOT / "GPTs/reports/aid_tier_manifest.tsv"
 CONFLICT_REGISTER = ROOT / "GPTs/reports/source_conflict_register.md"
+GAP_REGISTER = ROOT / "GPTs/reports/agent_playbook_gap_register.md"
+SOURCE_PLAYBOOK_CROSSWALK = ROOT / "GPTs/reports/source_pack_to_playbook_crosswalk.tsv"
+BASELINE_PLAYBOOK_CROSSWALK = (
+    ROOT / "GPTs/reports/korean_aligned_english_to_playbook_crosswalk.tsv"
+)
 INSTRUCTION_NOTE_PATHS = [
     PLAYBOOK_DIR / "coding_agent_instruction_note.md",
     PLAYBOOK_DIR / "gpt_service_development_instruction_note.md",
@@ -44,6 +50,69 @@ MANIFEST_COLUMNS = [
     "owning_stage2_job",
     "notes",
 ]
+
+SOURCE_PLAYBOOK_CROSSWALK_COLUMNS = [
+    "playbook_id",
+    "playbook_path",
+    "playbook_title",
+    "domain",
+    "validation_status",
+    "source_id",
+    "source_origin",
+    "source_path",
+    "source_role",
+    "source_family",
+    "version_scope",
+    "authority_label",
+    "source_pack_shard_id",
+    "source_pack_block_id",
+    "source_pack_block_ref",
+    "source_pack_validation_status",
+    "aid_route_or_tier",
+    "aid_tier_ids",
+    "korean_aligned_baseline_block_ids",
+    "generated_artifact_types",
+    "protected_topic",
+    "guardrail_ids",
+    "remaining_gap_ids",
+    "remaining_gap_class",
+    "notes",
+]
+
+BASELINE_PLAYBOOK_CROSSWALK_COLUMNS = [
+    "playbook_id",
+    "playbook_path",
+    "playbook_title",
+    "domain",
+    "validation_status",
+    "baseline_block_id",
+    "baseline_source_type",
+    "planned_downstream_use",
+    "alignment_status",
+    "source_block_refs",
+    "source_family",
+    "version_scope",
+    "authority_label",
+    "source_ids",
+    "source_pack_block_ids",
+    "aid_route_or_tier",
+    "aid_tier_ids",
+    "generated_artifact_types",
+    "protected_topic",
+    "guardrail_ids",
+    "remaining_gap_ids",
+    "remaining_gap_class",
+    "notes",
+]
+
+NON_PLAYBOOK_MARKDOWN = {
+    "README.md",
+    "coding_agent_instruction_note.md",
+    "gpt_service_development_instruction_note.md",
+    "playbook_validation.md",
+    "scenario_judge_rubric.md",
+    "test_scenarios.md",
+}
 
 REQUIRED_DOMAINS = [
     "Installation and startup",
@@ -367,7 +436,7 @@ DOMAIN_REQUIRED_TOKENS = {
 PLAYBOOK_ID_RE = re.compile(r"APB-\d{6}\Z")
 SOURCE_ID_RE = re.compile(r"(?:SRC|AID|AID-SRC)-\d{6}\Z")
 SOURCE_BLOCK_RE = re.compile(r"BLOCK-\d{6}\Z")
-SOURCE_BLOCK_PAIR_RE = re.compile(r"SRC-\d{6}/BLOCK-\d{6}\Z")
+SOURCE_BLOCK_PAIR_RE = re.compile(r"(?:SRC|AID-SRC)-\d{6}/BLOCK-\d{6}\Z")
 BASELINE_BLOCK_RE = re.compile(r"KAE-BLOCK-\d{6}\Z")
 GUARDRAIL_RE = re.compile(r"CONF-\d{6}\Z")
 JOB_RE = re.compile(r"S2-J\d{3}\Z")
@@ -408,9 +477,15 @@ def first_column_ids(path: Path) -> set[str]:
 
 
 def source_ids() -> set[str]:
-    ids = first_column_ids(SOURCE_MANIFEST)
-    ids.update(first_column_ids(AID_TIER_MANIFEST))
-    return ids
+    return source_manifest_ids() | aid_tier_ids()
+
+
+def source_manifest_ids() -> set[str]:
+    return first_column_ids(SOURCE_MANIFEST)
+
+
+def aid_tier_ids() -> set[str]:
+    return first_column_ids(AID_TIER_MANIFEST)
 
 
 def source_block_refs() -> tuple[set[str], set[str]]:
@@ -422,6 +497,18 @@ def source_block_refs() -> tuple[set[str], set[str]]:
         if row.get("source_id") and row.get("block_id")
     }
     return blocks, pairs
+
+
+def source_shard_rows_by_source() -> dict[str, dict[str, str]]:
+    return {row["source_id"]: row for row in read_tsv(SOURCE_TO_SHARD)}
+
+
+def source_manifest_rows_by_id() -> dict[str, dict[str, str]]:
+    return {row["source_id"]: row for row in read_tsv(SOURCE_MANIFEST)}
+
+
+def baseline_rows_by_id() -> dict[str, dict[str, str]]:
+    return {row["baseline_block_id"]: row for row in read_tsv(BASELINE_MANIFEST)}
 
 
 def baseline_block_ids() -> set[str]:
@@ -472,6 +559,26 @@ def check_instruction_notes(errors: list[str]) -> None:
 
         if "```" not in text:
             errors.append(f"{label}: instruction note must include a fenced structure template")
+
+
+def check_validation_report(errors: list[str]) -> None:
+    label = rel(VALIDATION_REPORT_PATH)
+    if not VALIDATION_REPORT_PATH.exists():
+        errors.append(f"Required playbook validation report missing: {label}")
+        return
+
+    text = VALIDATION_REPORT_PATH.read_text(encoding="utf-8")
+    for token in (
+        "S2-J012",
+        "Verdict:",
+        "Source-To-Playbook Crosswalk",
+        "Korean-Aligned English-To-Playbook Crosswalk",
+        "Required Domains",
+        "Gap Register",
+        "Self-Review",
+    ):
+        if token not in text:
+            errors.append(f"{label}: validation report missing required token: {token}")
 
 
 def scenario_sections(text: str) -> dict[str, str]:
@@ -548,6 +655,27 @@ def check_scenario_rubric(errors: list[str]) -> None:
 
     if "```" not in text:
         errors.append(f"{label}: rubric must include a fenced result record template")
+
+
+def check_manifest_source_refs(
+    label: str,
+    values: list[str],
+    known_source_manifest_ids: set[str],
+    known_aid_tier_ids: set[str],
+    errors: list[str],
+) -> None:
+    for value in values:
+        if not SOURCE_ID_RE.fullmatch(value):
+            errors.append(f"{label}: source_ids has invalid reference format: {value}")
+            continue
+
+        if value.startswith("AID-") and not value.startswith("AID-SRC-"):
+            if value not in known_aid_tier_ids:
+                errors.append(f"{label}: source_ids references unknown AID tier ID: {value}")
+        elif value not in known_source_manifest_ids:
+            errors.append(
+                f"{label}: source_ids references ID missing from source_manifest.tsv: {value}"
+            )
 
 
 def check_path(row: dict[str, str], errors: list[str]) -> None:
@@ -639,16 +767,270 @@ def check_known_list(
             errors.append(f"{label}: {field} references unknown ID: {value}")
 
 
+def check_playbook_files_have_manifest_rows(
+    rows: list[dict[str, str]], errors: list[str]
+) -> None:
+    manifest_paths = {row["path"] for row in rows}
+    seen_paths: set[str] = set()
+    for row in rows:
+        path = row["path"]
+        if path in seen_paths:
+            errors.append(f"{row['playbook_id']}: duplicate manifest path: {path}")
+        seen_paths.add(path)
+
+    for path in sorted(PLAYBOOK_DIR.glob("*.md")):
+        if path.name in NON_PLAYBOOK_MARKDOWN:
+            continue
+        relative = rel(path)
+        if relative not in manifest_paths:
+            errors.append(f"{relative}: playbook file has no playbook_manifest.tsv row")
+
+
+def check_gap_register(rows: list[dict[str, str]], errors: list[str]) -> None:
+    label = rel(GAP_REGISTER)
+    if not GAP_REGISTER.exists():
+        errors.append(f"Required playbook gap register missing: {label}")
+        return
+
+    text = GAP_REGISTER.read_text(encoding="utf-8")
+    for token in (
+        "## Not-Ready Blockers",
+        "## Accepted Limitations",
+        "## Residual Risks",
+        "## Downstream Stage 3/4 Work",
+        "S2-J012",
+        "APG-S2-J012",
+    ):
+        if token not in text:
+            errors.append(f"{label}: gap register missing required token: {token}")
+
+    for row in rows:
+        if row["validation_status"] == "planned" or not split_semicolon(row["source_ids"]):
+            if row["playbook_id"] not in text:
+                errors.append(
+                    f"{label}: planned or source-less row is not recorded as a gap: "
+                    f"{row['playbook_id']}"
+                )
+
+    pass_domains = {row["domain"] for row in rows if row["validation_status"] == "pass"}
+    for domain in REQUIRED_DOMAINS:
+        if domain not in pass_domains and domain not in text:
+            errors.append(
+                f"{label}: required domain without a pass row lacks a recorded gap: {domain}"
+            )
+
+
+def aid_tier_refs(row: dict[str, str]) -> list[str]:
+    return [
+        value
+        for value in split_semicolon(row["source_ids"])
+        if value.startswith("AID-") and not value.startswith("AID-SRC-")
+    ]
+
+
+def manifest_source_refs(row: dict[str, str]) -> list[str]:
+    return [
+        value
+        for value in split_semicolon(row["source_ids"])
+        if value.startswith("SRC-") or value.startswith("AID-SRC-")
+    ]
+
+
+def check_source_playbook_crosswalk(
+    rows: list[dict[str, str]], errors: list[str]
+) -> int:
+    label = rel(SOURCE_PLAYBOOK_CROSSWALK)
+    if not SOURCE_PLAYBOOK_CROSSWALK.exists():
+        errors.append(f"Required source-to-playbook crosswalk missing: {label}")
+        return 0
+
+    try:
+        crosswalk_rows = read_tsv(
+            SOURCE_PLAYBOOK_CROSSWALK, SOURCE_PLAYBOOK_CROSSWALK_COLUMNS
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+        return 0
+
+    manifest_by_id = {row["playbook_id"]: row for row in rows}
+    source_rows = source_manifest_rows_by_id()
+    shard_rows = source_shard_rows_by_source()
+    expected = {
+        (row["playbook_id"], source_id)
+        for row in rows
+        for source_id in manifest_source_refs(row)
+    }
+    actual: set[tuple[str, str]] = set()
+
+    for row_number, row in enumerate(crosswalk_rows, start=2):
+        row_label = f"{label}:{row_number}"
+        manifest_row = manifest_by_id.get(row["playbook_id"])
+        if manifest_row is None:
+            errors.append(f"{row_label}: unknown playbook_id {row['playbook_id']}")
+            continue
+
+        actual.add((row["playbook_id"], row["source_id"]))
+        for column in SOURCE_PLAYBOOK_CROSSWALK_COLUMNS:
+            if "\t" in row[column] or "\n" in row[column] or "\r" in row[column]:
+                errors.append(f"{row_label}: {column} contains forbidden whitespace")
+
+        source_row = source_rows.get(row["source_id"])
+        shard_row = shard_rows.get(row["source_id"])
+        if source_row is None:
+            errors.append(
+                f"{row_label}: source_id missing from source_manifest.tsv: {row['source_id']}"
+            )
+            continue
+        if shard_row is None:
+            errors.append(
+                f"{row_label}: source_id missing from source_to_shard_manifest.tsv: "
+                f"{row['source_id']}"
+            )
+            continue
+
+        expected_ref = f"{row['source_id']}/{shard_row['block_id']}"
+        expected_values = {
+            "playbook_path": manifest_row["path"],
+            "playbook_title": manifest_row["title"],
+            "domain": manifest_row["domain"],
+            "validation_status": manifest_row["validation_status"],
+            "source_origin": source_row["source_origin"],
+            "source_path": source_row["source_path"],
+            "source_role": source_row["source_role"],
+            "source_family": source_row["source_family"],
+            "version_scope": source_row["version_scope"],
+            "authority_label": source_row["authority_label"],
+            "source_pack_shard_id": shard_row["shard_id"],
+            "source_pack_block_id": shard_row["block_id"],
+            "source_pack_block_ref": expected_ref,
+            "source_pack_validation_status": shard_row["validation_status"],
+            "aid_route_or_tier": manifest_row["aid_route_or_tier"],
+            "aid_tier_ids": ";".join(aid_tier_refs(manifest_row)),
+            "korean_aligned_baseline_block_ids": manifest_row[
+                "korean_aligned_baseline_block_ids"
+            ],
+            "generated_artifact_types": manifest_row["generated_artifact_types"],
+            "protected_topic": manifest_row["protected_topic"],
+            "guardrail_ids": manifest_row["guardrail_ids"],
+        }
+        for field, expected_value in expected_values.items():
+            if row[field] != expected_value:
+                errors.append(
+                    f"{row_label}: {field}={row[field]!r}, expected {expected_value!r}"
+                )
+
+    missing = sorted(expected - actual)
+    extra = sorted(actual - expected)
+    if missing:
+        errors.append(
+            f"{label}: missing manifest source routes: "
+            + "; ".join(f"{playbook}/{source}" for playbook, source in missing)
+        )
+    if extra:
+        errors.append(
+            f"{label}: unexpected source routes: "
+            + "; ".join(f"{playbook}/{source}" for playbook, source in extra)
+        )
+
+    return len(crosswalk_rows)
+
+
+def check_baseline_playbook_crosswalk(
+    rows: list[dict[str, str]], errors: list[str]
+) -> int:
+    label = rel(BASELINE_PLAYBOOK_CROSSWALK)
+    if not BASELINE_PLAYBOOK_CROSSWALK.exists():
+        errors.append(f"Required baseline-to-playbook crosswalk missing: {label}")
+        return 0
+
+    try:
+        crosswalk_rows = read_tsv(
+            BASELINE_PLAYBOOK_CROSSWALK, BASELINE_PLAYBOOK_CROSSWALK_COLUMNS
+        )
+    except ValueError as exc:
+        errors.append(str(exc))
+        return 0
+
+    manifest_by_id = {row["playbook_id"]: row for row in rows}
+    baseline_rows = baseline_rows_by_id()
+    expected = {
+        (row["playbook_id"], baseline_id)
+        for row in rows
+        for baseline_id in split_semicolon(row["korean_aligned_baseline_block_ids"])
+    }
+    actual: set[tuple[str, str]] = set()
+
+    for row_number, row in enumerate(crosswalk_rows, start=2):
+        row_label = f"{label}:{row_number}"
+        manifest_row = manifest_by_id.get(row["playbook_id"])
+        if manifest_row is None:
+            errors.append(f"{row_label}: unknown playbook_id {row['playbook_id']}")
+            continue
+
+        actual.add((row["playbook_id"], row["baseline_block_id"]))
+        for column in BASELINE_PLAYBOOK_CROSSWALK_COLUMNS:
+            if "\t" in row[column] or "\n" in row[column] or "\r" in row[column]:
+                errors.append(f"{row_label}: {column} contains forbidden whitespace")
+
+        baseline_row = baseline_rows.get(row["baseline_block_id"])
+        if baseline_row is None:
+            errors.append(
+                f"{row_label}: baseline_block_id missing from baseline_manifest.tsv: "
+                f"{row['baseline_block_id']}"
+            )
+            continue
+
+        expected_values = {
+            "playbook_path": manifest_row["path"],
+            "playbook_title": manifest_row["title"],
+            "domain": manifest_row["domain"],
+            "validation_status": manifest_row["validation_status"],
+            "baseline_source_type": baseline_row["baseline_source_type"],
+            "planned_downstream_use": baseline_row["planned_downstream_use"],
+            "alignment_status": baseline_row["alignment_status"],
+            "source_block_refs": baseline_row["source_block_refs"],
+            "source_family": baseline_row["source_family"],
+            "version_scope": baseline_row["version_scope"],
+            "authority_label": baseline_row["authority_label"],
+            "source_ids": manifest_row["source_ids"],
+            "source_pack_block_ids": manifest_row["source_pack_block_ids"],
+            "aid_route_or_tier": manifest_row["aid_route_or_tier"],
+            "aid_tier_ids": ";".join(aid_tier_refs(manifest_row)),
+            "generated_artifact_types": manifest_row["generated_artifact_types"],
+            "protected_topic": manifest_row["protected_topic"],
+            "guardrail_ids": manifest_row["guardrail_ids"],
+        }
+        for field, expected_value in expected_values.items():
+            if row[field] != expected_value:
+                errors.append(
+                    f"{row_label}: {field}={row[field]!r}, expected {expected_value!r}"
+                )
+
+    missing = sorted(expected - actual)
+    extra = sorted(actual - expected)
+    if missing:
+        errors.append(
+            f"{label}: missing manifest baseline routes: "
+            + "; ".join(f"{playbook}/{baseline}" for playbook, baseline in missing)
+        )
+    if extra:
+        errors.append(
+            f"{label}: unexpected baseline routes: "
+            + "; ".join(f"{playbook}/{baseline}" for playbook, baseline in extra)
+        )
+
+    return len(crosswalk_rows)
+
+
 def validate_rows(rows: list[dict[str, str]]) -> list[str]:
     errors: list[str] = []
-    known_sources = source_ids()
+    known_source_manifest_ids = source_manifest_ids()
+    known_aid_tier_ids = aid_tier_ids()
     known_source_blocks, known_source_pairs = source_block_refs()
     known_baseline_blocks = baseline_block_ids()
     known_guardrails = guardrail_ids()
 
     seen_ids: set[str] = set()
-    domains_seen: dict[str, list[str]] = {domain: [] for domain in REQUIRED_DOMAINS}
-
     for row_number, row in enumerate(rows, start=2):
         label = row.get("playbook_id") or f"row {row_number}"
         for column in MANIFEST_COLUMNS:
@@ -682,15 +1064,11 @@ def validate_rows(rows: list[dict[str, str]]) -> list[str]:
         check_path(row, errors)
         check_playbook_file(row, errors)
 
-        if row["domain"] in domains_seen:
-            domains_seen[row["domain"]].append(playbook_id)
-
-        check_known_list(
+        check_manifest_source_refs(
             label,
-            "source_ids",
             split_semicolon(row["source_ids"]),
-            SOURCE_ID_RE,
-            known_sources,
+            known_source_manifest_ids,
+            known_aid_tier_ids,
             errors,
         )
 
@@ -736,9 +1114,7 @@ def validate_rows(rows: list[dict[str, str]]) -> list[str]:
                     f"{label}: pass rows must cite source-pack or Korean-aligned baseline blocks"
                 )
 
-    missing_domains = [domain for domain, ids in domains_seen.items() if not ids]
-    if missing_domains:
-        errors.append("Missing required domain placeholders: " + "; ".join(missing_domains))
+    check_playbook_files_have_manifest_rows(rows, errors)
 
     return errors
 
@@ -759,10 +1135,17 @@ def main() -> int:
 
     if rows:
         errors.extend(validate_rows(rows))
+        check_gap_register(rows, errors)
+        source_crosswalk_count = check_source_playbook_crosswalk(rows, errors)
+        baseline_crosswalk_count = check_baseline_playbook_crosswalk(rows, errors)
+    else:
+        source_crosswalk_count = 0
+        baseline_crosswalk_count = 0
 
     check_instruction_notes(errors)
     check_scenarios(errors)
     check_scenario_rubric(errors)
+    check_validation_report(errors)
     check_forbidden_git_edits(errors)
 
     if errors:
@@ -774,11 +1157,29 @@ def main() -> int:
     planned = sum(1 for row in rows if row["validation_status"] == "planned")
     non_planned = len(rows) - planned
     covered_domains = sorted({row["domain"] for row in rows if row["domain"] in REQUIRED_DOMAINS})
+    pass_domains = sorted(
+        {
+            row["domain"]
+            for row in rows
+            if row["domain"] in REQUIRED_DOMAINS and row["validation_status"] == "pass"
+        }
+    )
+    gap_text = GAP_REGISTER.read_text(encoding="utf-8") if GAP_REGISTER.exists() else ""
+    route_or_gap_domains = sorted(
+        set(covered_domains) | {domain for domain in REQUIRED_DOMAINS if domain in gap_text}
+    )
     print("Stage 2 playbook validation: PASS")
     print(f"Manifest rows: {len(rows)}")
     print(f"Required domains covered: {len(covered_domains)}/{len(REQUIRED_DOMAINS)}")
+    print(
+        "Required domains with pass route or recorded gap: "
+        f"{len(route_or_gap_domains)}/{len(REQUIRED_DOMAINS)}"
+    )
+    print(f"Required domains with pass rows: {len(pass_domains)}/{len(REQUIRED_DOMAINS)}")
     print(f"Planned placeholders: {planned}")
     print(f"Non-planned playbooks requiring files: {non_planned}")
+    print(f"Source-to-playbook crosswalk rows: {source_crosswalk_count}")
+    print(f"Baseline-to-playbook crosswalk rows: {baseline_crosswalk_count}")
     return 0
 
 
