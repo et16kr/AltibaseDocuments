@@ -33,7 +33,7 @@ source-pack shards. It follows the deterministic shard IDs written in
 | 11 | `GPTs/source_pack/source_pack_shard_011.md` | 188 | 4.07 MiB | 945,108 | `no` | monitoring_api_snmp to patch_notes |
 | 12 | `GPTs/source_pack/source_pack_shard_012.md` | 76 | 4.21 MiB | 912,959 | `no` | patch_notes to source_inventory_support |
 | 13 | `GPTs/source_pack/source_pack_shard_013.md` | 16 | 3.35 MiB | 763,236 | `no` | source_inventory_support to sql_reference |
-| 14 | `GPTs/source_pack/source_pack_shard_014.md` | 12 | 3.67 MiB | 834,905 | `no` | sql_reference to stored_external_procedures |
+| 14 | `GPTs/source_pack/source_pack_shard_014.md` | 12 | 3.68 MiB | 835,883 | `no` | sql_reference to stored_external_procedures |
 | 15 | `GPTs/source_pack/source_pack_shard_015.md` | 32 | 3.75 MiB | 860,990 | `no` | stored_external_procedures to utilities_datacompj |
 | 16 | `GPTs/source_pack/source_pack_shard_016.md` | 13 | 1.06 MiB | 224,573 | `no` | utilities_datacompj |
 
