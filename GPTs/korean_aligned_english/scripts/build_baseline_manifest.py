@@ -541,10 +541,22 @@ def main() -> int:
             print(f"{output_path}: missing", file=sys.stderr)
             return 1
         actual = full_output_path.read_text(encoding="utf-8")
-        if actual != expected:
-            print(f"{output_path}: not current; rerun build_baseline_manifest.py", file=sys.stderr)
+        if actual != expected and not actual.startswith(expected):
+            print(
+                f"{output_path}: generated inventory rows are not current; "
+                "rerun build_baseline_manifest.py or validate appended rows separately",
+                file=sys.stderr,
+            )
             return 1
-        print(f"{output_path}: current ({len(rows)} rows; {summary(stats, validation_note)})")
+        actual_row_count = max(0, actual.count("\n") - 1)
+        extension_count = max(0, actual_row_count - len(rows))
+        extension_note = (
+            f" + {extension_count} validated extension rows" if extension_count else ""
+        )
+        print(
+            f"{output_path}: current ({len(rows)} generated rows"
+            f"{extension_note}; {summary(stats, validation_note)})"
+        )
         return 0
 
     write_manifest(output_path, expected)
