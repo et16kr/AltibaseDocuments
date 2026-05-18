@@ -1416,3 +1416,28 @@ Each entry should include:
   machine-checkable full coverage closure gate is already blocked by `115` active
   patch-note `Missing` rows, and a full live rerun would require 270 provider calls
   before it could produce a final readiness pass.
+
+### PWF-J003
+
+- Changed files: `GPTs/attachments/00_version_release_platform.md`,
+  `source_item_catalog.tsv`, `source_to_attachment_matrix.tsv`,
+  `missing_item_register.md`, and this remediation log.
+- Scope: closed `SRC-PATCH-PATCH-000001` through `SRC-PATCH-PATCH-000010`, covering
+  Altibase `7.1.0.1.3` through `7.1.0.2.2` patch notes. Original patch-note source
+  files were not edited.
+- Product coverage changes: added `Patch Note Compact Change Blocks` to attachment
+  `00`, preserving exact patch versions, all scoped `BUG-*` tokens, `Version Info`
+  values, property and performance-view caveats, compatibility caveats, and
+  owner-attachment routing for the listed changes.
+- Catalog and matrix changes: the ten scoped rows are now `Covered` with anchors under
+  `Patch Note Compact Change Blocks`; active `Missing` rows decreased from `115` to
+  `105`.
+- Register changes: removed the ten closed rows from the active missing-item table and
+  recorded the `PWF-J003` closure note in the FCA-J004 register section.
+- Validation: `python3 GPTs/reports/full_coverage_audit/scripts/fca_catalog_tools.py
+  check --require-registers`, `catalog-qa`, and `matrix-qa` passed for `2153`
+  catalog rows and `2153` matrix rows. `catalog-qa` and `matrix-qa` report `1172`
+  `Covered`, `840` `Covered-by-routing`, `33` `Guardrail`, `3` `Out-of-scope`, and
+  `105` `Missing` rows. `git diff --check` passed. `bash
+  review/scripts/run_review_stage.sh validate` passed with 20 upload attachments and
+  no forbidden customer-facing strings.

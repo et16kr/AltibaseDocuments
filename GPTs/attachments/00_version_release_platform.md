@@ -20,7 +20,7 @@ Use this compact index before scanning the long release and platform sections. I
 
 - Aliases and customer wording: version comparison, release notes, supported platforms, OS and CPU matrix, server support, client support, Windows client-only, database binary version, metadata version, communication protocol, replication protocol, upgrade risk, migration risk, patch caveat.
 - Exact-token anchors: `V$VERSION`, `product_version`, `meta_version`, `protocol_version`, `repl_protocol_version`, `JSON`, `Temporary LOB`, `KADA`, `Kafka`, `ABM`, `abm`, `OpenSSL 3.0.8`, `TLS 1.3`, `JDBC 4.2`, `AKU`, `REPLICATION_SSL_PORT_NO`.
-- Focused routing anchors: release identity and feature-introduction answers route to `Quick Version Difference Summary`; platform and OS questions route to `Platform Support Blocks`; binary, metadata, client-protocol, and replication-protocol questions route to `Upgrade Risk Blocks`; patch-specific support boundaries route to `Minor Patch & Release Notes Caveats`.
+- Focused routing anchors: release identity and feature-introduction answers route to `Quick Version Difference Summary`; platform and OS questions route to `Platform Support Blocks`; binary, metadata, client-protocol, and replication-protocol questions route to `Upgrade Risk Blocks`; patch-specific support boundaries route to `Minor Patch & Release Notes Caveats` and `Patch Note Compact Change Blocks`.
 - Answer route: start here for release identity, supported platform, protocol, and feature-introduction questions, then route implementation details to the attachment that owns the feature.
 - Cross-file routing: installation and patch rollback use `01_getting_started_installation.md`; property defaults and ranges use `05_data_types_properties.md`; replication compatibility uses `09_replication_ha_cdc.md`; TLS details use `18_security_ssl_tls.md`; connector and tool procedures use `11_java_jdbc_spring.md` through `19_spatial_nifi_tableau_misc.md`.
 
@@ -451,6 +451,329 @@ ORDER BY name;
 
 ## Minor Patch & Release Notes Caveats
 - **Release/Patch Notes Review**: When planning an upgrade or migration, always refer to the specific Altibase release notes (e.g., 7.1.x.x, 8.1.x.x) for minor patch restrictions, deprecated functions, and critical bug fixes that may not be present in the general manual.
+
+## Patch Note Compact Change Blocks
+
+These blocks preserve exact patch versions and patch-note tokens for source-backed retrieval. They do not replace customer environment analysis: before attributing an incident to a patch item, ask for the installed Altibase patch, platform, topology, SQL or object definition, logs, and runtime output. Route implementation procedures to the owner attachment named for each token.
+
+Owner routes used below: `01_getting_started_installation.md` for install/start/stop/license; `02_administration_operations.md` for server operations, backup/recovery, storage, and transaction operations; `03_sql_ddl_generation.md` for DDL and partition SQL; `04_sql_dml_oracle_compatibility.md` for DML, functions, predicates, and query behavior; `05_data_types_properties.md` for properties, data types, LOB, and numeric behavior; `06_data_dictionary_performance_views.md` for dictionary and performance views; `07_error_messages_troubleshooting.md` for error/log symptoms; `08_performance_tuning_monitoring.md` for optimizer, plan, statistics, monitoring API, and performance; `09_replication_ha_cdc.md` for replication, HBT, protocol, and HA; `10_psm_stored_external_procedures.md` for PSM, packages, procedures, and triggers; `11_java_jdbc_spring.md` for JDBC and JDBC Adapter; `12_c_cli_odbc_precompiler.md` for CLI, ODBC, IPCDA, and APRE/precompiler; `13_isql_iloader_basic_tools.md` for iSQL and iLoader; `14_utilities_operation_tools.md` for `aexport`, `altiComp`, `awrite`, `dumptrc`, `dumpStack`, and altiMon; `15_migration_oracle_compatibility.md` for oraAdapter and Oracle skip policy; `16_dblink_external_connectors.md` for DB Link and AltiLinker; `18_security_ssl_tls.md` for OpenSSL/TLS and encryption.
+
+### Altibase 7.1.0.1.3 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000001`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_3_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.5.1`, cm protocol version `7.1.6`, replication protocol `7.4.2`.
+
+New features:
+
+- `BUG-45145` - adds iSQL command history through `ISQL_HIST_FILE`; the patch note warns that interactive input, including sensitive values, can be written to the history file. Route: `13_isql_iloader_basic_tools.md`.
+- `BUG-45802` - supports fetch across rollback. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-45830` - adds the `awrite` utility. Route: `14_utilities_operation_tools.md`.
+- `BUG-45858` - supports Hierarchy Query joins. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-45921` - supports DDL for Queue Sequence initialization. Route: `03_sql_ddl_generation.md`.
+- `BUG-45924` - adds `sql_cache_text_id` to Monitoring API `ABISqlText`. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-45934` - records LOB restrictions for Hierarchy Query joins. Route: `04_sql_dml_oracle_compatibility.md` and `05_data_types_properties.md`.
+- `BUG-45978` - adds RDMA/InfiniBand communication support and `IB_*` properties. Route: `05_data_types_properties.md`, `06_data_dictionary_performance_views.md`, and `09_replication_ha_cdc.md`.
+- `BUG-45936` - adds package support for online table partition swap. Route: `10_psm_stored_external_procedures.md` and `03_sql_ddl_generation.md`.
+- `BUG-45953` - allows replication create/add IP fields to use hostnames. Route: `09_replication_ha_cdc.md`.
+
+Fixed bugs:
+
+- `BUG-45344` - fixes A5 client communication with a higher-version server accessing freed memory. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-45618` - checks thread-termination state in replication send and receive functions. Route: `09_replication_ha_cdc.md`.
+- `BUG-45722` - changes `TERM ON` behavior so commands are not printed. Route: `13_isql_iloader_basic_tools.md`.
+- `BUG-45813` - reduces inefficient CPU use while a replication Parallel Applier waits for transactions. Route: `09_replication_ha_cdc.md`.
+- `BUG-45825` - fixes an unexpected error when an `UPDATE` statement uses a window function. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-45838` - allows `null` as the value for JDBC `PreparedStatement.setObject(Index, Value, Sqltype, Scale)`. Route: `11_java_jdbc_spring.md`.
+- `BUG-45856` - fixes a case where the job scheduler could stop while operating. Route: `02_administration_operations.md` and `10_psm_stored_external_procedures.md`.
+- `BUG-45857` - avoids writing a call stack to `altibase_error.log` for normal disk temporary table exceptions. Route: `07_error_messages_troubleshooting.md`.
+- `BUG-45864` - revises the Action text for DB Link errors when `altilinker.jar` is missing or has unsuitable permissions. Route: `16_dblink_external_connectors.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-45872` - fixes `altiComp` Diff `Invalid Lob range` errors when LOB length exceeds `4096`. Route: `14_utilities_operation_tools.md`.
+- `BUG-45883` - fixes wrong `altiComp` diff/sync output for LOB columns in differently named master and slave tables. Route: `14_utilities_operation_tools.md`.
+- `BUG-45893` - prevents user sessions from using cached plans for queries against `system_.dba_users_`. Route: `06_data_dictionary_performance_views.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-45904` - cleans BCB state from the page hash when page-header initialization fails during page creation. Route: `02_administration_operations.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-45909` - improves `altiComp` LOB-column diff/sync handling. Route: `14_utilities_operation_tools.md`.
+- `BUG-45925` - aligns server and client `Numeric` to `double` conversion error behavior. Route: `05_data_types_properties.md` and `12_c_cli_odbc_precompiler.md`.
+- `BUG-45935` - fixes abnormal termination when a `KEEP` clause uses a parallel hint. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-45958` - fixes `altiComp` `DIFF` and `SYNC` handling for `BIT` type data. Route: `14_utilities_operation_tools.md` and `05_data_types_properties.md`.
+- `BUG-45976` - checks for deleted semaphores in IPCDA mode. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-45979` - prevents invalid page-information access after index-cache creation fails. Route: `08_performance_tuning_monitoring.md` and `02_administration_operations.md`.
+- `BUG-45981` - fixes continuous HBT checking when `REPLICATION_HBT_DETECT_TIME` is set to `1`. Route: `09_replication_ha_cdc.md` and `05_data_types_properties.md`.
+- `BUG-45989` - fixes a segmentation fault when `aexport` runs in a directory without write permission. Route: `14_utilities_operation_tools.md`.
+- `BUG-45990` - fixes abnormal server termination when PSM with `PRAGMA AUTONOMOUS_TRANSACTION` is executed concurrently through a query. Route: `10_psm_stored_external_procedures.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged for this patch. Added properties are `IB_ENABLE`, `IB_PORT_NO`, `IB_MAX_LISTEN`, `IB_LISTENER_DISABLE`, `IB_LATENCY`, and `IB_CONCHKSPIN`; changed performance view: `V$STATNAME`. Ask for exact installed patch, platform, object definitions, replication topology, and logs before asserting production applicability.
+
+### Altibase 7.1.0.1.4 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000002`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_4_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.6.1`, cm protocol version `7.1.6`, replication protocol table value `7.4.3`.
+
+New features:
+
+- `BUG-45779` - supports APRE PSM array-type arguments. Route: `12_c_cli_odbc_precompiler.md` and `10_psm_stored_external_procedures.md`.
+- `BUG-45701` - supports PSM associative array parameter binding. Route: `10_psm_stored_external_procedures.md`.
+- `BUG-46032` - supports two-level associative array variables in `BULK COLLECT INTO`. Route: `10_psm_stored_external_procedures.md`.
+- `BUG-45946` - allows DDL Synchronization through replication and requires aligned `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, and `REPLICATION_DDL_ENABLE_LEVEL` settings on participating nodes. Route: `09_replication_ha_cdc.md` and `05_data_types_properties.md`.
+- `BUG-46308` - supports replication for Partition Merge/Split DDL. Route: `09_replication_ha_cdc.md` and `03_sql_ddl_generation.md`.
+- `BUG-45972` - handles DDL syntax that is valid only in standalone mode. Route: `03_sql_ddl_generation.md`.
+- `BUG-45984` - supports InfiniBand communication for replication and introduces `REPLICATION_IB_*` property use. Route: `09_replication_ha_cdc.md` and `05_data_types_properties.md`.
+- `BUG-46209` - adds APRE and AEXPORT syntax support for replication InfiniBand communication. Route: `12_c_cli_odbc_precompiler.md`, `14_utilities_operation_tools.md`, and `09_replication_ha_cdc.md`.
+- `BUG-46011` - removes CLI Deferred Prepare restrictions. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-46016` - removes the LOB restriction for Hierarchy Query joins. Route: `04_sql_dml_oracle_compatibility.md` and `05_data_types_properties.md`.
+- `BUG-46065` - supports `RANGE PARTITION` with `HASH`. Route: `03_sql_ddl_generation.md`.
+- `BUG-46074` - supports multiple trigger events and adds `DBMS_STANDARD`. Route: `10_psm_stored_external_procedures.md`.
+- `BUG-46095` - adds Adapter Propagation functionality. Route: `11_java_jdbc_spring.md` and `09_replication_ha_cdc.md`.
+- `BUG-46151` - changes failover behavior by adding `LoadBalance`. Route: `11_java_jdbc_spring.md`.
+- `BUG-46154` - adds `print_enable` and `print_disable` procedures to `DBMS_OUTPUT`. Route: `10_psm_stored_external_procedures.md`.
+- `BUG-46158` - provides a way to keep plans in the plan cache. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46163` - supports Queue over IPCDA. Route: `12_c_cli_odbc_precompiler.md` and `03_sql_ddl_generation.md`.
+- `BUG-46229` - improves memory reuse for `MERGE` statements. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46245` - lets `jdbcAdapter` execute SQL scripts at runtime like `oraAdapter`. Route: `11_java_jdbc_spring.md` and `15_migration_oracle_compatibility.md`.
+- `BUG-46273` - adds `LOCK TABLE` support for locking a specific partition. Route: `03_sql_ddl_generation.md`.
+- `BUG-46067` - improves replication sync lock-acquisition failure messages by including the table name. Route: `09_replication_ha_cdc.md` and `07_error_messages_troubleshooting.md`.
+
+Fixed bugs:
+
+- `BUG-45053` - returns threads correctly when a replication Parallel Applier thread-start function fails. Route: `09_replication_ha_cdc.md`.
+- `BUG-45060` - prevents `replication drop` while an offline replication start has not completed. Route: `09_replication_ha_cdc.md`.
+- `BUG-45264` - automatically creates a missing temp file at server startup. Route: `02_administration_operations.md`.
+- `BUG-45643` - fixes replication handshake failure for DDL on encrypted columns. Route: `09_replication_ha_cdc.md` and `18_security_ssl_tls.md`.
+- `BUG-45652` - fixes handshake success when Active and Standby List Partition tables have different range conditions. Route: `09_replication_ha_cdc.md` and `03_sql_ddl_generation.md`.
+- `BUG-45898` - prevents fetch exceptions from causing hangs or protocol misinterpretation. Route: `12_c_cli_odbc_precompiler.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-45948` - fixes abnormal termination when DDL sync is performed to the server after client startup. Route: `09_replication_ha_cdc.md`.
+- `BUG-45961` - improves cursor reuse-condition checks for fetch across rollback. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46010` - does not treat HBT connection-progress events as errors. Route: `09_replication_ha_cdc.md`.
+- `BUG-46023` - fixes abnormal termination when creating a forced view with `SELECT UNION ALL` against a table without a referenced column. Route: `03_sql_ddl_generation.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46051` - fixes a DB Link select-result issue after savepoint rollback failure. Route: `16_dblink_external_connectors.md`.
+- `BUG-46068` - fixes rare abnormal termination when a disk unique index accesses reused data. Route: `03_sql_ddl_generation.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-46113` - fixes segmentation fault from `SQLSetDescField()` with `NCHAR` or `NVARCHAR` schema. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-46123` - fixes JDBC `DatabaseMetaData.getTypeInfo()` result type-conversion errors. Route: `11_java_jdbc_spring.md`.
+- `BUG-46130` - fixes `dumptrc` operation on PowerPC Linux. Route: `14_utilities_operation_tools.md`.
+- `BUG-46157` - adds propagation-related create-replication syntax to APRE and AEXPORT. Route: `09_replication_ha_cdc.md`, `12_c_cli_odbc_precompiler.md`, and `14_utilities_operation_tools.md`.
+- `BUG-46161` - fixes segmentation fault in RDMA library `rshutdown()`. Route: `09_replication_ha_cdc.md`.
+- `BUG-46184` - fixes abnormal termination in Hierarchy Query `ORDER SIBLINGS BY` when normal and meaningless columns are used together. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46197` - fixes unwanted AltiLinker reconnect behavior when disconnect is performed while AltiLinker is not running. Route: `16_dblink_external_connectors.md`.
+- `BUG-46202` - removes duplicate entries in `V$EVENT_NAME`. Route: `06_data_dictionary_performance_views.md`.
+- `BUG-46230` - refines error messages for `iduMemory.getStatus()` and `iduMemory.setStatus()`. Route: `07_error_messages_troubleshooting.md`.
+- `BUG-46239` - fixes DDL Synchronization failure when a `SELECT` during DDL sync fails to acquire a lock. Route: `09_replication_ha_cdc.md`.
+- `BUG-46242` - requires DDL Synchronization to fail when the Propagation option is enabled. Route: `09_replication_ha_cdc.md`.
+- `BUG-46249` - fixes wrong results when no set operation references a column in a `GROUP BY` expression. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46264` - fixes a hang on disk tables when duplicate columns appear in a window sort `ORDER BY` clause. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-46265` - validates whether a `Create Disk Temp Table` key column list can cycle. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-46274` - fixes `column not found` after partition swap followed by update. Route: `03_sql_ddl_generation.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46279` - fixes wrong results when disk-temp grouping data sort references a subquery. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-46286` - fixes an error when an `insert ~ select` statement uses a parallel hint without a table name. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+
+Compatibility and catalog caveat: database binary and communication protocol are unchanged. Meta changes from `8.5.1` to `8.6.1`, and patching from `7.1.0.1.3` or earlier to `7.1.0.1.4` performs an automatic meta upgrade; `SYS_REPL_HOSTS_` adds `CONN_TYPE` and `IB_LATENCY`. The version table lists replication protocol `7.4.3`, while the compatibility prose says the replication protocol changed from `7.4.3` to `7.4.4` with backward compatibility; ask for `V$VERSION` output before making mixed-replication claims. Added properties are `REPLICATION_IB_PORT_NO`, `REPLICATION_IB_LATENCY`, `REPLICATION_DDL_SYNC`, and `REPLICATION_DDL_SYNC_TIMEOUT`; changed performance views are `V$SQL_PLAN_CACHE_SQLTEXT`, `V$SQL_PLAN_CACHE_PCO`, and `V$SESSION`.
+
+### Altibase 7.1.0.1.5 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000003`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_5_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.6.1`, cm protocol version `7.1.6`, replication protocol `7.4.3`.
+
+New features:
+
+- `BUG-46475` - supports JDBC Adapter for HP-UX and AIX. Route: `11_java_jdbc_spring.md`.
+- `BUG-46216` - adds key-preserved checking for updatable join views. Route: `04_sql_dml_oracle_compatibility.md` and `03_sql_ddl_generation.md`.
+- `BUG-46352` - prints the OpenSSL version while loading OpenSSL. Route: `18_security_ssl_tls.md`.
+- `BUG-46411` - changes the maximum value of `LOB_CACHE_THRESHOLD` for LOB fetch performance. Route: `05_data_types_properties.md`.
+- `BUG-46443` - applies list protocol to normal bind-parameter transmission for JDBC performance. Route: `11_java_jdbc_spring.md`.
+- `BUG-46465` - refactors `CmBufferWriter.encodeString` for JDBC performance. Route: `11_java_jdbc_spring.md`.
+
+Fixed bugs:
+
+- `BUG-46309` - fixes server abnormal termination when PSM calls `DEQUEUE` without an `INTO` clause. Route: `10_psm_stored_external_procedures.md` and `03_sql_ddl_generation.md`.
+- `BUG-46392` - fixes abnormal termination when an `ORDER BY` expression is referenced redundantly in the target clause. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46416` - fixes infinite wait when a view is referenced by both a function and a view. Route: `03_sql_ddl_generation.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46424` - fixes a disk temporary table creation case where an upper plan node does not store a required value. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46183` - fixes `DEQUEUE` `WAIT TIME` below one second not waiting for the configured time. Route: `03_sql_ddl_generation.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46217` - makes `V$TABLE` show only performance views rather than also showing `X$` and `D$` views. Route: `06_data_dictionary_performance_views.md`.
+- `BUG-46266` - fixes wrong `V$LFG` values for `FIRST_DELETED_LOGFILE` and `LAST_DELETED_LOGFILE`. Route: `06_data_dictionary_performance_views.md`.
+- `BUG-46383` - fixes a disk sort temp table hang caused by reading the wrong page. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46384` - fixes disk sort temp table misbehavior or hang when an unfinished page is changed to another page. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46322` - fixes an incorrect error in a specific merge join during disk sort temp table processing. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46410` - fixes possible wrong row pointer setup in `sdcTempRow::filteringAndFetch()`. Route: `08_performance_tuning_monitoring.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46442` - fixes a case where an error message is not set when a column value read from a file is invalid. Route: `07_error_messages_troubleshooting.md` and `14_utilities_operation_tools.md`.
+- `BUG-46292` - fixes `aexport` binding a `BIGINT` Object Id as integer and raising `Numeric value out of range`. Route: `14_utilities_operation_tools.md`.
+- `BUG-46295` - fixes generated SQL files failing when a view creation statement's final line contains a single-line comment. Route: `14_utilities_operation_tools.md` and `03_sql_ddl_generation.md`.
+- `BUG-46310` - fixes invalid memory access when querying `V$REPRECEIVER_TRANSTBL` while the receiver is stopping. Route: `09_replication_ha_cdc.md` and `06_data_dictionary_performance_views.md`.
+- `BUG-46314` - fixes replication update failure when column order differs between replication target tables on each server. Route: `09_replication_ha_cdc.md`.
+- `BUG-46354` - prints an error message when HBT socket open fails. Route: `09_replication_ha_cdc.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46369` - fixes repeated SenderApply restart attempts when tablespace full occurs during replication. Route: `09_replication_ha_cdc.md` and `02_administration_operations.md`.
+- `BUG-46385` - fixes eager replication hang when replications are not started in create order. Route: `09_replication_ha_cdc.md`.
+- `BUG-46276` - fixes hang when a transaction exists before eager replication failback flush state. Route: `09_replication_ha_cdc.md`.
+- `BUG-46393` - fixes commit waits when only lazy-replication tables have transactions but eager replication is in `FLUSH FAILBACK` state. Route: `09_replication_ha_cdc.md`.
+- `BUG-46400` - initializes all client communication module callback function lists. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-46277` - fixes repeated oraAdapter connection errors after Oracle server shutdown by no longer skipping the connection error. Route: `15_migration_oracle_compatibility.md`.
+- `BUG-46403` - adds oraAdapter support for Oracle `TIMESTAMP`. Route: `15_migration_oracle_compatibility.md`.
+- `BUG-46448` - fixes reversed microsecond values when `jdbcAdapter` inserts into a date column. Route: `11_java_jdbc_spring.md`.
+- `BUG-46455` - fixes split partition on `RANGE_USING_HASH` partition tables not moving data. Route: `03_sql_ddl_generation.md`.
+- `BUG-46469` - fixes missing `XA_PREPARE_REQ` log-name dump output. Route: `02_administration_operations.md` and `07_error_messages_troubleshooting.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged for this patch. Changed property: `LOB_CACHE_THRESHOLD`; changed performance view: `V$TABLE`. Ask for exact patch, LOB settings, adapter version, object definitions, and replication state before claiming runtime root cause.
+
+### Altibase 7.1.0.1.6 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000004`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_6_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.6.1`, cm protocol version `7.1.6`, replication protocol `7.4.3`.
+
+New features:
+
+- `BUG-46406` - extends `MERGE` syntax. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46481` - adds system stored procedure `sleep2` for microsecond sleep. Route: `10_psm_stored_external_procedures.md`.
+- `BUG-46402` - changes memory-index allocation handling for memory returned to mempool. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46436` - adds a `time` item to Monitoring API `ABISqlText`. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46480` - refactors internal functions for JDBC insert performance. Route: `11_java_jdbc_spring.md`.
+- `BUG-46485` - changes iLoader double-data binding from `SQL_C_DOUBLE` to `SQL_C_CHAR` for performance. Route: `13_isql_iloader_basic_tools.md`.
+- `BUG-46486` - improves iLoader performance by acquiring locks per array, not per record, when reading from buffers. Route: `13_isql_iloader_basic_tools.md`.
+
+Fixed bugs:
+
+- `BUG-46085` - frees `Query_Prepare` memory allocated while checking cached plans. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46389` - adds the missing `silent` option to APRE usage. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-46390` - adds a missing check for whether the client session ended when an IPCDA session ends. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-46483` - fixes HP `jdbcAdapter` startup behavior when `LD_LIBRARY_PATH` is not set. Route: `11_java_jdbc_spring.md`.
+- `BUG-46508` - fixes min/max statistics setup changing table meta-cache column information. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46516` - fixes APRE PSM Array not working for newly created users. Route: `12_c_cli_odbc_precompiler.md` and `10_psm_stored_external_procedures.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged; no added, changed, or deleted properties or performance views are listed. Ask for exact APRE/JDBC/iLoader build and runtime evidence before asserting applicability.
+
+### Altibase 7.1.0.1.7 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000005`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_7_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.6.1`, cm protocol version `7.1.6`, replication protocol `7.4.3`.
+
+New features:
+
+- `BUG-46418` - supports APRE host-variable data type `APRE_BINARY2`. Route: `12_c_cli_odbc_precompiler.md`.
+
+Fixed bugs:
+
+- `BUG-46519` - fixes abnormal termination when memory-allocation failure handling frees memory that was not allocated. Route: `02_administration_operations.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46526` - fixes AIX iSQL connection output of `"grep: Not a recognized flag: m"`. Route: `13_isql_iloader_basic_tools.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged; no added, changed, or deleted properties are listed, and no performance-view changes are intended. Ask for exact AIX/iSQL/APRE package evidence before asserting applicability.
+
+### Altibase 7.1.0.1.8 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000006`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_8_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.7.1`, cm protocol version `7.1.6`, replication protocol `7.4.4`.
+
+New features:
+
+- `BUG-46174` - extends stored procedures so `INSERT` and `UPDATE` can use record-type variables. Route: `10_psm_stored_external_procedures.md`.
+
+Fixed bugs:
+
+- `BUG-46120` - requires replication to fail when Active and Standby hash-partitioned tables have different partition counts. Route: `09_replication_ha_cdc.md` and `03_sql_ddl_generation.md`.
+- `BUG-46396` - fixes an iSQL syntax error caused by a newline appended to the last line of DDL generated by `aexport`. Route: `14_utilities_operation_tools.md` and `13_isql_iloader_basic_tools.md`.
+- `BUG-46515` - fixes omitted call stacks in `altibase_error.log` when `dumptrc` prints call stacks. Route: `14_utilities_operation_tools.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46539` - fixes parser conflicts for `MERGE`. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46550` - fixes JDBC driver memory growth when `directByteBuffer` is used with `addBatch`. Route: `11_java_jdbc_spring.md`.
+- `BUG-46551` - fixes `ArrayIndexOutOfBoundsException` when `jdbcAdapter` transfers data to Altibase `5.5.1`. Route: `11_java_jdbc_spring.md`.
+- `BUG-46552` - changes iSQL so it does not use `/dev/null`. Route: `13_isql_iloader_basic_tools.md`.
+- `BUG-46567` - fixes `dumpStack` concurrency issues. Route: `14_utilities_operation_tools.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46572` - fixes APRE failure to recognize PSM arrays when packages are used. Route: `12_c_cli_odbc_precompiler.md` and `10_psm_stored_external_procedures.md`.
+- `BUG-46574` - fixes restart failure after abnormal server termination during checkpoint image creation. Route: `02_administration_operations.md`.
+- `BUG-46586` - fixes repeated error output during Service Time Failover (`STF`) retries. Route: `11_java_jdbc_spring.md`.
+- `BUG-46598` - changes `V$REPGAP.REP_GAP` to a size unit. Route: `06_data_dictionary_performance_views.md` and `09_replication_ha_cdc.md`.
+
+Compatibility and catalog caveat: database binary and communication protocol are unchanged. Meta changes from `8.6.1` to `8.7.1`, and patching from `7.1.0.1.7` or earlier to `7.1.0.1.8` performs an automatic meta upgrade. Replication protocol changes from `7.4.3` to `7.4.4` with backward compatibility. Added property: `REPLICATION_GAP_UNIT`; changed performance views: `V$REPGAP`, `V$REPGAP_PARALLEL`. Ask for exact replication mode and `V$VERSION` output before mixed-patch replication claims.
+
+### Altibase 7.1.0.1.9 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000007`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_1_9_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.7.1`, cm protocol version `7.1.6`, replication protocol `7.4.4`.
+
+Fixed bugs:
+
+- `BUG-45623` - fixes HP-UX HBT errors caused by using more sockets than allowed during connection checks. Route: `09_replication_ha_cdc.md`.
+- `BUG-46296` - changes behavior so connection errors are not skipped when `OTHER_DATABASE_SKIP_ERROR` is `1`. Route: `15_migration_oracle_compatibility.md`.
+- `BUG-46453` - fixes Service Time Failover (`STF`) `ASSERT` errors when `AlternateServers` is not set. Route: `11_java_jdbc_spring.md`.
+- `BUG-46593` - adds logic to check host-variable array-size equality when PSM is called. Route: `12_c_cli_odbc_precompiler.md` and `10_psm_stored_external_procedures.md`.
+- `BUG-46596` - adds defensive handling for data-file open failure. Route: `02_administration_operations.md`.
+- `BUG-46607` - improves altiMon behavior on unsupported OS environments where `PICL` library files are missing. Route: `14_utilities_operation_tools.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46608` - fixes receiver-side `Invalid protocol sequence` errors after replication HBT errors. Route: `09_replication_ha_cdc.md`.
+- `BUG-46620` - supports altiMon on AIX 7. Route: `14_utilities_operation_tools.md`.
+- `BUG-46625` - fixes IPCDA abnormal termination when no column matches a host variable. Route: `12_c_cli_odbc_precompiler.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged; no added, changed, or deleted properties or performance views are listed. Ask for exact HP-UX/AIX, altiMon, HBT, IPCDA, and STF evidence before making root-cause claims.
+
+### Altibase 7.1.0.2.0 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000008`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_2_0_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.7.1`, cm protocol version `7.1.6`, replication protocol `7.4.4`.
+
+Fixed bugs:
+
+- `BUG-46502` - improves IPCDA stability on PowerPC. Route: `12_c_cli_odbc_precompiler.md`.
+- `BUG-46594` - removes unnecessary locks during replication handshake. Route: `09_replication_ha_cdc.md`.
+- `BUG-46644` - fixes a possible XA memory leak. Route: `02_administration_operations.md` and `12_c_cli_odbc_precompiler.md`.
+- `BUG-46666` - fixes memory table size continuing to grow during LOB updates. Route: `05_data_types_properties.md` and `02_administration_operations.md`.
+- `BUG-46678` - fixes return-buffer size calculation for functions whose return precision is not specified. Route: `10_psm_stored_external_procedures.md`.
+- `BUG-46679` - fixes disk-table Hierarchy Query cases that raised `[ERR-311A4 : Loop in hierarchical query detected.]`. Route: `04_sql_dml_oracle_compatibility.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46709` - fixes abnormal termination during `server stop` on AIX. Route: `01_getting_started_installation.md` and `02_administration_operations.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged. The CM protocol section specifically warns that when IPCDA connection attributes are used, compatibility with `7.1.0.2.0` or lower is not guaranteed; patch both server and client to `7.1.0.2.0` or later for IPCDA. No added, changed, or deleted properties or performance views are listed. Ask for exact server/client patch and IPCDA use before compatibility claims.
+
+### Altibase 7.1.0.2.1 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000009`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_2_1_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.7.1`, cm protocol version `7.1.6`, replication protocol `7.4.4`.
+
+New features:
+
+- `BUG-46702` - supports `WITH ROLLUP`. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46806` - supports aliases in `INSERT` statements. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46703` - supports simple expressions in `LIMIT` clauses. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46719` - supports `SYSDATETIME`. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46727` - supports ISO standard-year `IYYY` format. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46755` - applies licenses issued by host name. Route: `01_getting_started_installation.md`.
+- `BUG-46826` - improves DDL PVO stability. Route: `03_sql_ddl_generation.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-46781` - improves replication DDL safety. Route: `09_replication_ha_cdc.md`.
+- `BUG-46825` - changes `OTHER_DATABASE_SKIP_ERROR` and `ORACLE_SKIP_ERROR` policy. Route: `15_migration_oracle_compatibility.md`.
+- `BUG-46832` - optimizes simple queries on memory partition tables. Route: `08_performance_tuning_monitoring.md` and `04_sql_dml_oracle_compatibility.md`.
+
+Fixed bugs:
+
+- `BUG-46208` - fixes server startup failure when `REPLICATION_SENDER_AUTO_START` is set. Route: `09_replication_ha_cdc.md`, `02_administration_operations.md`, and `05_data_types_properties.md`.
+- `BUG-46670` - fixes temp flusher access to an already freed temp table header. Route: `08_performance_tuning_monitoring.md`.
+- `BUG-46680` - fixes lock timeout when replication sync is run twice on a CLOB-containing table while `INSERT_REPLACE` is `1`. Route: `09_replication_ha_cdc.md` and `05_data_types_properties.md`.
+- `BUG-46697` - fixes hash-partition replication restart failing handshake because the partition count cannot be found. Route: `09_replication_ha_cdc.md` and `03_sql_ddl_generation.md`.
+- `BUG-46700` - fixes memory table size continuing to grow when LOB columns are updated in memory tables. Route: `05_data_types_properties.md` and `02_administration_operations.md`.
+- `BUG-46708` - changes Windows AltiLinker startup to find `java.exe`, not `java`. Route: `16_dblink_external_connectors.md`.
+- `BUG-46728` - sets an `ORDER BY` host variable to the same `VARCHAR` type as the target. Route: `12_c_cli_odbc_precompiler.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46731` - handles `NOWAIT` for `INSERT` statements that use simple query. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+- `BUG-46754` - fixes server restart failure when `logfile0` is missing. Route: `02_administration_operations.md`.
+- `BUG-46757` - fixes abnormal characters in `V$DB_PROTOCOL` output. Route: `06_data_dictionary_performance_views.md`.
+- `BUG-46782` - adds Begin Transaction debugging information. Route: `02_administration_operations.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46800` - handles constant filters when an `ANTI JOIN` creates an `INVERSE HASH` plan. Route: `08_performance_tuning_monitoring.md` and `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46805` - fixes wrong results when two indexed subqueries in the target are identical except for the `WHERE` clause. Route: `04_sql_dml_oracle_compatibility.md`.
+- `BUG-46816` - fixes memory overwrite when table names and user names are at least `128` characters. Route: `03_sql_ddl_generation.md` and `07_error_messages_troubleshooting.md`.
+- `BUG-46836` - fixes `NOWAIT` option not being applied for `SELECT FOR UPDATE` when simple query optimization is used. Route: `04_sql_dml_oracle_compatibility.md` and `08_performance_tuning_monitoring.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged. Changed property: `EXECUTOR_FAST_SIMPLE_QUERY`; no added, changed, or deleted performance views are listed. Ask for exact simple-query settings, SQL text, object definitions, replication state, and installed patch before asserting behavior.
+
+### Altibase 7.1.0.2.2 Patch Notes
+
+Source row: `SRC-PATCH-PATCH-000010`.
+Source file: `PatchNotes/Altibase_7.1/kor/Altibase_7_1_0_2_2_Patch_Notes.md`.
+Version Info: database binary `6.5.1`, meta `8.7.1`, cm protocol version `7.1.6`, replication protocol `7.4.4`.
+
+Fixed bugs:
+
+- `BUG-46602` - fixes inaccurate `V$REPGAP.REP_GAP` values when Replication GAP is at least `4G` (`unsigned int max`). Route: `06_data_dictionary_performance_views.md` and `09_replication_ha_cdc.md`.
+
+Compatibility and catalog caveat: database binary, meta, communication protocol, and replication protocol are unchanged; no added, changed, or deleted properties or performance views are listed. Ask for exact replication topology, `V$REPGAP` output, and installed patch before attributing a gap-value issue to this fix.
 
 ## Attachment Cross-References
 
