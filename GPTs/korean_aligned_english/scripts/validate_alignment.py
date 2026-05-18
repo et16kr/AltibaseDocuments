@@ -35,6 +35,7 @@ BASELINE_MARKDOWN = [
     BASELINE_DIR / "release_patch_technical_aid_baseline.md",
     BASELINE_DIR / "stored_external_procedures_baseline.md",
     BASELINE_DIR / "monitoring_log_analyzer_baseline.md",
+    BASELINE_DIR / "performance_source_index_baseline.md",
 ]
 
 REQUIRED_MARKDOWN_BLOCK_IDS = {
@@ -44,6 +45,9 @@ REQUIRED_MARKDOWN_BLOCK_IDS = {
     "KAE-BLOCK-000280",
     "KAE-BLOCK-000281",
     "KAE-BLOCK-000282",
+    "KAE-BLOCK-000283",
+    "KAE-BLOCK-000284",
+    "KAE-BLOCK-000285",
 }
 
 BASELINE_COLUMNS = build_baseline_manifest.BASELINE_COLUMNS
@@ -317,6 +321,9 @@ def validate_manifest(
         "KAE-BLOCK-000280",
         "KAE-BLOCK-000281",
         "KAE-BLOCK-000282",
+        "KAE-BLOCK-000283",
+        "KAE-BLOCK-000284",
+        "KAE-BLOCK-000285",
     }
     missing_extensions = sorted(required_extensions.difference(manifest_by_id))
     if missing_extensions:
@@ -457,55 +464,107 @@ def validate_stage1_remediation_scope(
     scope_rows: list[dict[str, str]],
     manifest_by_id: dict[str, dict[str, str]],
 ) -> None:
-    expected_routes = {
+    s1r_j003_expected_routes = {
         "Log Analyzer User's Manual.md": "KAE-BLOCK-000280",
         "Monitoring API Developer's Guide.md": "KAE-BLOCK-000281",
         "SNMP Agent Guide.md": "KAE-BLOCK-000282",
     }
-    checked = 0
-    status_counts: Counter[str] = Counter()
+    s1r_j003_checked = 0
+    s1r_j003_status_counts: Counter[str] = Counter()
+    s1r_j004_checked = 0
+    s1r_j004_status_counts: Counter[str] = Counter()
 
     for row in scope_rows:
         if row.get("conflict_id") != "CONF-000008":
             continue
-        if row.get("assigned_remediation_job") != "S1R-J003":
-            continue
-        if row.get("source_family") not in {"log_analyzer", "monitoring_api_snmp"}:
-            continue
 
-        checked += 1
         source_path = row.get("source_path", "")
         status = row.get("current_routing_status", "")
-        status_counts[status] += 1
 
-        expected_block = ""
-        for filename, route_block in expected_routes.items():
-            if source_path.endswith(filename):
-                expected_block = route_block
-                break
+        if row.get("assigned_remediation_job") == "S1R-J003":
+            if row.get("source_family") not in {"log_analyzer", "monitoring_api_snmp"}:
+                continue
 
-        if not expected_block:
-            errors.append(f"S1R-J003 row has unexpected source path: {source_path}")
-            continue
-        if row.get("baseline_block_id") != expected_block:
-            errors.append(
-                f"{row.get('source_id')}: expected {expected_block} routing, found {row.get('baseline_block_id')}"
-            )
-        if status != "aligned_baseline":
-            errors.append(
-                f"{row.get('source_id')}: S1R-J003 routing is still blocking or unsupported: {status!r}"
-            )
-        if expected_block not in manifest_by_id:
-            errors.append(f"{row.get('source_id')}: route block {expected_block} missing from baseline_manifest.tsv")
+            s1r_j003_checked += 1
+            s1r_j003_status_counts[status] += 1
 
-    if checked != 18:
-        errors.append(f"S1R-J003 CONF-000008 scope row count changed: expected 18, found {checked}")
+            expected_block = ""
+            for filename, route_block in s1r_j003_expected_routes.items():
+                if source_path.endswith(filename):
+                    expected_block = route_block
+                    break
+
+            if not expected_block:
+                errors.append(f"S1R-J003 row has unexpected source path: {source_path}")
+                continue
+            if row.get("baseline_block_id") != expected_block:
+                errors.append(
+                    f"{row.get('source_id')}: expected {expected_block} routing, found {row.get('baseline_block_id')}"
+                )
+            if status != "aligned_baseline":
+                errors.append(
+                    f"{row.get('source_id')}: S1R-J003 routing is still blocking or unsupported: {status!r}"
+                )
+            if expected_block not in manifest_by_id:
+                errors.append(f"{row.get('source_id')}: route block {expected_block} missing from baseline_manifest.tsv")
+
+        if row.get("assigned_remediation_job") == "S1R-J004":
+            if row.get("source_family") not in {"performance_tuning", "source_index"}:
+                continue
+
+            s1r_j004_checked += 1
+            s1r_j004_status_counts[status] += 1
+
+            if row.get("source_family") == "performance_tuning":
+                expected_block = "KAE-BLOCK-000283"
+                expected_status = "aligned_baseline"
+            elif source_path.endswith("Sharding(deprecated).md"):
+                expected_block = "KAE-BLOCK-000285"
+                expected_status = "exact_source_pack_route"
+            else:
+                expected_block = "KAE-BLOCK-000284"
+                expected_status = "exact_source_pack_route"
+
+            if row.get("baseline_block_id") != expected_block:
+                errors.append(
+                    f"{row.get('source_id')}: expected {expected_block} routing, found {row.get('baseline_block_id')}"
+                )
+            if status != expected_status:
+                errors.append(
+                    f"{row.get('source_id')}: expected S1R-J004 routing status {expected_status!r}, found {status!r}"
+                )
+            if expected_block not in manifest_by_id:
+                errors.append(f"{row.get('source_id')}: route block {expected_block} missing from baseline_manifest.tsv")
+            if row.get("intended_disposition") not in {"aligned_baseline", "exact_source_pack_route"}:
+                errors.append(
+                    f"{row.get('source_id')}: S1R-J004 intended disposition remains blocking: {row.get('intended_disposition')!r}"
+                )
+
+    if s1r_j003_checked != 18:
+        errors.append(
+            f"S1R-J003 CONF-000008 scope row count changed: expected 18, found {s1r_j003_checked}"
+        )
+
+    if s1r_j004_checked != 17:
+        errors.append(
+            f"S1R-J004 CONF-000008 scope row count changed: expected 17, found {s1r_j004_checked}"
+        )
 
     checks.append(
         CheckResult(
             "S1R-J003 remediation scope routing",
             "Pass",
-            f"{checked} Monitoring API, SNMP Agent, and Log Analyzer rows checked; statuses {dict(sorted(status_counts.items()))}",
+            f"{s1r_j003_checked} Monitoring API, SNMP Agent, and Log Analyzer rows checked; statuses {dict(sorted(s1r_j003_status_counts.items()))}",
+        )
+    )
+    checks.append(
+        CheckResult(
+            "S1R-J004 remediation scope routing",
+            "Pass",
+            (
+                f"{s1r_j004_checked} Performance Tuning and source-index rows checked; "
+                f"statuses {dict(sorted(s1r_j004_status_counts.items()))}"
+            )
         )
     )
 
@@ -779,7 +838,7 @@ def render_report(
             "",
             "## Conflict Register Outcome",
             "",
-            "`GPTs/reports/source_conflict_register.md` remains the active register. `CONF-000001` through `CONF-000003` preserve accepted AID/source limitations and Korean-leakage constraints. `CONF-000004` through `CONF-000007` remain open recheck gates for admin operations, SQL/reference, client/tool integration, and release/patch/AID routing. No unregistered baseline conflict or recheck marker was found.",
+            "`GPTs/reports/source_conflict_register.md` remains the active register. `CONF-000001` through `CONF-000003` preserve accepted AID/source limitations and Korean-leakage constraints. `CONF-000004` through `CONF-000007` remain open recheck gates for admin operations, SQL/reference, client/tool integration, and release/patch/AID routing. `CONF-000008` remains open only for the remaining Replication Manager routing subset after the S1R-J004 Performance Tuning and source-index routes. No unregistered baseline conflict or recheck marker was found.",
             "",
             "## Self-Review Notes",
             "",
