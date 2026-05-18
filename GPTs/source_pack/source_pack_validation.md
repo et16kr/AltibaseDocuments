@@ -53,9 +53,9 @@ change.
 | Exclusion rows | 8,767 |
 | Source-to-shard rows | 941 |
 | Source-pack shards | 16 |
-| Selected source bytes | 57,970,302 |
-| Selected source estimated tokens | 12,782,266 |
-| Shard bytes including wrappers | 58,947,182 |
+| Selected source bytes | 57,972,466 |
+| Selected source estimated tokens | 12,782,807 |
+| Shard bytes including wrappers | 58,949,346 |
 | Largest shard by tokens | `GPTs/source_pack/source_pack_shard_011.md` (945,108) |
 | Largest shard by bytes | `GPTs/source_pack/source_pack_shard_001.md` (4.30 MiB) |
 
