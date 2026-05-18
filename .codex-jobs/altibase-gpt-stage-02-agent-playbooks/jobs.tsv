@@ -1,0 +1,14 @@
+id	status	kind	title	goal
+S2-J001	ToDo	mixed	Stage 2 preflight readiness gate	Verify Stage 1 ready/pass status, prior workflow completion, validation artifacts, blocked routing scans, and operator-only decisions before any playbook work starts.
+S2-J002	ToDo	mixed	Playbook schema and validation scaffolding	Create the agent playbook directory, manifest schema, validation script, and Stage 2 source-routing plan.
+S2-J003	ToDo	mixed	Service development and SQL generation playbooks	Create playbooks for Altibase-backed service planning plus SQL, DDL, DCL, DML, schema, privilege, object, data type, property, view, and validation artifact generation.
+S2-J004	ToDo	mixed	Application connectivity playbooks	Create source-backed playbooks for JDBC, ODBC, CLI, ACI, Precompiler, Java/Spring/Hibernate, connection configuration, compile/link/runtime checks, and diagnostics.
+S2-J005	ToDo	mixed	Administration and protected operations playbooks	Create guarded playbooks for installation, startup/shutdown, properties, tablespaces, backup/recovery, archive logs, security-sensitive administration, and protected operations.
+S2-J006	ToDo	mixed	Replication, CDC, and HA playbooks	Create guarded playbooks for replication topology, DDL, state checks, sync/conflict handling, CDC, Log Analyzer, and Replication Manager.
+S2-J007	ToDo	mixed	Tools, utilities, migration, and integration playbooks	Create playbooks for iSQL, iLoader, utilities, dataCompJ, dump tools, altiComp, aexport, Migration Center, Adapter for Oracle, DB Link, Hadoop, Kubernetes/AKU, Spatial, NiFi, and Tableau.
+S2-J008	ToDo	mixed	Troubleshooting and performance playbooks	Create playbooks for exact error handling, log/symptom triage, monitoring, dictionary/performance views, tuning checks, escalation points, and safe next checks.
+S2-J009	ToDo	mixed	AID, version, release, and patch routing playbooks	Create playbook routing guidance for AID-derived content, 7.1/7.3/8.1 boundaries, release-note tokens, patch-specific claims, accepted limitations, and source recheck guardrails.
+S2-J010	ToDo	mixed	Coding-agent and GPT instruction notes	Create coding-agent and GPT service-development instruction notes that define source routing, missing-input prompts, generated-artifact structure, and forbidden generic assumptions.
+S2-J011	ToDo	mixed	Scenario tests and judge rubric	Create representative GPT and coding-agent scenario tests plus the judge rubric for required source IDs, exact tokens, forbidden assumptions, missing inputs, artifacts, validations, stop conditions, and pass thresholds.
+S2-J012	ToDo	mixed	Playbook crosswalks and validation report	Validate playbook source-ID and baseline coverage, generate source-to-playbook crosswalks, update the playbook gap register, and write the playbook validation report.
+S2-J013	ToDo	mixed	Stage 2 readiness review	Review all Stage 2 outputs, rerun validation, preserve guardrails, and write a ready/pass or not-ready Stage 2 readiness report.
