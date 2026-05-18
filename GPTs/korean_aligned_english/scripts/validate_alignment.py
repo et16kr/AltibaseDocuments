@@ -36,6 +36,7 @@ BASELINE_MARKDOWN = [
     BASELINE_DIR / "stored_external_procedures_baseline.md",
     BASELINE_DIR / "monitoring_log_analyzer_baseline.md",
     BASELINE_DIR / "performance_source_index_baseline.md",
+    BASELINE_DIR / "replication_manager_baseline.md",
 ]
 
 REQUIRED_MARKDOWN_BLOCK_IDS = {
@@ -48,6 +49,8 @@ REQUIRED_MARKDOWN_BLOCK_IDS = {
     "KAE-BLOCK-000283",
     "KAE-BLOCK-000284",
     "KAE-BLOCK-000285",
+    "KAE-BLOCK-000286",
+    "KAE-BLOCK-000287",
 }
 
 BASELINE_COLUMNS = build_baseline_manifest.BASELINE_COLUMNS
@@ -324,6 +327,8 @@ def validate_manifest(
         "KAE-BLOCK-000283",
         "KAE-BLOCK-000284",
         "KAE-BLOCK-000285",
+        "KAE-BLOCK-000286",
+        "KAE-BLOCK-000287",
     }
     missing_extensions = sorted(required_extensions.difference(manifest_by_id))
     if missing_extensions:
@@ -473,6 +478,8 @@ def validate_stage1_remediation_scope(
     s1r_j003_status_counts: Counter[str] = Counter()
     s1r_j004_checked = 0
     s1r_j004_status_counts: Counter[str] = Counter()
+    s1r_j005_checked = 0
+    s1r_j005_status_counts: Counter[str] = Counter()
 
     for row in scope_rows:
         if row.get("conflict_id") != "CONF-000008":
@@ -540,6 +547,31 @@ def validate_stage1_remediation_scope(
                     f"{row.get('source_id')}: S1R-J004 intended disposition remains blocking: {row.get('intended_disposition')!r}"
                 )
 
+        if row.get("assigned_remediation_job") == "S1R-J005":
+            if row.get("source_family") != "replication_manager":
+                continue
+
+            s1r_j005_checked += 1
+            s1r_j005_status_counts[status] += 1
+            expected_block = "KAE-BLOCK-000286"
+
+            if row.get("baseline_block_id") != expected_block:
+                errors.append(
+                    f"{row.get('source_id')}: expected {expected_block} routing, found {row.get('baseline_block_id')}"
+                )
+            if status != "aligned_baseline":
+                errors.append(
+                    f"{row.get('source_id')}: expected S1R-J005 routing status 'aligned_baseline', found {status!r}"
+                )
+            if expected_block not in manifest_by_id:
+                errors.append(f"{row.get('source_id')}: route block {expected_block} missing from baseline_manifest.tsv")
+            if "Replication Manager User's Manual.md" not in source_path:
+                errors.append(f"S1R-J005 row has unexpected source path: {source_path}")
+            if row.get("intended_disposition") != "aligned_baseline":
+                errors.append(
+                    f"{row.get('source_id')}: S1R-J005 intended disposition remains blocking: {row.get('intended_disposition')!r}"
+                )
+
     if s1r_j003_checked != 18:
         errors.append(
             f"S1R-J003 CONF-000008 scope row count changed: expected 18, found {s1r_j003_checked}"
@@ -548,6 +580,11 @@ def validate_stage1_remediation_scope(
     if s1r_j004_checked != 17:
         errors.append(
             f"S1R-J004 CONF-000008 scope row count changed: expected 17, found {s1r_j004_checked}"
+        )
+
+    if s1r_j005_checked != 4:
+        errors.append(
+            f"S1R-J005 CONF-000008 scope row count changed: expected 4, found {s1r_j005_checked}"
         )
 
     checks.append(
@@ -565,6 +602,16 @@ def validate_stage1_remediation_scope(
                 f"{s1r_j004_checked} Performance Tuning and source-index rows checked; "
                 f"statuses {dict(sorted(s1r_j004_status_counts.items()))}"
             )
+        )
+    )
+    checks.append(
+        CheckResult(
+            "S1R-J005 remediation scope routing",
+            "Pass",
+            (
+                f"{s1r_j005_checked} Replication Manager rows checked; "
+                f"statuses {dict(sorted(s1r_j005_status_counts.items()))}"
+            ),
         )
     )
 
@@ -838,7 +885,7 @@ def render_report(
             "",
             "## Conflict Register Outcome",
             "",
-            "`GPTs/reports/source_conflict_register.md` remains the active register. `CONF-000001` through `CONF-000003` preserve accepted AID/source limitations and Korean-leakage constraints. `CONF-000004` through `CONF-000007` remain open recheck gates for admin operations, SQL/reference, client/tool integration, and release/patch/AID routing. `CONF-000008` remains open only for the remaining Replication Manager routing subset after the S1R-J004 Performance Tuning and source-index routes. No unregistered baseline conflict or recheck marker was found.",
+            "`GPTs/reports/source_conflict_register.md` remains the active register. `CONF-000001` through `CONF-000003` preserve accepted AID/source limitations and Korean-leakage constraints. `CONF-000004` through `CONF-000007` remain open recheck gates for admin operations, SQL/reference, client/tool integration, and release/patch/AID routing. `CONF-000008` is resolved for Stage 1 routing after the S1R-J002 through S1R-J005 aligned baseline and exact source-pack routes. No unregistered baseline conflict or recheck marker was found.",
             "",
             "## Self-Review Notes",
             "",
