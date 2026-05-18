@@ -49,4 +49,4 @@ FCA-J047	Done	docs	Retrieval remediation developer tools and integrations	Conver
 FCA-J048	Done	docs	Guardrail and out-of-scope audit	Verify every guardrail and out-of-scope row is truly source-limited, patch-specific, environment-limited, or customer-evidence-dependent.
 FCA-J049	Done	docs	Answer contract and prompt alignment	Update GPT instructions only where needed so exact tokens, item-block shapes, missing-input rules, and guardrails are used in answers.
 FCA-J050	Done	docs	Validation and targeted answerability	Run repository validation, source-to-attachment checks, targeted answerability for failed/protected/exact-token rows, and a selected full rerun if feasible.
-FCA-J051	ToDo	docs	Final full coverage audit report	Produce final sign-off with source scope, method, coverage totals, remaining guardrails, validation output, and no unresolved Missing or Retrieval-weak rows.
+FCA-J051	Done	docs	Final full coverage audit report	Produce final sign-off with source scope, method, coverage totals, remaining guardrails, validation output, and no unresolved Missing or Retrieval-weak rows.
