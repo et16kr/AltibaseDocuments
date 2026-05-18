@@ -101435,12 +101435,12 @@ The builder must verify that:
 | `version_scope` | multi |
 | `language` | mixed |
 | `authority_label` | Approved support evidence |
-| `source_sha256` | 7b82fedb29c508af92f5283a13a3083083143235ef39fea4ff63195517b6113b |
-| `byte_count` | 25941 |
-| `line_count` | 475 |
-| `estimated_tokens` | 6486 |
+| `source_sha256` | 1fec5da06092d7a4e1c5cb1a13a352cf2a8dd5463639118132267b07e66be19b |
+| `byte_count` | 28183 |
+| `line_count` | 502 |
+| `estimated_tokens` | 7046 |
 
-<!-- SOURCE_BLOCK_BEGIN source_id="SRC-000482" source_path="GPTs/reports/stage_01_source_pack_baseline_plan.md" source_family="stage1_source_selection" version_scope="multi" language="mixed" authority_label="Approved support evidence" sha256="7b82fedb29c508af92f5283a13a3083083143235ef39fea4ff63195517b6113b" byte_count="25941" line_count="475" estimated_tokens="6486" block_id="BLOCK-000893" -->
+<!-- SOURCE_BLOCK_BEGIN source_id="SRC-000482" source_path="GPTs/reports/stage_01_source_pack_baseline_plan.md" source_family="stage1_source_selection" version_scope="multi" language="mixed" authority_label="Approved support evidence" sha256="1fec5da06092d7a4e1c5cb1a13a352cf2a8dd5463639118132267b07e66be19b" byte_count="28183" line_count="502" estimated_tokens="7046" block_id="BLOCK-000893" -->
 # Stage 1 Source Pack And Korean-Aligned English Baseline Plan
 
 Job: `S1-J001`
@@ -101784,41 +101784,51 @@ Validation rules:
 
 File: `GPTs/korean_aligned_english/baseline_manifest.tsv`
 
-Purpose: track derived English baseline blocks and their source authority.
+Purpose: track Korean-aligned English baseline inventory blocks, downstream baseline
+generation candidates, and their source authority.
 
-Primary key: `baseline_id`
+S1-J006 implementation refinement: the first committed manifest is an inventory of
+repository-local selected source groups, not derived baseline prose. It creates one
+stable `baseline_block_id` for each normalized Korean/English source pair, Korean-only
+source, English-only source, and selected no-language-tree source. Later baseline text
+generation may extend this manifest or add a content manifest with `baseline_path`,
+content checksums, and generated block line counts after the English baseline text
+exists.
+
+Primary key: `baseline_block_id`
 
 Required columns:
 
 | Column | Required | Allowed values or format | Rule |
 | --- | --- | --- | --- |
-| `baseline_id` | yes | Stable ID such as `BASE-000001` | Never reuse. |
-| `baseline_path` | yes | `GPTs/korean_aligned_english/<file>.md` | Repository-relative path to derived content. |
-| `baseline_block_id` | yes | Stable block ID | Maps to a block inside the baseline file. |
+| `baseline_block_id` | yes | Stable ID such as `KAE-BLOCK-000001` | One inventory block for a normalized pair, unpaired source, no-language-tree source, or not-ready gate row. |
+| `korean_source_id` | conditional | Source ID list or blank | Required for repository-local Korean authority rows. |
+| `korean_source_path` | conditional | Repository-relative path list or blank | Required when `korean_source_id` is present. |
+| `english_source_id` | conditional | Source ID list or blank | Required when an English extraction-aid row exists. |
+| `english_source_path` | conditional | Repository-relative path list or blank | Required when `english_source_id` is present. |
+| `other_source_id` | conditional | Source ID list or blank | Records selected repository sources that have no `kor` or `eng` path segment. |
+| `other_source_path` | conditional | Repository-relative path list or blank | Required when `other_source_id` is present. |
 | `source_family` | yes | Source-family ID | Align with source manifest. |
-| `version_scope` | yes | `7.1`, `7.3`, `8.1_verified`, exact patch, `multi`, `aid`, or `unknown` | `unknown` requires guardrail. |
-| `baseline_source_type` | yes | `repo_paired_ko_en`, `repo_ko_only`, `aid_reuse`, `aid_auxiliary_labeled`, `hybrid` | Describes derivation path. |
-| `korean_authority_source_ids` | conditional | Source ID list | Required for repository-local Korean authority or Korean-source checks. |
-| `base_english_source_ids` | conditional | Source ID list | Required when English extraction aid exists. |
-| `aid_source_ids` | conditional | AID source ID list | Required for `aid_reuse` or `aid_auxiliary_labeled`. |
-| `source_block_refs` | yes | Source ID plus line or block refs | Must be reviewable. |
-| `alignment_status` | yes | `aligned`, `aid_reused`, `auxiliary_labeled`, `source_limitation`, `conflict_pending`, `recheck_required` | Only aligned or properly labeled rows are downstream-ready. |
-| `conflict_ids` | conditional | Conflict ID list or blank | Required for conflict or recheck rows. |
-| `baseline_sha256` | yes | SHA-256 hex | Calculated from baseline block or file as defined by implementation job. |
-| `line_count` | yes | Integer | Baseline block or file line count. |
-| `estimated_tokens` | yes | Integer | Deterministic estimate. |
-| `downstream_eligible` | yes | `yes`, `no`, `conditional` | `conditional` requires notes. |
+| `version_scope` | yes | `7.1`, `7.3`, `8.1_verified`, exact patch, tool/release scope inherited from `source_manifest.tsv`, `multi`, `aid`, or `unknown` | `unknown` requires guardrail. |
+| `authority_label` | yes | Source authority label list | Preserve Korean authoritative, English extraction-aid, and `Altibase 8.1 verified source` wording. |
+| `baseline_source_type` | yes | `repo_paired_ko_en`, `repo_ko_only`, `repo_en_only`, `repo_no_language_tree`, `aid_reuse`, `hybrid`, `not_ready` | Describes inventory and derivation path. |
+| `planned_downstream_use` | yes | Controlled phrase | Examples: `primary_working_source_after_alignment`, `translation_candidate_after_alignment`, `blocked_until_korean_authority_or_auxiliary_label`, `source_pack_only_not_korean_aligned`, `blocked_until_source_pack_validation_passes`. |
+| `alignment_status` | yes | `pending`, `aligned`, `conflict`, `recheck`, `excluded`, `aid_reuse`, `not_ready` | Only aligned, aid-reuse, or explicitly approved pending rows may become downstream inputs after later validation. |
+| `source_block_refs` | yes | Source ID plus source-pack block and line refs | Must be reviewable against `source_to_shard_manifest.tsv`. |
+| `evidence_or_limitation_note` | yes | Text | Records pairing evidence, missing counterpart, exclusion reason, or validation blocker. |
 | `last_verified_job` | yes | Job ID | Latest alignment validation job. |
-| `notes` | no | Text | Keep concise. |
 
 Validation rules:
 
-- A baseline row must trace back to source manifest rows or AID tier rows.
+- A baseline inventory row must trace back to source manifest rows, source-pack block
+  refs, AID tier rows, or a source-pack validation blocker row.
 - Baseline text cannot serve as proof of exact source inclusion.
 - Destructive, security-sensitive, version-sensitive, or conflict-prone claims require
   source references back to Korean authority or accepted AID classification evidence.
-- `conflict_pending` and `recheck_required` rows are not eligible for customer-facing
-  downstream generation.
+- `conflict`, `recheck`, `excluded`, and `not_ready` rows are not eligible for
+  customer-facing downstream generation.
+- Unpaired Korean-only and English-only selected sources must appear in the manifest
+  and must not be silently dropped.
 
 ## Source Conflict Register Schema
 
@@ -101849,8 +101859,8 @@ these required columns:
 
 Validation rules:
 
-- Every `conflict_or_recheck`, `conflict_pending`, or `recheck_required` manifest row
-  must have a conflict register entry.
+- Every `conflict_or_recheck`, `conflict_pending`, `recheck_required`, S1-J006
+  `conflict`, or S1-J006 `recheck` manifest row must have a conflict register entry.
 - Resolved rows must state the source-backed resolution and downstream guardrail.
 - Accepted limitations must preserve the limitation instead of inventing missing
   details.
@@ -101902,6 +101912,23 @@ Validation rules:
   material retains source references and missing-input guardrails.
 - Validation output is recorded under `GPTs/reports/` as support evidence only when
   explicitly selected in the source manifest.
+
+## Targeted Verification For S1-J006
+
+`GPTs/korean_aligned_english/scripts/build_baseline_manifest.py --check` must verify
+that `source_pack_validation.md` records `Status: pass`, `Verdict: Pass`, no source-pack
+validation blockers, and the Korean-aligned English continuation gate before baseline
+inventory rows are accepted. It must also verify normalized `kor`/`eng` pair detection,
+distinguishable `7.1`, `7.3`, and `8.1_verified` rows, complete selected-source ID
+coverage, and explicit rows for unpaired Korean-only and English-only sources.
+
+Required targeted commands:
+
+```bash
+python3 GPTs/korean_aligned_english/scripts/build_baseline_manifest.py --check
+python3 GPTs/source_pack/scripts/validate_source_pack.py --check
+git diff --check -- GPTs/korean_aligned_english GPTs/reports/stage_01_source_pack_baseline_plan.md
+```
 
 ## Targeted Verification For S1-J001
 
