@@ -835,6 +835,16 @@ baseline generation begins for the same source scope. Baseline jobs may then use
 validated source IDs, source boundaries, authority labels, and AID tier decisions from
 the source-pack subphase.
 
+For Stage 2 and later, the first job in the workflow must be a stage-start preflight
+gate. It must inspect the prior stage workflow status, prior stage readiness report,
+required validation artifacts, and any recorded `not-ready`, `operator decision
+required`, unresolved conflict, or accepted-limitation approval items before producing
+new downstream artifacts. If the prior stage is not explicitly ready/pass, if a
+required readiness report is missing, or if the prior stage left a decision that only
+the operator can make, the preflight job must refuse to continue the stage and record
+the blocker instead of treating the new stage as started. This gate is required even
+when the operator forgets to manually read the prior readiness report.
+
 ## 12. Validation Requirements
 
 Validation must include:
@@ -969,6 +979,9 @@ For a stage preparation request, the assistant must:
 - inspect the current repository status and any prior stage workflow status;
 - generate or update the stage workflow under `.codex-jobs/`;
 - write bounded jobs, prompts, acceptance checks, and rollback behavior;
+- for Stage 2 and later, include a first preflight job that refuses to proceed unless
+  the prior stage has an explicit ready/pass readiness report and no unresolved
+  operator-only decisions;
 - validate the generated `run-all.sh` with `bash -n`;
 - provide the exact command the user should run;
 - not execute `run-all.sh`.
