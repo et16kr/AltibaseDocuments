@@ -93,6 +93,42 @@ CODE_ARTIFACT_TYPES = {
 }
 
 DOMAIN_REQUIRED_TOKENS = {
+    "Installation and startup": [
+        "ALTIBASE_HOME",
+        "CREATE DATABASE",
+        "STARTUP PROCESS",
+        "SHUTDOWN NORMAL",
+        "SHUTDOWN IMMEDIATE",
+        "SHUTDOWN ABORT",
+    ],
+    "Properties": [
+        "V$PROPERTY",
+        "ALTER SYSTEM",
+        "ALTER SESSION",
+        "ADMIN_MODE",
+        "LOGANCHOR_DIR",
+        "ARCHIVE_DIR",
+        "INCREMENTAL_BACKUP_CHUNK_SIZE",
+        "altibase.properties",
+    ],
+    "Backup and recovery": [
+        "ARCHIVELOG",
+        "NOARCHIVELOG",
+        "ALTER DATABASE BACKUP DATABASE",
+        "ALTER TABLESPACE",
+        "STARTUP CONTROL",
+        "RESETLOGS",
+        "backupInfo",
+    ],
+    "Security and TLS": [
+        "SSL_ENABLE",
+        "SSL_PORT_NO",
+        "SSL_CERT",
+        "SSL_KEY",
+        "SSL_CA",
+        "SSL_VERIFY",
+        "openssl version",
+    ],
     "Java and JDBC": [
         "JDBC",
         "Altibase.jdbc.driver.AltibaseDriver",
@@ -115,6 +151,16 @@ DOMAIN_REQUIRED_TOKENS = {
         "$ALTIBASE_HOME/include/sqlcli.h",
         "libodbccli.a",
         "libapre.a",
+    ],
+    "Protected administration operations": [
+        "DROP DATABASE",
+        "DROP TABLESPACE",
+        "ALTER DATABASE",
+        "ALTER TABLESPACE",
+        "ALTER SYSTEM",
+        "LOGANCHOR_DIR",
+        "ARCHIVE_DIR",
+        "ADMIN_MODE",
     ],
 }
 

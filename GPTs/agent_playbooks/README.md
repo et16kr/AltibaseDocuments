@@ -1,10 +1,11 @@
 # Stage 2 Agent Playbooks
 
-- Job: `S2-J002` scaffold, extended by `S2-J003`
+- Job: `S2-J002` scaffold, extended by `S2-J003`, `S2-J004`, and `S2-J005`
 - Scope: manifest schema, validation scaffolding, source-routing plan,
-  service-development SQL generation playbooks, and application connectivity
-  playbooks
-- Status: scaffolded with completed `S2-J003` and `S2-J004` playbook routes
+  service-development SQL generation playbooks, application connectivity
+  playbooks, and protected administration playbooks
+- Status: scaffolded with completed `S2-J003`, `S2-J004`, and `S2-J005`
+  playbook routes
 
 ## Boundary
 
@@ -88,6 +89,26 @@ require exact source-block or customer runtime evidence.
 The validator now includes domain-token checks for the completed connectivity
 playbooks so required tokens such as `JDBC`, `ODBC`, `CLI`, `ACI`, and
 `Precompiler` cannot be silently dropped from the files.
+
+## S2-J005 Design Note
+
+`S2-J005` promotes the installation/startup, backup/recovery, and security/TLS
+routes from placeholders to guarded protected-operation playbooks, extends the
+properties route for dynamic/static activation and restart or recreate handling,
+and adds `APB-000016` as a cross-cutting protected administration gate. The
+playbooks preserve the Stage 1 admin-operations baseline boundaries: exact
+platform support, property defaults and ranges, backup/recovery command variants,
+TLS dependency versions, file paths, runtime state, logs, and production safety
+still require target-version source recheck plus customer evidence.
+
+The new protected-operation content requires missing input prompts,
+non-destructive first checks, validation steps, explicit stop conditions, and
+rollback or recovery notes before any generated command or SQL is treated as
+runnable. The validator now checks required domain tokens for installation,
+properties, backup/recovery, security/TLS, and the protected-administration gate
+so critical operational tokens such as `CREATE DATABASE`, `SHUTDOWN ABORT`,
+`V$PROPERTY`, `ALTER DATABASE BACKUP DATABASE`, `SSL_ENABLE`, and
+`DROP TABLESPACE` cannot be silently dropped from completed playbooks.
 
 ## Validation
 
