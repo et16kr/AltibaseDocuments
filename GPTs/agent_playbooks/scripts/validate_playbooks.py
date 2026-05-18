@@ -70,6 +70,28 @@ ALLOWED_AID_ROUTES = {
     "support_evidence_only",
 }
 
+REQUIRED_PLAYBOOK_SECTIONS = [
+    "## Source Routes",
+    "## Required Customer Inputs",
+    "## Generated Artifacts",
+    "## Guardrails",
+    "## Validation Checks",
+    "## Stop Conditions",
+]
+
+CODE_ARTIFACT_TYPES = {
+    "DDL",
+    "DCL",
+    "DML",
+    "SQL",
+    "commands",
+    "configuration",
+    "diagnostics",
+    "tests",
+    "validation_sql",
+    "validation_checks",
+}
+
 PLAYBOOK_ID_RE = re.compile(r"APB-\d{6}\Z")
 SOURCE_ID_RE = re.compile(r"(?:SRC|AID|AID-SRC)-\d{6}\Z")
 SOURCE_BLOCK_RE = re.compile(r"BLOCK-\d{6}\Z")
@@ -180,6 +202,40 @@ def check_path(row: dict[str, str], errors: list[str]) -> None:
         errors.append(f"{label}: non-planned playbook path does not exist: {path_text}")
 
 
+def check_playbook_file(row: dict[str, str], errors: list[str]) -> None:
+    """Validate source traceability and shape for completed playbook files."""
+    if row["validation_status"] == "planned":
+        return
+
+    label = row["playbook_id"]
+    full_path = ROOT / row["path"]
+    if not full_path.exists():
+        return
+
+    text = full_path.read_text(encoding="utf-8")
+    required_tokens = [row["playbook_id"], row["title"]]
+    required_tokens.extend(REQUIRED_PLAYBOOK_SECTIONS)
+    required_tokens.extend(split_semicolon(row["source_ids"]))
+    required_tokens.extend(split_semicolon(row["source_pack_block_ids"]))
+    required_tokens.extend(split_semicolon(row["korean_aligned_baseline_block_ids"]))
+    required_tokens.extend(split_semicolon(row["guardrail_ids"]))
+
+    for token in required_tokens:
+        if token and token not in text:
+            errors.append(f"{label}: playbook file is missing required token: {token}")
+
+    artifact_types = set(split_semicolon(row["generated_artifact_types"]))
+    if artifact_types & CODE_ARTIFACT_TYPES and "```" not in text:
+        errors.append(f"{label}: generated code/configuration artifact playbook needs fenced blocks")
+
+    if row["protected_topic"] == "yes":
+        lower_text = text.lower()
+        if "rollback" not in lower_text and "cleanup" not in lower_text:
+            errors.append(f"{label}: protected playbook must mention rollback or cleanup")
+        if "stop" not in lower_text:
+            errors.append(f"{label}: protected playbook must include stop conditions")
+
+
 def check_known_list(
     label: str,
     field: str,
@@ -236,6 +292,7 @@ def validate_rows(rows: list[dict[str, str]]) -> list[str]:
             errors.append(f"{label}: required_missing_input_prompts is required")
 
         check_path(row, errors)
+        check_playbook_file(row, errors)
 
         if row["domain"] in domains_seen:
             domains_seen[row["domain"]].append(playbook_id)

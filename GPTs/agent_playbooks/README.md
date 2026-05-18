@@ -1,9 +1,9 @@
 # Stage 2 Agent Playbooks
 
-- Job: `S2-J002`
-- Scope: schema, manifest placeholders, validation scaffolding, and source-routing
-  plan only
-- Status: scaffolded before domain playbooks are drafted
+- Job: `S2-J002` scaffold, extended by `S2-J003`
+- Scope: manifest schema, validation scaffolding, source-routing plan, and
+  service-development SQL generation playbooks
+- Status: scaffolded with completed `S2-J003` playbook routes
 
 ## Boundary
 
@@ -47,6 +47,25 @@ Rows with `validation_status=planned` are coverage placeholders. They may have
 baseline or guardrail routes but are not ready playbooks, and they do not need their
 future Markdown file to exist yet. Any row promoted beyond `planned` must point to an
 existing Markdown file and must carry source-backed routes.
+
+## S2-J003 Design Note
+
+`S2-J003` promotes the service-development, DDL/DCL, SQL/data type, properties, and
+dictionary/view routes from placeholders to source-backed playbooks. SQL, DDL, DCL,
+and DML generation are documented as generated artifact classes inside a broader
+Altibase-backed service-development workflow, not as the entire boundary.
+
+The manifest now includes `APB-000015` as the service-development and direct GPT
+copy/paste artifact hub, while `APB-000002` through `APB-000005` provide focused
+artifact-generation routes. Later Stage 2 jobs may extend adjacent operational,
+connectivity, troubleshooting, and testing content, but this job establishes the
+shared guardrails for destructive effects, implicit DDL commits, privilege changes,
+storage changes, version restrictions, required customer inputs, validation SQL, and
+stop conditions.
+
+The validator now checks non-planned playbook files for their playbook ID, title,
+required sections, manifest source IDs, source-pack block refs, Korean-aligned
+baseline block IDs, guardrail IDs, and fenced generated-artifact examples.
 
 ## Validation
 
