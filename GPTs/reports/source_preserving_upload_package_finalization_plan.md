@@ -126,7 +126,9 @@ The validation must preserve:
 
 Final follow-up task: update the existing 270-question validation benchmark so
 that it uses this source-preserving upload package and this finalization document
-as the package-routing authority.
+as the package-routing authority. Extend the benchmark with coding-agent-focused
+questions after the existing 270 records are preserved, so the package is tested
+both as a GPT answer source and as a practical Codex/LLM agent reference.
 
 Current limitation:
 
@@ -146,6 +148,13 @@ Required work:
   `GPTs/reports/source_preserving_upload_package_finalization_plan.md`, as the
   benchmark routing policy reference;
 - preserve all 270 existing question records without changing expected answers;
+- add a separate coding-agent question set that tests source-grounded repository
+  work, SQL/iSQL script generation, driver/API usage, error diagnosis, property
+  and version checks, replication/backup safety checks, and required manual
+  citation behavior;
+- keep coding-agent questions distinct from the existing answerability questions
+  with their own manifest, domain labels, expected artifacts, and judge rubric,
+  so the original 270-question baseline remains comparable;
 - keep leakage protections and judge-only fields unchanged;
 - run schema validation, answer-runner self-test, judge self-test, and a dry run;
 - only run a live 270-question benchmark after explicit operator approval and a
