@@ -209,6 +209,7 @@ build_runtime_prompt() {
     printf -- '- This job id is `%s`.\n' "$id"
     printf -- '- The orchestrator invokes Codex from the repository root by default; use repository-relative paths.\n'
     printf -- '- Complete only this job and preserve unrelated user changes.\n'
+    printf -- '- Do not edit, stage, or commit `.codex-jobs/` workflow runtime, log, rollback, or status files; the orchestrator manages them.\n'
     printf -- '- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.\n'
     printf -- '- If the job cannot be completed safely, stop with a clear failure.\n'
     printf -- '- After review and verification pass, create a focused git commit for this job.\n'
@@ -216,6 +217,15 @@ build_runtime_prompt() {
   } > "$runtime_prompt"
 
   printf '%s\n' "$runtime_prompt"
+}
+
+validate_workflow_files() {
+  command -v "$CODEX_BIN" >/dev/null 2>&1 || die "Codex binary not found: $CODEX_BIN"
+
+  local id
+  while IFS= read -r id; do
+    [[ -f "$PROMPT_DIR/$id.md" ]] || die "Missing prompt file for job $id: $PROMPT_DIR/$id.md"
+  done < <(job_ids)
 }
 
 run_job() {
@@ -257,6 +267,7 @@ run_job() {
 }
 
 [[ -f "$JOBS_FILE" ]] || die "Missing jobs file: $JOBS_FILE"
+validate_workflow_files
 
 failed_job="$(first_job_with_status Fail || true)"
 if [[ -n "$failed_job" ]]; then

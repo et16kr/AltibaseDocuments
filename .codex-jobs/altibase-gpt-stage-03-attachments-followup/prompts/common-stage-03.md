@@ -118,6 +118,10 @@ uses it.
 - Use Stage 2 playbooks as routing and guardrail evidence, not as replacement for
   exact source checks.
 - If source support is weak, record a gap or limitation instead of adding the claim.
+- When a job handles rows from `GPTs/reports/stage_03_attachment_followup_scope.tsv`,
+  update those rows or add a scoped follow-up note so the final validation can tell
+  whether each row became `attachment_update`, `retrieval_alias_update`,
+  `crosslink_update`, `recorded_gap`, `already_covered`, or `blocked`.
 - Run targeted checks and `git diff --check` on changed Stage 3 paths.
 - Review the final diff.
 - Commit the completed job with a focused commit message.

@@ -67,6 +67,8 @@
 - `S3-J001` is the first job and performs the prior-stage readiness gate.
 - Stage 3 jobs use source IDs, source-pack block IDs, Korean-aligned baseline routes,
   and Stage 2 playbook routes before broadening attachment content.
+- Preflight validates Stage 1 source-pack/alignment health and Stage 2 playbook health
+  before starting attachment edits.
 - Required exact-token, protected-topic, retrieval-alias, source-route, and
   cross-reference checks pass or are recorded as explicit gaps.
 - `source_pack_to_attachment_crosswalk.tsv` and
