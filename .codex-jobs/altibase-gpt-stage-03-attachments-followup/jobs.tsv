@@ -1,0 +1,19 @@
+id	status	kind	title	goal
+S3-J001	ToDo	mixed	Stage 3 preflight readiness gate	Verify Stage 2 ready/pass status, Stage 2 workflow completion, playbook validation, APB-000014 guardrail handling, and unresolved operator-only decisions before any attachment work starts.
+S3-J002	ToDo	mixed	Attachment follow-up scope and validation scaffolding	Create the Stage 3 attachment follow-up scope, validation scaffolding, and source/playbook routing plan from durable benchmark evidence and Stage 2 playbooks.
+S3-J003	ToDo	mixed	Core identity path storage property follow-up	Remediate core identity, path, database-file, log-anchor, storage, and foundational property attachment gaps using source-backed item blocks.
+S3-J004	ToDo	mixed	Capacity and memory property follow-up	Remediate memory, disk, volatile, log-size, cache, result-cache, and capacity-limit property attachment gaps.
+S3-J005	ToDo	mixed	Session optimizer locale lock property follow-up	Remediate optimizer, session, locale, lock, timeout, autocommit, transaction, and performance property attachment gaps.
+S3-J006	ToDo	mixed	Security replication network property follow-up	Remediate account, access-list, SSL/TLS, replication, network, port, and SQL-apply property attachment gaps.
+S3-J007	ToDo	mixed	DDL and destructive SQL generation follow-up	Remediate tablespace, datafile, table, partition, index, constraint, LOB storage, queue, and destructive DDL generation attachment gaps.
+S3-J008	ToDo	mixed	DML functions datatypes Oracle-difference follow-up	Remediate DML, functions, data type, JSON, LOB, object-name, regular-expression, and Oracle-difference attachment gaps.
+S3-J009	ToDo	mixed	Error and troubleshooting follow-up	Remediate exact error-code, SQL/property error, tool/driver error, symptom, log, and troubleshooting attachment gaps.
+S3-J010	ToDo	mixed	Install startup privilege runbook follow-up	Remediate installation, startup, account, privilege, tablespace, datafile, loganchor, and beginner-to-veteran runbook attachment gaps.
+S3-J011	ToDo	mixed	Backup recovery protected operations follow-up	Remediate backup, recovery, archive log, RESETLOGS, DROP/DISCARD/REUSE, and destructive protected-operation attachment gaps.
+S3-J012	ToDo	mixed	Replication topology state SQL follow-up	Remediate replication topology, state, DDL, control SQL, gap, compatibility, and replication guardrail attachment gaps.
+S3-J013	ToDo	mixed	CDC Log Analyzer RepMgr TLS network follow-up	Remediate CDC, Log Analyzer, Replication Manager, replication SSL, ordinary TLS, certificate, port, and network diagnostic attachment gaps.
+S3-J014	ToDo	mixed	Dictionary performance monitoring follow-up	Remediate dictionary and performance view, optimizer, execution plan, wait, lock, session, Monitoring API, and SNMP attachment gaps.
+S3-J015	ToDo	mixed	PSM client tools utilities follow-up	Remediate PSM, external procedure, CLI, ODBC, ACI, Precompiler, iSQL, iLoader, utility, and LOB/API attachment gaps.
+S3-J016	ToDo	mixed	Java connectors migration integration follow-up	Remediate Java, JDBC, connector, migration, Kubernetes, Spatial, NiFi, Tableau, and miscellaneous integration attachment gaps.
+S3-J017	ToDo	mixed	Retrieval aliases crosswalks and attachment validation	Update retrieval aliases, cross-links, source/playbook-to-attachment crosswalks, gap registers, and attachment validation reports after domain remediation.
+S3-J018	ToDo	mixed	Stage 3 readiness review	Review all Stage 3 attachment outputs, rerun validation, preserve guardrails, and write a ready/pass or not-ready Stage 3 readiness report.
