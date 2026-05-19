@@ -383,6 +383,46 @@ Reference facts:
 - Allowed for `SYS`, the table owner, users with `DELETE ANY TABLE`, and users with `DELETE` object privilege.
 - `MOVE` requires `DELETE` privilege on the source table and `INSERT` privilege on the target table.
 
+## High-Signal DML, Function, And Oracle-Difference Anchors
+
+Use these compact blocks when an answer needs exact syntax before a runnable DML
+or function first draft.
+
+Function and expression anchors:
+
+- `DECODE` syntax is `DECODE (expr, comparison_expr1, ret_expr1[, comparison_expr2, ret_expr2,..][, default])`. It compares `expr` with each `comparison_expr` in order, returns the matching `ret_expr`, and returns `default` or `NULL` when no comparison matches.
+- `GROUP_CONCAT` syntax is `GROUP_CONCAT (expr1 [, arg1])`; `arg1` is the delimiter character. Do not mechanically rewrite it to Oracle `LISTAGG`.
+- `REGEXP_REPLACE` syntax is `REGEXP_REPLACE (expr, pattern_expr [, replace_string [, start [, occurrence]]])`. If `replace_string` is omitted or `NULL`, matching text is removed.
+- `REGEXP_SUBSTR` syntax is `REGEXP_SUBSTR (expr, pattern_expr [, start [, occurrence]])`.
+- `REGEXP_LIKE` syntax is `[NOT] REGEXP_LIKE(source_expr, pattern_expr)`. The selected Altibase SQL Reference coverage documents `POSIX Basic Regular Expression`; also check `REGEXP_MODE` before accepting Oracle regular-expression syntax.
+
+Runnable examples:
+
+```sql
+SELECT DECODE('O', 'O', 'OPEN', 'C', 'CLOSED', 'UNKNOWN') AS status_label
+FROM dual;
+
+SELECT GROUP_CONCAT(ename, ',') AS employee_names
+FROM employees;
+
+SELECT REGEXP_REPLACE(
+         'Daerungpost-Tower II Guro-3 Dong, Guro-gu Seoul',
+         'Guro',
+         'Mapo',
+         1,
+         2
+       ) AS replaced_text
+FROM dual;
+```
+
+DML and Oracle-difference anchors:
+
+- `INSERT SELECT` / `INSERT ... SELECT` requires the target column count to match the source query column count.
+- `MERGE` can use `matched_update_clause`, `not_matched_insert_clause`, and `no_rows_insert_clause`; each appears at most once, and `no_rows_insert_clause` is Altibase-target syntax, not generic Oracle syntax.
+- The DML `RETURN` / `RETURNING` clause is for `INSERT`, `UPDATE`, and `DELETE` on tables. Do not return aggregate expressions, LOB values, aliases, subqueries, or `sequence` expressions.
+- For join rewrites, preserve `Semi Join` and `Anti Join` semantics and avoid `NOT IN` when the right side can contain `NULL`; use a null-safe `NOT EXISTS` rewrite when needed.
+- For object names, unquoted names can contain `A-Z`, `a-z`, `0-9`, `_`, `$`, and `#`, the first character must be a letter or `_`, and unquoted names cannot begin with `V$`, `X$`, or `D$`.
+
 ## Expression and Operator Generation
 
 ### Expression Item: Placement

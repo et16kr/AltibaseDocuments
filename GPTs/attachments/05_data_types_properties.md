@@ -92,6 +92,51 @@ and unsafe-assumption wording in answers.
   from `MEM_MAX_DB_SIZE`, so do not size it as if it were inside the memory
   database limit.
 
+## High-Signal Data Type, LOB, And JSON Answer Anchors
+
+Use these compact anchors when a customer asks for a type choice, Oracle
+conversion, or runnable table/query draft.
+
+- Character and binary storage modifiers: preserve `FIXED`, `VARIABLE`, and
+  `IN ROW`. On disk tables, user-specified `FIXED` or `VARIABLE` is ignored and
+  columns are treated as fixed; on memory tables, the specified option applies.
+  LOB data is variable-behavior data, but use `BLOB [IN ROW size]` or
+  `CLOB [IN ROW size]`, not a generic `VARIABLE` rewrite.
+- LOB selection: use `BLOB` for binary large objects and `CLOB` for character
+  large objects. A LOB column can store up to `4GB - 1 byte`; disk-table LOB
+  data can be placed in a separate disk LOB tablespace, while memory-table LOB
+  data stays in the same tablespace as the table.
+- LOB restrictions to preserve in generated SQL: LOB columns cannot be used in
+  volatile tables, disk temporary tablespaces, cursors, partition keys, indexes,
+  or join conditions. Avoid `NOT NULL` on LOB columns unless the application and
+  driver behavior have been tested.
+- Native `JSON` is an Altibase 8.1 verified source feature. Syntax is
+  `JSON [IN ROW size]`; maximum document size is `2GB (2,147,483,648 bytes)`;
+  JSON definition follows `RFC 8259`; JSON path expressions and functions follow
+  `ISO/IEC 19075-6(2021)`; maximum depth is `256`.
+- JSON processing uses Temporary LOB, so check `TEMPORARY_LOB_ENABLE`,
+  `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, and
+  `V$TEMPORARY_LOBS` for 8.1 JSON failures or memory questions. Do not use
+  native `JSON`, JSON functions, `IS JSON`, or `V$TEMPORARY_LOBS` for 7.1 or
+  7.3 unless the customer provides exact target-version proof.
+
+Runnable 8.1 JSON check:
+
+```sql
+CREATE TABLE app_event (
+  event_id BIGINT,
+  payload JSON
+);
+
+INSERT INTO app_event (event_id, payload)
+VALUES (1, JSON_OBJECT('customerId', 1001, 'status', 'OPEN' RETURNING JSON));
+
+SELECT JSON_VALUE(payload, '$.customerId' RETURNING BIGINT) AS customer_id
+FROM app_event
+WHERE payload IS JSON
+  AND JSON_EXISTS(payload, '$.status?(@=="OPEN")');
+```
+
 ## Source Documents
 
 - 7.1: Altibase 7.1 General Reference 1.
