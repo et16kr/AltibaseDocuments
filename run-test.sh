@@ -67,13 +67,23 @@ RUN_ID="${RUN_ID:-altibase_${SUITE_ID}_$(date +%Y%m%d_%H%M%S)}"
 MODE="${ALTIBASE_TEST_MODE:-${MODE:-live}}"
 PROVIDER="${ALTIBASE_TEST_PROVIDER:-${PROVIDER:-command}}"
 DEFAULT_CODEX_MODEL="${DEFAULT_CODEX_MODEL:-gpt-5.3-codex-spark}"
-MODEL="${ALTIBASE_TEST_MODEL:-${OPENAI_MODEL:-${MODEL_NAME:-}}}"
-if [[ -z "$MODEL" && "$PROVIDER" == "command" ]]; then
-  MODEL="${CODEX_EXEC_MODEL:-$DEFAULT_CODEX_MODEL}"
-fi
-if [[ "$PROVIDER" == "command" ]]; then
-  export CODEX_EXEC_MODEL="${CODEX_EXEC_MODEL:-$MODEL}"
-fi
+case "$PROVIDER" in
+  command)
+    MODEL="${ALTIBASE_TEST_MODEL:-${CODEX_EXEC_MODEL:-${MODEL_NAME:-$DEFAULT_CODEX_MODEL}}}"
+    if [[ -n "${ALTIBASE_TEST_MODEL:-}" && -n "${CODEX_EXEC_MODEL:-}" && "$ALTIBASE_TEST_MODEL" != "$CODEX_EXEC_MODEL" ]]; then
+      printf 'ERROR: ALTIBASE_TEST_MODEL (%s) and CODEX_EXEC_MODEL (%s) disagree for provider=command.\n' "$ALTIBASE_TEST_MODEL" "$CODEX_EXEC_MODEL" >&2
+      printf 'Set only one of them, or set both to the same model.\n' >&2
+      exit 2
+    fi
+    export CODEX_EXEC_MODEL="$MODEL"
+    ;;
+  openai|openai_responses)
+    MODEL="${ALTIBASE_TEST_MODEL:-${OPENAI_MODEL:-${MODEL_NAME:-}}}"
+    ;;
+  *)
+    MODEL="${ALTIBASE_TEST_MODEL:-${MODEL_NAME:-}}"
+    ;;
+esac
 PROVIDER_COMMAND="${PROVIDER_COMMAND:-evals/altibase_answerability/scripts/codex_exec_provider.sh}"
 CONTEXT_MODE="${CONTEXT_MODE:-lexical}"
 MAX_CONTEXT_CHARS="${MAX_CONTEXT_CHARS:-180000}"
@@ -140,10 +150,6 @@ PY
         log "ERROR: PROVIDER_COMMAND is not executable: ${PROVIDER_COMMAND}"
         exit 2
       fi
-      if [[ -z "$MODEL" ]]; then
-        MODEL="command-provider"
-      fi
-      export CODEX_EXEC_MODEL="${CODEX_EXEC_MODEL:-$MODEL}"
       ;;
     *)
       log "ERROR: unsupported live provider: ${PROVIDER}"
