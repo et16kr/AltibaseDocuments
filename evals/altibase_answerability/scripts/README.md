@@ -13,6 +13,16 @@ offline paths that do not require live model calls.
 
 ## Current Tooling
 
+For normal operation, prefer the repository-root wrapper:
+
+```bash
+./run-test.sh                  # attachment full benchmark
+./run-test.sh source-preserving
+./run-test.sh coding-agent
+```
+
+The lower-level commands below remain useful for targeted validation and debugging.
+
 `validate_benchmark.py` validates the durable schemas, `policy.json`,
 `source_taxonomy.json`, a manifest, and all selected JSONL question records.
 

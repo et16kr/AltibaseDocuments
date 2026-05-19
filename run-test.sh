@@ -4,9 +4,65 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT"
 
-MANIFEST="${MANIFEST:-evals/altibase_answerability/manifests/full_benchmark.json}"
+usage() {
+  cat <<'USAGE'
+Usage:
+  ./run-test.sh [attachments|source-preserving|coding-agent]
+
+Default:
+  ./run-test.sh
+    Runs the original attachment-based 270-question full benchmark.
+
+Suites:
+  attachments        GPTs/attachments full benchmark (default)
+  source-preserving  GPTs/upload_package_source_preserving full benchmark
+  coding-agent       Source-preserving coding-agent benchmark
+
+Common examples:
+  MODE=dry_run ./run-test.sh source-preserving
+  CODEX_EXEC_MODEL=gpt-5.3-codex-spark ALTIBASE_TEST_MODEL=gpt-5.3-codex-spark ./run-test.sh source-preserving
+  CODEX_EXEC_MODEL=gpt-5.3-codex-spark ALTIBASE_TEST_MODEL=gpt-5.3-codex-spark ./run-test.sh coding-agent
+
+Environment overrides:
+  MANIFEST, PROFILE, RUN_ID, MODE/ALTIBASE_TEST_MODE, PROVIDER/ALTIBASE_TEST_PROVIDER,
+  ALTIBASE_TEST_MODEL, CODEX_EXEC_MODEL, LIMIT, QUESTION_ID, RUN_ROOT
+USAGE
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+SUITE_RAW="${1:-${ALTIBASE_TEST_SUITE:-${TEST_SUITE:-attachments}}}"
+case "$SUITE_RAW" in
+  attachments|attachment|full|default)
+    TEST_SUITE="attachments"
+    DEFAULT_MANIFEST="evals/altibase_answerability/manifests/full_benchmark.json"
+    DEFAULT_PROFILE="full"
+    ;;
+  source-preserving|source_preserving|source|sp)
+    TEST_SUITE="source-preserving"
+    DEFAULT_MANIFEST="evals/altibase_answerability/manifests/full_benchmark_source_preserving_package.json"
+    DEFAULT_PROFILE="full"
+    ;;
+  coding-agent|coding_agent|agent)
+    TEST_SUITE="coding-agent"
+    DEFAULT_MANIFEST="evals/altibase_answerability/manifests/coding_agent_source_preserving_package.json"
+    DEFAULT_PROFILE="coding_agent"
+    ;;
+  *)
+    printf 'ERROR: unknown test suite: %s\n\n' "$SUITE_RAW" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+MANIFEST="${MANIFEST:-$DEFAULT_MANIFEST}"
+PROFILE="${PROFILE:-${VALIDATION_PROFILE:-$DEFAULT_PROFILE}}"
 POLICY="${POLICY:-evals/altibase_answerability/policy.json}"
-RUN_ID="${RUN_ID:-altibase_answerability_$(date +%Y%m%d_%H%M%S)}"
+SUITE_ID="${TEST_SUITE//-/_}"
+RUN_ID="${RUN_ID:-altibase_${SUITE_ID}_$(date +%Y%m%d_%H%M%S)}"
 MODE="${ALTIBASE_TEST_MODE:-${MODE:-live}}"
 PROVIDER="${ALTIBASE_TEST_PROVIDER:-${PROVIDER:-command}}"
 MODEL="${ALTIBASE_TEST_MODEL:-${OPENAI_MODEL:-${MODEL_NAME:-codex-exec}}}"
@@ -15,7 +71,18 @@ CONTEXT_MODE="${CONTEXT_MODE:-lexical}"
 MAX_CONTEXT_CHARS="${MAX_CONTEXT_CHARS:-180000}"
 PROVIDER_TIMEOUT_SECONDS="${PROVIDER_TIMEOUT_SECONDS:-600}"
 
-RUN_ROOT="evals/altibase_answerability/reports/full_benchmark/runs/${RUN_ID}"
+DEFAULT_RUN_ROOT="$(python3 - "$MANIFEST" "$RUN_ID" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+manifest = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+run_id = sys.argv[2]
+base = manifest.get("reporting", {}).get("output_dir", "evals/altibase_answerability/reports")
+print(f"{base}/runs/{run_id}")
+PY
+)"
+RUN_ROOT="${RUN_ROOT:-$DEFAULT_RUN_ROOT}"
 ANSWERS_DIR="${RUN_ROOT}/answers"
 JUDGE_DIR="${RUN_ROOT}/judge"
 SUMMARY_FILE="${RUN_ROOT}/summary.txt"
@@ -151,11 +218,51 @@ print(
 PY
 }
 
+write_dry_run_summary() {
+  local run_json="$1"
+  python3 - "$run_json" "$SUMMARY_FILE" "$TEST_SUITE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+run_path = Path(sys.argv[1])
+summary_path = Path(sys.argv[2])
+suite = sys.argv[3]
+run = json.loads(run_path.read_text(encoding="utf-8"))
+lines = [
+    "Altibase answerability dry-run summary",
+    f"Suite: {suite}",
+    f"Run ID: {run.get('run_id')}",
+    f"Manifest: {run.get('manifest_id')}",
+    f"Mode: {run.get('mode')}",
+    f"Provider: {run.get('provider')}",
+    f"Model: {run.get('model')}",
+    f"Answer records: {run.get('answer_records')}",
+    f"Errors: {run.get('errors')}",
+    f"Context glob: {run.get('context_source_glob')}",
+    f"Context root: {run.get('context_root')}",
+    f"Run JSON: {run_path.as_posix()}",
+    f"Answers: {(run_path.parent / 'answers.jsonl').as_posix()}",
+]
+summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+print(
+    "RESULT "
+    f"dry_run suite={suite} "
+    f"records={run.get('answer_records')} "
+    f"errors={run.get('errors')} "
+    f"summary={summary_path.as_posix()}"
+)
+PY
+}
+
 require_live_provider_config
 build_optional_args
 
 log "Altibase answerability test"
+log "suite=${TEST_SUITE}"
 log "run_id=${RUN_ID}"
+log "manifest=${MANIFEST}"
+log "profile=${PROFILE}"
 log "mode=${MODE} provider=${PROVIDER} model=${MODEL:-fixture} context=${CONTEXT_MODE}"
 if [[ "$PROVIDER" == "command" ]]; then
   log "provider_command=${PROVIDER_COMMAND}"
@@ -163,7 +270,8 @@ fi
 log "artifacts=${RUN_ROOT}"
 
 run_logged python3 evals/altibase_answerability/scripts/validate_benchmark.py \
-  --manifest "$MANIFEST"
+  --manifest "$MANIFEST" \
+  --profile "$PROFILE"
 
 run_logged python3 evals/altibase_answerability/scripts/answer_runner.py --self-test
 run_logged python3 evals/altibase_answerability/scripts/judge_report.py --self-test
@@ -196,6 +304,12 @@ fi
 
 if [[ "$ANSWER_STATUS" -ne 0 ]]; then
   log "WARNING: answer runner reported errors; generating judge report from produced answer records."
+fi
+
+if [[ "$MODE" == "dry_run" && "${JUDGE_DRY_RUN:-0}" != "1" ]]; then
+  write_dry_run_summary "${ANSWERS_DIR}/run.json" | tee -a "$LOG_FILE"
+  log "SUMMARY ${SUMMARY_FILE}"
+  exit "$ANSWER_STATUS"
 fi
 
 run_logged python3 evals/altibase_answerability/scripts/judge_report.py \
