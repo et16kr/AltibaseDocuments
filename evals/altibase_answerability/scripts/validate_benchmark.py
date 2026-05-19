@@ -32,6 +32,10 @@ BENCHMARK_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCHEMA_DIR = BENCHMARK_ROOT / "schemas"
 HANGUL_RE = re.compile(r"[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]")
+ALLOWED_CONTEXT_ROOTS = {
+    "GPTs/attachments/*.md": "GPTs/attachments",
+    "GPTs/upload_package_source_preserving/*.md": "GPTs/upload_package_source_preserving",
+}
 
 
 @dataclass
@@ -195,12 +199,51 @@ def validate_manifest(
             f"{repo_rel(manifest_path)} allowlists judge-only keys: {', '.join(leakage_keys)}"
         )
 
-    if answer_generation.get("attachment_glob") not in policy.get("source_boundary", {}).get(
-        "answer_generation_sources", []
-    ):
-        state.error(
-            f"{repo_rel(manifest_path)} attachment_glob is outside policy answer-generation sources"
+    attachment_glob = answer_generation.get("attachment_glob")
+    expected_context_root = ALLOWED_CONTEXT_ROOTS.get(attachment_glob)
+    if expected_context_root is None:
+        state.error(f"{repo_rel(manifest_path)} attachment_glob has no context-root allowlist entry")
+    else:
+        manifest_context_root = answer_generation.get("context_root")
+        if attachment_glob != "GPTs/attachments/*.md" and not manifest_context_root:
+            state.error(
+                f"{repo_rel(manifest_path)} package-aware manifests must set "
+                "answer_generation.context_root"
+            )
+        if manifest_context_root and manifest_context_root != expected_context_root:
+            state.error(
+                f"{repo_rel(manifest_path)} context_root must be {expected_context_root} "
+                f"for attachment_glob {attachment_glob}"
+            )
+        context_root_path = resolve_repo_path(
+            manifest_context_root or expected_context_root,
+            state,
+            "answer_generation.context_root",
         )
+        if context_root_path and not context_root_path.exists():
+            state.error(
+                f"{repo_rel(manifest_path)} context_root does not exist: "
+                f"{manifest_context_root or expected_context_root}"
+            )
+        if isinstance(attachment_glob, str):
+            matches = sorted(
+                Path(match).resolve() for match in glob.glob(str(REPO_ROOT / attachment_glob))
+            )
+            if not matches:
+                state.error(f"{repo_rel(manifest_path)} attachment_glob matched no files")
+            for match in matches:
+                if match.suffix != ".md":
+                    state.error(
+                        f"{repo_rel(manifest_path)} context match is not Markdown: {repo_rel(match)}"
+                    )
+                if context_root_path:
+                    try:
+                        match.relative_to(context_root_path)
+                    except ValueError:
+                        state.error(
+                            f"{repo_rel(manifest_path)} context match escapes "
+                            f"{manifest_context_root or expected_context_root}: {repo_rel(match)}"
+                        )
 
     if answer_generation.get("default_answer_language") != "en":
         state.error(f"{repo_rel(manifest_path)} must default answer generation to English")

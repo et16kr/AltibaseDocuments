@@ -16,10 +16,11 @@ offline paths that do not require live model calls.
 `validate_benchmark.py` validates the durable schemas, `policy.json`,
 `source_taxonomy.json`, a manifest, and all selected JSONL question records.
 
-`answer_runner.py` generates attachments-only answer records. It projects each question
-to the policy allowlist, builds retrieval context only from `GPTs/attachments/*.md`,
-checks that judge-only metadata keys do not enter the projected input, prompt, or
-request payload, and writes JSONL records that validate against
+`answer_runner.py` generates answer records from an explicitly allowlisted Markdown
+context root. It projects each question to the policy allowlist, builds retrieval
+context only from the manifest-selected context glob, checks that judge-only metadata
+keys do not enter the projected input, prompt scaffold, or request payload, and writes
+JSONL records that validate against
 `schemas/answer_record.schema.json`.
 
 `judge_report.py` judges answer records against the full source-backed question record
@@ -76,6 +77,17 @@ python3 evals/altibase_answerability/scripts/answer_runner.py \
   --limit 2 \
   --validate-output \
   --output-dir /tmp/altibase-answer-runner-dry-run
+```
+
+Source-preserving package dry-run:
+
+```bash
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/full_benchmark_source_preserving_package.json \
+  --mode dry_run \
+  --context-mode lexical \
+  --validate-output \
+  --output-dir /tmp/altibase-source-preserving-package-dry-run
 ```
 
 Judge/report self-test:

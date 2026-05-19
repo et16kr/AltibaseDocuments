@@ -1,0 +1,56 @@
+{
+  "$schema": "../schemas/manifest.schema.json",
+  "manifest_id": "full_benchmark_source_preserving_package",
+  "description": "Package-aware full Altibase answerability benchmark manifest selecting the unchanged 270 durable question records while building answer context from the source-preserving upload package.",
+  "question_files": [
+    "evals/altibase_answerability/questions/properties.jsonl",
+    "evals/altibase_answerability/questions/sql_ddl_dml_datatypes.jsonl",
+    "evals/altibase_answerability/questions/operations_admin.jsonl",
+    "evals/altibase_answerability/questions/views_performance_monitoring.jsonl",
+    "evals/altibase_answerability/questions/replication_cdc_security_network.jsonl",
+    "evals/altibase_answerability/questions/errors_troubleshooting.jsonl",
+    "evals/altibase_answerability/questions/tools_apis_connectors_migration.jsonl"
+  ],
+  "run_metadata": {
+    "profile": "full",
+    "job_id": "SPF-J006",
+    "source_boundary": "repository-local selected sources via GPTs/upload_package_source_preserving/*.md",
+    "baseline_manifest": "evals/altibase_answerability/manifests/full_benchmark.json",
+    "question_set": "unchanged 270 full_benchmark question records",
+    "routing_policy_reference": "GPTs/reports/source_preserving_upload_package_finalization_plan.md"
+  },
+  "answer_generation": {
+    "attachment_glob": "GPTs/upload_package_source_preserving/*.md",
+    "context_root": "GPTs/upload_package_source_preserving",
+    "allowlisted_question_fields": [
+      "id",
+      "question",
+      "version_scope",
+      "user_level",
+      "answer_type",
+      "answer_language",
+      "requested_language"
+    ],
+    "default_answer_language": "en",
+    "include_gpt_instruction_draft": true,
+    "gpt_instruction_draft_path": "GPTs/reports/source_preserving_upload_package_finalization_plan.md",
+    "provider": "offline",
+    "model": "fixture",
+    "mode": "dry_run"
+  },
+  "judge": {
+    "mode": "rule",
+    "threshold_policy": "evals/altibase_answerability/policy.json"
+  },
+  "reporting": {
+    "output_dir": "evals/altibase_answerability/reports/full_benchmark",
+    "aggregate_dimensions": [
+      "domain",
+      "subdomain",
+      "user_level",
+      "version_scope",
+      "answer_type",
+      "retrieval_risk"
+    ]
+  }
+}

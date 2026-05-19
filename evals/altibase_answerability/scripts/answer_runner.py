@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Run attachments-only answer generation for the Altibase benchmark.
+"""Run allowlisted-context answer generation for the Altibase benchmark.
 
 The runner projects each question record to the answer-generation allowlist,
-builds retrieval context only from GPTs/attachments/*.md, checks for metadata
-leakage before any provider call, and writes answer records as JSONL.
+builds retrieval context only from an explicitly allowlisted Markdown context
+root, checks for metadata leakage before any provider call, and writes answer
+records as JSONL.
 """
 
 from __future__ import annotations
@@ -63,6 +64,10 @@ STOPWORDS = {
     "which",
     "with",
 }
+ALLOWED_CONTEXT_ROOTS = {
+    "GPTs/attachments/*.md": "GPTs/attachments",
+    "GPTs/upload_package_source_preserving/*.md": "GPTs/upload_package_source_preserving",
+}
 
 
 @dataclass(frozen=True)
@@ -80,6 +85,18 @@ class ContextBundle:
     mode: str
     char_count: int
     chunk_count: int
+    context_source_glob: str
+    context_root: str
+
+
+@dataclass(frozen=True)
+class ContextChunk:
+    rel_path: str
+    heading: str
+    text: str
+    search_text: str
+    rel_path_lower: str
+    heading_lower: str
 
 
 @dataclass(frozen=True)
@@ -195,10 +212,25 @@ def load_questions(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return records
 
 
-def validate_runner_policy(manifest: dict[str, Any], policy: dict[str, Any]) -> None:
+def validate_runner_policy(manifest: dict[str, Any], policy: dict[str, Any]) -> str:
     answer_generation = manifest.get("answer_generation", {})
-    if answer_generation.get("attachment_glob") != "GPTs/attachments/*.md":
-        raise RunnerError("answer_generation.attachment_glob must be GPTs/attachments/*.md")
+    attachment_glob = answer_generation.get("attachment_glob")
+    if not isinstance(attachment_glob, str):
+        raise RunnerError("answer_generation.attachment_glob must be a string")
+
+    context_root = ALLOWED_CONTEXT_ROOTS.get(attachment_glob)
+    if context_root is None:
+        raise RunnerError(
+            "answer_generation.attachment_glob has no runner context-root "
+            f"allowlist entry: {attachment_glob}"
+        )
+
+    manifest_context_root = answer_generation.get("context_root")
+    if manifest_context_root is not None and manifest_context_root != context_root:
+        raise RunnerError(
+            "answer_generation.context_root must match the runner allowlist for "
+            f"{attachment_glob}: {context_root}"
+        )
 
     manifest_allowlist = set(answer_generation.get("allowlisted_question_fields", []))
     policy_allowlist = set(policy.get("answer_input_allowlist", []))
@@ -212,21 +244,28 @@ def validate_runner_policy(manifest: dict[str, Any], policy: dict[str, Any]) -> 
     if answer_generation.get("default_answer_language", "en") != "en":
         raise RunnerError("answer_generation.default_answer_language must be en")
 
+    return context_root
 
-def load_attachment_documents(attachment_glob: str) -> list[AttachmentDocument]:
+
+def load_attachment_documents(
+    attachment_glob: str,
+    context_root_rel: str,
+) -> list[AttachmentDocument]:
     paths = sorted(Path(match).resolve() for match in glob.glob(str(REPO_ROOT / attachment_glob)))
     if not paths:
-        raise RunnerError(f"Attachment glob matched no files: {attachment_glob}")
+        raise RunnerError(f"Context glob matched no files: {attachment_glob}")
 
     documents: list[AttachmentDocument] = []
-    attachments_root = (REPO_ROOT / "GPTs" / "attachments").resolve()
+    context_root = resolve_repo_path(context_root_rel, "context_root")
     for path in paths:
         if path.suffix != ".md":
-            raise RunnerError(f"Attachment context path is not Markdown: {repo_rel(path)}")
+            raise RunnerError(f"Context path is not Markdown: {repo_rel(path)}")
         try:
-            path.relative_to(attachments_root)
+            path.relative_to(context_root)
         except ValueError as exc:
-            raise RunnerError(f"Attachment context path escapes GPTs/attachments: {repo_rel(path)}") from exc
+            raise RunnerError(
+                f"Context path escapes allowlisted root {context_root_rel}: {repo_rel(path)}"
+            ) from exc
         documents.append(
             AttachmentDocument(
                 path=path,
@@ -286,8 +325,20 @@ def tokenize_query(projection: dict[str, Any]) -> list[str]:
     return [token for token in tokens if token not in STOPWORDS]
 
 
-def split_markdown_chunks(document: AttachmentDocument, chunk_chars: int) -> list[tuple[str, str]]:
-    chunks: list[tuple[str, str]] = []
+def make_context_chunk(rel_path: str, heading: str, text: str) -> ContextChunk:
+    search_text = f"{rel_path}\n{heading}\n{text}".lower()
+    return ContextChunk(
+        rel_path=rel_path,
+        heading=heading,
+        text=text,
+        search_text=search_text,
+        rel_path_lower=rel_path.lower(),
+        heading_lower=heading.lower(),
+    )
+
+
+def split_markdown_chunks(document: AttachmentDocument, chunk_chars: int) -> list[ContextChunk]:
+    chunks: list[ContextChunk] = []
     current_heading = document.rel_path
     current_lines: list[str] = []
     current_size = 0
@@ -296,7 +347,7 @@ def split_markdown_chunks(document: AttachmentDocument, chunk_chars: int) -> lis
         nonlocal current_lines, current_size
         text = "".join(current_lines).strip()
         if text:
-            chunks.append((current_heading, text))
+            chunks.append(make_context_chunk(document.rel_path, current_heading, text))
         current_lines = []
         current_size = 0
 
@@ -314,26 +365,34 @@ def split_markdown_chunks(document: AttachmentDocument, chunk_chars: int) -> lis
     return chunks
 
 
-def score_chunk(rel_path: str, heading: str, text: str, query_tokens: list[str]) -> int:
-    haystack = f"{rel_path}\n{heading}\n{text}".lower()
+def collect_markdown_chunks(documents: list[AttachmentDocument], chunk_chars: int) -> list[ContextChunk]:
+    chunks: list[ContextChunk] = []
+    for document in documents:
+        chunks.extend(split_markdown_chunks(document, chunk_chars))
+    return chunks
+
+
+def score_chunk(chunk: ContextChunk, query_tokens: list[str]) -> int:
     score = 0
     for token in query_tokens:
-        occurrences = haystack.count(token)
+        occurrences = chunk.search_text.count(token)
         if occurrences:
             score += min(occurrences, 5)
-        if token in rel_path.lower():
+        if token in chunk.rel_path_lower:
             score += 3
-        if token in heading.lower():
+        if token in chunk.heading_lower:
             score += 5
     return score
 
 
 def build_context(
     documents: list[AttachmentDocument],
+    context_chunks: list[ContextChunk],
     projection: dict[str, Any],
     mode: str,
     max_context_chars: int,
-    chunk_chars: int,
+    context_source_glob: str,
+    context_root: str,
 ) -> ContextBundle:
     if max_context_chars < 0:
         raise RunnerError("--max-context-chars must be 0 or a positive integer")
@@ -357,52 +416,56 @@ def build_context(
             mode=mode,
             char_count=len(text),
             chunk_count=len(documents),
+            context_source_glob=context_source_glob,
+            context_root=context_root,
         )
 
     if mode != "lexical":
         raise RunnerError(f"Unknown context mode: {mode}")
 
     query_tokens = tokenize_query(projection)
-    scored_chunks: list[tuple[int, str, str, str]] = []
-    for document in documents:
-        for heading, chunk_text in split_markdown_chunks(document, chunk_chars):
-            score = score_chunk(document.rel_path, heading, chunk_text, query_tokens)
-            scored_chunks.append((score, document.rel_path, heading, chunk_text))
+    scored_chunks: list[tuple[int, ContextChunk]] = []
+    for chunk in context_chunks:
+        scored_chunks.append((score_chunk(chunk, query_tokens), chunk))
 
-    scored_chunks.sort(key=lambda item: (-item[0], item[1], item[2]))
-    selected: list[tuple[str, str, str]] = []
+    scored_chunks.sort(key=lambda item: (-item[0], item[1].rel_path, item[1].heading))
+    selected: list[ContextChunk] = []
     selected_size = 0
-    budget = max_context_chars or sum(len(item[3]) for item in scored_chunks)
-    for score, rel_path, heading, chunk_text in scored_chunks:
+    budget = max_context_chars or sum(len(item.text) for _, item in scored_chunks)
+    for score, chunk in scored_chunks:
         if score <= 0 and selected:
             continue
-        header = f"\n\n===== {rel_path} :: {heading} =====\n"
-        candidate_size = len(header) + len(chunk_text) + 1
+        header = f"\n\n===== {chunk.rel_path} :: {chunk.heading} =====\n"
+        candidate_size = len(header) + len(chunk.text) + 1
         if candidate_size > budget and not selected:
             remaining = max(budget - len(header) - 1, 0)
-            selected.append((rel_path, heading, chunk_text[:remaining].rstrip()))
+            selected.append(
+                make_context_chunk(chunk.rel_path, chunk.heading, chunk.text[:remaining].rstrip())
+            )
             selected_size = budget
             break
         if selected_size + candidate_size > budget:
             continue
-        selected.append((rel_path, heading, chunk_text.rstrip()))
+        selected.append(make_context_chunk(chunk.rel_path, chunk.heading, chunk.text.rstrip()))
         selected_size += candidate_size
         if selected_size >= budget:
             break
 
     if not selected and scored_chunks:
-        _, rel_path, heading, chunk_text = scored_chunks[0]
-        selected.append((rel_path, heading, chunk_text[:budget].rstrip()))
+        _, chunk = scored_chunks[0]
+        selected.append(
+            make_context_chunk(chunk.rel_path, chunk.heading, chunk.text[:budget].rstrip())
+        )
 
     if not selected:
-        raise RunnerError("No attachment context chunks were selected")
+        raise RunnerError("No context chunks were selected")
 
     parts = [
-        f"\n\n===== {rel_path} :: {heading} =====\n{chunk_text}\n"
-        for rel_path, heading, chunk_text in selected
+        f"\n\n===== {chunk.rel_path} :: {chunk.heading} =====\n{chunk.text}\n"
+        for chunk in selected
     ]
     text = "".join(parts).strip()
-    files = sorted({rel_path for rel_path, _, _ in selected})
+    files = sorted({chunk.rel_path for chunk in selected})
     return ContextBundle(
         text=text,
         files=files,
@@ -410,6 +473,8 @@ def build_context(
         mode=mode,
         char_count=len(text),
         chunk_count=len(selected),
+        context_source_glob=context_source_glob,
+        context_root=context_root,
     )
 
 
@@ -443,8 +508,8 @@ def build_prompt(
 ) -> tuple[str, str]:
     instruction_parts = [
         "You are answering an Altibase benchmark question.",
-        "Use only the attachment context included in this request.",
-        "Do not use outside knowledge or original manuals.",
+        "Use only the benchmark context included in this request.",
+        "Do not use outside knowledge or repository files not included in the context.",
         language_instruction(projection),
         (
             "Keep SQL object names, SQL keywords used as syntax, function names, "
@@ -452,10 +517,10 @@ def build_prompt(
             "names, connector names, and version labels literal."
         ),
         (
-            "If the attachment context is not enough for a safe answer, ask for the "
+            "If the benchmark context is not enough for a safe answer, ask for the "
             "missing version, environment, log excerpt, patch level, or object "
             "definition needed, and give the safest next check supported by the "
-            "attachment context."
+            "benchmark context."
         ),
     ]
     if draft_text is not None:
@@ -515,7 +580,8 @@ def run_leakage_check(
         failures.append(f"projected input contains judge-only keys: {', '.join(leaked_projection)}")
 
     failures.extend(recursive_payload_key_leaks(request_payload, judge_only))
-    failures.extend(quoted_key_leaks(prompt_text, judge_only, "prompt text"))
+    # Source context is root-allowlisted and may legitimately contain JSON-like source text.
+    failures.extend(quoted_key_leaks(prompt_scaffold, judge_only, "prompt scaffold"))
     failures.extend(scaffold_label_leaks(prompt_scaffold, judge_only))
 
     return {
@@ -555,8 +621,8 @@ def offline_fixture_answer(
     answer = (
         f"Offline fixture answer for {projection['id']}. No live model call was made.\n\n"
         f"Question: {projection['question']}\n\n"
-        "Attachment-only context was built and leakage checks passed. "
-        f"Selected attachment files: {', '.join(context.files)}.\n\n"
+        "Allowlisted context was built and leakage checks passed. "
+        f"Selected context files: {', '.join(context.files)}.\n\n"
         f"Context preview:\n{preview}"
     )
     return ProviderResult(
@@ -568,6 +634,7 @@ def offline_fixture_answer(
             "context_characters": context.char_count,
             "context_chunks": context.chunk_count,
             "attachment_file_count": len(context.files),
+            "context_file_count": len(context.files),
         },
     )
 
@@ -648,12 +715,13 @@ def run_provider(
     if mode == "dry_run":
         return ProviderResult(
             status="skipped",
-            answer="Dry run: projection, attachment context, and leakage checks passed.",
+            answer="Dry run: projection, allowlisted context, and leakage checks passed.",
             usage={
                 "context_mode": context.mode,
                 "context_characters": context.char_count,
                 "context_chunks": context.chunk_count,
                 "attachment_file_count": len(context.files),
+                "context_file_count": len(context.files),
             },
         )
     if mode == "offline_fixture":
@@ -690,6 +758,8 @@ def answer_record(
     attachment_context: dict[str, Any] = {
         "attachment_files": context.files,
         "context_digest": context.digest,
+        "context_source_glob": context.context_source_glob,
+        "context_root": context.context_root,
     }
     if draft_path:
         attachment_context["gpt_instruction_draft_path"] = draft_path
@@ -842,7 +912,7 @@ def main() -> int:
         manifest_path = args.manifest if args.manifest.is_absolute() else (REPO_ROOT / args.manifest)
         policy = load_json(policy_path.resolve())
         manifest = load_json(manifest_path.resolve())
-        validate_runner_policy(manifest, policy)
+        context_root = validate_runner_policy(manifest, policy)
 
         answer_generation = manifest.get("answer_generation", {})
         mode = args.mode or answer_generation.get("mode") or "dry_run"
@@ -867,7 +937,9 @@ def main() -> int:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         questions = filter_questions(load_questions(manifest), args.question_id, args.limit)
-        documents = load_attachment_documents(answer_generation["attachment_glob"])
+        context_source_glob = answer_generation["attachment_glob"]
+        documents = load_attachment_documents(context_source_glob, context_root)
+        context_chunks = collect_markdown_chunks(documents, args.chunk_chars)
         draft_path, draft_text = load_instruction_draft(manifest)
         validator = load_answer_record_validator() if args.validate_output else None
 
@@ -879,10 +951,12 @@ def main() -> int:
                 projection = project_question(question, manifest, policy)
                 context = build_context(
                     documents,
+                    context_chunks,
                     projection,
                     args.context_mode,
                     args.max_context_chars,
-                    args.chunk_chars,
+                    context_source_glob,
+                    context_root,
                 )
                 prompt_text, prompt_scaffold = build_prompt(projection, context, draft_text)
                 request_payload = build_request_payload(provider, model, mode, prompt_text)
@@ -943,6 +1017,8 @@ def main() -> int:
             "errors": error_count,
             "answers_path": repo_rel(answer_path),
             "attachment_glob": answer_generation["attachment_glob"],
+            "context_source_glob": context_source_glob,
+            "context_root": context_root,
         }
         write_json(output_dir / "run.json", run_summary)
 

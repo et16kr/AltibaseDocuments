@@ -55,7 +55,17 @@
       ],
       "properties": {
         "attachment_glob": {
-          "const": "GPTs/attachments/*.md"
+          "enum": [
+            "GPTs/attachments/*.md",
+            "GPTs/upload_package_source_preserving/*.md"
+          ]
+        },
+        "context_root": {
+          "enum": [
+            "GPTs/attachments",
+            "GPTs/upload_package_source_preserving"
+          ],
+          "type": "string"
         },
         "allowlisted_question_fields": {
           "type": "array",

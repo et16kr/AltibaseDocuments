@@ -34,3 +34,10 @@ to English answers.
 manifest to use for production answer generation and readiness reporting. It preserves
 the same answer-generation boundary as the fixture manifests: only
 `GPTs/attachments/*.md`, the allowlisted question projection, and no judge-only fields.
+
+`full_benchmark_source_preserving_package.json` selects the same seven durable domain
+question files without changing question records or expected answers, but routes
+answer-generation context to `GPTs/upload_package_source_preserving/*.md`. It keeps the
+same answer-input allowlist, judge configuration, and reporting dimensions, and adds an
+explicit `context_root` so package dry-runs cannot escape the source-preserving upload
+package.

@@ -146,6 +146,14 @@
           "type": "string",
           "minLength": 1
         },
+        "context_source_glob": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context_root": {
+          "type": "string",
+          "minLength": 1
+        },
         "gpt_instruction_draft_path": {
           "type": "string",
           "minLength": 1
