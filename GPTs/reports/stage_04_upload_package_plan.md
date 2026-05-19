@@ -73,6 +73,22 @@ The package remains progressive, not final-upload ready. Developer/tooling slice
 integration slices, final AID selection, retrieval checks, benchmark dry runs, and
 Stage 4 readiness remain deferred to later scoped jobs.
 
+## S4-J006 Assembly Update
+
+`S4-J006` assembles the developer/client-tool package slice without changing the
+20-file topic architecture. It creates package files for PSM and external procedures,
+Java/JDBC/Spring/Hibernate, C/CLI/ODBC/ACI/Precompiler, iSQL/iLoader, and operation
+utilities. The slice preserves full answer-ready attachment content under
+`Answer-Ready Reference`, adds package-level source and playbook routing for compiler,
+client library, DSN, classpath, driver, utility, installed-tool output, generated
+artifact validation, and native/runtime evidence claims, and records source-pack,
+Korean-aligned English, playbook, and attachment crosswalk rows for the assembled
+files.
+
+The package remains progressive, not final-upload ready. Integration slices, final
+AID selection, retrieval checks, benchmark dry runs, and Stage 4 readiness remain
+deferred to later scoped jobs.
+
 ## Package Shape Decision
 
 The final package will use the existing 20 attachment topic filenames as the upload
