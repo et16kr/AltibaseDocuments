@@ -39,7 +39,7 @@
 | `SPF-J005` | `Done` | Shard retrieval metadata | Add non-source-body shard retrieval metadata to improve semantic search while preserving all source block bytes. |
 | `SPF-J006` | `Done` | Package-aware benchmark harness | Retarget benchmark tooling or manifests so the existing 270-question benchmark can dry-run against GPTs/upload_package_source_preserving without changing questions or expected answers. |
 | `SPF-J007` | `Done` | Coding-agent benchmark extension | Add a separate coding-agent question set, manifest, and rubric that tests repository work, SQL/iSQL generation, APIs, diagnostics, safety checks, and citation behavior against the source-preserving package. |
-| `SPF-J008` | `ToDo` | Final validation and readiness review | Run final deterministic validation, benchmark dry-runs, and write a readiness report with explicit remaining live-benchmark routing and no unsupported pass claims. |
+| `SPF-J008` | `Done` | Final validation and readiness review | Run final deterministic validation, benchmark dry-runs, and write a readiness report with explicit remaining live-benchmark routing and no unsupported pass claims. |
 
 ## Resume Rules
 
