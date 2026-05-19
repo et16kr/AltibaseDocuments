@@ -25,7 +25,7 @@ JOB_ID = "SPF-J002"
 JOB_DATE = "2026-05-19"
 
 ROOT = Path(__file__).resolve().parents[3]
-PACKAGE_DIR = ROOT / "GPTs/upload_package_source_preserving"
+PACKAGE_DIR = ROOT / "GPTs/upload_package"
 SOURCE_PACK_DIR = ROOT / "GPTs/source_pack"
 REPORT_PATH = ROOT / "GPTs/reports/source_preserving_upload_package_validation.md"
 
@@ -723,7 +723,7 @@ def render_report(pre_final: ValidationResult, strict_final: ValidationResult) -
         "",
         f"- Job: `{JOB_ID}`",
         f"- Date: {JOB_DATE}",
-        "- Package: `GPTs/upload_package_source_preserving/`",
+        "- Package: `GPTs/upload_package/`",
         "- Validator: `GPTs/reports/scripts/validate_source_preserving_upload_package.py`",
         "",
         "## Verdict",
@@ -838,7 +838,7 @@ def render_report(pre_final: ValidationResult, strict_final: ValidationResult) -
             "  normalization.",
             "- `source_to_shard_manifest.tsv` paths are mapped from",
             "  `GPTs/source_pack/source_pack_shard_*.md` to the same shard filenames in",
-            "  `GPTs/upload_package_source_preserving/`.",
+            "  `GPTs/upload_package/`.",
             "",
         ]
     )

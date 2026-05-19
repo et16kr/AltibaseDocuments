@@ -14,14 +14,14 @@
   "run_metadata": {
     "profile": "full",
     "job_id": "SPF-J006",
-    "source_boundary": "repository-local selected sources via GPTs/upload_package_source_preserving/*.md",
+    "source_boundary": "repository-local selected sources via GPTs/upload_package/*.md",
     "baseline_manifest": "evals/altibase_answerability/manifests/full_benchmark.json",
     "question_set": "unchanged 270 full_benchmark question records",
     "routing_policy_reference": "GPTs/reports/source_preserving_upload_package_finalization_plan.md"
   },
   "answer_generation": {
-    "attachment_glob": "GPTs/upload_package_source_preserving/*.md",
-    "context_root": "GPTs/upload_package_source_preserving",
+    "attachment_glob": "GPTs/upload_package/*.md",
+    "context_root": "GPTs/upload_package",
     "allowlisted_question_fields": [
       "id",
       "question",

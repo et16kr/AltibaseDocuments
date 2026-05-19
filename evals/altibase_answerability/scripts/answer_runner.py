@@ -66,7 +66,7 @@ STOPWORDS = {
 }
 ALLOWED_CONTEXT_ROOTS = {
     "GPTs/attachments/*.md": "GPTs/attachments",
-    "GPTs/upload_package_source_preserving/*.md": "GPTs/upload_package_source_preserving",
+    "GPTs/upload_package/*.md": "GPTs/upload_package",
 }
 
 

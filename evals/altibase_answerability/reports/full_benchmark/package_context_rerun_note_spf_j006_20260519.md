@@ -17,9 +17,9 @@ threshold policy remain unchanged.
 The package-aware manifest changes only answer-generation context routing:
 
 - `answer_generation.attachment_glob`:
-  `GPTs/upload_package_source_preserving/*.md`
+  `GPTs/upload_package/*.md`
 - `answer_generation.context_root`:
-  `GPTs/upload_package_source_preserving`
+  `GPTs/upload_package`
 - `answer_generation.gpt_instruction_draft_path`:
   `GPTs/reports/source_preserving_upload_package_finalization_plan.md`
 
@@ -53,9 +53,9 @@ Result: pass for dry-run mechanics; 270 answer records were written with
 | `manifest_id` | `full_benchmark_source_preserving_package` |
 | `answer_records` | `270` |
 | `errors` | `0` |
-| `attachment_glob` | `GPTs/upload_package_source_preserving/*.md` |
-| `context_source_glob` | `GPTs/upload_package_source_preserving/*.md` |
-| `context_root` | `GPTs/upload_package_source_preserving` |
+| `attachment_glob` | `GPTs/upload_package/*.md` |
+| `context_source_glob` | `GPTs/upload_package/*.md` |
+| `context_root` | `GPTs/upload_package` |
 | `mode` | `dry_run` |
 | `provider` | `offline` |
 | `model` | `fixture` |

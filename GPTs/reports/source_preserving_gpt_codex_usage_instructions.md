@@ -2,7 +2,7 @@
 
 - Job: `SPF-J004`
 - Date: 2026-05-19
-- Package: `GPTs/upload_package_source_preserving/`
+- Package: `GPTs/upload_package/`
 - Verdict: Pass
 
 ## Scope
@@ -37,7 +37,7 @@ expected answers, shard source bodies, or source-pack TSV rows.
 | `python3 GPTs/reports/scripts/validate_source_preserving_upload_package.py --strict-final` | Pass: 20 package files, 941 selected sources, 941 source-to-shard rows, and 941 parsed source blocks. |
 | Disallowed package-role wording scan outside shard files | Pass: no matches for `Upload intended: no`, `not a final GPT Knowledge upload manifest`, `not final upload`, or equivalent non-final wording. |
 | Positive package-role wording scan | Pass: README and manifest wrapper wording confirms primary source corpus, secondary topic routing, and no live benchmark readiness claim. |
-| `git diff --check -- GPTs/upload_package_source_preserving GPTs/reports` | Pass. |
+| `git diff --check -- GPTs/upload_package GPTs/reports` | Pass. |
 
 ## Self-Review
 

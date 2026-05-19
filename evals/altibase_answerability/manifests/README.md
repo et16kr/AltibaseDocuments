@@ -37,7 +37,7 @@ the same answer-generation boundary as the fixture manifests: only
 
 `full_benchmark_source_preserving_package.json` selects the same seven durable domain
 question files without changing question records or expected answers, but routes
-answer-generation context to `GPTs/upload_package_source_preserving/*.md`. It keeps the
+answer-generation context to `GPTs/upload_package/*.md`. It keeps the
 same answer-input allowlist, judge configuration, and reporting dimensions, and adds an
 explicit `context_root` so package dry-runs cannot escape the source-preserving upload
 package.
@@ -47,7 +47,7 @@ package.
 `coding_agent_source_preserving_package.json` is a separate benchmark for practical
 Codex, customer-owned LLM, and RAG-agent use of the source-preserving package. It
 selects only `../questions/coding_agent_source_preserving.jsonl`, uses
-`GPTs/upload_package_source_preserving/*.md` as answer context, and is not part of the
+`GPTs/upload_package/*.md` as answer context, and is not part of the
 locked 270-question `full_benchmark` baseline.
 
 Validate it with the dedicated small-profile gate:

@@ -10,7 +10,7 @@
     "korean_manuals_authoritative": true,
     "answer_generation_sources": [
       "GPTs/attachments/*.md",
-      "GPTs/upload_package_source_preserving/*.md",
+      "GPTs/upload_package/*.md",
       "allowlisted_question_projection",
       "optional_manifest_selected_gpt_instruction_draft"
     ]

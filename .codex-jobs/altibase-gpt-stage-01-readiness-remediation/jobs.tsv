@@ -1,8 +1,0 @@
-id	status	kind	title	goal
-S1R-J001	Done	mixed	Blocker preflight and source grouping	Freeze the current CONF-000008 and CONF-000009 scope, verify source IDs and baseline rows, and write the remediation plan for Stage 1 readiness blockers.
-S1R-J002	Done	mixed	Stored procedures and media authority remediation	Resolve stored/external procedure baseline routing, including the two English-only stored-procedure media sources, with Korean authority or explicit auxiliary/exclusion handling.
-S1R-J003	Done	mixed	Monitoring and Log Analyzer remediation	Create aligned working baseline or exact source-pack routing for Monitoring API, SNMP Agent, and Log Analyzer pending rows.
-S1R-J004	Done	mixed	Performance and source-index remediation	Create aligned working baseline or exact source-pack routing for Performance Tuning and source-index/Sharding pending rows.
-S1R-J005	Done	mixed	Replication Manager remediation	Create aligned working baseline or exact source-pack routing for Replication Manager manual and release-note pending rows.
-S1R-J006	Done	mixed	Manifest crosswalk and blocker closure	Update baseline manifest, crosswalk, conflict register, and Stage 2 gap register so CONF-000008 and CONF-000009 are resolved or explicitly downgraded with nonblocking guardrails.
-S1R-J007	Done	mixed	Stage 1 readiness revalidation	Rerun Stage 1 source-pack, AID tier, baseline, crosswalk, and conflict validation, then update the Stage 1 readiness report with a ready/pass or remaining blocker verdict.

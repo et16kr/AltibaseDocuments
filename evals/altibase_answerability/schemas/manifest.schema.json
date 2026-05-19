@@ -57,13 +57,13 @@
         "attachment_glob": {
           "enum": [
             "GPTs/attachments/*.md",
-            "GPTs/upload_package_source_preserving/*.md"
+            "GPTs/upload_package/*.md"
           ]
         },
         "context_root": {
           "enum": [
             "GPTs/attachments",
-            "GPTs/upload_package_source_preserving"
+            "GPTs/upload_package"
           ],
           "type": "string"
         },

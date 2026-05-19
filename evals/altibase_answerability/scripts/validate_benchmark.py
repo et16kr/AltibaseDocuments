@@ -34,7 +34,7 @@ SCHEMA_DIR = BENCHMARK_ROOT / "schemas"
 HANGUL_RE = re.compile(r"[\u1100-\u11ff\u3130-\u318f\uac00-\ud7af]")
 ALLOWED_CONTEXT_ROOTS = {
     "GPTs/attachments/*.md": "GPTs/attachments",
-    "GPTs/upload_package_source_preserving/*.md": "GPTs/upload_package_source_preserving",
+    "GPTs/upload_package/*.md": "GPTs/upload_package",
 }
 CODING_AGENT_TASK_TYPES = {
     "source_navigation",
@@ -561,10 +561,10 @@ def enforce_coding_agent_profile(
         )
 
     answer_generation = manifest.get("answer_generation", {})
-    if answer_generation.get("attachment_glob") != "GPTs/upload_package_source_preserving/*.md":
-        state.error("Coding-agent benchmark must use GPTs/upload_package_source_preserving/*.md")
-    if answer_generation.get("context_root") != "GPTs/upload_package_source_preserving":
-        state.error("Coding-agent benchmark must set context_root to GPTs/upload_package_source_preserving")
+    if answer_generation.get("attachment_glob") != "GPTs/upload_package/*.md":
+        state.error("Coding-agent benchmark must use GPTs/upload_package/*.md")
+    if answer_generation.get("context_root") != "GPTs/upload_package":
+        state.error("Coding-agent benchmark must set context_root to GPTs/upload_package")
 
     task_counts = Counter(record.get("agent_task_type") for record in records)
     missing_task_types = sorted(

@@ -2,7 +2,7 @@
 
 - Job: `SPF-J005`
 - Date: 2026-05-19
-- Package: `GPTs/upload_package_source_preserving/`
+- Package: `GPTs/upload_package/`
 - Scope: non-source-body retrieval metadata added to all 16 source shard files
 
 ## Summary
@@ -52,6 +52,6 @@ edited.
 | --- | --- |
 | `python3 GPTs/reports/scripts/validate_source_preserving_upload_package.py --strict-final` | Pass: 20 files, 941 selected sources, 941 source-to-shard rows, and 941 parsed source blocks validated. |
 | Independent inline Python source-block body preservation check | Pass: 941 source-block bodies hashed against recorded `source_sha256` and `extracted_body_sha256` values. |
-| `git diff --check -- GPTs/upload_package_source_preserving GPTs/reports/source_preserving_shard_metadata_report.md` | Pass. |
+| `git diff --check -- GPTs/upload_package GPTs/reports/source_preserving_shard_metadata_report.md` | Pass. |
 
 No live benchmark was run or claimed for this metadata-only job.

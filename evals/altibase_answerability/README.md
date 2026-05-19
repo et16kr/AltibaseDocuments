@@ -12,7 +12,7 @@ restricted to the rebuilt attachment files so the benchmark can expose remaining
 answerability gaps.
 
 The separate coding-agent source-preserving benchmark uses the same runner and judge
-contracts but targets `GPTs/upload_package_source_preserving/` and practical agent
+contracts but targets `GPTs/upload_package/` and practical agent
 artifacts. It is not part of the locked 270-question full answerability baseline.
 
 ## Scope

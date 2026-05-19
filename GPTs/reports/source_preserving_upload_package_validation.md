@@ -2,7 +2,7 @@
 
 - Job: `SPF-J002`
 - Date: 2026-05-19
-- Package: `GPTs/upload_package_source_preserving/`
+- Package: `GPTs/upload_package/`
 - Validator: `GPTs/reports/scripts/validate_source_preserving_upload_package.py`
 
 ## Verdict
@@ -48,32 +48,32 @@ reverse-routing wording outside source blocks.
 | Source-to-shard rows | 941 |
 | Parsed source blocks | 941 |
 | Shard files | 16 |
-| Largest file by size | `GPTs/upload_package_source_preserving/source_pack_shard_001.md` (4.30 MiB) |
-| Largest file by estimated tokens | `GPTs/upload_package_source_preserving/source_pack_shard_011.md` (945,108) |
+| Largest file by size | `GPTs/upload_package/source_pack_shard_001.md` (4.30 MiB) |
+| Largest file by estimated tokens | `GPTs/upload_package/source_pack_shard_011.md` (945,108) |
 
 ## Strict-Final Wording Status
 
 The following matches are outside source blocks and are expected until
 `SPF-J003` normalizes wrapper/header wording:
 
-- GPTs/upload_package_source_preserving/01_upload_order.md:5: not-final upload manifest wording: 'not a final GPT Knowledge upload manifest'
-- GPTs/upload_package_source_preserving/01_upload_order.md:10: not-final upload wording: 'not final upload'
-- GPTs/upload_package_source_preserving/source_pack_shard_001.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_002.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_003.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_004.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_005.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_006.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_007.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_008.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_009.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_010.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_011.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_012.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_013.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_014.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_015.md:4: upload-intended=no shard header: 'Upload intended: `no`'
-- GPTs/upload_package_source_preserving/source_pack_shard_016.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/01_upload_order.md:5: not-final upload manifest wording: 'not a final GPT Knowledge upload manifest'
+- GPTs/upload_package/01_upload_order.md:10: not-final upload wording: 'not final upload'
+- GPTs/upload_package/source_pack_shard_001.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_002.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_003.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_004.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_005.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_006.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_007.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_008.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_009.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_010.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_011.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_012.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_013.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_014.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_015.md:4: upload-intended=no shard header: 'Upload intended: `no`'
+- GPTs/upload_package/source_pack_shard_016.md:4: upload-intended=no shard header: 'Upload intended: `no`'
 
 ## Supporting Check Log
 
@@ -95,4 +95,4 @@ The following matches are outside source blocks and are expected until
   normalization.
 - `source_to_shard_manifest.tsv` paths are mapped from
   `GPTs/source_pack/source_pack_shard_*.md` to the same shard filenames in
-  `GPTs/upload_package_source_preserving/`.
+  `GPTs/upload_package/`.

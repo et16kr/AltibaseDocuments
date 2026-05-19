@@ -2,7 +2,7 @@
 
 - Job: `SPF-J008`
 - Date: 2026-05-19
-- Package: `GPTs/upload_package_source_preserving/`
+- Package: `GPTs/upload_package/`
 - Verdict: `Conditional-ready`
 
 ## Verdict
@@ -44,7 +44,7 @@ Relevant prior evidence:
 
 | Metric | Result |
 | --- | ---: |
-| Markdown files in `GPTs/upload_package_source_preserving/` | 20 |
+| Markdown files in `GPTs/upload_package/` | 20 |
 | Total package bytes | 59,738,374 |
 | Approximate total size | 56.97 MiB |
 | Source shard files | 16 |
@@ -85,8 +85,8 @@ found outside source blocks.
 The 270-question package-aware dry run used:
 
 - Manifest: `full_benchmark_source_preserving_package`
-- Context glob: `GPTs/upload_package_source_preserving/*.md`
-- Context root: `GPTs/upload_package_source_preserving`
+- Context glob: `GPTs/upload_package/*.md`
+- Context root: `GPTs/upload_package`
 - Mode/provider/model: `dry_run` / `offline` / `fixture`
 - Output: `/tmp/spf_j008_full_source_preserving_dry_run`
 
@@ -106,8 +106,8 @@ Summary from `run.json` and `answers.jsonl`:
 The coding-agent dry run used:
 
 - Manifest: `coding_agent_source_preserving_package`
-- Context glob: `GPTs/upload_package_source_preserving/*.md`
-- Context root: `GPTs/upload_package_source_preserving`
+- Context glob: `GPTs/upload_package/*.md`
+- Context root: `GPTs/upload_package`
 - Mode/provider/model: `dry_run` / `offline` / `fixture`
 - Output: `/tmp/spf_j008_coding_agent_source_preserving_dry_run`
 
@@ -173,7 +173,7 @@ A future live 270-question benchmark must be started only after explicit
 operator approval and a durable output path are recorded before generation. The
 run must preserve the locked 270 question records, expected answers, answer-input
 allowlist, judge-only leakage protections, and package context rooted at
-`GPTs/upload_package_source_preserving/`.
+`GPTs/upload_package/`.
 
 Until that run exists and is judged, the latest live answerability evidence
 remains the earlier recorded full-benchmark evidence, not a source-preserving

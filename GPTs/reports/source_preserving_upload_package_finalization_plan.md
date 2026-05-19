@@ -3,13 +3,13 @@
 - Date: 2026-05-19
 - Repository: `/home/et16/AltibaseDocuments`
 - Current baseline commit: `5af19e71 Add source-preserving GPT upload package`
-- Primary package: `GPTs/upload_package_source_preserving/`
+- Primary package: `GPTs/upload_package/`
 - Current verdict: correct source-preserving corpus; final upload polish and
   package-aware benchmark routing are still pending.
 
 ## Purpose
 
-`GPTs/upload_package_source_preserving/` is the correct package boundary when the
+`GPTs/upload_package/` is the correct package boundary when the
 goal is an Altibase encyclopedia for GPTs, Codex, or other LLM/RAG systems that
 must retain the selected original source content.
 
@@ -66,7 +66,7 @@ Required changes:
 
 ### 2. Add A Source-Preserving Package Validator
 
-Create a validator dedicated to `GPTs/upload_package_source_preserving/`. The
+Create a validator dedicated to `GPTs/upload_package/`. The
 existing `validate_upload_package.py` validates the compact topic package and is
 not sufficient for this package.
 
@@ -90,7 +90,7 @@ Add final usage instructions for custom GPTs, Codex, and other LLM systems.
 
 The instructions should say:
 
-- treat `GPTs/upload_package_source_preserving/` as the primary source corpus;
+- treat `GPTs/upload_package/` as the primary source corpus;
 - use `02_source_manifest.md` to identify source documents;
 - use `03_source_to_shard_manifest.md` to map source/block IDs to shard files;
 - answer from shard source text when exact product behavior matters;
@@ -145,12 +145,12 @@ Current limitation:
   `GPTs/attachments/` context boundary;
 - `GPTs/reports/stage_04_retrieval_dry_run.md` records that the existing runner
   cannot benchmark `GPTs/upload_package/` or
-  `GPTs/upload_package_source_preserving/` without a scoped harness change.
+  `GPTs/upload_package/` without a scoped harness change.
 
 Required work:
 
 - add a package-aware benchmark manifest or manifest option for
-  `GPTs/upload_package_source_preserving/*.md`;
+  `GPTs/upload_package/*.md`;
 - include this document,
   `GPTs/reports/source_preserving_upload_package_finalization_plan.md`, as the
   benchmark routing policy reference;

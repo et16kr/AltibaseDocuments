@@ -4,13 +4,13 @@ This file is a Markdown wrapper around `GPTs/source_pack/source_to_shard_manifes
 
 Use this mapping after selecting a row from `02_source_manifest.md`. Locate the
 matching `source_id`, record the `block_id`, and open the shard with the same
-basename under `GPTs/upload_package_source_preserving/` to read the exact
+basename under `GPTs/upload_package/` to read the exact
 `SOURCE_BLOCK_BEGIN` / `SOURCE_BLOCK_END` body. The `shard_path` column is
 preserved from the `GPTs/source_pack/` evidence baseline; in this upload package,
 use the corresponding `source_pack_shard_*.md` file in this directory.
 
 The `upload_intended` column is preserved source-pack baseline metadata and does
-not override the final role of `GPTs/upload_package_source_preserving/` as the
+not override the final role of `GPTs/upload_package/` as the
 primary source corpus. For exact claims, cite or retain `source_id`, `block_id`,
 `source_sha256` or `extracted_body_sha256`, `version_scope`, language, and
 authority metadata from this mapping and the matching source block.

@@ -3,7 +3,7 @@
 - Job: `SPF-J007`
 - Manifest: `evals/altibase_answerability/manifests/coding_agent_source_preserving_package.json`
 - Question set: `evals/altibase_answerability/questions/coding_agent_source_preserving.jsonl`
-- Context root: `GPTs/upload_package_source_preserving/`
+- Context root: `GPTs/upload_package/`
 - Scope: practical Codex, customer-owned LLM, and RAG-agent use of the source-preserving package
 
 ## Purpose
