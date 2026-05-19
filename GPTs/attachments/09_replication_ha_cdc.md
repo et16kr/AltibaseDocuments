@@ -185,6 +185,12 @@ stateDiagram-v2
 
 Use these compact blocks when the question asks for replication topology, state transitions, control SQL, gap handling, compatibility, or unsafe-operation guardrails. They preserve the exact terms an Altibase answer must keep for both new operators and advanced users.
 
+Answer block: missing topology and runtime inputs
+
+- Before giving runnable replication DDL or control SQL, ask for the target Altibase version and patch on each node, Sender-to-Receiver direction, topology, intended write ownership, `replication_name`, peer host and Receiver port, target tables or partitions, primary keys, character sets, current `Replication Gap`, `REPL_MODE`, `ACT_REPL_MODE`, `START_FLAG`, `NET_ERROR_FLAG`, `STATUS`, and rollback or rebuild plan.
+- For compatibility answers, ask for `product_version`, `meta_version`, and `repl_protocol_version` from every node, plus whether the operation is ordinary `LAZY`, `EAGER`, DDL replication, offline replication, receive-only, Log Analyzer, or Altibase 8.1 verified source SSL replication.
+- For patch-note answers involving `BUG-45946`, `ERR-61186`, `Different replication protocols`, `restartXSN`, `7.4.4`, or `7.4.5`, preserve the exact patch token and stop if the customer's exact patch level is missing.
+
 Answer block: basic topology terms
 
 - `Local Server`: current operation node; it can be Active, Standby, Sender, or Receiver depending on the task.

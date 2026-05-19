@@ -24,6 +24,7 @@ Use this compact index before scanning dictionary and performance-view cookbooks
 
 - Aliases and customer wording: data dictionary, meta table, performance view, system view, object lookup, column lookup, property check, session wait, lock wait, transaction wait, tablespace free space, backup history, replication status, Monitoring API mapping, SNMP metric.
 - Exact-token anchors: `SYSTEM_.SYS_TABLES_`, `SYSTEM_.SYS_COLUMNS_`, `SYS_COLUMNS_`, `SYS_INDICES_`, `SYS_CONSTRAINTS_`, `V$TABLE`, `V$ALLCOLUMN`, `NAME`, `COLUMNCOUNT`, `TABLENAME`, `COLNAME`, `SELECT`, `V$PROPERTY`, `V$VERSION`, `V$SESSION`, `V$STATEMENT`, `V$LOCK`, `V$TRANS`, `V$WAIT`, `SID`, `TX_ID`, `TRANS_ID`, `WAIT_CLASS`, `WAIT_FOR_TRANS_ID`, `V$ACCESS_LIST`, `V$REPSENDER`, `V$REPRECEIVER`, `START_FLAG`, `NET_ERROR_FLAG`, `QUERY`, `UPDATE_TX_COUNT`, `GC_ALREADY_SYNC_COUNT`, `OPTIMIZER_PERFORMANCE_VIEW`.
+- Replication exact-token anchors: `V$REPGAP`, `V$REPSYNC`, `REPL_MODE`, `ACT_REPL_MODE`, `STATUS`, `SYNC_RECORD_COUNT`, `Replication Gap`, `XSN`, `restartXSN`, `Master-Slave Scheme`, `User-Oriented Scheme`, `BUG-45946`, `ERR-61186`, and `Different replication protocols`.
 - Focused routing anchors: view and column availability answers route to `Check Whether a Performance View or Column Exists`; object, column, privilege, tablespace, backup, session, wait, lock, transaction, plan-cache, statistics, buffer, memory, replication, audit, Monitoring API, and SNMP questions route to the matching `Cookbook:` section; uncommon or patch-sensitive columns route first to `Dictionary and Performance View Inventory Baseline`.
 - Answer route: use this file for verification SQL and column names; use `05_data_types_properties.md` for property semantics; use `08_performance_tuning_monitoring.md` for tuning interpretation; use `09_replication_ha_cdc.md` for replication operations and unsafe state changes.
 - Safety route: performance views are read-only inspection surfaces for customer answers; do not recommend direct DML against `SYSTEM_.SYS_*` meta tables.
@@ -4661,6 +4662,108 @@ SELECT rep_name, start_flag, status, net_error_flag, xsn, commit_xsn,
 FROM V$REPSENDER
 ORDER BY rep_name;
 ```
+
+Replication topology and state validation bundle:
+
+```sql
+SELECT product_version,
+       meta_version,
+       repl_protocol_version
+FROM V$VERSION;
+
+SELECT name,
+       value1
+FROM V$PROPERTY
+WHERE name IN ('REPLICATION_DDL_SYNC',
+               'REPLICATION_DDL_ENABLE',
+               'REPLICATION_DDL_ENABLE_LEVEL',
+               'REPLICATION_DDL_SYNC_TIMEOUT',
+               'REPLICATION_SQL_APPLY_ENABLE',
+               'REPLICATION_INSERT_REPLACE',
+               'REPLICATION_UPDATE_REPLACE')
+ORDER BY name;
+
+SELECT replication_name,
+       host_count,
+       is_started,
+       xsn,
+       conflict_resolution,
+       repl_mode,
+       role,
+       options,
+       remote_fault_detect_time
+FROM SYSTEM_.SYS_REPLICATIONS_
+WHERE replication_name = '<REPLICATION_NAME>';
+
+SELECT replication_name,
+       host_no,
+       host_ip,
+       port_no,
+       conn_type
+FROM SYSTEM_.SYS_REPL_HOSTS_
+WHERE replication_name = '<REPLICATION_NAME>'
+ORDER BY host_no;
+
+SELECT replication_name,
+       local_user_name,
+       local_table_name,
+       local_partition_name,
+       remote_user_name,
+       remote_table_name,
+       remote_partition_name,
+       replication_unit
+FROM SYSTEM_.SYS_REPL_ITEMS_
+WHERE replication_name = '<REPLICATION_NAME>'
+ORDER BY local_user_name, local_table_name, local_partition_name;
+
+SELECT rep_name,
+       rep_gap,
+       rep_gap_size,
+       read_file_no,
+       read_offset
+FROM V$REPGAP
+WHERE rep_name = '<REPLICATION_NAME>';
+
+SELECT rep_name,
+       sync_table,
+       sync_partition,
+       sync_record_count
+FROM V$REPSYNC
+WHERE rep_name = '<REPLICATION_NAME>';
+
+SELECT rep_name,
+       start_flag,
+       status,
+       net_error_flag,
+       xsn,
+       commit_xsn,
+       repl_mode,
+       act_repl_mode,
+       sender_ip,
+       peer_ip,
+       peer_port
+FROM V$REPSENDER
+WHERE rep_name = '<REPLICATION_NAME>';
+
+SELECT rep_name,
+       my_ip,
+       my_port,
+       peer_ip,
+       peer_port,
+       apply_xsn,
+       sql_apply_table_count
+FROM V$REPRECEIVER
+WHERE rep_name = '<REPLICATION_NAME>';
+```
+
+Interpretation notes:
+
+- Use `V$REPGAP.REP_GAP` as the read-only `Replication Gap` check before replication state changes, DDL synchronization, failover, `SYNC`, `SYNC ONLY`, `QUICKSTART`, `RESET`, `DROP TABLE`, or `DROP REPLICATION`.
+- Decode `START_FLAG`, `STATUS`, and `NET_ERROR_FLAG` from `V$REPSENDER` before saying a started replication is healthy. `NET_ERROR_FLAG = 1` means a network error was detected.
+- Compare `REPL_MODE` and `ACT_REPL_MODE`; when configured `EAGER` replication has a gap after failure, `ACT_REPL_MODE` can show runtime `LAZY` behavior.
+- Use `V$REPSYNC.SYNC_RECORD_COUNT` to monitor `SYNC` and `SYNC ONLY`; `-1` indicates synchronization completion.
+- Use `SYSTEM_.SYS_REPLICATIONS_.CONFLICT_RESOLUTION` to support `Master-Slave Scheme` answers and pair it with property checks for `User-Oriented Scheme` answers.
+- For `BUG-45946`, `ERR-61186`, `Different replication protocols`, `restartXSN`, or `XSN` questions, this file supplies the validation SQL only. Route compatibility and rebuild interpretation to the replication attachment and the exact patch-note source.
 
 ### Object Block: Replication Log Buffer, Sent-Log, Statistics, Transaction, and Recovery Views
 

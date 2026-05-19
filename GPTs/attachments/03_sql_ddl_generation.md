@@ -22,6 +22,7 @@ Use this compact index before scanning syntax families and examples. It is inten
 
 - Aliases and customer wording: generate DDL, create tablespace, volatile tablespace, memory tablespace, disk tablespace, temporary tablespace, add datafile, add partition, table compression, LOB storage clause, create index, create sequence, create user, grant privilege, create replication, alter replication, backup SQL, recovery SQL.
 - Exact-token anchors: `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `ALTER TABLE ADD PARTITION`, `table_compression_clause`, `LOB(column_name)`, `CREATE INDEX`, `CREATE SEQUENCE`, `CREATE USER`, `GRANT`, `ALTER SYSTEM`, `ALTER SESSION`, `LOCK TABLE`, `UNTIL NEXT DDL`, `NON-AUTOCOMMIT`, `multiple_update`, `replication_host_ip`, `replication_host_port_no`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, `REPLICATION_DDL_ENABLE_LEVEL`, `IF EXISTS`, `IF NOT EXISTS`.
+- Replication state anchors: `ACT_REPL_MODE`, `START_FLAG`, `NET_ERROR_FLAG`, `Replication Gap`, `Master-Slave Scheme`, `User-Oriented Scheme`, `BUG-45946`, `ERR-61186`, `Different replication protocols`, `restartXSN`, `XSN`, `7.4.4`, and `7.4.5`.
 - Focused routing anchors: disk, memory, volatile, temporary, `DATAFILE`, `TEMPFILE`, `SIZE`, `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE`, and `UNLIMITED` answers route to `Tablespace Syntax`; table, partition, LOB, queue, index, user, privilege, sequence, replication, property SQL, lock-table SQL, and DML-adjacent cleanup or seed SQL route to the matching subsection under `Compact Syntax Patterns`; copy-ready examples route to `Complete DDL Examples`.
 - Answer route: use this file for syntax and copy-ready SQL generation; use `02_administration_operations.md` for operational preconditions and recovery cautions; use `05_data_types_properties.md` for property meanings and mutability; use `09_replication_ha_cdc.md` for replication state, topology, and compatibility.
 - Safety route: when DDL can commit prior DML or destroy/reuse storage, include the DDL transaction caveat and route to the operational stop conditions in `02_administration_operations.md`.
@@ -1006,6 +1007,9 @@ Generation notes:
 - `ALTER REPLICATION ... START AT SN (...)` is Log Analyzer XLog Sender syntax, not ordinary table-to-table replication start syntax. It requires Archivelog mode and `REPLICATION_LOG_BUFFER_SIZE = 0`.
 - `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
 - DDL replication is a separate protected route from ordinary `CREATE REPLICATION` object creation. Before generating DDL against replicated tables, require `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, and `REPLICATION_DDL_ENABLE_LEVEL` evidence from each node, confirm the DDL is in the Replication Manual's allowed set, and confirm all three `replication protocol version` components match when DDL replication is requested. DDL replication is not allowed with `propagation`.
+- For DDL replication compatibility, preserve the patch-note tokens in the answer when relevant: `BUG-45946` for DDL synchronization enablement, `ERR-61186` and `Different replication protocols` for protocol mismatch, and the `7.4.6` to `7.4.7` protocol change in 7.1.0.6.5. Do not reduce this to a generic "version mismatch" warning.
+- For sender-side database rebuild or replication metadata reset questions, preserve `restartXSN`, `XSN`, `DROP REPLICATION`, and `CREATE REPLICATION`. The 7.1.0.2.4 patch-note route says the documented workaround is to recreate the replication object on both sides when one side was rebuilt, not only on the rebuilt Sender side.
+- Before generating replication-changing SQL, ask for topology and ownership inputs: Sender/Receiver direction, Active-Standby or Active-Active, peer receiver ports, object mappings, current `Replication Gap`, `V$REPSENDER.REPL_MODE`, `V$REPSENDER.ACT_REPL_MODE`, `V$REPSENDER.START_FLAG`, `V$REPSENDER.NET_ERROR_FLAG`, and `V$REPSENDER.STATUS`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
@@ -3060,14 +3064,47 @@ SELECT replication_name,
 FROM SYSTEM_.SYS_REPL_ITEMS_
 WHERE replication_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
-SELECT *
+SELECT rep_name,
+       start_flag,
+       status,
+       net_error_flag,
+       xsn,
+       commit_xsn,
+       repl_mode,
+       act_repl_mode,
+       sender_ip,
+       peer_ip,
+       peer_port
 FROM V$REPSENDER
 WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
-SELECT *
+SELECT rep_name,
+       my_ip,
+       my_port,
+       peer_ip,
+       peer_port,
+       apply_xsn,
+       sql_apply_table_count
 FROM V$REPRECEIVER
 WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
+
+SELECT rep_name,
+       sync_table,
+       sync_partition,
+       sync_record_count
+FROM V$REPSYNC
+WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 ```
+
+Replication SQL guardrails:
+
+- Treat this verification block as mandatory evidence for generated `CREATE REPLICATION`, `ALTER REPLICATION`, and DDL synchronization answers. It is not a proof that the SQL is safe to execute by itself.
+- For `LAZY` versus `EAGER`, check both `REPL_MODE` and `ACT_REPL_MODE`; if `ACT_REPL_MODE` is `LAZY` while the configured mode is `EAGER`, explain that the runtime mode changed because a gap exists after failure.
+- For `START RETRY` and `QUICKSTART RETRY`, show `START_FLAG`, `NET_ERROR_FLAG`, and `STATUS` checks because iSQL can show success after the first Handshaking failure.
+- For `SYNC` or `SYNC ONLY`, include `SYNC_RECORD_COUNT`; `SYNC ONLY` copies records without starting replication, so a later `ALTER REPLICATION ... START` needs explicit approval.
+- For `Master-Slave Scheme`, validate `CONFLICT_RESOLUTION` on both nodes. For `User-Oriented Scheme`, ask for `REPLICATION_INSERT_REPLACE`, `REPLICATION_UPDATE_REPLACE`, conflict logs, and table definitions before generating conflict-resolution guidance.
+- For DDL synchronization compatibility, answer with `BUG-45946`, `REPLICATION_DDL_SYNC_TIMEOUT`, `ERR-61186`, and `Different replication protocols` only after checking the exact patch route and both nodes' `repl_protocol_version`.
+- For `restartXSN` rebuild cases, do not suggest `RESET` as a generic fix. Ask whether one database was rebuilt, compare `XSN` state, and route the customer to a planned `DROP REPLICATION` and `CREATE REPLICATION` rebuild on both sides when the documented workaround applies.
 
 ## Oracle DDL Conversion Rules
 
