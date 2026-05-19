@@ -26,7 +26,7 @@
   source-backed playbook closes it; carry forward `CONF-000004` through `CONF-000007`,
   the item-level `CONF-000008` recheck rule, and the `CONF-000009` exclusions.
 - Completion target: `customer_agent_enablement_stage_04_readiness.md` must be
-  written by `S4-J008` with an explicit ready/pass or not-ready/blocker verdict.
+  written by `S4-J011` with an explicit ready/pass or not-ready/blocker verdict.
 
 ## Jobs
 
@@ -34,12 +34,15 @@
 | --- | --- | --- | --- |
 | `S4-J001` | `ToDo` | Stage 4 preflight readiness gate | Verify Stage 3 ready/pass status, Stage 3 workflow completion, validation health, APB-000014 deferral, guardrails, AID candidate status, upload-package absence or cleanliness, and unresolved operator-only decisions before package assembly starts. |
 | `S4-J002` | `ToDo` | Upload package composition and validation scaffold | Define the Stage 4 upload composition plan, manifest schema, package validation checks, file-count policy, AID selection decision path, and source/playbook/attachment routing requirements. |
-| `S4-J003` | `ToDo` | Core reference upload package assembly | Assemble the core version, installation, administration, SQL, data type, dictionary, troubleshooting, performance, and replication upload-package files from the validated attachment layer plus required source/playbook routing notes. |
-| `S4-J004` | `ToDo` | Developer tools and integrations upload package assembly | Assemble the PSM, Java, C/CLI/ODBC/Precompiler, tools, migration, connectors, Kubernetes, security, Spatial, NiFi, Tableau, and miscellaneous upload-package files from the validated layers. |
-| `S4-J005` | `ToDo` | AID source-limitation and guardrail integration | Apply the final AID upload-content decision, preserve AID classifications and accepted limitations, carry forward CONF guardrails, and record APB-000014 as deferred or explicitly excluded without inflating the upload file count. |
-| `S4-J006` | `ToDo` | Upload package crosswalks and deterministic validation | Generate upload-package manifests and crosswalks, validate file count, required sections, leakage scans, source/playbook/attachment routes, excluded-source handling, and upload boundary hygiene. |
-| `S4-J007` | `ToDo` | Retrieval and answerability dry-run gate | Run deterministic retrieval/package checks and benchmark dry-run validation against the assembled package, record any residual gaps, and avoid live-benchmark claims unless a live run is explicitly performed. |
-| `S4-J008` | `ToDo` | Stage 4 readiness review | Review all Stage 4 outputs, rerun validation, preserve guardrails, and write a ready/pass or not-ready Stage 4 readiness report for final upload or live benchmark rerun routing. |
+| `S4-J003` | `ToDo` | Version installation administration package assembly | Assemble the version, release, platform, installation, startup, administration, tablespace, backup/recovery, and protected-operation upload-package files. |
+| `S4-J004` | `ToDo` | SQL reference upload package assembly | Assemble SQL DDL/DCL/DML, Oracle compatibility, data type, property, dictionary, and performance-view upload-package files. |
+| `S4-J005` | `ToDo` | Troubleshooting performance replication security package assembly | Assemble troubleshooting, error-response, performance tuning, monitoring, replication, CDC, HA, security, SSL, and TLS upload-package files. |
+| `S4-J006` | `ToDo` | Developer client tools package assembly | Assemble PSM, stored/external procedure, Java/JDBC/Spring/Hibernate, C/CLI/ODBC/ACI/Precompiler, iSQL, iLoader, utility, and operation-tool upload-package files. |
+| `S4-J007` | `ToDo` | Migration connectors cloud spatial package assembly | Assemble migration, Oracle compatibility, DB Link, external connector, Kubernetes, AKU, Spatial, NiFi, Tableau, and miscellaneous integration upload-package files. |
+| `S4-J008` | `ToDo` | AID source-limitation and guardrail integration | Apply the final AID upload-content decision, preserve AID classifications and accepted limitations, carry forward CONF guardrails, and record APB-000014 as deferred or explicitly excluded without inflating the upload file count. |
+| `S4-J009` | `ToDo` | Upload package crosswalks and deterministic validation | Generate upload-package manifests and crosswalks, validate file count, required sections, leakage scans, source/playbook/attachment routes, excluded-source handling, and upload boundary hygiene. |
+| `S4-J010` | `ToDo` | Retrieval and answerability dry-run gate | Run deterministic retrieval/package checks and benchmark dry-run validation against the assembled package, record any residual gaps, and avoid live-benchmark claims unless a live run is explicitly performed. |
+| `S4-J011` | `ToDo` | Stage 4 readiness review | Review all Stage 4 outputs, rerun validation, preserve guardrails, and write a ready/pass or not-ready Stage 4 readiness report for final upload or live benchmark rerun routing. |
 
 ## Resume Rules
 

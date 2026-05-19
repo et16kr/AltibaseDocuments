@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 import re
 import subprocess
@@ -1119,7 +1120,24 @@ def validate_rows(rows: list[dict[str, str]]) -> list[str]:
     return errors
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Validate the Stage 2 agent playbook and scenario-test scaffold."
+    )
+    parser.add_argument(
+        "--skip-forbidden-git-edits",
+        action="store_true",
+        help=(
+            "Skip the Stage 2 forbidden-path dirty-worktree gate. Use only from "
+            "Stage 3+ workflows that intentionally edit GPTs/attachments or "
+            "GPTs/upload_package while reusing playbook validation."
+        ),
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     errors: list[str] = []
 
     for path in (PLAYBOOK_DIR, README_PATH, MANIFEST_PATH):
@@ -1146,7 +1164,8 @@ def main() -> int:
     check_scenarios(errors)
     check_scenario_rubric(errors)
     check_validation_report(errors)
-    check_forbidden_git_edits(errors)
+    if not args.skip_forbidden_git_edits:
+        check_forbidden_git_edits(errors)
 
     if errors:
         print("Stage 2 playbook validation: FAIL")
@@ -1180,6 +1199,8 @@ def main() -> int:
     print(f"Non-planned playbooks requiring files: {non_planned}")
     print(f"Source-to-playbook crosswalk rows: {source_crosswalk_count}")
     print(f"Baseline-to-playbook crosswalk rows: {baseline_crosswalk_count}")
+    if args.skip_forbidden_git_edits:
+        print("Forbidden Stage 2 path dirty-worktree gate: skipped")
     return 0
 
 

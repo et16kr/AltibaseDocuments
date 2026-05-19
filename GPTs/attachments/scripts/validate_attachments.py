@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import argparse
 import re
 import subprocess
 import sys
@@ -577,11 +578,28 @@ def check_attachment_crosswalks(failures: list[str]) -> None:
             seen_keys.add(key)
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Validate the Stage 3 customer-facing attachment scaffold."
+    )
+    parser.add_argument(
+        "--skip-upload-package-gate",
+        action="store_true",
+        help=(
+            "Skip the Stage 3 GPTs/upload_package cleanliness gate. Use only from "
+            "Stage 4+ workflows that intentionally assemble GPTs/upload_package."
+        ),
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     failures: list[str] = []
     check_attachment_shape(failures)
     check_forbidden_attachment_text(failures)
-    check_upload_package_clean(failures)
+    if not args.skip_upload_package_gate:
+        check_upload_package_clean(failures)
     check_scope_tsv(failures)
     check_completed_scope_exact_tokens(failures)
     check_attachment_crosswalks(failures)
@@ -597,7 +615,10 @@ def main() -> int:
     print("- Required top-level attachment sections: present")
     print("- Customer-facing path/internal-label scan: passed")
     print("- Altibase 8.1 verified source wording: preserved")
-    print("- GPTs/upload_package Stage 3 and uncommitted-change gate: clean")
+    if args.skip_upload_package_gate:
+        print("- GPTs/upload_package Stage 3 and uncommitted-change gate: skipped")
+    else:
+        print("- GPTs/upload_package Stage 3 and uncommitted-change gate: clean")
     print("- Stage 3 scope TSV routing: valid")
     print("- Completed Stage 3 scope exact-token checks: passed")
     print("- Stage 3 attachment crosswalk routes: valid")
