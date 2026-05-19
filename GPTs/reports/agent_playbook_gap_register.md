@@ -15,6 +15,8 @@ crosswalk and validation-report scope.
 This register extends the Stage 1 `S1-J012` / `S1R-J006` gap record. Stage 1 remains
 ready/pass for guarded Stage 2 routing. `CONF-000008` stays closed only as a Stage 1
 routing blocker, and `CONF-000009` stays a nonblocking exclusion guardrail.
+No open Stage 2 blockers remain for `CONF-000008` or `CONF-000009`.
+CONF-000009 remains a nonblocking exclusion guardrail.
 
 ## Current Validation Snapshot
 
