@@ -1,0 +1,426 @@
+#!/usr/bin/env python3
+"""Validate the Stage 4 upload-package manifest and package boundary."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import re
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+REPORTS_DIR = ROOT / "GPTs/reports"
+ATTACHMENTS_DIR = ROOT / "GPTs/attachments"
+UPLOAD_DIR = ROOT / "GPTs/upload_package"
+PLAN_PATH = REPORTS_DIR / "stage_04_upload_package_plan.md"
+MANIFEST_PATH = REPORTS_DIR / "stage_04_upload_package_manifest.tsv"
+VALIDATION_PATH = REPORTS_DIR / "stage_04_upload_package_validation.md"
+PREFLIGHT_PATH = REPORTS_DIR / "stage_04_preflight_status.md"
+SOURCE_MANIFEST = ROOT / "GPTs/source_pack/source_manifest.tsv"
+SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
+
+EXPECTED_COUNT = 20
+EXPECTED_AID_CANDIDATES = {
+    "AID-000001",
+    "AID-000002",
+    "AID-000003",
+    "AID-000004",
+    "AID-000005",
+}
+REQUIRED_GUARDRAILS = {
+    "CONF-000004",
+    "CONF-000005",
+    "CONF-000006",
+    "CONF-000007",
+    "CONF-000008",
+    "CONF-000009",
+}
+EXCLUDED_SOURCE_IDS = {"SRC-000109", "SRC-000169"}
+
+REQUIRED_SECTIONS = [
+    "Package Role",
+    "Applicable Versions And Authority",
+    "Questions This File Can Answer",
+    "Retrieval Alias Index",
+    "Source Routes",
+    "Task And Playbook Routing",
+    "Answer-Ready Reference",
+    "Required Inputs And Stop Conditions",
+    "Validation And Rollback Checks",
+    "Cross-References",
+    "Residual Scope And Limitations",
+]
+
+MANIFEST_COLUMNS = [
+    "upload_file_id",
+    "upload_path",
+    "source_attachment_path",
+    "upload_title",
+    "package_role",
+    "owning_stage4_job",
+    "assembly_status",
+    "counts_against_20",
+    "merge_policy",
+    "required_sections",
+    "source_route_expectation",
+    "baseline_route_expectation",
+    "playbook_route_expectation",
+    "attachment_route_expectation",
+    "aid_candidate_routes",
+    "aid_integration_policy",
+    "allowed_source_metadata",
+    "internal_ids_excluded_from_upload",
+    "guardrail_ids_carried",
+    "apb_000014_disposition",
+    "excluded_source_ids",
+    "validation_status",
+    "notes",
+]
+
+FORBIDDEN_UPLOAD_PATTERNS = [
+    (re.compile(r"/home/et16"), "local workstation path"),
+    (re.compile(r"~/AID"), "local AID workspace path"),
+    (re.compile(r"\.codex-jobs"), "workflow runtime path"),
+    (re.compile(r"\bGPTs/reports/"), "internal report path"),
+    (re.compile(r"\bGPTs/attachments/"), "internal attachment path"),
+    (re.compile(r"\bGPTs/source_pack/"), "internal source-pack path"),
+    (re.compile(r"\bGPTs/agent_playbooks/"), "internal playbook path"),
+    (re.compile(r"\bManuals/Altibase"), "repository source-tree path"),
+    (re.compile(r"\bKAE-BLOCK-\d{6}\b"), "internal baseline block ID"),
+    (re.compile(r"\bAID-\d{6}\b"), "internal AID tier ID"),
+    (re.compile(r"\bAPB-\d{6}\b"), "internal playbook ID"),
+    (re.compile(r"\bCONF-\d{6}\b"), "internal guardrail ID"),
+    (re.compile(r"\bS3-SCOPE-\d{3}\b"), "internal Stage 3 scope ID"),
+    (re.compile(r"\bS[1-4]R?-J\d{3}\b"), "internal job ID"),
+]
+
+CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
+LOCAL_LINK_RE = re.compile(r"\]\((?:file://|/home/et16|~/|[A-Za-z]:\\)")
+
+
+def rel(path: Path) -> str:
+    return path.relative_to(ROOT).as_posix()
+
+
+def split_values(value: str) -> list[str]:
+    return [item.strip() for item in value.split(";") if item.strip()]
+
+
+def read_tsv(path: Path, errors: list[str]) -> list[dict[str, str]]:
+    if not path.exists():
+        errors.append(f"missing TSV: {rel(path)}")
+        return []
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        if reader.fieldnames != MANIFEST_COLUMNS:
+            errors.append(
+                f"{rel(path)} has unexpected columns: {reader.fieldnames!r}; "
+                f"expected {MANIFEST_COLUMNS!r}"
+            )
+            return []
+        return [
+            {column: (row.get(column) or "").strip() for column in MANIFEST_COLUMNS}
+            for row in reader
+        ]
+
+
+def read_any_tsv(path: Path, errors: list[str]) -> list[dict[str, str]]:
+    if not path.exists():
+        errors.append(f"missing TSV: {rel(path)}")
+        return []
+    with path.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle, delimiter="\t"))
+
+
+def check_required_docs(errors: list[str]) -> None:
+    for path in (PLAN_PATH, MANIFEST_PATH, VALIDATION_PATH, PREFLIGHT_PATH):
+        if not path.exists():
+            errors.append(f"required Stage 4 file missing: {rel(path)}")
+
+    if PLAN_PATH.exists():
+        text = PLAN_PATH.read_text(encoding="utf-8")
+        for token in (
+            "Package Shape Decision",
+            "Required Upload Markdown Sections",
+            "Source Metadata Policy",
+            "AID Selection Decision Path",
+            "Manifest Schema",
+            "Deterministic Validation Approach",
+            "APB-000014",
+            "CONF-000004",
+            "CONF-000009",
+        ):
+            if token not in text:
+                errors.append(f"{rel(PLAN_PATH)} missing required token: {token}")
+
+    if VALIDATION_PATH.exists():
+        text = VALIDATION_PATH.read_text(encoding="utf-8")
+        for token in (
+            "Scaffold Mode",
+            "Assembled Mode",
+            "Deterministic Check Matrix",
+            "SRC-000109",
+            "SRC-000169",
+        ):
+            if token not in text:
+                errors.append(f"{rel(VALIDATION_PATH)} missing required token: {token}")
+
+
+def check_manifest_rows(rows: list[dict[str, str]], errors: list[str]) -> None:
+    if len(rows) != EXPECTED_COUNT:
+        errors.append(f"expected {EXPECTED_COUNT} manifest rows, found {len(rows)}")
+
+    seen_ids: set[str] = set()
+    seen_upload_paths: set[str] = set()
+    seen_attachment_paths: set[str] = set()
+    aid_seen: set[str] = set()
+    guardrails_seen: set[str] = set()
+
+    attachment_files = {
+        path.name: path
+        for path in ATTACHMENTS_DIR.glob("[0-9][0-9]_*.md")
+        if path.is_file()
+    }
+
+    for index, row in enumerate(rows):
+        row_label = row.get("upload_file_id") or f"row {index + 2}"
+        expected_id = f"UPKG-{index:03d}"
+        if row["upload_file_id"] != expected_id:
+            errors.append(f"{row_label} expected upload_file_id {expected_id}")
+        if row["upload_file_id"] in seen_ids:
+            errors.append(f"duplicate upload_file_id: {row['upload_file_id']}")
+        seen_ids.add(row["upload_file_id"])
+
+        upload_path = row["upload_path"]
+        if upload_path in seen_upload_paths:
+            errors.append(f"{row_label} duplicates upload_path: {upload_path}")
+        seen_upload_paths.add(upload_path)
+        if not upload_path.startswith("GPTs/upload_package/") or not upload_path.endswith(".md"):
+            errors.append(f"{row_label} upload_path must be GPTs/upload_package/*.md")
+
+        attachment_path = row["source_attachment_path"]
+        if attachment_path in seen_attachment_paths:
+            errors.append(f"{row_label} duplicates source_attachment_path: {attachment_path}")
+        seen_attachment_paths.add(attachment_path)
+        if not attachment_path.startswith("GPTs/attachments/") or not attachment_path.endswith(".md"):
+            errors.append(f"{row_label} source_attachment_path must be GPTs/attachments/*.md")
+        attachment_file = ROOT / attachment_path
+        if not attachment_file.exists():
+            errors.append(f"{row_label} source attachment missing: {attachment_path}")
+        if Path(upload_path).name != Path(attachment_path).name:
+            errors.append(f"{row_label} must preserve attachment filename")
+        if Path(attachment_path).name not in attachment_files:
+            errors.append(f"{row_label} source attachment is not a numbered attachment")
+
+        if row["assembly_status"] != "planned_not_assembled":
+            errors.append(f"{row_label} assembly_status must be planned_not_assembled")
+        if row["counts_against_20"] != "yes":
+            errors.append(f"{row_label} counts_against_20 must be yes")
+        if row["merge_policy"] != "preserve_attachment_filename":
+            errors.append(f"{row_label} merge_policy must preserve attachment filename")
+        if row["validation_status"] != "planned_scaffold":
+            errors.append(f"{row_label} validation_status must be planned_scaffold")
+
+        sections = split_values(row["required_sections"])
+        if sections != REQUIRED_SECTIONS:
+            errors.append(f"{row_label} required_sections do not match Stage 4 policy")
+
+        for field in (
+            "source_route_expectation",
+            "baseline_route_expectation",
+            "playbook_route_expectation",
+            "attachment_route_expectation",
+            "aid_integration_policy",
+            "allowed_source_metadata",
+            "internal_ids_excluded_from_upload",
+            "apb_000014_disposition",
+            "notes",
+        ):
+            if not row[field]:
+                errors.append(f"{row_label} has empty required field: {field}")
+
+        if "no_KAE_ids_in_upload" not in row["baseline_route_expectation"]:
+            errors.append(f"{row_label} must keep KAE IDs outside upload Markdown")
+        if "APB-000014_deferred" not in row["playbook_route_expectation"]:
+            errors.append(f"{row_label} must carry APB-000014 as deferred")
+        if "SRC_AND_AID_SRC_IDS" not in row["allowed_source_metadata"]:
+            errors.append(f"{row_label} must allow source IDs only as source metadata")
+        if "SOURCE_PACK_BLOCK_IDS" not in row["allowed_source_metadata"]:
+            errors.append(f"{row_label} must allow source-pack block metadata")
+
+        excluded_internal = set(split_values(row["internal_ids_excluded_from_upload"]))
+        required_internal = {
+            "KAE-BLOCK_IDS",
+            "APB_IDS",
+            "CONF_IDS",
+            "S3_SCOPE_IDS",
+            "JOB_IDS",
+            "LOCAL_PATHS",
+            "AID_TIER_IDS",
+        }
+        missing_internal = sorted(required_internal - excluded_internal)
+        if missing_internal:
+            errors.append(
+                f"{row_label} missing internal ID exclusions: {', '.join(missing_internal)}"
+            )
+
+        guardrails = set(split_values(row["guardrail_ids_carried"]))
+        unknown_guardrails = sorted(
+            guardrail for guardrail in guardrails if not re.fullmatch(r"CONF-\d{6}", guardrail)
+        )
+        if unknown_guardrails:
+            errors.append(f"{row_label} has invalid guardrail IDs: {', '.join(unknown_guardrails)}")
+        guardrails_seen.update(guardrails)
+
+        excluded = set(split_values(row["excluded_source_ids"]))
+        if excluded != EXCLUDED_SOURCE_IDS:
+            errors.append(f"{row_label} must record excluded source IDs SRC-000109 and SRC-000169")
+
+        aid_routes = set(split_values(row["aid_candidate_routes"]))
+        invalid_aid = sorted(aid for aid in aid_routes if not re.fullmatch(r"AID-\d{6}", aid))
+        if invalid_aid:
+            errors.append(f"{row_label} has invalid AID candidate IDs: {', '.join(invalid_aid)}")
+        aid_seen.update(aid_routes)
+
+    missing_aid = sorted(EXPECTED_AID_CANDIDATES - aid_seen)
+    if missing_aid:
+        errors.append("manifest does not cover AID candidates: " + ", ".join(missing_aid))
+
+    missing_guardrails = sorted(REQUIRED_GUARDRAILS - guardrails_seen)
+    if missing_guardrails:
+        errors.append("manifest does not carry guardrails: " + ", ".join(missing_guardrails))
+
+
+def upload_markdown_files() -> list[Path]:
+    if not UPLOAD_DIR.exists():
+        return []
+    return sorted(path for path in UPLOAD_DIR.glob("*.md") if path.is_file())
+
+
+def check_scaffold_boundary(errors: list[str]) -> None:
+    files = upload_markdown_files()
+    if files:
+        errors.append(
+            "scaffold mode expects no upload Markdown files, found: "
+            + ", ".join(rel(path) for path in files)
+        )
+
+
+def check_assembled_package(rows: list[dict[str, str]], errors: list[str]) -> None:
+    files = upload_markdown_files()
+    manifest_paths = {row["upload_path"] for row in rows}
+    file_paths = {rel(path) for path in files}
+    known_source_ids = {
+        row.get("source_id", "")
+        for row in read_any_tsv(SOURCE_MANIFEST, errors)
+        if row.get("source_id")
+    }
+    known_block_ids = {
+        row.get("block_id", "")
+        for row in read_any_tsv(SOURCE_TO_SHARD, errors)
+        if row.get("block_id")
+    }
+
+    if not files:
+        errors.append("assembled mode requires upload Markdown files")
+        return
+    if len(files) > EXPECTED_COUNT:
+        errors.append(f"assembled upload package has {len(files)} Markdown files; limit is {EXPECTED_COUNT}")
+
+    missing = sorted(manifest_paths - file_paths)
+    extra = sorted(file_paths - manifest_paths)
+    if missing:
+        errors.append("manifest rows missing assembled files: " + ", ".join(missing))
+    if extra:
+        errors.append("assembled files not listed in manifest: " + ", ".join(extra))
+
+    for path in files:
+        text = path.read_text(encoding="utf-8")
+        label = rel(path)
+        for section in REQUIRED_SECTIONS:
+            if not re.search(rf"^## {re.escape(section)}$", text, re.MULTILINE):
+                errors.append(f"{label} missing required section: {section}")
+
+        for pattern, reason in FORBIDDEN_UPLOAD_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                errors.append(f"{label} contains forbidden {reason}: {match.group(0)}")
+
+        cjk_match = CJK_RE.search(text)
+        if cjk_match:
+            errors.append(f"{label} contains CJK character: {cjk_match.group(0)}")
+
+        link_match = LOCAL_LINK_RE.search(text)
+        if link_match:
+            errors.append(f"{label} contains local filesystem link: {link_match.group(0)}")
+
+        for source_id in EXCLUDED_SOURCE_IDS:
+            if source_id in text:
+                errors.append(f"{label} contains excluded source ID: {source_id}")
+
+        for source_id in re.findall(r"\b(?:SRC|AID-SRC)-\d{6}\b", text):
+            if source_id not in known_source_ids:
+                errors.append(f"{label} references unknown source ID: {source_id}")
+
+        for block_id in re.findall(r"\bBLOCK-\d{6}\b", text):
+            if block_id not in known_block_ids:
+                errors.append(f"{label} references unknown source-pack block ID: {block_id}")
+
+        for link in re.findall(r"\]\(([^)#]+\.md)(?:#[^)]+)?\)", text):
+            if "://" in link:
+                continue
+            target = (path.parent / link).resolve()
+            try:
+                target.relative_to(UPLOAD_DIR.resolve())
+            except ValueError:
+                errors.append(f"{label} links outside upload package: {link}")
+                continue
+            if not target.exists():
+                errors.append(f"{label} has broken upload-package link: {link}")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--assembled",
+        action="store_true",
+        help="Validate assembled GPTs/upload_package Markdown files.",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    errors: list[str] = []
+
+    check_required_docs(errors)
+    rows = read_tsv(MANIFEST_PATH, errors)
+    if rows:
+        check_manifest_rows(rows, errors)
+        if args.assembled:
+            check_assembled_package(rows, errors)
+        else:
+            check_scaffold_boundary(errors)
+
+    if errors:
+        print("Stage 4 upload package validation failed:")
+        for error in errors:
+            print(f"- {error}")
+        return 1
+
+    print("Stage 4 upload package validation passed.")
+    print(f"- Manifest rows: {len(rows)}")
+    if args.assembled:
+        print(f"- Upload Markdown files: {len(upload_markdown_files())}")
+        print("- Required sections and upload-boundary scans: passed")
+    else:
+        print("- Mode: scaffold")
+        print("- Upload Markdown files: 0")
+        print("- Planned rows are not yet assembled by design")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
