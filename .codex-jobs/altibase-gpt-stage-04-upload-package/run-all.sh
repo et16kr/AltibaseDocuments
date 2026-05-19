@@ -196,6 +196,21 @@ ensure_commit_after_job() {
     set_status "$id" "Fail"
     die "Job $id finished without creating a commit. A successful reviewed job must commit its result."
   fi
+
+  local changed_paths
+  changed_paths="$(git diff --name-only "$before_head..$after_head" --)"
+  if [[ -z "$changed_paths" ]]; then
+    set_status "$id" "Fail"
+    die "Job $id advanced HEAD but no changed paths were found in the commit range."
+  fi
+  if printf '%s\n' "$changed_paths" | grep -q '^\.codex-jobs/'; then
+    set_status "$id" "Fail"
+    die "Job $id committed .codex-jobs workflow files. Job commits must contain project outputs only."
+  fi
+  if ! printf '%s\n' "$changed_paths" | grep -qv '^\.codex-jobs/'; then
+    set_status "$id" "Fail"
+    die "Job $id committed no project files outside .codex-jobs."
+  fi
 }
 
 build_runtime_prompt() {
@@ -224,10 +239,23 @@ build_runtime_prompt() {
 validate_workflow_files() {
   command -v "$CODEX_BIN" >/dev/null 2>&1 || die "Codex binary not found: $CODEX_BIN"
 
-  local id
+  local id seen_ids
+  seen_ids="$(mktemp)"
   while IFS= read -r id; do
+    if grep -Fxq "$id" "$seen_ids"; then
+      rm -f "$seen_ids"
+      die "Duplicate job id in jobs file: $id"
+    fi
+    printf '%s\n' "$id" >> "$seen_ids"
     [[ -f "$PROMPT_DIR/$id.md" ]] || die "Missing prompt file for job $id: $PROMPT_DIR/$id.md"
   done < <(job_ids)
+  rm -f "$seen_ids"
+
+  local invalid_status
+  invalid_status="$(awk -F '\t' 'NR > 1 && $2 !~ /^(ToDo|Progress|Done|Fail)$/ { print $1 ":" $2; exit }' "$JOBS_FILE")"
+  if [[ -n "$invalid_status" ]]; then
+    die "Invalid job status in jobs file: $invalid_status"
+  fi
 }
 
 run_job() {
