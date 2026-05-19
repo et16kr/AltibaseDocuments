@@ -973,6 +973,7 @@ Property SQL rules:
 - For `ALTER SESSION`, the change affects only the current session.
 - For persistent operations policy, also maintain `altibase.properties` when the site requires restart-stable configuration; do not assume a dynamic statement replaces file configuration unless the target version documentation confirms it.
 - `ALTER SYSTEM RELOAD ACCESS LIST` rebuilds runtime access-list rules from `ACCESS_LIST_FILE` and is run in `SYSDBA` administrator mode. It applies to new connection requests; existing sessions are not disconnected by the reload.
+- For security, replication, and network property answers, keep separate item blocks for `REPLICATION_PORT_NO`, `REPLICATION_SSL_PORT_NO`, `REPLICATION_SQL_APPLY_ENABLE`, `SSL_ENABLE`, `SSL_PORT_NO`, account password properties, `ACCESS_LIST`, and `ACCESS_LIST_FILE`. Do not collapse these into a generic port, generic TLS, or generic access-control answer.
 
 ## Property Check SQL
 
@@ -5022,6 +5023,9 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 - For PSM signature-size questions, prefer explicit `CHAR`, `VARCHAR`, `NCHAR`, or `NVARCHAR` precision over relying on default-precision properties.
 - For VARRAY questions, include the target version because `VARRAY_MEMORY_MAXIMUM` is documented in 7.3 and Altibase 8.1 verified source, not in the selected 7.1 inventory.
 - For SSL replication, distinguish `REPLICATION_SSL_PORT_NO` from ordinary `REPLICATION_PORT_NO` and ordinary client `SSL_PORT_NO`.
+- For SQL Apply answers, preserve `LAZY` or `Lazy` scope, value `0` `Handshaking` behavior, `ALTER SYSTEM SET REPLICATION_SQL_APPLY_ENABLE = 1`, and receiver validation through `V$REPRECEIVER.SQL_APPLY_TABLE_COUNT`.
+- For access-list answers, preserve `PERMIT`, `DENY`, `ACCESS_LIST_FILE`, `ALTER SYSTEM RELOAD ACCESS LIST`, and `V$ACCESS_LIST`; state that reload applies to new connection requests and does not disconnect existing sessions.
+- For account security answers, separate read-write policy properties such as `CASE_SENSITIVE_PASSWORD`, `REMOTE_SYSDBA_ENABLE`, and `ADMIN_MODE` from read-only password-aging properties such as `FAILED_LOGIN_ATTEMPTS` and `PASSWORD_LOCK_TIME`.
 - If the verified source does not define values, say to verify with `V$PROPERTY` instead of inventing defaults or ranges.
 
 ## Residual Scope

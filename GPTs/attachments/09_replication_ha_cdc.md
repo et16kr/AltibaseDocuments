@@ -636,6 +636,13 @@ WHERE name IN (
 ORDER BY name;
 ```
 
+Property interpretation notes:
+
+- `REPLICATION_PORT_NO` is the local ordinary replication Receiver port. It is an `Unsigned Integer`, read-only, single value property; `0` means ordinary replication is not used through that property. Configure it before startup and use the peer node's value in `CREATE REPLICATION ... WITH 'peer_host', peer_port`.
+- `REPLICATION_SSL_PORT_NO` is the Altibase 8.1 verified source SSL replication Receiver port. It is also `Unsigned Integer`, read-only, single value; `0` means SSL replication cannot connect to that node. Do not substitute ordinary client/server `SSL_PORT_NO`.
+- `REPLICATION_SQL_APPLY_ENABLE` is a protected SQL Apply Mode property for documented `LAZY` metadata-difference cases. Value `0` keeps XLog apply and can raise a `Handshaking` error when metadata differs; value `1` allows supported XLog-to-SQL conversion, but it is not an EAGER-mode compatibility switch.
+- Before changing replication DDL, SQL Apply, timeout, or port properties, ask for exact version, patch level, topology, peer endpoint values, current `V$PROPERTY`, current Sender/Receiver state, replication gap, and the rollback or rebuild plan.
+
 ## Object Eligibility And Target Compatibility
 
 Target matching block: object and column identity

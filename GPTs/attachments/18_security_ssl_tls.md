@@ -93,6 +93,7 @@ Exact TLS and port token block:
 - FIPS client loading: `ALTIBASE_SSL_LOAD_CONFIG=1` is for ODBC/CLI clients when `FIPS` module configuration must be loaded; skip it when `FIPS` is not used.
 - SSL monitoring: `V$SESSION`, `COMM_NAME`, and `ALTER DATABASE database_name SESSION CLOSE session_number`.
 - Altibase 8.1 verified source replication SSL: `USING SSL`, `REPLICATION_SSL_PORT_NO`, `Unsigned Integer`, `0`, `65535`, `read-only`, `single value`.
+- Security property handoff: `CASE_SENSITIVE_PASSWORD`, `REMOTE_SYSDBA_ENABLE`, `ADMIN_MODE`, `FAILED_LOGIN_ATTEMPTS`, `PASSWORD_LOCK_TIME`, `PASSWORD_LIFE_TIME`, `ACCESS_LIST`, `ACCESS_LIST_FILE`, `PERMIT`, `DENY`, `ALTER SYSTEM RELOAD ACCESS LIST`, and `V$ACCESS_LIST` are security-facing property topics; use the property attachment for exact default, range, mutability, reload, and verification SQL.
 
 ```mermaid
 flowchart LR
@@ -691,7 +692,7 @@ Troubleshooting block: replication SSL does not connect
 ## Attachment Cross-References
 
 - Use `03_sql_ddl_generation.md` for user, role, grant, revoke, audit, and replication DDL that carries security or SSL/TLS implications.
-- Use `05_data_types_properties.md` for exact SSL/TLS, replication port, certificate path, audit, and password-related property names.
+- Use `05_data_types_properties.md` for exact SSL/TLS, replication port, certificate path, access-list, audit, and password-related property names.
 - Use `06_data_dictionary_performance_views.md` for audit runtime state, audit options, encrypted column metadata, security module metadata, SSL/TLS session checks, and replication SSL view evidence.
 - Use `07_error_messages_troubleshooting.md` for SSL/TLS error codes, SQLSTATEs, OpenSSL details, and handshake failure triage.
 - Use `09_replication_ha_cdc.md` for replication mode, topology, failover, and CDC context around Altibase 8.1 replication SSL.
