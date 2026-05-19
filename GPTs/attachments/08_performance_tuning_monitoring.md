@@ -246,6 +246,79 @@ WHERE name IN (
 ORDER BY name;
 ```
 
+## Performance First Checks
+
+Use this matrix before recommending an index, hint, property change, monitoring
+integration, or SNMP alert rule. It is designed for first-pass answers where the
+customer has not yet supplied complete runtime evidence.
+
+| Symptom or request | First checks | Interpretation guardrail |
+| --- | --- | --- |
+| Slow SQL, high CPU, or plan change | Get SQL text and bind pattern; run `ALTER SESSION SET EXPLAIN PLAN = ONLY` or `ON`; check table storage, indexes, statistics, and `V$STATEMENT` timing. | A `full table scan` is not automatically wrong. For disk tables, an index scan can be worse when it causes excessive random I/O. |
+| Complex predicate or uncertain index use | Set `TRCLOG_DETAIL_PREDICATE = 1` for an approved diagnostic window and compare `FIXED KEY RANGE`, `VARIABLE KEY RANGE`, and `FILTER` in the plan. | Predicate detail may disappear after optimizer transformations; do not infer index use from index existence alone. |
+| Hint request | Verify the documented `/*+ hint */` form, table aliases, candidate indexes in `SYSTEM_.SYS_INDICES_`, leading columns in `SYSTEM_.SYS_INDEX_COLUMNS_`, and before/after plan output. | Use hints as last-mile controls after statistics, predicates, data types, indexes, and SQL shape are checked. |
+| Lock wait or session wait | Check `V$SESSION`, `V$STATEMENT`, `V$SESSION_WAIT`, `V$SESSION_EVENT`, `V$LOCK_WAIT`, `V$LOCK`, and `V$LOCK_STATEMENT`. | Preserve `TRANS_ID` and `WAIT_FOR_TRANS_ID`; ask for whether a session can be cancelled before suggesting a state-changing action. |
+| Log-file wait or group commit | Compare two `V$LFG` snapshots with `LF_PREPARE_WAIT_COUNT`, `UPDATE_TX_COUNT`, `GC_WAIT_COUNT`, `GC_ALREADY_SYNC_COUNT`, and `GC_REAL_SYNC_COUNT`. | These counters are workload-window evidence. Do not tune `PREPARE_LOG_FILE_COUNT` from one cumulative snapshot. |
+| Partition or index tuning | Check `SYS_TABLE_PARTITIONS_` columns `PARTITION_MIN_VALUE`, `PARTITION_MAX_VALUE`, `PARTITION_ORDER`, and `PARTITION_USABLE`; check `SYS_INDICES_` `INDEX_TYPE` and index columns. | Hash partition min/max values can be `NULL`; `B-TREE` and `R-TREE` are exact index-type interpretations, not generic optimizer advice. |
+| Monitoring API design | Confirm installed `altibaseMonitor.h`, `libaltibaseMonitor.a` or `libaltibaseMonitor_sl.so`, `libodbccli.a`, local `Unix Domain Socket`, `ABIInitialize`, `ABISetProperty`, and `ABICheckConnection`. | Monitoring API is supported from `Altibase 5.5.1`, but return structures and thread behavior still require installed header/library evidence. |
+| SNMP setup or alerting | Check `SNMP_ENABLE`, `SNMP_PORT_NO`, `SNMP_TRAP_PORT_NO`, `altisnmpd.conf`, `ALTIBASE-MIB`, `snmpwalk`, and `snmptrapd` output. | `altiTrap` fields are SNMP output. Cross-check SQL-side status with `V$DATABASE`, `V$VERSION`, and `V$SESSION`, but validate live trap codes before hard-coding severity. |
+| Patch-sensitive performance-view client error | Ask for exact server patch, client driver version, and full error. For the documented Altibase `7.1.0.7.9` case, the old client symptom is `That had return update result`. | The workaround `OPTIMIZER_PERFORMANCE_VIEW = 0` is narrow and can degrade performance-view query performance. |
+
+Reusable SQL packet:
+
+```sql
+SELECT s.id AS session_id,
+       s.db_username,
+       s.task_state,
+       s.session_state,
+       s.active_flag,
+       s.trans_id,
+       st.id AS stmt_id,
+       st.execute_flag,
+       st.total_time,
+       st.execute_time,
+       st.fetch_time,
+       st.read_page,
+       st.get_page,
+       st.event,
+       st.wait_time,
+       st.query
+FROM V$SESSION s,
+     V$STATEMENT st
+WHERE s.id = st.session_id
+  AND s.current_stmt_id = st.id
+ORDER BY s.active_flag DESC, st.total_time DESC;
+
+SELECT sid,
+       event,
+       wait_class,
+       wait_time,
+       second_in_wait,
+       p1,
+       p2,
+       p3
+FROM V$SESSION_WAIT
+ORDER BY second_in_wait DESC, wait_time DESC;
+
+SELECT trans_id,
+       wait_for_trans_id
+FROM V$LOCK_WAIT
+ORDER BY wait_for_trans_id, trans_id;
+
+SELECT lfg_id,
+       lf_prepare_wait_count,
+       update_tx_count,
+       gc_wait_count,
+       gc_already_sync_count,
+       gc_real_sync_count
+FROM V$LFG;
+```
+
+Stop point: if the target version, patch level, SQL text, plan output, view-column
+availability, object definitions, metric window, Monitoring API build evidence, or
+SNMP command output is missing, ask for that input and provide only the safest
+read-only next check.
+
 ## Query Processing Model
 
 Altibase query processing follows this order:

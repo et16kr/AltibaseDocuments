@@ -510,6 +510,158 @@ ALTER SYSTEM SET OPTIMIZER_PERFORMANCE_VIEW = 0;
 
 Ask for the exact Altibase 7.1 server patch level, client driver version, full error text, and failing `x$`/`v$` query before recommending this patch-specific workaround. The patch note cautions that changing `OPTIMIZER_PERFORMANCE_VIEW` can degrade performance-view query performance.
 
+### Dictionary, View, Monitoring, and Patch Evidence Bridge
+
+Use this bridge when the user asks for a compact first answer about dictionary
+columns, wait/lock/session views, Monitoring API, SNMP, optimizer evidence, or a
+patch-sensitive performance-view issue. Keep the answer read-only until the user
+provides exact version, patch level, runtime output, and object or SQL context.
+
+Portable availability checks:
+
+```sql
+SELECT name,
+       columncount
+FROM V$TABLE
+WHERE name IN (
+  'V$SESSION',
+  'V$STATEMENT',
+  'V$SQLTEXT',
+  'V$SESSION_WAIT',
+  'V$SESSION_EVENT',
+  'V$SYSTEM_EVENT',
+  'V$LOCK',
+  'V$LOCK_WAIT',
+  'V$LOCK_STATEMENT',
+  'V$TRANSACTION',
+  'V$SQL_PLAN_CACHE',
+  'V$SQL_PLAN_CACHE_PCO',
+  'V$SQL_PLAN_CACHE_SQLTEXT',
+  'V$DBMS_STATS',
+  'V$LOCK_TABLE_STATS',
+  'V$LFG',
+  'V$LOG',
+  'V$PROPERTY',
+  'V$DATABASE',
+  'V$VERSION',
+  'V$REPGAP',
+  'V$REPSENDER_SENT_LOG_COUNT'
+)
+ORDER BY name;
+
+SELECT tablename,
+       colname
+FROM V$ALLCOLUMN
+WHERE tablename IN (
+  'V$SESSION',
+  'V$STATEMENT',
+  'V$SESSION_WAIT',
+  'V$LOCK_WAIT',
+  'V$LOCK_STATEMENT',
+  'V$LFG',
+  'V$LOG',
+  'V$VERSION',
+  'V$DATABASE',
+  'V$REPGAP',
+  'V$REPSENDER_SENT_LOG_COUNT'
+)
+  AND colname IN (
+    'ID',
+    'SID',
+    'SESSION_ID',
+    'TRANS_ID',
+    'TX_ID',
+    'WAIT_FOR_TRANS_ID',
+    'EVENT',
+    'WAIT_CLASS',
+    'WAIT_TIME',
+    'SECOND_IN_WAIT',
+    'QUERY',
+    'EXECUTE_FLAG',
+    'TOTAL_TIME',
+    'READ_PAGE',
+    'GET_PAGE',
+    'SERVER_STATUS',
+    'UPDATE_TX_COUNT',
+    'GC_WAIT_COUNT',
+    'GC_ALREADY_SYNC_COUNT',
+    'GC_REAL_SYNC_COUNT',
+    'PRODUCT_VERSION',
+    'DB_NAME',
+    'REP_NAME',
+    'REP_GAP',
+    'INSERT_LOG_COUNT',
+    'UPDATE_LOG_COUNT',
+    'DELETE_LOG_COUNT'
+  )
+ORDER BY tablename, colname;
+```
+
+Dictionary column guard for partition and index answers:
+
+```sql
+SELECT t.table_name,
+       c.column_name
+FROM SYSTEM_.SYS_TABLES_ t,
+     SYSTEM_.SYS_COLUMNS_ c,
+     SYSTEM_.SYS_USERS_ u
+WHERE t.user_id = u.user_id
+  AND c.user_id = t.user_id
+  AND c.table_id = t.table_id
+  AND u.user_name = 'SYSTEM_'
+  AND t.table_name IN (
+    'SYS_TABLE_PARTITIONS_',
+    'SYS_INDICES_',
+    'SYS_INDEX_COLUMNS_'
+  )
+  AND c.column_name IN (
+    'PARTITION_MIN_VALUE',
+    'PARTITION_MAX_VALUE',
+    'PARTITION_ORDER',
+    'PARTITION_ACCESS',
+    'PARTITION_USABLE',
+    'INDEX_TYPE',
+    'INDEX_NAME',
+    'IS_UNIQUE',
+    'IS_RANGE',
+    'IS_DIRECTKEY',
+    'IS_PARTITIONED',
+    'COLUMN_ID',
+    'SORT_ORDER'
+  )
+ORDER BY t.table_name, c.column_name;
+```
+
+Interpretation anchors:
+
+- `PARTITION_MIN_VALUE` and `PARTITION_MAX_VALUE` are range-bound strings; for
+  hash partitions they are `NULL`, so use `PARTITION_ORDER` and
+  `SYS_PART_KEY_COLUMNS_` instead of inventing range bounds. `PARTITION_USABLE`
+  distinguishes usable and unusable partitions.
+- `INDEX_TYPE = 1` means `B-TREE`; `INDEX_TYPE = 2` means `R-TREE`. Use
+  `SYS_INDEX_COLUMNS_` before explaining leading columns, `SORT_ORDER`, or
+  whether an index can support an optimizer recommendation.
+- Current wait answers should name `V$SESSION_WAIT.SID`, `EVENT`, `WAIT_CLASS`,
+  `WAIT_TIME`, and `SECOND_IN_WAIT`; lock-chain answers should name
+  `V$LOCK_WAIT.TRANS_ID` and `V$LOCK_WAIT.WAIT_FOR_TRANS_ID`.
+- `V$LFG.UPDATE_TX_COUNT`, `GC_WAIT_COUNT`, `GC_ALREADY_SYNC_COUNT`, and
+  `GC_REAL_SYNC_COUNT` are group-commit counters. Compare two snapshots before
+  interpreting log-file wait.
+- `V$LOG.SERVER_STATUS` values include `SERVER SHUTDOWN` and `SERVER STARTED`.
+  Do not confuse this status with listener, process, or SNMP daemon state.
+- Monitoring API mappings are same-host API evidence, not SQL views:
+  `ABIGetVSession` maps to `V$SESSION`, `ABIGetSqlText` maps to statement and
+  SQL text evidence, `ABIGetLockPairBetweenSessions` maps to lock-pair evidence,
+  and `ABIGetRepGap` maps to `V$REPGAP`.
+- SNMP `altiPropertyTable`, `altiStatus`, and `altiTrap` values should be
+  cross-checked with `V$PROPERTY`, `V$DATABASE`, `V$VERSION`, and `V$SESSION`
+  where a SQL-side equivalent exists; process ID and trap delivery remain
+  SNMP-output evidence.
+- The `7.1.0.7.9` `OPTIMIZER_PERFORMANCE_VIEW` workaround is patch-sensitive:
+  use it only for the documented `Altibase 6.5.1` or earlier `JDBC` client
+  performance-view error `That had return update result`, and warn that the
+  workaround can degrade performance-view query performance.
+
 ## Cookbook: Objects, Columns, Comments, and Sequences
 
 ### List Objects Owned by a User
