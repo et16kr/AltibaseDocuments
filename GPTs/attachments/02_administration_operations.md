@@ -52,6 +52,19 @@ Use this compact index before scanning the long administration runbooks. It is i
 
 Use these compact anchors for customer answers that need exact account, privilege, tablespace, datafile, and log-anchor facts before the longer runbooks below.
 
+Anchor: beginner-to-veteran account, tablespace, datafile, and loganchor route
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source unless a listed syntax item is marked 8.1-only in the SQL generation attachment.
+- Use this route after first startup when the customer asks for a practical DBA sequence that creates a service account, grants least privilege, assigns tablespace access, validates storage paths, or prepares a datafile/loganchor operation.
+- Required inputs before executable SQL: exact version and patch, startup phase, connected user, whether `SYSDBA` or `SYS` is available, account names, role names, object owner, target object list, default data tablespace, temporary tablespace, extra `ACCESS` tablespaces, datafile or checkpoint paths, `LOG_DIR`, `LOGANCHOR_DIR`, archive-log state, backup point, replication state, and rollback or recovery plan.
+- Account first check: confirm the creator is `SYS` or has `CREATE USER system privilege`; do not modify `SYS` or `SYSTEM_`.
+- Safe account default: create a schema owner and a runtime user separately; specify `DEFAULT TABLESPACE`, `TEMPORARY TABLESPACE`, and every required `ACCESS tablespace_name ON`; grant through a small role; audit and revoke unused automatically granted DDL privileges for runtime accounts.
+- Storage first check: query `V$PROPERTY` for `DB_NAME`, `LOG_DIR`, `LOGANCHOR_DIR`, and `SERVER_MSGLOG_DIR`; query `V$TABLESPACES` for `NAME`, `TYPE`, `STATE`, and `DATAFILE_COUNT`; query `V$DATAFILES` for `NAME`, `CREATE_LSN_FILENO`, `CURRSIZE`, `AUTOEXTEND`, `OPENED`, and `STATE`.
+- Datafile safety default: use absolute paths, pre-create directories with Altibase OS-account ownership, confirm filesystem free space, prefer `CONTROL` phase for media-recovery or strict-policy file rename, and record whether `ALTER DATABASE RECOVER DATABASE` is required.
+- Loganchor safety default: keep three log anchor files, back them up after tablespace structure changes, prefer the `current loganchor` for ordinary complete media recovery, and use backed-up historical log anchors only when the current metadata no longer contains the needed object, such as an accidentally dropped tablespace.
+- Expected states: ordinary account and privilege validation should run in `SERVICE`; media recovery, strict datafile rename, temporary datafile recreation, and `DISCARD` paths require `CONTROL`; post-recovery transition reaches `META` and then `SERVICE`.
+- Stop rather than inventing: if the target phase, object inventory, view columns, file list, archive-log state, replication state, backup evidence, or customer approval is absent, give read-only inventory SQL and ask for the missing inputs before generating state-changing SQL.
+
 Anchor: built-in accounts and system tablespaces after `CREATE DATABASE`
 
 - Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source.

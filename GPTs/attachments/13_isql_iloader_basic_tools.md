@@ -59,6 +59,48 @@ Exact block: core iSQL command-line options
 - `-F infile_name [param1 [param2] ...]` runs a script after iSQL starts.
 - `-O outfile_name` writes command results to an output file.
 
+Exact block: installation and startup iSQL validation bundle
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source for the iSQL command pattern; exact startup behavior still depends on target version, patch, platform, license, and trace-log evidence.
+- For first startup, run iSQL as the Altibase installation account and connect locally as `SYS` with `-SYSDBA`; a remote `SYSDBA` connection cannot start the `DBMS`.
+- Manual examples use `sys` and `manager`; replace `manager` or `MANAGER` with the site-specific `SYS` password.
+
+```bash
+isql -u sys -p manager -sysdba
+```
+
+```sql
+STARTUP SERVICE;
+```
+
+- For post-install PSM setup, run `catproc.sql` through iSQL after the database is created and started:
+
+```bash
+isql -s 127.0.0.1 -u SYS -p MANAGER -silent -f $ALTIBASE_HOME/packages/catproc.sql
+```
+
+- For first-run validation, connect to the expected host and port, then run version and path checks:
+
+```bash
+isql -s 127.0.0.1 -port 20300 -u sys -p manager
+```
+
+```sql
+SELECT product_version,
+       meta_version,
+       protocol_version,
+       repl_protocol_version
+FROM V$VERSION;
+
+SELECT name, value1, value2, value3
+FROM V$PROPERTY
+WHERE name IN ('DB_NAME', 'LOGANCHOR_DIR', 'LOG_DIR', 'SERVER_MSGLOG_DIR')
+ORDER BY name;
+```
+
+- Expected state: startup reaches `SERVICE`, iSQL accepts SQL, `V$VERSION` matches the installed package and patch, and path properties match the install plan.
+- Stop before diagnosing or retrying startup when the exact startup output, `$ALTIBASE_HOME/trc` log excerpt, license state, kernel/resource settings, or package/patch evidence is missing.
+
 Exact block: iSQL `SYSDBA` startup restrictions
 
 - Version scope: Altibase 8.1 verified source.

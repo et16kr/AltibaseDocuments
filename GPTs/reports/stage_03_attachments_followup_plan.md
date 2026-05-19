@@ -108,6 +108,8 @@ topic shape, it must refactor within the existing `00` through `19` files.
 | `S3-J017` | Update retrieval aliases, cross-links, source/playbook-to-attachment crosswalks, gap registers, and attachment validation reports. | All prior Stage 3 scope rows, benchmark inventories, playbook/source routes. | Reports, scripts, and affected attachments. |
 | `S3-J018` | Review all Stage 3 outputs, rerun validation, preserve guardrails, and write Stage 3 readiness. | Stage 3 validation, final diff, gap/register state, attachment count. | `customer_agent_enablement_stage_03_readiness.md` and validation reports. |
 
+Design note for `S3-J010`: this job does not change attachment architecture or upload-package structure. It adds compact answer-route anchors inside the existing installation, administration, and iSQL attachments so long runbooks retrieve as beginner-to-veteran sequences with prerequisites, commands, expected states, validation SQL, and missing-input stop points.
+
 ## Required Attachment Edit Pattern
 
 Each domain remediation job should keep attachment edits answer-ready and

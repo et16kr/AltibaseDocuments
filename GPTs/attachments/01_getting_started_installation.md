@@ -44,6 +44,19 @@ Use this compact index before scanning the installation runbooks. It is intentio
 
 Use these compact anchors when the customer asks an installation, first-start, or patch-administration question and retrieval returns only a broad runbook. They preserve exact tokens that should appear in the final answer.
 
+Anchor: beginner-to-veteran installation and startup answer route
+
+- Version scope: cross-version for 7.1, 7.3, and Altibase 8.1 verified source where the target-version package and platform are confirmed; use the 7.3 platform anchor below for the exact `GNU glibc 2.12 ~ 2.33` Linux range.
+- Use this route when the customer needs a single first-install sequence from prerequisites through first iSQL validation, or when a coding agent must produce a guarded installation runbook.
+- Required inputs before final commands: exact version and patch, server or client package, OS and CPU architecture, Linux glibc or vendor support evidence when relevant, installation account, `ALTIBASE_HOME`, license state, `DB_NAME`, service port, database and national character sets, archive-log choice, disk data directory, memory database directory, `LOG_DIR`, three `LOGANCHOR_DIR` paths, `SERVER_MSGLOG_DIR`, and the site-specific `SYS` password policy.
+- Beginner-safe prerequisite checks are read-only: collect `uname -a`, `ulimit -a`, package file name, account identity with `id`, `$ALTIBASE_HOME/conf/license`, `$ALTIBASE_HOME/install/pre_install.sh`, `$ALTIBASE_HOME/install/post_install.sh`, and `$ALTIBASE_HOME/APatch/patchinfo` if the product is already installed.
+- First database path: use `$ALTIBASE_HOME/install/pre_install.sh` as the kernel-setting reference, source the installation account profile, run `sh post_install.sh dbcreate` only when installer database-creation properties were supplied, otherwise use `server create [DB Character Set] [National Character Set]` after confirming character sets and license state.
+- First startup path: run `server start` or connect locally with `isql -u sys -p manager -sysdba` and issue `startup`. Expected state is `SERVICE` with `TRANSITION TO PHASE : PROCESS`, `CONTROL`, `META`, and `SERVICE`, followed by `STARTUP Process SUCCESS`.
+- First validation path: connect with `isql -s 127.0.0.1 -u sys -p manager`, query `V$VERSION`, query `V$PROPERTY` for `DB_NAME`, `LOGANCHOR_DIR`, `LOG_DIR`, and `SERVER_MSGLOG_DIR`, then run `catproc.sql` through iSQL if PSM setup was not run during installation.
+- Veteran patch route: before `server downgrade`, confirm full product, datafile, logfile, loganchor, and configuration backups; package rollback restores only installer-managed files, uses `uninstall-p<patch_version>`, and stores backup files under `rollback-p<patch_version>`.
+- If meta downgrade reaches `DOWNGRADE`, uninstall the patch before starting the patched binary again. If downgrade fails, inspect `$ALTIBASE_HOME/trc/altibase_boot.log` and `$ALTIBASE_HOME/trc/altibase_qp.log`.
+- Stop rather than inventing: when platform support, patch level, package identity, license, character set, directory layout, startup output, trace logs, or rollback evidence is missing, ask for that input and provide the safest read-only next check.
+
 Anchor: 7.3 server post-install completion
 
 - Version scope: 7.3 source-backed; 7.1 follows the same post-install decision shape where noted below.
