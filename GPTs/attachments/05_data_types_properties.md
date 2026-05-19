@@ -23,7 +23,7 @@
 Use this compact index before scanning data type and property blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact default, range, mutability, value-count, dynamic-change, or check-SQL block.
 
 - Aliases and customer wording: property default, property range, static property, dynamic property, environment variable precedence, `V$PROPERTY` check, data type limit, JSON type, Temporary LOB, result cache, plan cache, lock escalation, autocommit, session locale, database path, log path, replication property, TLS property.
-- Exact-token anchors: `V$PROPERTY`, `NAME`, `VALUE1`, `VALUE8`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `$ALTIBASE_HOME/conf/altibase.properties`, `ALTER SYSTEM`, `ALTER SESSION`, `ALTIBASE_property_name`, `environment variable`, `DB_NAME`, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `SERVER_MSGLOG_DIR`, `LOG_FILE_SIZE`, `LOG_CREATE_METHOD`, `ARCHIVE_FULL_ACTION`, `CHECKPOINT_ENABLED`, `CHECKPOINT_INTERVAL_IN_SEC`, `CHECKPOINT_INTERVAL_IN_LOG`, `MAX_CLIENT`, `JOB_THREAD_COUNT`, `GROUP_CONCAT_PRECISION`, `LISTAGG_PRECISION`, `PSM_CASE_SENSITIVE_MODE`, `REGEXP_MODE`, `write()`, `fallocate()`, `altibase_sm.log`, `HP-UX`, `AIX`, `Linux`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `NORMALFORM_MAXIMUM`, `NNF`, `LOCK_ESCALATION_MEMORY_SIZE`, `1000MB`, `inplace update`, `AUTO_COMMIT`, `ALTER SESSION SET AUTOCOMMIT = FALSE`, `QUERY_TIMEOUT`, `FETCH_TIMEOUT`, `IDLE_TIMEOUT`, `UTRANS_TIMEOUT`, `NLS_TERRITORY`, `NLS_NUMERIC_CHARACTERS`, `'.,'`, `ACCESS_LIST_FILE`, `V$ACCESS_LIST`, `PERMIT`, `DENY`, `REPLICATION_SSL_PORT_NO`, `1000`, `4000`, `2097152`, `2^31`, `2^32 + 1`, `16777216`, `2147483648`.
+- Exact-token anchors: `V$PROPERTY`, `NAME`, `VALUE1`, `VALUE8`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `$ALTIBASE_HOME/conf/altibase.properties`, `ALTER SYSTEM`, `ALTER SESSION`, `ALTIBASE_property_name`, `environment variable`, `DB_NAME`, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `SERVER_MSGLOG_DIR`, `LOG_FILE_SIZE`, `LOG_CREATE_METHOD`, `ARCHIVE_FULL_ACTION`, `CHECKPOINT_ENABLED`, `CHECKPOINT_INTERVAL_IN_SEC`, `CHECKPOINT_INTERVAL_IN_LOG`, `MAX_CLIENT`, `JOB_THREAD_COUNT`, `GROUP_CONCAT_PRECISION`, `LISTAGG_PRECISION`, `PSM_CASE_SENSITIVE_MODE`, `REGEXP_MODE`, `write()`, `fallocate()`, `altibase_sm.log`, `HP-UX`, `AIX`, `Linux`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `NORMALFORM_MAXIMUM`, `NNF`, `LOCK_ESCALATION_MEMORY_SIZE`, `1000MB`, `inplace update`, `AUTO_COMMIT`, `NON-AUTOCOMMIT`, `ALTER SESSION SET AUTOCOMMIT = FALSE`, `QUERY_TIMEOUT`, `FETCH_TIMEOUT`, `IDLE_TIMEOUT`, `UTRANS_TIMEOUT`, `NLS_TERRITORY`, `NLS_NUMERIC_CHARACTERS`, `'.,'`, `ACCESS_LIST_FILE`, `V$ACCESS_LIST`, `PERMIT`, `DENY`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, `REPLICATION_DDL_ENABLE_LEVEL`, `REPLICATION_SSL_PORT_NO`, `1000`, `4000`, `2097152`, `2^31`, `2^32 + 1`, `16777216`, `2147483648`.
 - Focused routing anchors: static, dynamic, environment-variable, and precedence answers route to `Property Configuration Model`; property change SQL routes to `Compact Property SQL Syntax` and `Property Change Decision Flow`; `DB_NAME`, path, log, and storage properties route to `Core Identity, Path, And Storage Defaults`; optimizer, timeout, session, access-list, result-cache, JSON, Temporary LOB, and replication/TLS properties route to the matching quick block or `Decomposed Property Blocks`.
 - Answer route: use this file for meanings, defaults, ranges, mutability, restart requirements, and property SQL; use `06_data_dictionary_performance_views.md` for view-column verification; use `03_sql_ddl_generation.md` only for generated `ALTER SYSTEM` or `ALTER SESSION` forms.
 - Missing-input trigger: for property change advice, ask for exact version, current `V$PROPERTY` row, whether the property is file, environment, system, or session scoped, and whether restart or recreation is acceptable.
@@ -1144,7 +1144,7 @@ ORDER BY name;
 - Version scope: documented in Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source.
 - Default: `1`; range `[0, 1]`.
 - `AUTO_COMMIT=1`: each SQL statement is treated as one transaction and committed automatically.
-- `AUTO_COMMIT=0`: non-autocommit mode; the application or user must explicitly decide transaction commit or rollback.
+- `AUTO_COMMIT=0`: `NON-AUTOCOMMIT` mode; the application or user must explicitly decide transaction commit or rollback.
 - Dynamic scope: the server default can be changed with `ALTER SYSTEM`; a session can switch to non-autocommit even when the server starts with `AUTO_COMMIT=1`.
 - Literal session syntax to preserve: `ALTER SESSION SET AUTOCOMMIT = FALSE`.
 
@@ -3554,7 +3554,7 @@ Range: `[0, 1]`.
 
 Values:
 
-- `0`: non-autocommit mode.
+- `0`: `NON-AUTOCOMMIT` mode.
 - `1`: autocommit mode.
 
 Session syntax to preserve:
@@ -3564,8 +3564,9 @@ ALTER SESSION SET AUTOCOMMIT = FALSE;
 ```
 
 Runtime note: when `AUTO_COMMIT=0`, the application or user must explicitly decide
-transaction commit or rollback. A session can switch to non-autocommit even when the
-server starts with `AUTO_COMMIT=1`.
+transaction commit or rollback. A session can switch to `NON-AUTOCOMMIT` even when
+the server starts with `AUTO_COMMIT=1`. DDL generation answers should still state
+that DDL has its own commit behavior and can change rollback expectations.
 
 Check SQL:
 

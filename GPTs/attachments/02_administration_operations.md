@@ -160,6 +160,7 @@ Anchor: online backup, checkpoint ordering, and completion markers
 Anchor: protected administration stop points
 
 - Do not run direct `DML` against a `SYSTEM_` `meta table` as routine repair. Direct meta-table changes can cause startup failure, object-information loss, or severe system damage; if unavoidable, take a `database backup` first and require expert approval.
+- Before destructive DDL or storage-changing SQL, check whether the session is in `AUTO_COMMIT` or `NON-AUTOCOMMIT` mode and state rollback limits explicitly. DDL can commit prior work or require restore/rebuild rather than SQL rollback, so ask for current transaction state before mixing DDL with data changes.
 - When restoring a replicated database, ask for topology and whether the target host is the same host. Restoring backup files can resend based on `backup-time metadata`; set `REPLICATION_SENDER_AUTO_START` to `0` when the recovery plan requires preventing automatic replication startup.
 - Do not issue `DROP TABLESPACE`, `DISCARD`, incomplete recovery, historical log-anchor restore, or `RESETLOGS` without exact version, database mode, startup phase, backup evidence, object scope, and business approval.
 

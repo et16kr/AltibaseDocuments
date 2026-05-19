@@ -21,8 +21,8 @@
 Use this compact index before scanning syntax families and examples. It is intentionally redundant with later headings so lexical retrieval can land on the exact DDL, DCL, administrative SQL, or replication SQL block.
 
 - Aliases and customer wording: generate DDL, create tablespace, volatile tablespace, memory tablespace, disk tablespace, temporary tablespace, add datafile, add partition, table compression, LOB storage clause, create index, create sequence, create user, grant privilege, create replication, alter replication, backup SQL, recovery SQL.
-- Exact-token anchors: `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `ALTER TABLE ADD PARTITION`, `table_compression_clause`, `LOB(column_name)`, `CREATE INDEX`, `CREATE SEQUENCE`, `CREATE USER`, `GRANT`, `ALTER SYSTEM`, `ALTER SESSION`, `replication_host_ip`, `replication_host_port_no`, `IF EXISTS`, `IF NOT EXISTS`.
-- Focused routing anchors: disk, memory, volatile, temporary, `DATAFILE`, `TEMPFILE`, `SIZE`, `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE`, and `UNLIMITED` answers route to `Tablespace Syntax`; table, partition, LOB, queue, index, user, privilege, sequence, replication, and property SQL route to the matching subsection under `Compact Syntax Patterns`; copy-ready examples route to `Complete DDL Examples`.
+- Exact-token anchors: `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `ALTER TABLE ADD PARTITION`, `table_compression_clause`, `LOB(column_name)`, `CREATE INDEX`, `CREATE SEQUENCE`, `CREATE USER`, `GRANT`, `ALTER SYSTEM`, `ALTER SESSION`, `LOCK TABLE`, `UNTIL NEXT DDL`, `NON-AUTOCOMMIT`, `multiple_update`, `replication_host_ip`, `replication_host_port_no`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, `REPLICATION_DDL_ENABLE_LEVEL`, `IF EXISTS`, `IF NOT EXISTS`.
+- Focused routing anchors: disk, memory, volatile, temporary, `DATAFILE`, `TEMPFILE`, `SIZE`, `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE`, and `UNLIMITED` answers route to `Tablespace Syntax`; table, partition, LOB, queue, index, user, privilege, sequence, replication, property SQL, lock-table SQL, and DML-adjacent cleanup or seed SQL route to the matching subsection under `Compact Syntax Patterns`; copy-ready examples route to `Complete DDL Examples`.
 - Answer route: use this file for syntax and copy-ready SQL generation; use `02_administration_operations.md` for operational preconditions and recovery cautions; use `05_data_types_properties.md` for property meanings and mutability; use `09_replication_ha_cdc.md` for replication state, topology, and compatibility.
 - Safety route: when DDL can commit prior DML or destroy/reuse storage, include the DDL transaction caveat and route to the operational stop conditions in `02_administration_operations.md`.
 
@@ -76,6 +76,7 @@ Exact-token generation anchors:
 - Tablespaces and files: preserve `CREATE TABLESPACE`, `CREATE DISK TABLESPACE`, `CREATE MEMORY TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `CREATE TEMPORARY TABLESPACE`, `DATAFILE`, `TEMPFILE`, `SIZE`, `REUSE`, `AUTOEXTEND ON`, `NEXT`, `MAXSIZE`, `UNLIMITED`, `CHECKPOINT PATH`, `SPLIT EACH`, `EXPAND_CHUNK_PAGE_COUNT`, `MEM_MAX_DB_SIZE`, `VOLATILE_MAX_DB_SIZE`, and `MEM_DB_DIR` when those facts drive the answer.
 - Table, partition, and LOB DDL: preserve `GLOBAL TEMPORARY`, `ON COMMIT DELETE ROWS`, `ON COMMIT PRESERVE ROWS`, `ALTER TABLE`, `DROP TABLE`, `CREATE INDEX`, `TIMESTAMP`, `8-byte`, `INSERT`, `UPDATE`, `PARTITION BY RANGE`, `VALUES LESS THAN`, `DEFAULT`, `NULL`, `ALTER TABLE ADD PARTITION`, `PARTITION BY HASH`, `PARTITION BY LIST`, `ROW MOVEMENT`, `DISABLE ROW MOVEMENT`, `1000`, `CREATE TABLE AS SELECT`, `alias`, `table_compression_clause`, `PRIMARY KEY`, `UNIQUE`, `BLOB`, `CLOB`, `LOB`, `STORE AS`, `TABLESPACE`, and `LOB(column_name)`.
 - Index and destructive-DDL safety: preserve `PARALLEL`, `INDEX_BUILD_THREAD_COUNT`, `LOGGING`, `NOLOGGING`, `FORCE`, `NOFORCE`, `V$DISK_BTREE_HEADER`, `DROP TABLESPACE`, `INCLUDING CONTENTS`, `AND DATAFILES`, `CASCADE CONSTRAINTS`, and `PURGE TABLE` when generating operational or cleanup SQL.
+- Lock, DML-adjacent, and replication-sensitive DDL: preserve `LOCK TABLE`, `UNTIL NEXT DDL`, `NON-AUTOCOMMIT`, `multiple_update`, `LIMIT`, `RETURNING`, `full outer join`, `ENABLE ROW MOVEMENT`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, `REPLICATION_DDL_ENABLE_LEVEL`, `DDL replication`, `propagation`, and `replication protocol version` when a DDL answer includes lock control, post-DDL data movement, replicated tables, or DDL synchronization.
 
 ### Tablespace Syntax
 
@@ -1004,6 +1005,7 @@ Generation notes:
 - For Log Analyzer TCP, the `WITH` endpoint is the XLog Collector IP address or host name and port. The XLog Collector must already be listening before `ALTER REPLICATION ... START`.
 - `ALTER REPLICATION ... START AT SN (...)` is Log Analyzer XLog Sender syntax, not ordinary table-to-table replication start syntax. It requires Archivelog mode and `REPLICATION_LOG_BUFFER_SIZE = 0`.
 - `FOR PROPAGABLE LOGGING` and `FOR PROPAGATION` are propagation roles, not Log Analyzer CDC forms. Use the ordinary replication connection rules for their `WITH` clause; for 8.1 SSL replication, use the peer `REPLICATION_SSL_PORT_NO` with `USING SSL`.
+- DDL replication is a separate protected route from ordinary `CREATE REPLICATION` object creation. Before generating DDL against replicated tables, require `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, and `REPLICATION_DDL_ENABLE_LEVEL` evidence from each node, confirm the DDL is in the Replication Manual's allowed set, and confirm all three `replication protocol version` components match when DDL replication is requested. DDL replication is not allowed with `propagation`.
 - For Log Analyzer `WITH UNIX_DOMAIN`, the XLog Sender and XLog Collector must run on the same UNIX or Linux host. `$ALTIBASE_HOME` must be the same for Sender and Collector, and the generated socket path is `$ALTIBASE_HOME/trc/rp-replication_name`.
 - `START RETRY` and `QUICKSTART RETRY` are not supported for EAGER mode. If the replication mode is unknown, verify it before adding `RETRY`.
 - `SYNC` copies current target data and then starts replication. `SYNC ONLY` copies current target data without creating a Sender thread. `START` resumes from the latest restart point. `QUICKSTART` starts from the current log position and can skip unsent historical changes.
@@ -1309,6 +1311,7 @@ table_maintenance_ddl ::=
 | LOCK TABLE [owner.]table_name [PARTITION (partition_name)]
     IN {ROW SHARE | SHARE UPDATE | ROW EXCLUSIVE | SHARE ROW EXCLUSIVE | SHARE | EXCLUSIVE} MODE
     [{WAIT integer | NOWAIT}]
+    [UNTIL NEXT DDL]
 | CONJOIN TABLE table_name PARTITION BY
     { RANGE (column_name [, column_name ...]) (range_table_to_partition_clause [, ...])
     | LIST (column_name) (list_table_to_partition_clause [, ...]) }
@@ -1329,7 +1332,8 @@ Table maintenance generation notes:
 
 - `TRUNCATE TABLE` is DDL. After successful completion, deleted rows cannot be rolled back. If the target is a queue table, `TRUNCATE TABLE queue_name` removes enqueued messages.
 - `PURGE TABLE` permanently removes a recycle-bin table. `FLASHBACK TABLE ... TO BEFORE DROP` restores a table from the recycle bin; when multiple dropped tables share the same original name, Altibase restores or purges the first dropped matching object. Use `RENAME TO` when the original name is already in use.
-- `LOCK TABLE` holds the requested table or partition lock until the transaction commits or rolls back. Use `WAIT n` or `NOWAIT` explicitly when producing operational SQL for a live system.
+- `LOCK TABLE` requires `SYS`, the table owner, or `LOCK ANY TABLE`. It holds the requested table or partition lock until the transaction commits or rolls back. Use `WAIT n` or `NOWAIT` explicitly when producing operational SQL for a live system.
+- In `NON-AUTOCOMMIT` mode, ordinary DDL performs an automatic commit immediately before executing. `LOCK TABLE ... IN EXCLUSIVE MODE ... UNTIL NEXT DDL` is the source-backed exception that prevents that pre-DDL automatic commit for the next DDL only, and it can be used only once in one transaction. Ask for the session autocommit state, current transaction work, target table or partition, and explicit rollback expectation before generating this pattern.
 - `CONJOIN TABLE` converts one or more non-partitioned tables into a new range- or list-partitioned table; the source tables are removed and data is moved into the new partitions. Do not qualify the source or target table names with owners.
 - `DISJOIN TABLE` converts partitions of a partitioned table into non-partitioned tables; the partitioned table is removed and data is moved into the new tables. Do not qualify the source or target table names with owners.
 - `CONJOIN TABLE` and `DISJOIN TABLE` do not support hash partitioning or range tables that omit the default partition. Check dependent PSM objects, packages, views, triggers, hidden/security/compressed columns, schema equality, column order, data types, `IN ROW`, compressed logging, `CHECK`, and `NOT NULL` compatibility before generating them.
@@ -1384,6 +1388,13 @@ Transaction control generation notes:
 - `SET TRANSACTION` affects only the current transaction and cannot be used while another transaction is already active in the session.
 - `COMMIT FORCE global_tx_id` and `ROLLBACK FORCE global_tx_id` are XA in-doubt transaction operations. Ask for the exact global transaction ID and recovery context before generating them.
 - `ROLLBACK TO SAVEPOINT savepoint_name` rolls back only to a previously created savepoint; it does not undo DDL that was executed as its own transaction.
+
+DML-adjacent routing for generated DDL packages:
+
+- When a DDL answer also needs post-DDL data cleanup, seed data, or partition-key migration, route executable DML details to `04_sql_dml_oracle_compatibility.md` and keep this file focused on DDL ordering, transaction caveats, and validation.
+- Preserve the exact `multiple_update` token when the request asks for Altibase's join-update form. `multiple_update` updates rows that satisfy a join condition and cannot use `LIMIT`, `RETURNING`, dictionary tables, or `full outer join`.
+- If an `UPDATE` changes a partition key so rows move between partitions, require `ENABLE ROW MOVEMENT` before generating the DML. If row movement is disabled or the partition design is unknown, ask for the table DDL and current partition metadata first.
+- Do not mix DDL and DML rollback expectations. DML may be committed or rolled back according to session state, but DDL and destructive table maintenance have separate commit behavior and may require restore, rebuild, or reverse DDL rather than `ROLLBACK`.
 
 #### Audit Control Syntax
 
@@ -3010,13 +3021,28 @@ Replication cautions:
 - For Altibase 8.1 SSL replication, query `REPLICATION_SSL_PORT_NO` on the peer node and confirm SSL/TLS server configuration first.
 - Do not combine Log Analyzer `FOR ANALYSIS` with `USING SSL` or `USING IB`; use TCP or `WITH UNIX_DOMAIN` according to the Log Analyzer manual.
 - For offline replication, do not proceed from SQL snippets alone. Confirm active-server log access, `META_LOGGING` evidence, replication object state, and whether `REPLICATION_SQL_APPLY_ENABLE` must be enabled for the recovery path.
+- For DDL replication, do not generate the protected DDL until both nodes show compatible `product_version`, `meta_version`, and `repl_protocol_version`, `REPLICATION_DDL_SYNC = 1`, `REPLICATION_DDL_ENABLE = 1`, matching `REPLICATION_DDL_ENABLE_LEVEL`, no disallowed `propagation` option, and a one-node-at-a-time execution plan.
 
 Verify replication:
 
 ```sql
+SELECT product_version, meta_version, repl_protocol_version
+FROM V$VERSION;
+
 SELECT name, value1
 FROM V$PROPERTY
-WHERE name IN ('REPLICATION_PORT_NO', 'REPLICATION_SSL_PORT_NO');
+WHERE name IN (
+    'REPLICATION_PORT_NO',
+    'REPLICATION_SSL_PORT_NO',
+    'REPLICATION_DDL_SYNC',
+    'REPLICATION_DDL_ENABLE',
+    'REPLICATION_DDL_ENABLE_LEVEL',
+    'REPLICATION_SQL_APPLY_ENABLE'
+)
+ORDER BY name;
+
+SELECT rep_name, rep_gap
+FROM V$REPGAP;
 
 SELECT replication_name, is_started, item_count, host_count,
        conflict_resolution, repl_mode, role, options, xsn, remote_xsn
@@ -3077,6 +3103,7 @@ WHERE rep_name IN ('REP_APP_USER', 'REP_APP_USER_SSL');
 
 - State the assumed Altibase version.
 - State the assumed owner/schema, tablespaces, file paths, host names, and ports.
+- If any required input is missing, ask for it instead of inventing executable SQL. Required prompts commonly include target version and patch, connected user and privilege path, startup phase, storage target, absolute datafile or checkpoint path, table DDL, partition design, LOB column list, index uniqueness scope, replication membership, current `AUTO_COMMIT` or `NON-AUTOCOMMIT` state, backup point, maintenance window, and rollback or recovery plan.
 - Include prerequisite privileges or `SYS` requirements for tablespace, user, role, table, queue, and replication DDL.
 - Generate DDL in execution order: tablespaces, users, grants, tables, constraints, queues, indexes, sequences, schema objects, jobs, replication.
 - For users and grants, include least-privilege notes and verification SQL for roles, system privileges, object privileges, and broad grants.

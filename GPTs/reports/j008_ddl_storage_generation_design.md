@@ -19,7 +19,8 @@ The main failure pattern was not a missing long-form manual rewrite. The attachm
 - tablespace/datafile generation blocks for `CREATE DISK TABLESPACE`, `CREATE VOLATILE TABLESPACE`, `AUTOEXTEND ON`, `MAXSIZE UNLIMITED`, `REUSE`, `CHECKPOINT PATH`, and `SPLIT EACH`;
 - table and partition blocks for `GLOBAL TEMPORARY`, `ON COMMIT` behavior, `ALTER TABLE ADD PARTITION`, default-less range partition metadata, `TIMESTAMP`, `CREATE TABLE AS SELECT`, `table_compression_clause`, and `LOB(column_name)`;
 - index blocks for `PARALLEL`, `INDEX_BUILD_THREAD_COUNT`, `NOLOGGING`, `FORCE`, `NOFORCE`, `V$DISK_BTREE_HEADER`, and LOB/index restrictions;
-- destructive DDL guardrails for `DROP TABLESPACE`, `INCLUDING CONTENTS`, `AND DATAFILES`, `CASCADE CONSTRAINTS`, and system tablespaces.
+- destructive DDL guardrails for `DROP TABLESPACE`, `INCLUDING CONTENTS`, `AND DATAFILES`, `CASCADE CONSTRAINTS`, and system tablespaces;
+- lock, DML-adjacent, and replication-sensitive DDL bridges for `LOCK TABLE`, `UNTIL NEXT DDL`, `NON-AUTOCOMMIT`, `multiple_update`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_ENABLE`, `REPLICATION_DDL_ENABLE_LEVEL`, `propagation`, and `replication protocol version` so generated DDL packages retain safety-critical routing tokens without moving full DML or replication runbooks into the DDL attachment.
 
 ## Source-Safety Notes
 
