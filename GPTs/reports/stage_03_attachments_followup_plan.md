@@ -114,6 +114,8 @@ Design note for `S3-J011`: this job does not change attachment architecture or u
 
 Design note for `S3-J014`: this job does not change attachment architecture or upload-package structure. It closes the J015 dictionary/performance-view, optimizer, execution-plan, wait, lock, session, Monitoring API, and SNMP row inside the existing dictionary/views and performance/monitoring attachments by adding compact answer bridges for exact partition/index columns, wait and lock check SQL, log-group counters, Monitoring API and SNMP mappings, optimizer predicate-detail first checks, and the `7.1.0.7.9` `OPTIMIZER_PERFORMANCE_VIEW` guardrail. The completed scope row now makes the attachment validator enforce the J015 exact-token anchors.
 
+Design note for `S3-J015`: this job does not change attachment architecture or upload-package structure. It closes the J016 PSM, external-procedure, C/CLI/ODBC/ACI/APRE, iSQL/iLoader, utility, and LOB/API row inside the existing client-tool attachments by adding compact answer bridges for exact commands, options, methods, handles, file paths, call order, verification output, and common error-handling packets. The completed scope row now makes the attachment validator enforce the J016 exact-token anchors.
+
 ## Required Attachment Edit Pattern
 
 Each domain remediation job should keep attachment edits answer-ready and

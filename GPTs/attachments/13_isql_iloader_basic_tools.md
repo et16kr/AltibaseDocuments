@@ -152,6 +152,21 @@ Exact block: iLoader row-load error evidence
 - Use `-errors count` to control the allowed error count; default is `50`, and `-errors 0` continues regardless of error count.
 - Inspect both `test.log` and `test.bad` before claiming a single root cause.
 
+Exact block: iSQL/iLoader reproducible evidence packet
+
+- Interactive iSQL packet: preserve the full command such as `isql -S server_name -PORT port_no -U user_name -P password -F input.sql -O outfile_name`, any `CONNECT` command, and the executed SQL text.
+- Output capture: use `SPOOL filename` and `SPOOL OFF` inside iSQL or `-O outfile_name` from the shell; `-O` overwrites an existing file with the same name.
+- iLoader sequence packet:
+
+```text
+iLoader> formout -T employees -f employees.fmt
+iLoader> out -f employees.fmt -d employees.dat
+iLoader> in -f employees.fmt -d employees.dat -mode replace -log test.log -bad test.bad -errors 50
+```
+
+- Verification output to preserve: `DOWNLOAD:`, `UPLOAD:`, `Load Count`, affected table name, return or exit status such as `-2` for one or more upload errors, and the exact `test.log` error line.
+- Bad-row handling: do not discard `test.bad`; compare it with `employees.fmt`, `employees.dat`, target table definition, delimiter settings, `ALTIBASE_NLS_USE`, and `DATA_NLS_USE` before recommending retry or data correction.
+
 Exact block: iSQL and iLoader error-code routing
 
 - Version scope: 7.1, 7.3, and Altibase 8.1 verified source for the referenced iSQL/iLoader commands; exact error cause/action routes through `07_error_messages_troubleshooting.md`.

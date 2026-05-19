@@ -131,6 +131,15 @@ Exact block: external procedure and function registration
 - `RETURN` must appear after all function argument parameters, at the end of the parameter list.
 - If no attribute parameter follows `RETURN`, specifying `RETURN` alone is equivalent to omitting `RETURN`.
 
+Exact block: PSM client-tool durable checklist
+
+- Before generating stored logic, choose the object form deliberately: `CREATE PROCEDURE` for no scalar return, `CREATE FUNCTION` with `RETURN data_type` and `RETURN expression` for a scalar result, or an anonymous `BEGIN ... END;` block for one-time execution.
+- In iSQL scripts, end `CREATE PROCEDURE`, `CREATE FUNCTION`, `CREATE TYPESET`, package, and anonymous-block bodies with `END;`, then submit the block with `/` on the next line; successful compilation is reported as `Create success.`.
+- Parameter handling: `IN` is the default, `OUT` and `IN OUT` cannot have default values, and `NOCOPY` should be used only for source-supported collection cases such as `ASSOCIATIVE ARRAY` or `VARRAY` subarray access.
+- For cursor-return procedures, define a `REF CURSOR` type in a typeset or package, declare the procedure parameter as `OUT` or `IN OUT`, and open it with `OPEN cursor_variable FOR select_statement`.
+- External native-code sequence: compile the shared object, place the file under `$ALTIBASE_HOME/lib`, run `CREATE LIBRARY`, then run external `CREATE PROCEDURE` or `CREATE FUNCTION` with `LANGUAGE C`, the user function name, `PARAMETERS`, and `EXTERNAL` or `INTERNAL` mode.
+- Verification packet: preserve the exact DDL, library file path, iSQL output, object status, call SQL, external-procedure mode, and any external-procedure agent or server trace before diagnosing load, symbol, type-mapping, or execution errors.
+
 ## Version Differences
 
 | Area | 7.1 | 7.3 | 8.1 verified source |

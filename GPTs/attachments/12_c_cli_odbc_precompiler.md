@@ -143,6 +143,15 @@ Exact block: APRE build and error handling
 - `WHENEVER` applies by source-file scope, must be declared before affected embedded SQL statements, and is independent of connection.
 - Altibase `SQLCA` supports `sqlcode`, `sqlerrm.sqlerrmc`, `sqlerrm.sqlerrml`, and `sqlerrd[2]`; Oracle-only `SQLCA` members such as `sqlwarn` are not supported.
 
+Exact block: client API verification and failure packet
+
+- CLI handle order: allocate `SQLHENV`, allocate `SQLHDBC`, connect with `SQLDriverConnect()` or `SQLConnect()`, allocate `SQLHSTMT`, execute with `SQLExecDirect()` or `SQLPrepare()` plus `SQLBindParameter()` plus `SQLExecute()`, read diagnostics with `SQLGetDiagRec()`, commit or roll back with `SQLEndTran()`, then close cursors, disconnect, and free handles.
+- If a CLI connection string uses `DEFER_PREPARES=ON`, remember that metadata calls such as `SQLDescribeCol()`, `SQLDescribeParam()`, `SQLNumParams()`, and `SQLNumResultCols()` can force prepare before the deferred `SQLExecute()` step.
+- ODBC LOB compatibility packet: preserve DSN or driver string, driver-manager name and bitness, `LongDataCompat=ON` when `BLOB` or `CLOB` must appear as standard long data, statement text, and `SQLGetData()` or bound-column behavior.
+- JSON LOB cleanup packet: after `SQLPutLob()` updates JSON through a LOB locator in the 8.1 verified source path, call `SQLFreeLob2(stmt, locator)` to release locator resources; use `SQLEndTran()` separately for transaction control.
+- ACI packet: preserve `ALTIBASE`, `ALTIBASE_STMT`, SQL text, bind definitions, `altibase_store_result()` versus `altibase_use_result()` choice, row-fetch loop, `altibase_errno()`, `altibase_error()`, and `altibase_sqlstate()` output.
+- APRE packet: keep the `.sc` source, `apre` command, `-t cpp` if used, generated `.c` or `.cpp`, compile/link command, `WHENEVER` placement, `SQLCA`, `SQLCODE`, `SQLSTATE`, `sqlerrm.sqlerrmc`, `sqlerrm.sqlerrml`, `sqlerrd[2]`, and the note that `sqlwarn` is not an Altibase-supported `SQLCA` member.
+
 ## Fast Decision Map
 
 ```mermaid

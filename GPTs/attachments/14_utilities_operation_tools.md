@@ -118,6 +118,26 @@ Exact block: `dataCompJ 7.2` release note and Java compatibility
 - Java compatibility matrix for `dataCompJ 7.2`: Java 6 and Java 7 are unsupported; Java 8 is tested and is the minimum from `dataCompJ 7.2`; Java 9 through Java 10 are tested; Java 11 is tested with the note that Java 11 or later is supported from `dataCompJ 7.1`; Java 12 is tested; Java 17 is untested; Java 18 is tested.
 - Answer rule: do not treat the broad `JRE 8 or higher` requirement as tested Java 17 support. Ask for the exact `dataCompJ` version, package file, `java -version`, JDBC driver versions, and non-production `DIFF` evidence before production use.
 
+Exact block: migration-tool handoff anchors
+
+- Use this utilities attachment for tool routing, but use `15_migration_oracle_compatibility.md` for the full Migration Center workflow and Oracle compatibility details.
+- Migration Center 7.19 supports GUI and CLI operation. GUI mode depends on Swing and a Java runtime; CLI mode can run without an OS graphic library.
+- Compatibility anchors to preserve before answering version-fit questions: source database `Oracle Database 10gR2` through `21c`, target database `Altibase 6.5.1` or later, and the exact Migration Center package version.
+- Source-backed workflow stages: `Prepare`, `Build`, `Reconcile`, `Run`, and `Data Validation`.
+- CLI command anchors:
+
+```text
+./migcenter.sh register register.xml
+./migcenter.sh build project_path
+./migcenter.sh reconcile project_path
+./migcenter.sh run project_path
+./migcenter.sh diff project_path
+./migcenter.sh filesync project_path
+```
+
+- Validation limits: data validation applies to tables with a `Primary Key`, `LOB` columns are excluded, the validation report always contains summary information, and `Write to CSV` controls whether difference rows are written as CSV files.
+- Error-handling rule: use `FILESYNC` only for small differences after reviewing validation output; for broad differences, preserve the project path, stage, generated logs, CSV output path, and target-table impact before recommending a rerun.
+
 Exact block: `altiMon` Java compatibility
 
 - Version scope: supplemental Java compatibility material for server-side `altiMon`.
