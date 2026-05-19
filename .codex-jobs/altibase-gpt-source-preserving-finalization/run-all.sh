@@ -343,16 +343,16 @@ if [[ -n "$failed_job" ]]; then
   die "Job $failed_job is Fail. Fix it or reset its status before continuing."
 fi
 
-if [[ "$REQUIRE_CLEAN_START" == "1" ]] && git_dirty_blocking; then
-  print_blocking_status
-  die "Uncommitted project files exist. Commit or stash them before running jobs."
-fi
-
 while true; do
   progress_job="$(first_job_with_status Progress || true)"
   [[ -n "$progress_job" ]] || break
   preserve_and_clear_progress "$progress_job"
 done
+
+if [[ "$REQUIRE_CLEAN_START" == "1" ]] && git_dirty_blocking; then
+  print_blocking_status
+  die "Uncommitted project files exist. Commit or stash them before running jobs."
+fi
 
 for id in $(job_ids); do
   status="$(status_of "$id")"
