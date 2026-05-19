@@ -2,6 +2,18 @@
 
 This file is a Markdown wrapper around `GPTs/source_pack/source_manifest.tsv`. The TSV content is preserved below for GPT/Codex retrieval.
 
+Use this manifest before scanning shard bodies. Match the question or task to
+candidate rows by `source_family`, title, `source_path`, `version_scope`,
+`language`, `authority_label`, and AID classification, then carry the selected
+`source_id` forward to `03_source_to_shard_manifest.md`. For version-sensitive
+answers, prefer rows for the exact requested Altibase version; if no version is
+provided, ask for it before generating production SQL, iSQL, configuration,
+replication, backup/recovery, security, TLS, driver, or utility artifacts.
+
+Preserve source metadata in Codex/RAG traces. When a customer-facing answer uses
+this package, cite the practical source identity by manual or source path,
+version scope, authority label, and the `SRC-*` ID when it helps verification.
+
 ```tsv
 source_id	source_origin	source_path	source_role	source_family	title	version_scope	language	authority_label	aid_classification	classification_evidence	selection_decision	extraction_mode	source_sha256	byte_count	line_count	estimated_tokens	selected_by_job	last_verified_job	notes
 SRC-000001	repo	3rd Party Guide for Altibase/README.md	third_party_guide	third_party_guides	3rd Party Guide for Altibase	multi	mixed	Repository source evidence			include_exact	exact_markdown	98d166d208b2dca48964ae1ba614c0fa07e22b761af10fb1909f5a9bbfebd6b2	3453	31	864	S1-J002	S1-J002	Selected repository-local Markdown source from 3rd Party Guide for Altibase.

@@ -2,6 +2,19 @@
 
 This file is a Markdown wrapper around `GPTs/source_pack/source_to_shard_manifest.tsv`. It maps each source and block to the exact source-preserving shard.
 
+Use this mapping after selecting a row from `02_source_manifest.md`. Locate the
+matching `source_id`, record the `block_id`, and open the shard with the same
+basename under `GPTs/upload_package_source_preserving/` to read the exact
+`SOURCE_BLOCK_BEGIN` / `SOURCE_BLOCK_END` body. The `shard_path` column is
+preserved from the `GPTs/source_pack/` evidence baseline; in this upload package,
+use the corresponding `source_pack_shard_*.md` file in this directory.
+
+The `upload_intended` column is preserved source-pack baseline metadata and does
+not override the final role of `GPTs/upload_package_source_preserving/` as the
+primary source corpus. For exact claims, cite or retain `source_id`, `block_id`,
+`source_sha256` or `extracted_body_sha256`, `version_scope`, language, and
+authority metadata from this mapping and the matching source block.
+
 ```tsv
 source_id	shard_id	shard_path	block_id	order_in_shard	source_start_line	source_end_line	source_sha256	extracted_body_sha256	block_byte_count	block_line_count	block_estimated_tokens	shard_estimated_tokens	upload_intended	validation_status	notes
 SRC-000018	SHARD-001	GPTs/source_pack/source_pack_shard_001.md	BLOCK-000001	1	1	10503	aace8d29a80a7f2e2dbff8dbc1facc73189f761ebfcc4b16c039f5c64a75fcc2	aace8d29a80a7f2e2dbff8dbc1facc73189f761ebfcc4b16c039f5c64a75fcc2	540475	10503	134830	929328	no	pass	Exact source bytes copied into the source-pack shard body.

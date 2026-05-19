@@ -18,7 +18,10 @@ encyclopedia by themselves.
 
 ## Upload Set
 
-Upload all files in this directory:
+Upload all 20 Markdown files in this directory as one GPT Knowledge source
+corpus. When the upload tool allows ordering, upload this README, the upload
+order file, and the two manifest files before the 16 shard files so the lookup
+contract is available before retrieval reaches the large source bodies.
 
 1. `00_README_SOURCE_PRESERVING_UPLOAD.md`
 2. `01_upload_order.md`
@@ -41,6 +44,10 @@ Upload all files in this directory:
 19. `source_pack_shard_015.md`
 20. `source_pack_shard_016.md`
 
+`01_upload_order.md` records the deterministic shard order and shard-family
+span. The order is guidance for upload, validation, and retrieval; all 20 files
+are part of one package and count against the same 20-file GPT Knowledge limit.
+
 ## Retrieval Contract
 
 - Use `02_source_manifest.md` to identify selected source documents, source IDs,
@@ -54,9 +61,63 @@ Upload all files in this directory:
   secondary routing layer, but it must not replace the source-preserving upload
   set when exact original content is required.
 
+## GPT, Codex, And LLM Usage Instructions
+
+Treat this directory as the primary source corpus for Altibase GPT Knowledge,
+Codex, and RAG-style LLM use. The shard files are the authority for exact
+Altibase behavior, syntax, commands, examples, properties, errors, and version
+boundaries within the selected corpus.
+
+Use this lookup workflow:
+
+1. Start with `02_source_manifest.md` to find candidate sources by `source_id`,
+   `source_path`, title, `source_family`, `version_scope`, `language`,
+   `authority_label`, and AID classification.
+2. Use `03_source_to_shard_manifest.md` to map the selected `source_id` and
+   `BLOCK-*` record to the exact shard file and block.
+3. Read the matching source block in `source_pack_shard_*.md`, using the
+   `SOURCE_BLOCK_BEGIN` metadata to confirm `source_id`, `source_path`,
+   `version_scope`, `language`, `authority_label`, `sha256`, and `block_id`.
+4. Answer or generate artifacts from the source block text. Use concise topic
+   files in `GPTs/upload_package/` only as secondary answer-routing and
+   synthesis guidance, not as a replacement for exact source-block evidence.
+
+When citing or preserving provenance, include the practical metadata available
+for the answer: `source_id`, `block_id`, `source_path`, `version_scope`,
+`language`, and `authority_label`. Customer-facing answers may use a concise
+manual/version citation, but internal Codex or RAG traces should retain the
+machine-readable IDs whenever possible.
+
+For repository-local Korean and English source conflicts, apply the active
+source policy: Korean Altibase manuals are authoritative; English manuals are
+extraction aids unless the source metadata records a stronger label. Preserve
+AID labels such as Korean-source-verified, link-validated, English-only
+auxiliary, evidence-only, and accepted source-limitation classifications.
+
+## Source-Grounded Answer Safety
+
+- Ask for the exact Altibase version and patch level before giving
+  version-sensitive SQL, iSQL commands, configuration, replication, backup,
+  recovery, security, TLS, driver, utility, or migration guidance.
+- Ask for missing platform, topology, installed tool output, object DDL, log
+  excerpt, runtime state, backup state, replication state, certificate paths,
+  credentials policy, or rollback constraints when those inputs affect safe
+  execution.
+- For destructive SQL, recovery, replication state changes, TLS/security
+  changes, and property changes, provide guarded first checks and stop
+  conditions before copy-ready commands.
+- Do not infer Altibase behavior from Oracle, generic SQL, generic JDBC/ODBC,
+  Kubernetes, or third-party assumptions when the source block does not support
+  the claim.
+- If the selected source blocks do not establish a claim, say that the package
+  does not support the definitive claim, ask for the missing evidence, and give
+  the safest source-backed next check instead of inventing behavior.
+- Do not claim a live benchmark readiness pass from this package alone. Current
+  finalization evidence is structural validation and dry-run routing evidence
+  unless a later package-aware live benchmark report records otherwise.
+
 ## Current Coverage
 
 The source pack validation baseline records `941` selected sources, `16` shards,
 and `8,767` exclusions. Exclusions are intentional source-selection exclusions,
 not missing text from the selected source-pack shards.
-
