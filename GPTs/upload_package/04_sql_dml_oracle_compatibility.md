@@ -29,7 +29,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - Oracle adapter and migration-overlap route: `SRC-000172/BLOCK-000574`.
 - 8.1 release-note route for JSON and Temporary LOB version boundaries: `SRC-000452/BLOCK-000826`.
 - Exact function support, grammar, JSON behavior, and Oracle-overlap claims must be rechecked against the target-version route before final SQL is generated.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - DML generation routing: require target version, SQL text, object definitions, table/view/queue/partition type, data types, privileges, sample values, transaction expectations, and expected result.

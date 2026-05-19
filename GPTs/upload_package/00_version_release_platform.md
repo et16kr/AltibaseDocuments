@@ -12,7 +12,7 @@
 
 - Korean authoritative release, platform, General Reference, and SQL sources control version-sensitive claims for 7.1 and 7.3.
 - For 8.1-only material, preserve the Altibase 8.1 verified source wording and do not backport 8.1 features to earlier releases.
-- Patch-note and AID-derived candidates remain route evidence until a later package pass selects exact customer-facing AID content with labels preserved.
+- AID-derived candidates are not uploaded as a separate file; when exact AID evidence is used, preserve its source-confidence or source-limitation label.
 
 ## Questions This File Can Answer
 - What changed between Altibase 7.1, 7.3, and 8.1?
@@ -40,7 +40,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 8.1 dictionary and performance-view route: `SRC-000181/BLOCK-000525`.
 - 8.1 SQL source route for feature syntax boundaries: `SRC-000194/BLOCK-000888`.
 - Patch-specific BUG and TASK behavior must be routed to exact patch-note source blocks before answering beyond the compact release summaries.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -1097,4 +1097,4 @@ Compatibility and catalog caveat: database binary, meta, communication protocol,
 ## Residual Scope And Limitations
 - This file summarizes release and platform boundaries; it does not replace exact patch-note source checks for a specific BUG or TASK token.
 - It does not prove live customer compatibility. Installed binaries, runtime SQL, client libraries, and platform evidence must be checked when the answer depends on them.
-- AID content is not independently selected here; later AID integration must preserve Korean-source-verified, link-validated, English-only, and source-limitation labels.
+- AID content is not uploaded as a separate file; any exact AID support must preserve Korean-source-verified, link-validated, English-only, and source-limitation labels.

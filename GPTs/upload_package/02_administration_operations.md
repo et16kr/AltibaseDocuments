@@ -12,7 +12,7 @@
 
 - Korean authoritative Administrator, General Reference, SQL, and tool sources control version-sensitive administration, tablespace, backup, and recovery behavior for 7.1 and 7.3.
 - For 8.1 administration and recovery material, preserve the Altibase 8.1 verified source wording and ask for runtime evidence before production commands.
-- AID-derived operational content is not selected as separate upload content in this slice; later integration must preserve source labels and limitations.
+- AID-derived operational content is not uploaded as a separate file; exact AID evidence must remain label-preserving and within this topic.
 
 ## Questions This File Can Answer
 - How do I start up, shut down, back up, recover, or inspect an Altibase database?
@@ -43,7 +43,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - SQL source route for tablespace and recovery syntax boundaries: `SRC-000194/BLOCK-000888`.
 - installation/startup phase cross-route: `SRC-000124/BLOCK-000533`.
 - Protected operations require exact source-block, runtime-state, backup, archive-log, object-inventory, and rollback evidence before final SQL or shell commands.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -3514,4 +3514,4 @@ Template: discard tablespace
 ## Residual Scope And Limitations
 - This file provides guarded operational runbooks, not authorization to execute production recovery without current customer evidence.
 - Exact syntax, uncommon view columns, patch-specific recovery behavior, or site-specific storage layout must be checked against the target-version source and runtime output.
-- AID operational content is not independently selected here; later AID integration must preserve labels and remain inside the same 20-file package limit.
+- AID operational content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

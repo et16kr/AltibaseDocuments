@@ -26,7 +26,7 @@ Use these source-boundary routes for source-backed synthesis. Recheck the exact 
 - NiFi and Tableau guide routes: `SRC-000010/BLOCK-000921` and `SRC-000014/BLOCK-000925`.
 - JDBC, release-note, and Java compatibility routes: `SRC-000185/BLOCK-000561`, `SRC-000470/BLOCK-000882`, and `SRC-000473/BLOCK-000562`.
 - Exact product version, connector/tool version, runtime output, source/target schema, cluster state, third-party configuration, patch level, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Spatial route: require Altibase version and patch, table DDL, `GEOMETRY` precision, SRID, expected coordinate system, sample WKT/WKB/EWKT/EWKB values, metadata state, and validation SQL.

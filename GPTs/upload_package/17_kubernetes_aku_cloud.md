@@ -26,7 +26,7 @@ Use these source-boundary routes for source-backed synthesis. Recheck the exact 
 - Replication routes for dynamic Pod IP and replication-state checks: `SRC-000070/BLOCK-000845`, `SRC-000132/BLOCK-000847`, and `SRC-000192/BLOCK-000849`.
 - Release-note routes for 7.3 and Altibase 8.1 verified source platform or AKU boundaries: `SRC-000451/BLOCK-000824` and `SRC-000452/BLOCK-000826`.
 - Exact product version, connector/tool version, runtime output, source/target schema, cluster state, third-party configuration, patch level, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Kubernetes design route: require Altibase version and patch, Kubernetes version, image source, license basis, namespace, Service model, storage class, PV/PVC plan, network policy, secrets policy, and backup/recovery design.

@@ -37,7 +37,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 7.1 patch routes for replication protocol and monitoring guardrails: `SRC-000311/BLOCK-000620`, `SRC-000321/BLOCK-000648`, `SRC-000362/BLOCK-000715`, and `SRC-000376/BLOCK-000743`.
 - 8.1 release-note route for metadata and view boundary checks: `SRC-000452/BLOCK-000826`.
 - Exact view names, column names, error-code interpretations, and monitoring claims must be rechecked against target-version sources and customer runtime output.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Dictionary routing: require target version, object name, owner/schema, desired view or column, and whether portable SQL is needed before generating final predicates.
@@ -5484,4 +5484,4 @@ Use this when the user asks about 8.1 dictionary or performance view changes:
 ## Residual Scope And Limitations
 - This file provides read-only validation routes and view inventories, not a guarantee that every column exists in every patch or customer build.
 - Exact view columns, patch-sensitive metadata, runtime state, Monitoring API/SNMP mappings, and error-code claims require target-version source routes plus live customer output.
-- AID-derived dictionary or monitoring content is not independently selected here; later integration must preserve labels and remain inside the same 20-file package limit.
+- AID-derived dictionary or monitoring content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

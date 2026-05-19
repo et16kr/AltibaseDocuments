@@ -13,6 +13,14 @@ whose Korean-aligned English baseline routing was still pending or explicitly
 excluded. `S1R-J006` resolved the `CONF-000008` routing blocker and retained
 `CONF-000009` as a nonblocking English-only media exclusion guardrail.
 
+`S4-J008` records the Stage 4 upload-package AID routing decision only: no separate
+AID Markdown file is added, AID upload-content candidates remain label-preserving
+topic evidence or exact-source support, accepted source limitations remain
+limitations, and `SRC-000109` plus `SRC-000169` remain excluded from authoritative
+upload content. This does not close `CONF-000007`; exact patch, live-environment,
+third-party, and item-level AID claims still require source-route and customer-evidence
+rechecks.
+
 | Conflict ID | Status | Severity | Source IDs | Paths | Version Scope | Conflict Type | Finding | Authority Policy | Resolution Or Next Check | Downstream Guardrail | Owner Job | Last Reviewed |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | CONF-000001 | accepted_limitation | Low | AID-000015; AID-000016; AID-000022; AID-000023; AID-000025 | `~/AID/source-stabilization/legacy-attachments.tsv`; `~/AID/source-stabilization/url-backed-attachments.tsv`; `~/AID/llm-reference/coverage/semantic-unit-coverage.tsv`; `~/AID/llm-reference/coverage/attachment-diagram-register.tsv`; `~/AID/llm-reference/coverage/omissions-and-risks.tsv` | aid | source_limitation | AID records accepted limitations for legacy attachment labels with no downloadable URL, unavailable diagrams, non-document-format artifacts, source variations, and accepted English-only auxiliary rows. | Preserve AID evidence labels; do not infer missing URLs, diagrams, exact values, or source-normalized variants. Korean AID sources remain authority for future cleanup checks. | Keep the limitation labels in source-pack, baseline, playbook, attachment, and upload-package work; resolve only with direct source evidence. | Do not invent unavailable source content. Ask for source or environment evidence when an answer depends on the missing artifact or exact variant. | S1-J003 | 2026-05-18 |

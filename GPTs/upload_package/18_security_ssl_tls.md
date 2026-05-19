@@ -46,7 +46,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - replication receiver network-check support route: `SRC-000474/BLOCK-000909`.
 - cross-version replication compatibility support route: `SRC-000475/BLOCK-000910`.
 - Exact logs, runtime outputs, topology, certificate files, ports, private keys, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -822,4 +822,4 @@ Use `SELECT id, db_username, comm_name FROM V$SESSION WHERE comm_name LIKE 'SSL%
 
 - This file provides guarded security and TLS first-draft routes, not proof that a production certificate, cipher, port, or access policy is correct for the customer environment.
 - Patch level, platform, OpenSSL version, certificate files, ports, private-key handling, runtime logs, replication state, and rollback evidence are mandatory for protected TLS and security changes.
-- AID-derived security or TLS content is not independently selected here; later integration must preserve labels and remain inside the same 20-file package limit.
+- AID-derived security or TLS content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

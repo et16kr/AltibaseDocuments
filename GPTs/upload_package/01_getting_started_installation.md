@@ -12,7 +12,7 @@
 
 - Korean authoritative Getting Started, Installation, Administrator, General Reference, and SQL sources control version-sensitive installation and startup claims for 7.1 and 7.3.
 - For 8.1 installation and startup material, preserve the Altibase 8.1 verified source wording and confirm exact package/platform support before use.
-- AID-derived installation material is not selected as separate upload content in this slice; later integration must preserve source labels and limitations.
+- AID-derived installation material is not uploaded as a separate file; exact AID evidence must remain label-preserving and within this topic.
 
 ## Questions This File Can Answer
 - What should be checked before installing Altibase?
@@ -42,7 +42,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 8.1 startup and administration phase route: `SRC-000173/BLOCK-000006`.
 - dictionary and validation SQL route: `SRC-000181/BLOCK-000525`.
 - Platform, package, startup, patch rollback, and shutdown answers need exact target-version source blocks when copy-ready commands are requested.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -931,4 +931,4 @@ server stop
 ## Residual Scope And Limitations
 - This file does not invent package names or supported platforms. Use placeholders until exact package, platform, and patch evidence is available.
 - It covers first-run and package administration. Ongoing DBA, tablespace, backup, or recovery work belongs in the administration package file.
-- AID installation content is not independently selected here; later AID integration must preserve labels and remain inside the same 20-file package limit.
+- AID installation content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

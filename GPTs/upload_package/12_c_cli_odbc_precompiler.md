@@ -37,7 +37,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 8.1 Precompiler route: `SRC-000190/BLOCK-000491`.
 - 8.1 release-note route for client feature boundary: `SRC-000452/BLOCK-000826`.
 - Exact compiler output, installed client library or driver files, DSN entries, classpath, utility help output, generated artifacts, runtime logs, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Compile/link routing: require target client package, `$ALTIBASE_HOME`, header and library existence, OS, compiler, bitness, runtime library path, sample source, and expected binary output before compile-ready commands.

@@ -8,7 +8,7 @@
 - 7.3: Based on Korean authoritative Altibase 7.3 SQL Reference, Administrator, General Reference, and Replication Manual sources.
 - 8.1: Based on Altibase 8.1 verified source SQL Reference, Administrator, General Reference, and release-note material.
 - SQL grammar, privilege, replication, backup, recovery, and destructive-DDL claims require the exact target version and source route before final executable SQL.
-- AID-derived SQL content is not selected as separate upload content in this slice; later integration must preserve source labels and limitations.
+- AID-derived SQL content is not uploaded as a separate file; exact AID evidence must remain label-preserving and within this topic.
 ## Questions This File Can Answer
 - How should Altibase DDL or DCL be generated for tablespaces, tables, partitions, indexes, constraints, users, roles, privileges, sequences, queues, and replication objects?
 - Which clauses are 8.1-only, such as `IF EXISTS` and `IF NOT EXISTS`, and what should 7.1 or 7.3 answers do instead?
@@ -35,7 +35,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 7.1 patch routes for replication protocol and restart-sensitive facts: `SRC-000311/BLOCK-000620`, `SRC-000321/BLOCK-000648`, and `SRC-000362/BLOCK-000715`.
 - 8.1 release-note route for version-gated syntax and feature boundaries: `SRC-000452/BLOCK-000826`.
 - Exact grammar, object-specific clauses, and patch-sensitive behavior must be rechecked against the target-version route before production SQL is finalized.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - DDL generation routing: collect target version, patch level, object names, schema names, storage target, tablespace names, privilege model, and rollback plan before writing executable SQL.

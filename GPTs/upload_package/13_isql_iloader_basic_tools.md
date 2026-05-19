@@ -36,7 +36,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 7.3 error-message route for tool failures: `SRC-000118/BLOCK-000511`.
 - 8.1 error-message route for tool failures: `SRC-000178/BLOCK-000513`.
 - Exact compiler output, installed client library or driver files, DSN entries, classpath, utility help output, generated artifacts, runtime logs, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - iSQL routing: require target host, port, user, credentials policy, startup phase, script path, bind-variable inputs, output path, expected SQL, and validation plan before copy-ready commands.

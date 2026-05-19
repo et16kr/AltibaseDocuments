@@ -31,7 +31,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 8.1 SQL type and JSON syntax route: `SRC-000194/BLOCK-000888`.
 - 8.1 release-note route for JSON, Temporary LOB, and default-change boundaries: `SRC-000452/BLOCK-000826`.
 - Property, data type, and error-response claims must be rechecked against exact source routes and current customer runtime values before production advice.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Property routing: require target version, property name, current `V$PROPERTY` row, desired value, scope, mutability, restart window, rollback plan, and startup phase before change advice.
@@ -5136,4 +5136,4 @@ WHERE name = 'VARRAY_MEMORY_MAXIMUM';
 ## Residual Scope And Limitations
 - This file preserves source-backed values and change patterns, but customer-specific property advice requires current runtime evidence.
 - Exact property grammar, range interpretation, unit conversion, dynamic/static mutability, view columns, patch-specific defaults, and error-code diagnosis require target-version source and customer output.
-- AID-derived property content is not independently selected here; later AID integration must preserve labels and remain within the 20-file package limit.
+- AID-derived property content is not uploaded as a separate file; any exact AID support must preserve labels and remain within the 20-file package limit.

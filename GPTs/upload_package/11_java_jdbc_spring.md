@@ -31,7 +31,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - Spring Data JPA with Hibernate 6.4 route: `SRC-000013/BLOCK-000924`.
 - 8.1 release-note route for version and feature boundary: `SRC-000452/BLOCK-000826`.
 - Exact compiler output, installed client library or driver files, DSN entries, classpath, utility help output, generated artifacts, runtime logs, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - JDBC configuration routing: require server version, driver patch and JAR, Java version, framework version, host, port, database name, credentials policy, character set, SSL/TLS requirement, pool product, and runtime validation plan.
@@ -1872,4 +1872,4 @@ Install `jdbcAdapter` on a platform supported by the target Adapter guide, with 
 ## Residual Scope And Limitations
 - This file provides guarded Java and JDBC first drafts, not confirmation that an arbitrary framework, pool, or Java runtime is supported with the customer driver patch.
 - Driver patch, delivered JAR, classpath, Java version, framework version, TLS files, failover topology, and runtime output are customer-environment facts and must not be invented.
-- AID-derived Java material is not independently selected here; later integration must preserve source labels and remain inside the same 20-file package limit.
+- AID-derived Java material is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

@@ -40,6 +40,13 @@ REQUIRED_GUARDRAILS = {
     "CONF-000009",
 }
 EXCLUDED_SOURCE_IDS = {"SRC-000109", "SRC-000169"}
+FINAL_AID_POLICY_TOKENS = [
+    "final_aid_decision_recorded",
+    "no_separate_aid_file",
+    "AID-000005_separate_file_excluded",
+    "accepted_limitations_evidence_only",
+]
+FINAL_APB_DISPOSITION_TOKEN = "final_deferred_no_customer_test_generation_playbook"
 
 REQUIRED_SECTIONS = [
     "Package Role",
@@ -157,6 +164,13 @@ FORBIDDEN_UPLOAD_PATTERNS = [
     (re.compile(r"\bS[1-4]R?-J\d{3}\b"), "internal job ID"),
 ]
 
+STALE_AID_UPLOAD_PATTERNS = [
+    (re.compile(r"later AID", re.IGNORECASE), "stale deferred AID wording"),
+    (re.compile(r"later integration", re.IGNORECASE), "stale deferred AID wording"),
+    (re.compile(r"later package pass", re.IGNORECASE), "stale deferred AID wording"),
+    (re.compile(r"defer_unmatched_to_S4-J008"), "stale S4-J008 deferral token"),
+]
+
 CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
 LOCAL_LINK_RE = re.compile(r"\]\((?:file://|/home/et16|~/|[A-Za-z]:\\)")
 
@@ -242,6 +256,11 @@ def check_required_docs(errors: list[str]) -> None:
             "Scaffold Mode",
             "Assembled Mode",
             "Deterministic Check Matrix",
+            "S4-J008 Final AID Decision",
+            "CONF-000001",
+            "CONF-000002",
+            "AID-000005",
+            "APB-000014",
             "SRC-000109",
             "SRC-000169",
         ):
@@ -346,6 +365,15 @@ def check_manifest_rows(rows: list[dict[str, str]], errors: list[str]) -> None:
             errors.append(f"{row_label} must allow source IDs only as source metadata")
         if "SOURCE_PACK_BLOCK_IDS" not in row["allowed_source_metadata"]:
             errors.append(f"{row_label} must allow source-pack block metadata")
+        if "defer_unmatched_to_S4-J008" in row["aid_integration_policy"]:
+            errors.append(f"{row_label} still defers AID routing to S4-J008")
+        for token in FINAL_AID_POLICY_TOKENS:
+            if token not in row["aid_integration_policy"]:
+                errors.append(f"{row_label} missing final AID policy token: {token}")
+        if FINAL_APB_DISPOSITION_TOKEN not in row["apb_000014_disposition"]:
+            errors.append(
+                f"{row_label} must record final APB-000014 deferral disposition"
+            )
 
         excluded_internal = set(split_values(row["internal_ids_excluded_from_upload"]))
         required_internal = {
@@ -518,6 +546,10 @@ def check_assembled_package(
             match = pattern.search(text)
             if match:
                 errors.append(f"{label} contains forbidden {reason}: {match.group(0)}")
+        for pattern, reason in STALE_AID_UPLOAD_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                errors.append(f"{label} contains {reason}: {match.group(0)}")
 
         cjk_match = CJK_RE.search(text)
         if cjk_match:

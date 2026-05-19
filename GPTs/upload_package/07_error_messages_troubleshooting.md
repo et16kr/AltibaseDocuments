@@ -47,7 +47,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 8.1 dictionary/runtime validation route: `SRC-000181/BLOCK-000525`.
 - 8.1 SQL syntax boundary route: `SRC-000194/BLOCK-000888`.
 - Exact logs, runtime outputs, topology, certificate files, ports, private keys, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -3172,4 +3172,4 @@ Use this order:
 
 - The package preserves common and high-risk error maps, but exact uncovered codes still require the target-version source entry or runtime evidence before cause/action claims.
 - Log, patch, runtime, topology, certificate, port, private-key, object-definition, and rollback/rebuild evidence is mandatory for protected operations.
-- AID-derived troubleshooting content is not independently selected here; later integration must preserve labels and remain inside the same 20-file package limit.
+- AID-derived troubleshooting content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

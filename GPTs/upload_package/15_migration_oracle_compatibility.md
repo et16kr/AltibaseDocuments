@@ -27,7 +27,7 @@ Use these source-boundary routes for source-backed synthesis. Recheck the exact 
 - Oracle conversion support routes: `SRC-000120/BLOCK-000517`, `SRC-000134/BLOCK-000886`, `SRC-000180/BLOCK-000519`, and `SRC-000194/BLOCK-000888` for data type, property, and SQL rewrite boundaries.
 - Java compatibility route for tool runtime questions: `SRC-000473/BLOCK-000562`.
 - Exact product version, connector/tool version, runtime output, source/target schema, cluster state, third-party configuration, patch level, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Migration planning route: require source Oracle version, target Altibase version and patch, Migration Center package version, Java runtime, source/target schema, object inventory, character sets, storage design, LOB/JSON/partition/PSM use, and downtime policy.

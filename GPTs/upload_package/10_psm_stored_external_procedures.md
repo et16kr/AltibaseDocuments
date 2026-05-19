@@ -31,7 +31,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 7.3 release-note route for PSM feature boundary: `SRC-000451/BLOCK-000824`.
 - 8.1 release-note route for Temporary LOB and feature boundary: `SRC-000452/BLOCK-000826`.
 - Exact compiler output, installed client library or driver files, DSN entries, classpath, utility help output, generated artifacts, runtime logs, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 ## Task And Playbook Routing
 - Stored logic generation routing: require target version, patch level, schema, object names, parameter modes, data types, referenced tables, privileges, transaction expectations, SQL side effects, and compile plan before copy-ready PSM.

@@ -49,7 +49,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - 7.1 optimizer-performance-view patch route: `SRC-000376/BLOCK-000743`.
 - 8.1 release-note route for JSON plan and view boundaries: `SRC-000452/BLOCK-000826`.
 - Exact logs, runtime outputs, topology, certificate files, ports, private keys, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -3201,4 +3201,4 @@ SNMP answer pattern:
 
 - This file supports diagnosis and guarded first drafts, not a guarantee that a tuning action will improve every workload.
 - Runtime metrics, logs, patch level, object definitions, installed view columns, Monitoring API values, SNMP output, and rollback evidence are required for production advice.
-- AID-derived performance or monitoring content is not independently selected here; later integration must preserve labels and remain inside the same 20-file package limit.
+- AID-derived performance or monitoring content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

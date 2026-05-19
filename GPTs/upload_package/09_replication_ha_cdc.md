@@ -51,7 +51,7 @@ Use these source-boundary routes for source-backed synthesis. They identify the 
 - replication receiver network-check support route: `SRC-000474/BLOCK-000909`.
 - cross-version replication compatibility support route: `SRC-000475/BLOCK-000910`.
 - Exact logs, runtime outputs, topology, certificate files, ports, private keys, patch levels, and protected-operation claims must be rechecked against the target-version source route and customer evidence.
-- Korean-source-verified, link-validated, English-only, and source-limitation labels must be preserved when later AID material is selected.
+- AID-derived support is not a separate upload file; preserve Korean-source-verified, link-validated, English-only, and source-limitation labels whenever exact AID evidence is used.
 - Internal baseline, playbook, guardrail, job, and local-path identifiers stay outside this upload Markdown.
 
 ## Task And Playbook Routing
@@ -2771,4 +2771,4 @@ First identify the Sender and Receiver direction, exact `product_version`, `meta
 
 - This file provides guarded replication and CDC first-draft routes, not confirmation that a production topology is safe to change.
 - Runtime state, logs, topology, gap checks, ports, certificates, patch level, object definitions, and rollback or rebuild evidence are mandatory for protected replication operations.
-- AID-derived replication content is not independently selected here; later integration must preserve labels and remain inside the same 20-file package limit.
+- AID-derived replication content is not uploaded as a separate file; any exact AID support must preserve labels and remain inside the same 20-file package limit.

@@ -2,8 +2,8 @@
 
 - Created: 2026-05-18
 - Updated: 2026-05-19
-- Current job: `S3-J017`
-- Status: Stage 2/3 playbook validation and attachment-route gap register
+- Current job: `S4-J008`
+- Status: Stage 2/3/4 playbook validation, attachment-route, and upload-route gap register
 
 ## Reconfirmed Requirement And Boundary
 
@@ -21,6 +21,11 @@ CONF-000009 remains a nonblocking exclusion guardrail.
 `S3-J017` updates only the Stage 3 attachment-routing disposition. It does not run
 scenario tests, does not create a source-ID-backed test-generation playbook, and does
 not assemble `GPTs/upload_package/` content.
+
+`S4-J008` records the Stage 4 upload-package disposition for AID and `APB-000014`.
+It does not create `GPTs/agent_playbooks/test_generation.md`, does not run scenario
+tests, and does not close `APB-000014` as a completed customer-facing test-generation
+playbook.
 
 ## Current Validation Snapshot
 
@@ -54,7 +59,7 @@ final-upload claims.
 
 | Gap ID | Status | Severity | Scope | Evidence | Required handling |
 | --- | --- | --- | --- | --- | --- |
-| APG-S2-J012-001 | Open | Medium | `APB-000014` / Test generation | `playbook_manifest.tsv` keeps `APB-000014` at `validation_status=planned`; it has baseline block routes but no source IDs, no source-pack block IDs, and no `GPTs/agent_playbooks/test_generation.md` playbook file. The scenario-test suite exists in `test_scenarios.md`, but that is not a source-backed generated-test playbook. `S3-J017` rechecked this condition and did not close it. | Before declaring complete Stage 2 playbook readiness, create a source-ID-backed test-generation playbook or record an explicit readiness decision that test generation remains deferred. Until then, use the existing scenario tests only as validation scenarios, not as a customer-facing test-generation playbook. |
+| APG-S2-J012-001 | Deferred for Stage 4 | Medium | `APB-000014` / Test generation | `playbook_manifest.tsv` keeps `APB-000014` at `validation_status=planned`; it has baseline block routes but no source IDs, no source-pack block IDs, and no `GPTs/agent_playbooks/test_generation.md` playbook file. The scenario-test suite exists in `test_scenarios.md`, but that is not a source-backed generated-test playbook. `S3-J017` rechecked this condition and did not close it. `S4-J008` records final upload-package deferral without marking the playbook complete. | Before declaring complete playbook readiness, create a source-ID-backed test-generation playbook or make a later explicit readiness exclusion. For this Stage 4 upload package, use existing scenario tests only as validation scenarios and use upload Markdown validation checks only as checks, not as a complete customer-facing test-generation playbook. |
 
 ## Accepted Limitations
 
@@ -72,7 +77,7 @@ final-upload claims.
 
 | Gap ID | Status | Severity | Scope | Evidence | Required handling |
 | --- | --- | --- | --- | --- | --- |
-| APG-S2-J012-004 | Partially closed; open downstream work | Low | Answer-ready attachment integration, scenario execution, AID upload composition, and final upload package assembly | Stage 3 domain attachment integration rows are `done`, and `S3-J017` generated source-pack, Korean-aligned English, and playbook-to-attachment crosswalks plus attachment validation evidence. The final GPT Knowledge package still must be assembled later under the global 20 Markdown file limit. Scenario rows are defined with `Not run` placeholders. AID upload-content candidates remain governed by `CONF-000007`. | Treat Stage 3 attachment crosswalk integration as closed for this gap. Stage 3/4 still must run or judge scenario coverage where required, preserve AID labels, choose final upload files, and revalidate the final package before upload readiness. |
+| APG-S2-J012-004 | Partially closed; residual validation work | Low | Answer-ready attachment integration, scenario execution, AID upload composition, and final upload package assembly | Stage 3 domain attachment integration rows are `done`, and `S3-J017` generated source-pack, Korean-aligned English, and playbook-to-attachment crosswalks plus attachment validation evidence. Stage 4 assembled the 20-file upload package, and `S4-J008` records final AID routing without adding a separate AID file. Scenario rows are defined with `Not run` placeholders. AID item-level claims remain governed by `CONF-000007`. | Treat Stage 3 attachment crosswalk integration and Stage 4 AID file-count composition as closed for this gap. Scenario execution, final readiness, and any exact AID item-level claim still require their own validation and source-route evidence. |
 
 ## Carry-Forward Stage 1 Gap Closure
 
@@ -85,19 +90,19 @@ final-upload claims.
 
 | AID tier row | Disposition |
 | --- | --- |
-| `AID-000001` | Upload-content candidate after file-level source-manifest selection; preserve Korean-source-verified or link-validated labels. |
-| `AID-000002` | Upload-content candidate after file-level source-manifest selection; preserve Korean-core FAQE verification labels. |
-| `AID-000003` | English-only auxiliary upload-content candidate; preserve `CONF-000002` and source-confidence labels. |
-| `AID-000004` | Primary AID `llm-reference/` working source with preserved labels. |
-| `AID-000005` | AID GPT upload-package candidate for later review; counts against the global 20 Markdown file limit if selected. |
+| `AID-000001` | Selected as label-preserving exact-source support only; no separate upload file and no unlabeled customer-facing AID prose. |
+| `AID-000002` | Selected as label-preserving Korean-core FAQE support only; no separate upload file and no unlabeled customer-facing AID prose. |
+| `AID-000003` | Deferred to English-only auxiliary use with `CONF-000002` and source-confidence labels preserved. |
+| `AID-000004` | Selected as the primary AID `llm-reference/` routing and recheck source with all labels preserved. |
+| `AID-000005` | Explicitly excluded as a separate upload file under the global 20 Markdown file limit; retained only as consolidation review evidence outside upload Markdown. |
 
 ## Self-Review Notes
 
-- Not-ready blockers: `APB-000014` is the only planned, source-pack-unitemized
-  playbook row found by `S2-J012`.
+- Not-ready blockers: `APB-000014` remains planned and source-pack-unitemized.
+  `S4-J008` records Stage 4 deferral but does not close it as a completed playbook.
 - Accepted limitations: `CONF-000009` remains visible and nonblocking; no playbook
   row uses `SRC-000109` or `SRC-000169` as a source route.
 - Residual risks: open guardrails are intentionally preserved in the manifest and
   crosswalks instead of being downgraded to readiness claims.
-- Downstream work: final attachment/upload-package integration and scenario execution
+- Downstream work: scenario execution and any future complete test-generation playbook
   remain outside this job.
