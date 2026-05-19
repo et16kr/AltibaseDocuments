@@ -121,6 +121,15 @@ Anchor: tablespace and datafile verification views
 - Use `V$DATAFILES` for disk and temporary file state. Preserve columns such as `NAME`, `SPACEID`, `CREATE_LSN_FILENO`, `NEXTSIZE`, `MAXSIZE`, `INITSIZE`, `CURRSIZE`, `AUTOEXTEND`, `OPENED`, `MODIFIED`, and `STATE`.
 - `V$DATAFILES.AUTOEXTEND` uses `0` for disabled and `1` for enabled; `OPENED` uses `0` for closed and `1` for open.
 
+Anchor: capacity-limit properties for tablespace planning
+
+- Version scope: Altibase 7.3 for the exact defaults below; use the target-version property section and `V$PROPERTY` before changing a production plan.
+- `MEM_MAX_DB_SIZE`: total dynamically growing memory database size; default `2^31` bytes (`2G`); range 32-bit `[2097152, 2^32 + 1]` and 64-bit `[2097152, 2^64]`; read-only single value.
+- `DISK_MAX_DB_SIZE`: maximum disk database size; default `2^64 - 1`; range 64-bit `[2097152, 2^64]`; read-only single value.
+- `VOLATILE_MAX_DB_SIZE`: total volatile tablespace size; default `2^32 + 1`; range 32-bit `[2097152, 2^32 + 1]` and 64-bit `[2097152, 2^64]`; read-only single value and cannot exceed operating-system memory.
+- If `MEM_MAX_DB_SIZE` or `DISK_MAX_DB_SIZE` is exceeded, the expansion-causing transaction errors and later non-`SELECT` SQL also errors.
+- Do not treat these read-only limits as online `ALTER SYSTEM` tuning knobs. For a capacity incident, ask for exact version and patch, current `V$PROPERTY` rows, tablespace inventory, filesystem or OS memory evidence, and the full error or trace excerpt.
+
 Anchor: datafile and temporary file recovery
 
 - Version scope: Altibase 8.1 verified source for the cited datafile runbooks; temporary-file exception is cross-checked against 7.3 and 8.1.
@@ -1305,7 +1314,7 @@ DDL rules:
 - For disk data files, emit explicit `SIZE`, `NEXT`, and `MAXSIZE`; when reviewing omitted-value scripts, inspect file-size properties such as `USER_DATA_FILE_INIT_SIZE`, `USER_DATA_FILE_NEXT_SIZE`, and `USER_DATA_FILE_MAX_SIZE` for the target version.
 - Disk temporary file defaults are controlled by `USER_TEMP_FILE_INIT_SIZE`, `USER_TEMP_FILE_NEXT_SIZE`, and `USER_TEMP_FILE_MAX_SIZE`.
 - Memory and volatile `SIZE` and `AUTOEXTEND NEXT` must be multiples of `EXPAND_CHUNK_PAGE_COUNT * 32KB`.
-- Memory growth is bounded by `MEM_MAX_DB_SIZE`; if memory database expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors until capacity is corrected.
+- Memory growth is bounded by `MEM_MAX_DB_SIZE`; if memory database expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors.
 - Disk database growth is bounded by `DISK_MAX_DB_SIZE`; if expansion exceeds it, the transaction that caused the expansion errors and later SQL except `SELECT` also errors.
 - For `CREATE VOLATILE TABLESPACE ... MAXSIZE UNLIMITED`, preserve both limits: the SQL Reference describes growth against the combined memory and volatile total reaching `MEM_MAX_DB_SIZE`, and the General Reference defines `VOLATILE_MAX_DB_SIZE` as the maximum total volatile tablespace size. That total volatile limit cannot exceed memory space provided by the operating system.
 - `CHECKPOINT PATH` operations apply only to memory tablespaces and require the DBA to create, move, or remove the underlying OS directories and checkpoint image files.
@@ -1344,6 +1353,11 @@ WHERE name IN (
   'USER_TEMP_FILE_MAX_SIZE'
 )
 ORDER BY name;
+
+SELECT name, storedcount, value1, value2, value3, value4,
+       value5, value6, value7, value8
+FROM V$PROPERTY
+WHERE name = 'MEM_DB_DIR';
 
 SELECT id,
        name,

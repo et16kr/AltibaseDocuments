@@ -62,6 +62,35 @@ and unsafe-assumption wording in answers.
   `ALTER SYSTEM`; `GROUP_CONCAT_PRECISION` controls the `VARCHAR` returned by
   `GROUP_CONCAT` with range `[0, 32000]`, while `LISTAGG_PRECISION` controls the
   `VARCHAR` returned by `LISTAGG` with range `[1, 32000]`.
+- Memory, disk, and volatile capacity-limit answers / Altibase 7.3:
+  `MEM_MAX_DB_SIZE` limits the total dynamically growing memory database size;
+  default `2^31` bytes, described as `2G`; range is 32-bit
+  `[2097152, 2^32 + 1]` and 64-bit `[2097152, 2^64]`; read-only single value.
+  `DISK_MAX_DB_SIZE` limits disk database size; default `2^64 - 1`; 64-bit range
+  `[2097152, 2^64]`; read-only single value. `VOLATILE_MAX_DB_SIZE` limits the
+  total size of all volatile tablespaces; default `2^32 + 1`; range is 32-bit
+  `[2097152, 2^32 + 1]` and 64-bit `[2097152, 2^64]`; read-only single value and
+  cannot exceed operating-system memory. If `MEM_MAX_DB_SIZE` or
+  `DISK_MAX_DB_SIZE` is exceeded, the transaction that caused the expansion errors,
+  and later non-`SELECT` SQL also errors.
+- Default `IN ROW` threshold answers / Altibase 7.3: `DISK_LOB_COLUMN_IN_ROW_SIZE`
+  defaults to `4000` bytes and applies only to disk-table LOB storage;
+  `MEMORY_LOB_COLUMN_IN_ROW_SIZE` defaults to `64` bytes and applies only to
+  memory-table LOB storage; `MEMORY_VARIABLE_COLUMN_IN_ROW_SIZE` defaults to `32`
+  bytes and applies to non-LOB variable-size columns in memory tables. All three
+  have range `[0, 4000]` and are read-only single-value defaults.
+- Restart recovery target answers / Altibase 8.1 verified source:
+  `FAST_START_LOGFILE_TARGET` default is `10`, and 8.1.0.0.1 release notes record
+  the default as changed from `100` to `10`; range `[1, 2^32 - 1]`; read-write
+  with `ALTER SYSTEM`. A smaller value can reduce restart recovery time by causing
+  more dirty pages to be flushed during service.
+- Temporary LOB memory answers / Altibase 8.1 verified source:
+  `MEMORY_TEMPLOB_MAX_ALLOC_SIZE` limits total memory stored for Temporary LOB;
+  default `2147483648` (`2G`); range `[16777216, 2^64]`; read-write with
+  `ALTER SYSTEM`. If allocation beyond the configured value is requested, memory
+  allocation fails and the transaction errors. Temporary LOB memory is separate
+  from `MEM_MAX_DB_SIZE`, so do not size it as if it were inside the memory
+  database limit.
 
 ## Source Documents
 
@@ -3071,7 +3100,7 @@ Properties:
 - `RESULT_CACHE_MEMORY_MAXIMUM`: memory limit, in bytes, for Result Cache and Top Result Cache for one query; default `10M`; range `[4096, ULONG MAX]`; read-write with `ALTER SYSTEM`. If the cached item would exceed this value, it is not stored in memory and is freed. This property is a per-query constraint and does not provide a system-wide memory limit.
 - `TOP_RESULT_CACHE_MODE`: controls final-result cache use; default `0`; range `[0, 3]`; read-write with `ALTER SYSTEM` or `ALTER SESSION`. `0` means Disabled, `1` means `MEMORY`, `2` means `DISK`, and `3` means `ALL`.
 
-Related hints and restrictions: `RESULT_CACHE` caches intermediate results and `TOP_RESULT_CACHE` caches final results. Use the detailed Result Cache block in `08_performance_tuning_monitoring.md` for hint examples, supported plan areas, commit-mode cautions, and restrictions.
+Related hints and restrictions: `RESULT_CACHE` caches intermediate results and `TOP_RESULT_CACHE` caches final results. Use the detailed Result Cache block in `08_performance_tuning_monitoring.md` for hint examples, supported plan areas, commit-mode cautions, and restrictions. Do not describe `RESULT_CACHE_MEMORY_MAXIMUM` as a global result-cache pool; it is a one-query storage limit.
 
 Check SQL:
 
