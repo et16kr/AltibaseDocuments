@@ -23,7 +23,7 @@
 Use this compact index before scanning data type and property blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact default, range, mutability, value-count, dynamic-change, or check-SQL block.
 
 - Aliases and customer wording: property default, property range, static property, dynamic property, environment variable precedence, `V$PROPERTY` check, data type limit, JSON type, Temporary LOB, result cache, plan cache, lock escalation, autocommit, session locale, database path, log path, replication property, TLS property.
-- Exact-token anchors: `V$PROPERTY`, `NAME`, `VALUE1`, `VALUE8`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `$ALTIBASE_HOME/conf/altibase.properties`, `ALTER SYSTEM`, `ALTER SESSION`, `ALTIBASE_property_name`, `environment variable`, `DB_NAME`, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `SERVER_MSGLOG_DIR`, `LOG_FILE_SIZE`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `NORMALFORM_MAXIMUM`, `NLS_TERRITORY`, `ACCESS_LIST_FILE`, `V$ACCESS_LIST`, `PERMIT`, `DENY`, `REPLICATION_SSL_PORT_NO`, `2097152`, `2^31`, `2^32 + 1`, `16777216`, `2147483648`.
+- Exact-token anchors: `V$PROPERTY`, `NAME`, `VALUE1`, `VALUE8`, `STOREDCOUNT`, `ATTR`, `MIN`, `MAX`, `$ALTIBASE_HOME/conf/altibase.properties`, `ALTER SYSTEM`, `ALTER SESSION`, `ALTIBASE_property_name`, `environment variable`, `DB_NAME`, `MEM_DB_DIR`, `LOGANCHOR_DIR`, `LOG_DIR`, `SERVER_MSGLOG_DIR`, `LOG_FILE_SIZE`, `LOG_CREATE_METHOD`, `ARCHIVE_FULL_ACTION`, `CHECKPOINT_ENABLED`, `CHECKPOINT_INTERVAL_IN_SEC`, `CHECKPOINT_INTERVAL_IN_LOG`, `MAX_CLIENT`, `JOB_THREAD_COUNT`, `GROUP_CONCAT_PRECISION`, `LISTAGG_PRECISION`, `PSM_CASE_SENSITIVE_MODE`, `REGEXP_MODE`, `write()`, `fallocate()`, `altibase_sm.log`, `HP-UX`, `AIX`, `Linux`, `TEMPORARY_LOB_ENABLE`, `MEMORY_TEMPLOB_MAX_ALLOC_SIZE`, `MEMORY_TEMPLOB_PIECE_SIZE`, `NORMALFORM_MAXIMUM`, `NLS_TERRITORY`, `ACCESS_LIST_FILE`, `V$ACCESS_LIST`, `PERMIT`, `DENY`, `REPLICATION_SSL_PORT_NO`, `1000`, `4000`, `2097152`, `2^31`, `2^32 + 1`, `16777216`, `2147483648`.
 - Focused routing anchors: static, dynamic, environment-variable, and precedence answers route to `Property Configuration Model`; property change SQL routes to `Compact Property SQL Syntax` and `Property Change Decision Flow`; `DB_NAME`, path, log, and storage properties route to `Core Identity, Path, And Storage Defaults`; optimizer, timeout, session, access-list, result-cache, JSON, Temporary LOB, and replication/TLS properties route to the matching quick block or `Decomposed Property Blocks`.
 - Answer route: use this file for meanings, defaults, ranges, mutability, restart requirements, and property SQL; use `06_data_dictionary_performance_views.md` for view-column verification; use `03_sql_ddl_generation.md` only for generated `ALTER SYSTEM` or `ALTER SESSION` forms.
 - Missing-input trigger: for property change advice, ask for exact version, current `V$PROPERTY` row, whether the property is file, environment, system, or session scoped, and whether restart or recreation is acceptable.
@@ -42,6 +42,26 @@ and unsafe-assumption wording in answers.
   Avoid the assumption that `RESULT_CACHE_MEMORY_MAXIMUM` is a system-wide
   result-cache memory cap; it is a per-query constraint and does not provide a
   system-wide memory limit.
+- Core path and log-anchor answers / Altibase 7.3 `LOGANCHOR_DIR`: default
+  `$ALTIBASE_HOME/logs`; read-only multi-value string; exactly three log anchor
+  file paths are required, and by default all three paths use the default directory.
+  Verify `STOREDCOUNT` and `VALUE1` through `VALUE8` in `V$PROPERTY`; do not present
+  `LOGANCHOR_DIR` as an online `ALTER SYSTEM` property.
+- Connection headroom answers / Altibase 7.3 `MAX_CLIENT`: default `1000`; nominal
+  range `[0, 65535]`; read-only single value. If `JOB_THREAD_COUNT` is greater than
+  `0`, calculate the effective maximum as `65535 - JOB_THREAD_COUNT` after checking
+  both rows in `V$PROPERTY`.
+- Archive-full answers / Altibase 7.3 `ARCHIVE_FULL_ACTION`: default `0`; range
+  `[0, 2]`; changeable single value. Values `0` and `2` log failed archive backup
+  attempts to `altibase_sm.log` and try the next log file, which can leave missing
+  archive logs and make recovery impossible if checkpoint later deletes failed-backup
+  logs. Value `1` waits until enough disk space is available and does not let
+  checkpoint delete those unbacked log files during the wait.
+- Aggregate return-size answers / Altibase 7.3 `GROUP_CONCAT_PRECISION` and
+  `LISTAGG_PRECISION`: both default to `4000` bytes and are changed with
+  `ALTER SYSTEM`; `GROUP_CONCAT_PRECISION` controls the `VARCHAR` returned by
+  `GROUP_CONCAT` with range `[0, 32000]`, while `LISTAGG_PRECISION` controls the
+  `VARCHAR` returned by `LISTAGG` with range `[1, 32000]`.
 
 ## Source Documents
 
@@ -2822,6 +2842,48 @@ WHERE name IN (
 ORDER BY name;
 ```
 
+### Property Item: `ARCHIVE_FULL_ACTION`
+
+Version: documented in Altibase 7.3 and Altibase 8.1 verified source as a changeable
+single-value archive-log property. For Altibase 7.1, verify the installed source before
+using value `2`.
+
+Meaning: controls archive-log thread behavior when the filesystem containing
+`ARCHIVE_DIR` does not have enough space for archive log backup.
+
+Default: `0`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM` in the 7.3 and
+8.1 property source.
+
+Range: `[0, 2]` in the 7.3 and 8.1 property source.
+
+Values and recovery risk:
+
+- `0`: write an error message to `altibase_sm.log` and try to back up the next log
+  file. During the shortage window, some log files can remain missing from the archive
+  path; if checkpoint later treats a failed-backup log file as unnecessary and deletes
+  it, database recovery can become impossible.
+- `1`: wait until enough disk space is secured and the archive log file can be backed
+  up. During the wait, checkpoint does not delete the unbacked archive log files.
+- `2`: when a backup failure occurs, including insufficient disk space, write an error
+  message to `altibase_sm.log` and try the next log file. Like `0`, this can leave
+  missing archive logs and make recovery impossible if checkpoint later deletes the
+  failed-backup log files.
+
+Safe answer pattern: before recommending recovery-impacting cleanup or a value change,
+check `ARCHIVE_FULL_ACTION`, inspect `ARCHIVE_DIR` capacity, and read `altibase_sm.log`
+for archive backup failures. Do not call `0` or `2` safe retry modes.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN ('ARCHIVE_DIR', 'ARCHIVE_FULL_ACTION')
+ORDER BY name;
+```
+
 ### Property Item Group: Checkpoint request, recovery target, and bulk flush
 
 Version scope: Altibase 7.1, Altibase 7.3, and Altibase 8.1 verified source unless noted.
@@ -2830,8 +2892,8 @@ Meaning: control checkpoint scheduling, dirty-page flushing, restart recovery ta
 
 Properties:
 
-- `CHECKPOINT_ENABLED`: checkpoint thread enable flag; default `1`; range `[0, 1]`; read-only. `0` stops interval-driven checkpoint thread operation, but explicit checkpoints can still run.
-- `CHECKPOINT_INTERVAL_IN_LOG`: checkpoint request interval by generated log files; default 7.1 `100`, 7.3 and 8.1 `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`. If a checkpoint is already running when the interval requests one, the new request can be canceled.
+- `CHECKPOINT_ENABLED`: checkpoint thread enable flag; default `1`; range `[0, 1]`; read-only. `0` means checkpoint `OFF` and `1` means checkpoint `ON`. When set to `0`, the checkpoint thread does not operate and cannot run on the cycles specified by `CHECKPOINT_INTERVAL_IN_SEC` or `CHECKPOINT_INTERVAL_IN_LOG`, but explicit user checkpoint execution can still run.
+- `CHECKPOINT_INTERVAL_IN_LOG`: checkpoint request interval by generated log files; default 7.1 `100`, 7.3 and 8.1 `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`. If a checkpoint is already running or another reason prevents execution when the interval requests one, the current request is canceled rather than queued to run immediately after the running checkpoint finishes.
 - `CHECKPOINT_INTERVAL_IN_SEC`: checkpoint request interval in seconds; default `6000`; range `[3, 2592000]`; read-write with `ALTER SYSTEM`.
 - `FAST_START_IO_TARGET`: target redo page count for restart recovery; default `10000`; range `[1, 2^64 - 1]`; read-write with `ALTER SYSTEM`. Lower values can reduce restart recovery time by flushing more dirty pages during runtime.
 - `FAST_START_LOGFILE_TARGET`: target log-file count to read during restart recovery; default 7.1 `100`, 7.3 `10`, and Altibase 8.1 verified source `10`; 8.1.0.0.1 release notes record the default as changed from `100` to `10`; range `[1, 2^32 - 1]`; read-write with `ALTER SYSTEM`. During checkpoint flushing, if the difference between a dirty page's page LSN `LogFileNo` and the current log LSN `LogFileNo` is greater than this value, Altibase flushes that page. A smaller value flushes more pages during service and can reduce restart recovery time.
@@ -3791,16 +3853,24 @@ Meaning: maximum number of client connections.
 
 Default: `1000`.
 
-Dynamic Change Support: read-only.
+Data type and attribute: unsigned integer; read-only; single value.
+
+Dynamic Change Support: read-only. Do not generate `ALTER SYSTEM` for an online
+capacity change unless the exact installed-version source says otherwise.
 
 Range: `[0, 65535]`, with an effective upper bound reduced by `JOB_THREAD_COUNT` when job threads are configured.
+
+Effective maximum rule: if `JOB_THREAD_COUNT` is greater than `0`, subtract the
+configured `JOB_THREAD_COUNT` value from `65535` before calculating client headroom.
+Do not answer as though `MAX_CLIENT=65535` is always available.
 
 Check SQL:
 
 ```sql
-SELECT name, value1
+SELECT name, value1, min, max
 FROM V$PROPERTY
-WHERE name = 'MAX_CLIENT';
+WHERE name IN ('MAX_CLIENT', 'JOB_THREAD_COUNT')
+ORDER BY name;
 ```
 
 ### Property Item: `REPLICATION_PORT_NO`
@@ -4796,6 +4866,30 @@ WHERE name IN (
 ORDER BY name;
 ```
 
+### Property Item: `GROUP_CONCAT_PRECISION`
+
+Version: documented in Altibase 7.3 and Altibase 8.1 verified source. It is not part
+of the selected 7.1 General Reference 1 inventory.
+
+Meaning: size of the `VARCHAR` returned by the `GROUP_CONCAT` function.
+
+Default: `4000`.
+
+Dynamic Change Support: read-write; can be changed with `ALTER SYSTEM`.
+
+Range: `[0, 32000]`.
+
+Related items: `GROUP_CONCAT`, aggregate SQL, and `04_sql_dml_oracle_compatibility.md`.
+Do not use this property for `LISTAGG`; use `LISTAGG_PRECISION` for that function.
+
+Check SQL:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name = 'GROUP_CONCAT_PRECISION';
+```
+
 ### Property Item: `LISTAGG_PRECISION`
 
 Version: documented in 7.1, 7.3, and Altibase 8.1 verified source.
@@ -4836,6 +4930,10 @@ Values:
 
 - `0`: Altibase regular expression mode with partial POSIX BRE and ERE support.
 - `1`: PCRE2-compatible mode; available when the server character set is `US7ASCII` or `UTF-8`.
+
+Caution: Altibase regular expression mode and PCRE2 mode have syntax differences.
+For final SQL generation, route exact pattern syntax through the SQL Reference regular
+expression appendix instead of assuming Oracle-compatible regular-expression behavior.
 
 Check SQL:
 

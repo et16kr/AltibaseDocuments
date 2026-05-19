@@ -301,12 +301,41 @@ def check_scope_tsv(failures: list[str]) -> None:
         )
 
 
+def check_completed_scope_exact_tokens(failures: list[str]) -> None:
+    """For completed scope rows, require exact tokens in the row's target files."""
+    if not SCOPE_PATH.exists():
+        return
+
+    for row in read_tsv(SCOPE_PATH):
+        if row.get("current_status") not in {"done", "already_covered"}:
+            continue
+
+        targets = split_values(row.get("target_attachments", ""))
+        combined = ""
+        for target in targets:
+            path = ROOT / target
+            if path.exists():
+                combined += "\n" + path.read_text(encoding="utf-8")
+
+        missing_tokens = [
+            token
+            for token in split_values(row.get("exact_tokens", ""))
+            if token not in combined
+        ]
+        if missing_tokens:
+            failures.append(
+                f"{row['scope_row_id']} is {row['current_status']} but target "
+                "attachments are missing exact token(s): " + ", ".join(missing_tokens)
+            )
+
+
 def main() -> int:
     failures: list[str] = []
     check_attachment_shape(failures)
     check_forbidden_attachment_text(failures)
     check_upload_package_clean(failures)
     check_scope_tsv(failures)
+    check_completed_scope_exact_tokens(failures)
 
     if failures:
         print("Attachment validation failed:")
@@ -321,6 +350,7 @@ def main() -> int:
     print("- Altibase 8.1 verified source wording: preserved")
     print("- GPTs/upload_package uncommitted-change gate: clean")
     print("- Stage 3 scope TSV routing: valid")
+    print("- Completed Stage 3 scope exact-token checks: passed")
     return 0
 
 

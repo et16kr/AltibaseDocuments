@@ -278,6 +278,32 @@ have one to eight configured paths, and the documented default count is two valu
 `$ALTIBASE_HOME/dbs`. `LOGANCHOR_DIR` requires exactly three log anchor file paths, and
 by default all three use `$ALTIBASE_HOME/logs`.
 
+For core property follow-up checks, preserve the exact property names and compare the
+runtime `VALUE1`, `MIN`, and `MAX` fields before calculating headroom, archive risk,
+checkpoint behavior, or aggregate return-size limits:
+
+```sql
+SELECT NAME,
+       STOREDCOUNT,
+       ATTR,
+       MIN,
+       MAX,
+       VALUE1
+FROM V$PROPERTY
+WHERE NAME IN (
+  'MAX_CLIENT',
+  'JOB_THREAD_COUNT',
+  'ARCHIVE_FULL_ACTION',
+  'CHECKPOINT_ENABLED',
+  'CHECKPOINT_INTERVAL_IN_LOG',
+  'CHECKPOINT_INTERVAL_IN_SEC',
+  'LOG_CREATE_METHOD',
+  'GROUP_CONCAT_PRECISION',
+  'LISTAGG_PRECISION'
+)
+ORDER BY NAME;
+```
+
 For dynamic property change checks, always query before and after the change in the same session or maintenance window:
 
 ```sql

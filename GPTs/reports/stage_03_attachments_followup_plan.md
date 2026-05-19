@@ -205,6 +205,12 @@ The validation currently checks:
   Korean-aligned baseline block IDs, valid protected-topic flags, valid expected
   dispositions, and valid current statuses.
 
+`S3-J003` extends the validation scaffold for completed scope rows: when a row is
+marked `current_status=done` or `current_status=already_covered`, the validator now
+requires every exact token in that row to appear literally in one of the row's target
+attachments. Planned, blocked, and recorded-gap rows are not forced through this exact
+token check.
+
 Later validation expansion should add checks that:
 
 - every Stage 3 scope row has a completed final disposition such as

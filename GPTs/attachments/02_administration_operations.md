@@ -2246,7 +2246,7 @@ WHERE name IN ('ARCHIVE_DIR', 'ARCHIVE_FULL_ACTION')
 ORDER BY name;
 ```
 
-2. Stop if `ARCHIVELOG` is not enabled, an archive destination is missing or full, or `ARCHIVE_FULL_ACTION` policy could allow missed archive logs that the recovery plan requires.
+2. Stop if `ARCHIVELOG` is not enabled, an archive destination is missing or full, or `ARCHIVE_FULL_ACTION` policy could allow missed archive logs that the recovery plan requires. In the 7.3 and Altibase 8.1 verified source property blocks, `ARCHIVE_FULL_ACTION=0` and `ARCHIVE_FULL_ACTION=2` write archive backup failure errors to `altibase_sm.log` and try the next log file; missing archive logs can make recovery impossible if checkpoint later deletes failed-backup logs. `ARCHIVE_FULL_ACTION=1` waits until enough disk space is secured and prevents checkpoint from deleting those unbacked log files during the wait.
 3. Run the database-level backup and then force log archival:
 
 ```sql
@@ -2359,7 +2359,7 @@ ORDER BY lfg_id;
 2. Confirm each `ARCHIVE_DIR` path exists, is writable, and is mapped one-to-one with `LOG_DIR` when multiple log directories are configured.
 3. Copy closed archive log files from `ARCHIVE_DIR` to managed backup storage according to the site's recovery objective. Keep enough archive logs to recover the oldest retained online or incremental backup.
 4. Verify copied archive logs by file count, size, checksum, or the site's backup catalog before removing any archive-log copy from the archive destination.
-5. If archive storage is full, free or extend archive storage first. Do not delete online log files or log anchors. With `ARCHIVE_FULL_ACTION` values that skip failed archive writes, missing archive logs can make media recovery impossible.
+5. If archive storage is full, free or extend archive storage first. Do not delete online log files or log anchors. With `ARCHIVE_FULL_ACTION=0` or `ARCHIVE_FULL_ACTION=2`, check `altibase_sm.log` for archive backup failures because missing archive logs can make media recovery impossible; `ARCHIVE_FULL_ACTION=1` waits for archive space instead of skipping the failed file.
 6. After a database, tablespace, or DBA-driven online backup, run `ALTER SYSTEM SWITCH LOGFILE` and verify the backup-related log was archived or protected.
 
 Backup method block: snapshot for `iLoader`
