@@ -1,11 +1,12 @@
 # Stage 4 Upload Package Validation
 
-- Job: `S4-J009`
+- Latest job: `S4-J010`
+- Previous deterministic package-validation job: `S4-J009`
 - Date: 2026-05-19
 - Scope: deterministic upload-package manifest, crosswalk, boundary, and leakage
-  validation after assembly
-- Verdict: Pass for deterministic package validation; final live benchmark readiness
-  is not claimed
+  validation after assembly, plus retrieval and answerability dry-run gate recording
+- Verdict: Pass for deterministic package validation and existing lexical dry-run
+  validation; final package-context or live benchmark readiness is not claimed
 
 ## Boundary Reconfirmation
 
@@ -256,3 +257,57 @@ Result on 2026-05-19: pass.
   source IDs and source-pack block IDs as source-boundary metadata.
 - The source-pack refresh is limited to deterministic support-evidence currentness
   required by `validate_source_pack.py --check`.
+
+## S4-J010 Retrieval And Answerability Dry-Run Gate
+
+`S4-J010` adds the retrieval and answerability dry-run gate report without changing
+upload Markdown, benchmark questions, expected answers, judge rules, or live-run
+thresholds. The gate records two separate facts:
+
+- the assembled upload package still passes deterministic package validation;
+- the current answerability benchmark runner is attachment-bound and cannot target
+  `GPTs/upload_package/` without a scoped code or manifest-policy change.
+
+The supporting report is
+`GPTs/reports/stage_04_retrieval_dry_run.md`. It records the package file count,
+manifest confirmation, dry-run command, schema and leakage results, residual gaps, and
+the live-benchmark routing decision.
+
+## Required Checks For S4-J010
+
+`S4-J010` must run the package validator, the benchmark schema/self-test gates, the
+safest supported lexical dry-run, and a scoped whitespace check:
+
+```bash
+python3 GPTs/reports/scripts/validate_upload_package.py --assembled
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/full_benchmark.json
+python3 evals/altibase_answerability/scripts/answer_runner.py --self-test
+python3 evals/altibase_answerability/scripts/judge_report.py --self-test
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/full_benchmark.json \
+  --run-id s4_j010_full_lexical_dry_run_20260519 \
+  --mode dry_run \
+  --context-mode lexical \
+  --validate-output \
+  --output-dir /tmp/s4_j010_full_lexical_dry_run
+git diff --check -- \
+  GPTs/reports/stage_04_retrieval_dry_run.md \
+  GPTs/reports/stage_04_upload_package_validation.md \
+  evals/altibase_answerability/reports
+```
+
+## S4-J010 Verification Result
+
+Result on 2026-05-19: pass for deterministic checks and existing lexical dry-run.
+
+| Check | Result |
+| --- | --- |
+| `python3 GPTs/reports/scripts/validate_upload_package.py --assembled` | Pass; 20 manifest rows, 20 upload Markdown files, required sections, package-boundary scans, source/baseline/playbook/attachment crosswalk route integrity, excluded-source handling, AID limitation labels, stale-placeholder scan, and CJK scan passed. |
+| `python3 evals/altibase_answerability/scripts/validate_benchmark.py --manifest evals/altibase_answerability/manifests/full_benchmark.json` | Pass; 11 schemas, 7 question files, 270 questions, and full-profile domain counts validated. |
+| `python3 evals/altibase_answerability/scripts/answer_runner.py --self-test` | Pass. |
+| `python3 evals/altibase_answerability/scripts/judge_report.py --self-test` | Pass. |
+| Existing lexical dry-run command listed above | Pass; wrote 270 answer records to `/tmp/s4_j010_full_lexical_dry_run/answers.jsonl` with `errors=0`, 0 leakage-check failures, and 270 intentional dry-run `skipped` statuses. |
+
+No live benchmark was run, no package-context benchmark result is claimed, and no
+benchmark expected-answer files were changed.
