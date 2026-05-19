@@ -79,6 +79,54 @@ workflow_rel_path() {
   esac
 }
 
+workflow_file_rel_path() {
+  local root="$1"
+  local file="$2"
+  local dir base abs
+  dir="$(cd "$(dirname "$file")" && pwd)"
+  base="$(basename "$file")"
+  abs="$dir/$base"
+  case "$abs" in
+    "$root"/*) printf '%s\n' "${abs#$root/}" ;;
+    *) return 1 ;;
+  esac
+}
+
+workflow_state_paths() {
+  inside_git_repo || return 0
+  local root
+  root="$(git_repo_root)"
+  workflow_file_rel_path "$root" "$JOBS_FILE" || true
+  if [[ -f "$SCRIPT_DIR/jobs.md" ]]; then
+    workflow_file_rel_path "$root" "$SCRIPT_DIR/jobs.md" || true
+  fi
+}
+
+is_workflow_state_path() {
+  local path="$1"
+  local state_path
+  while IFS= read -r state_path; do
+    [[ -n "$state_path" ]] || continue
+    if [[ "$path" == "$state_path" ]]; then
+      return 0
+    fi
+  done < <(workflow_state_paths)
+  return 1
+}
+
+workflow_state_dirty_status() {
+  inside_git_repo || return 0
+  local root paths=()
+  root="$(git_repo_root)"
+  while IFS= read -r path; do
+    [[ -n "$path" ]] && paths+=("$path")
+  done < <(workflow_state_paths)
+  if [[ "${#paths[@]}" -eq 0 ]]; then
+    return 0
+  fi
+  git -C "$root" status --porcelain --untracked-files=all -- "${paths[@]}"
+}
+
 git_head() {
   if inside_git_repo; then
     git -C "$(git_repo_root)" rev-parse --verify HEAD 2>/dev/null || printf '%s\n' "__NO_HEAD__"
@@ -229,19 +277,63 @@ ensure_commit_after_job() {
     die "Job $id finished without creating a commit. A successful reviewed job must commit its result."
   fi
 
-  local changed_paths
+  if [[ "$(status_of "$id")" != "Done" ]]; then
+    die "Job $id advanced HEAD but did not commit its Done state in $JOBS_FILE. Reset to the last successful commit or amend the job commit with workflow status."
+  fi
+
+  local root changed_paths path disallowed_paths has_non_workflow has_jobs_tsv has_jobs_md jobs_tsv_rel jobs_md_rel
+  root="$(git_repo_root)"
   changed_paths="$(git -C "$(git_repo_root)" diff --name-only "$before_head..$after_head" --)"
   if [[ -z "$changed_paths" ]]; then
     set_status "$id" "Fail"
     die "Job $id advanced HEAD but no changed paths were found in the commit range."
   fi
-  if printf '%s\n' "$changed_paths" | grep -q '^\.codex-jobs/'; then
-    set_status "$id" "Fail"
-    die "Job $id committed .codex-jobs workflow files. Job commits must contain project outputs only."
+
+  has_non_workflow=0
+  has_jobs_tsv=0
+  has_jobs_md=0
+  disallowed_paths=""
+  jobs_tsv_rel="$(workflow_file_rel_path "$root" "$JOBS_FILE" || true)"
+  jobs_md_rel=""
+  if [[ -f "$SCRIPT_DIR/jobs.md" ]]; then
+    jobs_md_rel="$(workflow_file_rel_path "$root" "$SCRIPT_DIR/jobs.md" || true)"
   fi
-  if ! printf '%s\n' "$changed_paths" | grep -qv '^\.codex-jobs/'; then
+
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    if [[ "$path" == .codex-jobs/* ]]; then
+      if is_workflow_state_path "$path"; then
+        [[ "$path" == "$jobs_tsv_rel" ]] && has_jobs_tsv=1
+        [[ -n "$jobs_md_rel" && "$path" == "$jobs_md_rel" ]] && has_jobs_md=1
+      else
+        disallowed_paths+="$path"$'\n'
+      fi
+    else
+      has_non_workflow=1
+    fi
+  done <<< "$changed_paths"
+
+  if [[ -n "$disallowed_paths" ]]; then
     set_status "$id" "Fail"
-    die "Job $id committed no project files outside .codex-jobs."
+    die "Job $id committed disallowed .codex-jobs paths. Only this workflow's jobs.tsv/jobs.md state files may be committed: ${disallowed_paths%$'\n'}"
+  fi
+  if [[ "$has_non_workflow" -ne 1 ]]; then
+    set_status "$id" "Fail"
+    die "Job $id committed workflow state but no project output outside .codex-jobs."
+  fi
+  if [[ "$has_jobs_tsv" -ne 1 ]]; then
+    set_status "$id" "Fail"
+    die "Job $id commit must include this workflow's jobs.tsv Done-state update."
+  fi
+  if [[ -n "$jobs_md_rel" && "$has_jobs_md" -ne 1 ]]; then
+    set_status "$id" "Fail"
+    die "Job $id commit must include this workflow's jobs.md Done-state update."
+  fi
+
+  local dirty_state
+  dirty_state="$(workflow_state_dirty_status)"
+  if [[ -n "$dirty_state" ]]; then
+    die "Job $id left workflow state files uncommitted:\n$dirty_state"
   fi
 }
 
@@ -249,8 +341,13 @@ build_runtime_prompt() {
   local id="$1"
   local prompt_file="$PROMPT_DIR/$id.md"
   local runtime_prompt="$RUNTIME_DIR/$id.prompt.md"
+  local workflow_rel
 
   [[ -f "$prompt_file" ]] || die "Missing prompt file: $prompt_file"
+  workflow_rel="the current workflow"
+  if inside_git_repo; then
+    workflow_rel="$(workflow_rel_path "$(git_repo_root)" || printf '%s' "the current workflow")"
+  fi
 
   {
     if [[ -f "$COMMON_PROMPT" ]]; then
@@ -260,11 +357,13 @@ build_runtime_prompt() {
     cat "$prompt_file"
     printf '\n## Orchestrator Contract\n\n'
     printf -- '- This job id is `%s`.\n' "$id"
+    printf -- '- The orchestrator sets this job to `Progress` before invoking Codex; that state is intentionally uncommitted.\n'
     printf -- '- The orchestrator invokes Codex from the repository root by default; use repository-relative paths.\n'
     printf -- '- Complete only this job and preserve unrelated user changes.\n'
     printf -- '- Before editing, stop if uncommitted project files exist outside `.codex-jobs/` workflow directories.\n'
     printf -- '- If the job cannot be completed safely, stop with a clear failure.\n'
-    printf -- '- After review and verification pass, create a focused git commit for this job.\n'
+    printf -- '- Before the final commit, mark this job `Done` in `%s/jobs.tsv` and `%s/jobs.md`.\n' "$workflow_rel" "$workflow_rel"
+    printf -- '- After review and verification pass, create one focused git commit containing both the scoped job output and the workflow `jobs.tsv`/`jobs.md` state update. Do not commit logs, rollbacks, or `.runtime` files.\n'
     printf -- '- A successful job must leave project files clean and must advance HEAD with a commit.\n'
   } > "$runtime_prompt"
 
@@ -330,7 +429,6 @@ run_job() {
 
   ensure_clean_after_job "$id"
   ensure_commit_after_job "$id" "$before_head"
-  set_status "$id" "Done"
   rm -f "$RUNTIME_DIR/$id.before_head"
   printf 'Done: %s\n' "$id"
 }

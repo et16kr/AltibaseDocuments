@@ -8,6 +8,7 @@
 - Optional single-job mode: `RUN_ONE=1 ./run-all.sh`
 - Handoff gate: uncommitted project files stop the workflow before the next job starts
 - Commit gate: each successful job must pass review and create a focused commit
+  containing both job output and `jobs.tsv`/`jobs.md` `Done` state
 - Purpose: finalize `GPTs/upload_package_source_preserving/` as the primary
   source-preserving Altibase encyclopedia package for GPTs, Codex, and LLM/RAG
   systems.
@@ -46,13 +47,13 @@
 - Dirty project files: stop before starting or advancing to another job.
 - `Progress`: preserve interruption evidence, set the job back to `ToDo`, then rerun only when project files are clean.
 - `Done`: skip.
-- Nonzero `codex exec` exits leave the job as `Progress` by default; the next manual run stops if project files are dirty, or resets runtime state and retries when clean.
+- Nonzero `codex exec` exits leave the job as uncommitted `Progress` by default. A repository reset to the last successful job commit returns that job to `ToDo`; otherwise the next manual run stops if project files are dirty, or resets runtime state and retries when clean.
 
 ## Acceptance Checklist
 
 - Each job has a matching prompt in `prompts/`.
 - Each job has concrete acceptance criteria.
-- Each successful job leaves project files clean and advances HEAD with a commit.
+- Each successful job leaves project files clean and advances HEAD with a commit containing both job output and workflow state.
 - `bash -n run-all.sh` passes.
 - `run-all.sh` invokes `codex exec --cd "$exec_root"` by default, with
   `$exec_root` resolving to the repository root unless `CODEX_WORKDIR` is set.

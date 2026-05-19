@@ -48,5 +48,9 @@ is explicitly comparing the current pre-normalization baseline.
 - Add or update focused checks appropriate for the job.
 - Run `git diff --check` on changed paths.
 - Review the final diff before committing.
-- Create one focused commit for the job.
+- Before the final commit, mark the current job `Done` in
+  `.codex-jobs/altibase-gpt-source-preserving-finalization/jobs.tsv` and
+  `.codex-jobs/altibase-gpt-source-preserving-finalization/jobs.md`.
+- Create one focused commit for the job that includes both the scoped project output
+  and the workflow status update.
 - Leave project files clean after the commit.
