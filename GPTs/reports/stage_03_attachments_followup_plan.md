@@ -1,9 +1,11 @@
 # Stage 3 Attachments Follow-Up Plan
 
 - Job: `S3-J001`
+- Updated by: `S3-J002`
 - Date: 2026-05-19
 - Scope: planning evidence for Stage 3 attachment follow-up
-- Status: Ready to start guarded Stage 3 attachment follow-up after preflight pass
+- Status: Ready for guarded domain attachment follow-up after scope and validation
+  scaffolding
 
 ## Requirement And Boundary
 
@@ -25,11 +27,14 @@ The attachment set must remain exactly `20` customer-facing Markdown files under
 
 ## Design Note
 
-This plan changes documentation structure only by adding Stage 3 planning evidence
-under `GPTs/reports/`. It does not add Altibase behavior, broaden source claims, or
-change validation code. `S3-J002` should convert this plan into a machine-checkable
-Stage 3 scope TSV, validation scaffolding, and source/playbook-to-attachment
-crosswalk plan before domain attachment edits begin.
+This plan changes documentation structure by adding Stage 3 planning evidence under
+`GPTs/reports/`.
+
+`S3-J002` adds the first executable Stage 3 attachment validation scaffold and the
+machine-checkable attachment follow-up scope TSV. It does not add Altibase behavior,
+broaden source claims, edit customer-facing attachment text, or create
+`GPTs/upload_package/` content. Later domain jobs must still open the exact source
+routes before changing answer-ready product behavior.
 
 ## Starting Evidence
 
@@ -85,7 +90,7 @@ topic shape, it must refactor within the existing `00` through `19` files.
 
 | Job | Planned outcome | Primary evidence | Attachment targets |
 | --- | --- | --- | --- |
-| `S3-J002` | Create Stage 3 scope TSV, validation scaffolding, and source/playbook routing plan. | Preflight report, this plan, benchmark inventories, Stage 2 playbook crosswalks. | Reports and scripts only. |
+| `S3-J002` | Create Stage 3 scope TSV, validation scaffolding, and source/playbook routing plan. Completed by `GPTs/reports/stage_03_attachment_followup_scope.tsv` and `GPTs/attachments/scripts/validate_attachments.py`. | Preflight report, this plan, benchmark inventories, Stage 2 playbook crosswalks. | Reports and scripts only. |
 | `S3-J003` | Remediate core identity, path, database-file, log-anchor, storage, and foundational property gaps. | `J004` remediation matrix, property/source routes, `APB-000004`, `APB-000016`. | `05`, `00`, `01`, `02`, `06`. |
 | `S3-J004` | Remediate memory, disk, volatile, log-size, cache, result-cache, and capacity-limit property gaps. | `J005`, exact-token inventory, `APB-000004`, `APB-000016`. | `05`, `00`, `02`, `08`. |
 | `S3-J005` | Remediate optimizer, session, locale, lock, timeout, autocommit, transaction, and performance property gaps. | `J006`, exact-token inventory, `APB-000004`, `APB-000005`, `APB-000015`. | `05`, `08`, `06`. |
@@ -140,16 +145,71 @@ source-backed:
 | `CONF-000008` | Treat as closed for Stage 1 routing only; exact procedures, APIs, command options, tuning, source-index behavior, and Replication Manager workflows still require source-section and customer-evidence checks. |
 | `CONF-000009` | Keep `SRC-000109` and `SRC-000169` excluded from authoritative customer-facing attachment and upload-package content unless a later source-authority decision permits use. |
 
+## S3-J002 Scope And Routing Outputs
+
+`S3-J002` creates `GPTs/reports/stage_03_attachment_followup_scope.tsv` as the
+durable routing contract for domain remediation jobs. The TSV maps durable inventory
+groups `J004` through `J017` to owning Stage 3 jobs `S3-J003` through `S3-J016`.
+Each row records:
+
+- source inventory job group, owning Stage 3 job, priority, benchmark question IDs,
+  exact-token anchors, and critical fact notes;
+- target attachment paths;
+- source IDs and source-pack block pairs derived from the benchmark question
+  `source_refs` and `GPTs/source_pack/source_to_shard_manifest.tsv`;
+- Korean-aligned baseline block IDs derived from
+  `GPTs/reports/source_pack_to_korean_aligned_english_crosswalk.tsv`;
+- Stage 2 playbook routes, protected-topic flags, expected disposition, current
+  status, and validation notes.
+
+Current scope policy:
+
+- Initial rows use `current_status=planned`.
+- Initial expected disposition is `attachment_update` because every row needs a
+  source-checked answer-ready block, token-preserving item block, retrieval alias, or
+  downstream gap decision inside the owning domain job.
+- Later jobs may update `current_status` and, if source checks prove the better final
+  handling, may change `expected_disposition` or add follow-up notes using one of
+  `attachment_update`, `retrieval_alias_update`, `crosslink_update`, `recorded_gap`,
+  `already_covered`, or `blocked`.
+- A row may not be treated as completed unless its tokens, fact notes, source route,
+  target attachment, protected-topic handling, and validation notes are still
+  accurate after the edit.
+
 ## Validation Plan
 
-`S3-J002` should make the Stage 3 validation contract executable. The validation
-should check at least:
+`S3-J002` makes the first Stage 3 validation contract executable with:
+
+```bash
+python3 GPTs/attachments/scripts/validate_attachments.py
+```
+
+The validation currently checks:
 
 - the attachment count remains exactly `20` Markdown files excluding `README.md`;
-- no Stage 3 job creates or edits `GPTs/upload_package/` content;
-- every Stage 3 scope row has a final disposition such as `attachment_update`,
-  `retrieval_alias_update`, `crosslink_update`, `recorded_gap`,
-  `already_covered`, or `blocked`;
+- every customer-facing attachment has the required top-level sections:
+  `Applicable Versions`, `Questions This File Can Answer`, `Retrieval Alias Index`,
+  `Source Documents`, `Response Rules`, `Attachment Cross-References`, and
+  `Residual Scope`;
+- Stage 3 validation does not require `GPTs/upload_package/` content and fails if
+  there are uncommitted upload-package paths;
+- customer-facing attachments do not expose repository-local paths, local workspace
+  paths, source-pack IDs, Korean-aligned block IDs, source IDs, shard IDs, or stale
+  internal routing labels;
+- any customer-facing attachment that mentions `8.1` preserves
+  `Altibase 8.1 verified source` wording;
+- `GPTs/reports/stage_03_attachment_followup_scope.tsv` has required columns, valid
+  `J004` through `J017` job groups, valid owning `S3-J003` through `S3-J016` job
+  IDs, valid priorities, valid question IDs, valid attachment paths, valid Stage 2
+  playbook IDs, valid source IDs, valid source-pack block pairs, valid
+  Korean-aligned baseline block IDs, valid protected-topic flags, valid expected
+  dispositions, and valid current statuses.
+
+Later validation expansion should add checks that:
+
+- every Stage 3 scope row has a completed final disposition such as
+  `attachment_update`, `retrieval_alias_update`, `crosslink_update`,
+  `recorded_gap`, `already_covered`, or `blocked`;
 - every new customer-facing claim cites a valid source-pack source ID, source-pack
   block route, Korean-aligned baseline block, playbook route, or accepted limitation;
 - no attachment cites `SRC-000109` or `SRC-000169` as authoritative content;
