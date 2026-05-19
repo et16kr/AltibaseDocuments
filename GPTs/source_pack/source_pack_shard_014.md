@@ -101264,12 +101264,12 @@ AID-000028	~/AID/llm-reference/gpts-upload/README.md; ~/AID/llm-reference/gpts-u
 | `version_scope` | aid |
 | `language` | en |
 | `authority_label` | Approved support evidence |
-| `source_sha256` | 5b9bc80685af1fd7ae9846398fdec8e50b45b4c2077a671b5233724b5d5aa7bc |
-| `byte_count` | 17449 |
-| `line_count` | 26 |
-| `estimated_tokens` | 4363 |
+| `source_sha256` | 1d4aeee7c266e1da2adcefaf0d5e59fe474a647476e704f2f7610dfff051166b |
+| `byte_count` | 17954 |
+| `line_count` | 34 |
+| `estimated_tokens` | 4489 |
 
-<!-- SOURCE_BLOCK_BEGIN source_id="SRC-000485" source_path="GPTs/reports/source_conflict_register.md" source_family="stage1_aid_tiering" version_scope="aid" language="en" authority_label="Approved support evidence" sha256="5b9bc80685af1fd7ae9846398fdec8e50b45b4c2077a671b5233724b5d5aa7bc" byte_count="17449" line_count="26" estimated_tokens="4363" block_id="BLOCK-000890" -->
+<!-- SOURCE_BLOCK_BEGIN source_id="SRC-000485" source_path="GPTs/reports/source_conflict_register.md" source_family="stage1_aid_tiering" version_scope="aid" language="en" authority_label="Approved support evidence" sha256="1d4aeee7c266e1da2adcefaf0d5e59fe474a647476e704f2f7610dfff051166b" byte_count="17954" line_count="34" estimated_tokens="4489" block_id="BLOCK-000890" -->
 # Source Conflict And Limitation Register
 
 Job: `S1-J003`
@@ -101284,6 +101284,14 @@ turn them into unsupported customer-facing facts.
 whose Korean-aligned English baseline routing was still pending or explicitly
 excluded. `S1R-J006` resolved the `CONF-000008` routing blocker and retained
 `CONF-000009` as a nonblocking English-only media exclusion guardrail.
+
+`S4-J008` records the Stage 4 upload-package AID routing decision only: no separate
+AID Markdown file is added, AID upload-content candidates remain label-preserving
+topic evidence or exact-source support, accepted source limitations remain
+limitations, and `SRC-000109` plus `SRC-000169` remain excluded from authoritative
+upload content. This does not close `CONF-000007`; exact patch, live-environment,
+third-party, and item-level AID claims still require source-route and customer-evidence
+rechecks.
 
 | Conflict ID | Status | Severity | Source IDs | Paths | Version Scope | Conflict Type | Finding | Authority Policy | Resolution Or Next Check | Downstream Guardrail | Owner Job | Last Reviewed |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |

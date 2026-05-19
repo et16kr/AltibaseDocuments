@@ -1,26 +1,40 @@
-# Stage 4 Upload Package Validation Scaffold
+# Stage 4 Upload Package Validation
 
-- Job: `S4-J002`
+- Job: `S4-J009`
 - Date: 2026-05-19
-- Scope: validation design and pre-assembly scaffold only
-- Verdict: Scaffold validation target; upload-package assembly remains gated
+- Scope: deterministic upload-package manifest, crosswalk, boundary, and leakage
+  validation after assembly
+- Verdict: Pass for deterministic package validation; final live benchmark readiness
+  is not claimed
 
 ## Boundary Reconfirmation
 
-This document defines deterministic checks for the Stage 4 upload package. It does
-not assemble `GPTs/upload_package/`, claim final upload readiness, or change
-customer-facing Altibase behavior.
+`S4-J009` validates the assembled Stage 4 upload package and its route evidence. It
+does not add upload Markdown files, broaden customer-facing Altibase behavior, edit
+source manuals, mark `APB-000014` complete, or claim final live benchmark readiness.
 
-`GPTs/reports/stage_04_preflight_status.md` currently records
-`Verdict: Not ready for upload-package assembly`. The validation scaffold therefore
-supports a pre-assembly mode that can pass before upload Markdown exists while still
-requiring later assembled-mode checks before readiness.
+The final upload-package boundary remains exactly the 20 Markdown files under
+`GPTs/upload_package/`. Manifests, crosswalks, validation reports, scripts, source
+pack shards, Korean-aligned English baselines, playbooks, attachments, AID evidence
+ledgers, and benchmark reports remain outside the upload package unless transformed
+into one of those 20 files and listed in the manifest.
 
 ## Design Note
 
-This job adds `GPTs/reports/scripts/validate_upload_package.py`. The validator is a
-documentation-structure and packaging-boundary check. It does not generate upload
-files and does not replace source-specific review.
+This job changes deterministic validation behavior, not customer-facing product
+content. `GPTs/reports/scripts/validate_upload_package.py` now validates not only
+manifest shape and Markdown leakage, but also route-row integrity for the
+source-pack, Korean-aligned English, playbook, and attachment upload crosswalks.
+
+New checks verify upload file ID/path consistency, crosswalk status values,
+source-pack source/block resolution, one attachment route per package file,
+`APB-000014` deferral rows, baseline/playbook ID non-exposure policy, stale assembly
+placeholder text, balanced fenced code blocks, and preservation of the `Altibase 8.1
+verified source` wording where 8.1 appears.
+
+Historical note: `S4-J002` added the original validation scaffold and scaffold mode;
+later package assembly jobs used progressive and assembled modes. This report now
+records the current assembled-package validation state for `S4-J009`.
 
 ## S4-J008 Final AID Decision
 
@@ -178,13 +192,67 @@ Result on 2026-05-19: pass.
 | CJK leakage scan over `GPTs/upload_package/*.md` | Pass; no CJK leakage found. |
 | Scoped `git diff --check` | Pass |
 
+## S4-J009 Current Crosswalk Summary
+
+`S4-J009` keeps the assembled package at exactly 20 upload Markdown files and
+validates the current route evidence outside the package:
+
+| Artifact | Current count | Validation handling |
+| --- | ---: | --- |
+| `GPTs/upload_package/*.md` | 20 | Counted upload files; all are listed in the manifest and have required sections. |
+| `stage_04_upload_package_manifest.tsv` | 20 rows | All rows are `assembled`, count against the global 20-file limit, carry final AID policy tokens, carry `APB-000014` deferral, and list `SRC-000109` plus `SRC-000169` as excluded. |
+| `source_pack_to_upload_package_crosswalk.tsv` | 262 rows | Every row matches a manifest ID/path, has `route_status=pass`, resolves its `SRC-*` and `BLOCK-*` route, and does not route excluded sources. |
+| `korean_aligned_english_to_upload_package_crosswalk.tsv` | 28 rows | Every row matches a manifest ID/path, remains crosswalk-only, and keeps baseline IDs out of upload Markdown. |
+| `playbook_to_upload_package_crosswalk.tsv` | 109 rows | Every row matches a manifest ID/path; non-deferred playbook routes are `pass`/`routed`, and each package file keeps `APB-000014` as `planned`, `deferred_not_uploaded`, and `deferred_guardrail`. |
+| `attachment_to_upload_package_crosswalk.tsv` | 20 rows | Exactly one attachment route exists per package file and matches the manifest source attachment path. |
+
+No relative Markdown links are present in the upload package, so there are no
+non-upload support references to record. Future relative `.md` links must either
+resolve inside `GPTs/upload_package/` or remain outside customer upload Markdown and
+be recorded in support reports.
+
+## Required Checks For S4-J009
+
+`S4-J009` must run the upload-package validator plus the upstream layer validators
+required by the job:
+
+```bash
+python3 GPTs/reports/scripts/validate_upload_package.py --assembled
+python3 GPTs/attachments/scripts/validate_attachments.py --skip-upload-package-gate
+python3 GPTs/agent_playbooks/scripts/validate_playbooks.py --skip-forbidden-git-edits
+python3 GPTs/source_pack/scripts/validate_source_pack.py --check
+python3 GPTs/korean_aligned_english/scripts/validate_alignment.py
+git diff --check -- GPTs/upload_package GPTs/reports/stage_04_upload_package_manifest.tsv GPTs/reports/*_to_upload_package_crosswalk.tsv GPTs/reports/stage_04_upload_package_validation.md GPTs/reports/scripts
+```
+
+Because the required source-pack check found stale committed support-evidence
+metadata for `SRC-000485`, this job refreshed the deterministic source-pack
+manifest, shard mapping, shard 014, validation note, and upload-order note before
+rerunning the required check. The refresh does not add upload files and does not make
+the source pack upload-intended.
+
+## S4-J009 Verification Result
+
+Result on 2026-05-19: pass.
+
+| Check | Result |
+| --- | --- |
+| `python3 GPTs/reports/scripts/validate_upload_package.py --assembled` | Pass; 20 manifest rows, 20 upload Markdown files, required sections, crosswalk route integrity, excluded-source handling, AID limitation labels, stale-placeholder scan, and CJK scan passed. |
+| `python3 GPTs/attachments/scripts/validate_attachments.py --skip-upload-package-gate` | Pass; 20 customer-facing attachment files, required sections, internal-label scan, exact-token checks, and Stage 3 routes passed. Upload-package dirty-worktree gate was intentionally skipped for this Stage 4 job. |
+| `python3 GPTs/agent_playbooks/scripts/validate_playbooks.py --skip-forbidden-git-edits` | Pass; 17 manifest rows, 14/14 required domains route-or-gap, 13/14 pass rows, and one planned placeholder for `APB-000014`. |
+| `python3 GPTs/source_pack/scripts/validate_source_pack.py --check` | Pass after deterministic support-evidence refresh; 941 selected sources, 16 shards, and 8,767 exclusions validated. |
+| `python3 GPTs/korean_aligned_english/scripts/validate_alignment.py` | Pass; baseline manifest, AID classification preservation, conflict/recheck coverage, Korean leakage, and unsupported-inference scans passed. |
+| Scoped `git diff --check` from the job request | Pass |
+
 ## Self-Review Checklist
 
 - The package uses the existing 20 topic filenames.
-- No upload-package Markdown is created by this job.
+- No upload-package Markdown is created or rewritten by this job.
 - AID content has no separate file allocation.
 - `APB-000014` remains deferred.
 - `CONF-000004` through `CONF-000009` remain visible in reports and manifest fields.
 - `SRC-000109` and `SRC-000169` remain excluded.
 - Internal IDs are allowed in the package only where this plan explicitly permits
   source IDs and source-pack block IDs as source-boundary metadata.
+- The source-pack refresh is limited to deterministic support-evidence currentness
+  required by `validate_source_pack.py --check`.

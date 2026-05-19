@@ -151,6 +151,12 @@ FORBIDDEN_UPLOAD_PATTERNS = [
     (re.compile(r"/home/et16"), "local workstation path"),
     (re.compile(r"~/AID"), "local AID workspace path"),
     (re.compile(r"\.codex-jobs"), "workflow runtime path"),
+    (re.compile(r"\bevals/altibase_answerability/"), "internal benchmark run path"),
+    (re.compile(r"\breview/scripts/"), "internal review script path"),
+    (re.compile(r"\breview/reports/"), "internal review report path"),
+    (re.compile(r"\brun-test\.log\b"), "internal run log name"),
+    (re.compile(r"\bvalidate_upload_package\.py\b"), "validator implementation name"),
+    (re.compile(r"\bstage_04_upload_package\b"), "internal Stage 4 artifact name"),
     (re.compile(r"\bGPTs/reports/"), "internal report path"),
     (re.compile(r"\bGPTs/attachments/"), "internal attachment path"),
     (re.compile(r"\bGPTs/source_pack/"), "internal source-pack path"),
@@ -171,8 +177,25 @@ STALE_AID_UPLOAD_PATTERNS = [
     (re.compile(r"defer_unmatched_to_S4-J008"), "stale S4-J008 deferral token"),
 ]
 
+STALE_PLACEHOLDER_PATTERNS = [
+    (re.compile(r"\bTBD\b"), "stale placeholder token"),
+    (re.compile(r"\bFIXME\b"), "stale placeholder token"),
+    (re.compile(r"lorem ipsum", re.IGNORECASE), "stale placeholder prose"),
+    (re.compile(r"to be filled", re.IGNORECASE), "stale placeholder prose"),
+    (re.compile(r"to be added", re.IGNORECASE), "stale placeholder prose"),
+    (re.compile(r"pending assembly", re.IGNORECASE), "stale assembly placeholder"),
+    (re.compile(r"planned_not_assembled"), "stale manifest assembly status"),
+    (re.compile(r"scaffold validation", re.IGNORECASE), "stale scaffold wording"),
+    (re.compile(r"TODO:"), "unresolved TODO marker"),
+]
+
 CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uac00-\ud7af]")
 LOCAL_LINK_RE = re.compile(r"\]\((?:file://|/home/et16|~/|[A-Za-z]:\\)")
+
+SOURCE_ROUTE_STATUSES = {"pass"}
+BASELINE_ROUTE_STATUSES = {"routed"}
+PLAYBOOK_ROUTE_STATUSES = {"routed", "deferred_guardrail"}
+ATTACHMENT_ROUTE_STATUSES = {"assembled"}
 
 
 def rel(path: Path) -> str:
@@ -434,11 +457,11 @@ def check_scaffold_boundary(errors: list[str]) -> None:
 
 
 def check_upload_crosswalks(
-    rows: list[dict[str, str]], files: list[Path], errors: list[str]
+    rows: list[dict[str, str]],
+    files: list[Path],
+    errors: list[str],
+    allow_partial: bool = False,
 ) -> None:
-    if not files:
-        return
-
     source_rows = read_tsv_with_columns(SOURCE_UPLOAD_CROSSWALK, SOURCE_UPLOAD_COLUMNS, errors)
     baseline_rows = read_tsv_with_columns(BASELINE_UPLOAD_CROSSWALK, BASELINE_UPLOAD_COLUMNS, errors)
     playbook_rows = read_tsv_with_columns(PLAYBOOK_UPLOAD_CROSSWALK, PLAYBOOK_UPLOAD_COLUMNS, errors)
@@ -447,6 +470,136 @@ def check_upload_crosswalks(
     )
     if errors:
         return
+
+    manifest_by_id = {row["upload_file_id"]: row for row in rows}
+    manifest_by_path = {row["upload_path"]: row for row in rows}
+    known_source_ids = {
+        row.get("source_id", "")
+        for row in read_any_tsv(SOURCE_MANIFEST, errors)
+        if row.get("source_id")
+    }
+    known_block_ids = {
+        row.get("block_id", "")
+        for row in read_any_tsv(SOURCE_TO_SHARD, errors)
+        if row.get("block_id")
+    }
+    if errors:
+        return
+
+    def validate_common_rows(
+        name: str,
+        collection: list[dict[str, str]],
+        allowed_statuses: set[str],
+    ) -> None:
+        for line_number, crosswalk_row in enumerate(collection, start=2):
+            row_id = crosswalk_row.get("upload_file_id", "")
+            upload_path = crosswalk_row.get("upload_path", "")
+            row_label = f"{rel(REPORTS_DIR / name)} line {line_number}"
+
+            if row_id not in manifest_by_id:
+                errors.append(f"{row_label} references unknown upload_file_id: {row_id}")
+            elif manifest_by_id[row_id]["upload_path"] != upload_path:
+                errors.append(
+                    f"{row_label} upload_path does not match manifest row {row_id}: {upload_path}"
+                )
+
+            if upload_path not in manifest_by_path:
+                errors.append(f"{row_label} references upload_path outside manifest: {upload_path}")
+
+            route_status = crosswalk_row.get("route_status", "")
+            if route_status not in allowed_statuses:
+                errors.append(
+                    f"{row_label} has invalid route_status {route_status!r}; "
+                    + "expected one of "
+                    + ", ".join(sorted(allowed_statuses))
+                )
+
+    validate_common_rows(
+        SOURCE_UPLOAD_CROSSWALK.name,
+        source_rows,
+        SOURCE_ROUTE_STATUSES,
+    )
+    validate_common_rows(
+        BASELINE_UPLOAD_CROSSWALK.name,
+        baseline_rows,
+        BASELINE_ROUTE_STATUSES,
+    )
+    validate_common_rows(
+        PLAYBOOK_UPLOAD_CROSSWALK.name,
+        playbook_rows,
+        PLAYBOOK_ROUTE_STATUSES,
+    )
+    validate_common_rows(
+        ATTACHMENT_UPLOAD_CROSSWALK.name,
+        attachment_rows,
+        ATTACHMENT_ROUTE_STATUSES,
+    )
+
+    for line_number, source_row in enumerate(source_rows, start=2):
+        row_label = f"{rel(SOURCE_UPLOAD_CROSSWALK)} line {line_number}"
+        source_id = source_row["source_id"]
+        block_id = source_row["source_pack_block_id"]
+        if source_id in EXCLUDED_SOURCE_IDS:
+            errors.append(f"{row_label} routes excluded source ID: {source_id}")
+        if source_id not in known_source_ids:
+            errors.append(f"{row_label} references unknown source ID: {source_id}")
+        if block_id not in known_block_ids:
+            errors.append(f"{row_label} references unknown source-pack block ID: {block_id}")
+        expected_ref = f"{source_id}/{block_id}"
+        if source_row["source_pack_block_ref"] != expected_ref:
+            errors.append(
+                f"{row_label} source_pack_block_ref must be {expected_ref}, "
+                f"found {source_row['source_pack_block_ref']}"
+            )
+        for required_field in ("route_type", "authority_label", "version_scope", "source_family"):
+            if not source_row[required_field]:
+                errors.append(f"{row_label} has empty required field: {required_field}")
+
+    for line_number, baseline_row in enumerate(baseline_rows, start=2):
+        row_label = f"{rel(BASELINE_UPLOAD_CROSSWALK)} line {line_number}"
+        if "no_baseline_ids_in_upload" not in baseline_row["upload_visibility"]:
+            errors.append(f"{row_label} must keep baseline IDs outside upload Markdown")
+        if not baseline_row["baseline_block_ids"]:
+            errors.append(f"{row_label} must record baseline blocks or AID decision evidence")
+        if not baseline_row["authority_label_policy"]:
+            errors.append(f"{row_label} has empty authority_label_policy")
+
+    for line_number, playbook_row in enumerate(playbook_rows, start=2):
+        row_label = f"{rel(PLAYBOOK_UPLOAD_CROSSWALK)} line {line_number}"
+        playbook_id = playbook_row["playbook_id"]
+        if playbook_id == "APB-000014":
+            if playbook_row["validation_status"] != "planned":
+                errors.append(f"{row_label} APB-000014 must remain planned")
+            if playbook_row["upload_visibility"] != "deferred_not_uploaded":
+                errors.append(f"{row_label} APB-000014 must remain deferred_not_uploaded")
+            if playbook_row["route_status"] != "deferred_guardrail":
+                errors.append(f"{row_label} APB-000014 must remain a deferred guardrail")
+        else:
+            if playbook_row["validation_status"] != "pass":
+                errors.append(f"{row_label} non-deferred playbook route must have pass status")
+            if "no_playbook_ids_in_upload" not in playbook_row["upload_visibility"]:
+                errors.append(f"{row_label} must keep playbook IDs outside upload Markdown")
+            if playbook_row["route_status"] != "routed":
+                errors.append(f"{row_label} non-deferred playbook route must be routed")
+        if not playbook_row["required_missing_input_prompts"]:
+            errors.append(f"{row_label} has empty required_missing_input_prompts")
+
+    attachment_row_counts: dict[str, int] = {}
+    for line_number, attachment_row in enumerate(attachment_rows, start=2):
+        row_label = f"{rel(ATTACHMENT_UPLOAD_CROSSWALK)} line {line_number}"
+        upload_path = attachment_row["upload_path"]
+        attachment_row_counts[upload_path] = attachment_row_counts.get(upload_path, 0) + 1
+        manifest_row = manifest_by_path.get(upload_path)
+        if manifest_row:
+            if attachment_row["source_attachment_path"] != manifest_row["source_attachment_path"]:
+                errors.append(
+                    f"{row_label} source_attachment_path does not match manifest: "
+                    f"{attachment_row['source_attachment_path']}"
+                )
+            if split_values(attachment_row["required_sections_status"]) != REQUIRED_SECTIONS:
+                errors.append(f"{row_label} required_sections_status does not match policy")
+            if "preserve_answer_ready_reference" not in attachment_row["transformation_policy"]:
+                errors.append(f"{row_label} must preserve answer-ready reference content")
 
     source_by_path: dict[str, list[dict[str, str]]] = {}
     baseline_by_path: dict[str, list[dict[str, str]]] = {}
@@ -461,10 +614,16 @@ def check_upload_crosswalks(
         for row in collection:
             target.setdefault(row["upload_path"], []).append(row)
 
-    manifest_by_path = {row["upload_path"]: row for row in rows}
-    for path in files:
-        upload_path = rel(path)
-        row_label = manifest_by_path.get(upload_path, {}).get("upload_file_id", upload_path)
+    file_paths = {rel(path) for path in files}
+    required_rows = (
+        [row for row in rows if row["upload_path"] in file_paths]
+        if allow_partial
+        else rows
+    )
+
+    for manifest_row in required_rows:
+        upload_path = manifest_row["upload_path"]
+        row_label = manifest_row["upload_file_id"]
         for name, grouped in (
             ("source-pack", source_by_path),
             ("Korean-aligned English", baseline_by_path),
@@ -473,7 +632,12 @@ def check_upload_crosswalks(
         ):
             if not grouped.get(upload_path):
                 errors.append(f"{row_label} missing {name} upload-package crosswalk rows")
+        if attachment_row_counts.get(upload_path, 0) != 1:
+            errors.append(f"{row_label} must have exactly one attachment crosswalk row")
 
+    for path in files:
+        upload_path = rel(path)
+        row_label = manifest_by_path.get(upload_path, {}).get("upload_file_id", upload_path)
         text = path.read_text(encoding="utf-8")
         upload_source_rows = source_by_path.get(upload_path, [])
         crosswalk_source_ids = {row["source_id"] for row in upload_source_rows if row["source_id"]}
@@ -550,6 +714,10 @@ def check_assembled_package(
             match = pattern.search(text)
             if match:
                 errors.append(f"{label} contains {reason}: {match.group(0)}")
+        for pattern, reason in STALE_PLACEHOLDER_PATTERNS:
+            match = pattern.search(text)
+            if match:
+                errors.append(f"{label} contains {reason}: {match.group(0)}")
 
         cjk_match = CJK_RE.search(text)
         if cjk_match:
@@ -562,6 +730,15 @@ def check_assembled_package(
         for source_id in EXCLUDED_SOURCE_IDS:
             if source_id in text:
                 errors.append(f"{label} contains excluded source ID: {source_id}")
+
+        if "8.1" in text and "Altibase 8.1 verified source" not in text:
+            errors.append(
+                f"{label} mentions 8.1 but does not preserve "
+                "`Altibase 8.1 verified source` wording"
+            )
+
+        if text.count("```") % 2:
+            errors.append(f"{label} has unbalanced fenced code blocks")
 
         for source_id in re.findall(r"\b(?:SRC|AID-SRC)-\d{6}\b", text):
             if source_id not in known_source_ids:
@@ -583,7 +760,7 @@ def check_assembled_package(
             if not target.exists():
                 errors.append(f"{label} has broken upload-package link: {link}")
 
-    check_upload_crosswalks(rows, files, errors)
+    check_upload_crosswalks(rows, files, errors, allow_partial=allow_partial)
 
 
 def parse_args() -> argparse.Namespace:
@@ -627,6 +804,8 @@ def main() -> int:
         if args.allow_partial:
             print("- Mode: assembled partial")
         print("- Required sections and upload-boundary scans: passed")
+        print("- Source, baseline, playbook, and attachment crosswalk routes: passed")
+        print("- Excluded-source, AID limitation, stale-placeholder, and CJK scans: passed")
     else:
         print("- Mode: scaffold")
         print("- Upload Markdown files: 0")
