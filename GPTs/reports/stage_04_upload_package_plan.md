@@ -58,6 +58,21 @@ The package remains progressive, not final-upload ready. Error-message assembly,
 operations/performance/replication/security slices, AID selection, retrieval checks,
 benchmark dry runs, and Stage 4 readiness remain deferred to later scoped jobs.
 
+## S4-J005 Assembly Update
+
+`S4-J005` assembles the operations-deep package slice without changing the 20-file
+topic architecture. It creates package files for error response and troubleshooting,
+performance tuning and monitoring, replication/HA/CDC, and security/SSL/TLS. The
+slice preserves full answer-ready attachment content under `Answer-Ready Reference`,
+adds package-level routes for logs, runtime metrics, replication topology and state,
+gap checks, certificates, private keys, ports, patch level, rollback, and rebuild
+conditions, and records source-pack, Korean-aligned English, playbook, and
+attachment crosswalk rows for the assembled files.
+
+The package remains progressive, not final-upload ready. Developer/tooling slices,
+integration slices, final AID selection, retrieval checks, benchmark dry runs, and
+Stage 4 readiness remain deferred to later scoped jobs.
+
 ## Package Shape Decision
 
 The final package will use the existing 20 attachment topic filenames as the upload
