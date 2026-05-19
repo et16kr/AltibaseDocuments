@@ -23,8 +23,8 @@
 Use this compact index before scanning Kubernetes and AKU runbooks. It is intentionally redundant with later headings so lexical retrieval can land on the exact Pod, Deployment, StatefulSet, Service, AKU lifecycle, replication, or cleanup block.
 
 - Aliases and customer wording: Altibase on Kubernetes, container deployment, Pod, Deployment, StatefulSet, headless Service, ConfigMap, PVC, startupProbe, AKU, scale up, scale down, Pod termination, master Pod failure, dynamic Pod IP, Kubernetes replication.
-- Exact-token anchors: `Pod`, `Deployment`, `StatefulSet`, `Service`, `ConfigMap`, `PersistentVolumeClaim`, `podManagementPolicy: OrderedReady`, `publishNotReadyAddresses: true`, `startupProbe`, `/tmp/aku_start_completed`, `terminationGracePeriodSeconds`, `MODE=daemon`, `MODE=replication`, `AKU_SERVER_COUNT`, `REPLICATIONS`, `aku -p start`, `aku -p end`, `aku -p clean`, `AKU_REPLICATION_RESET_AT_END`.
-- Focused routing anchors: AKU lifecycle questions route to `Exact block: AKU purpose and scale-out boundary`, `Exact block: StatefulSet controls for safe startup`, and `Exact block: safe shutdown and abnormal termination`; keep `AKU_SERVER_COUNT`, `1`, `6`, `aku -p start`, `aku -p end`, `OrderedReady`, `startupProbe`, `/tmp/aku_start_completed`, `publishNotReadyAddresses: true`, `terminationGracePeriodSeconds`, `altiEncrypt`, and `REPLICATIONS`.
+- Exact-token anchors: `Pod`, `Deployment`, `StatefulSet`, `Service`, `ConfigMap`, `PersistentVolumeClaim`, `podManagementPolicy: OrderedReady`, `publishNotReadyAddresses: true`, `startupProbe`, `/tmp/aku_start_completed`, `terminationGracePeriodSeconds`, `MODE=daemon`, `MODE=replication`, `AKU_SERVER_COUNT`, `REPLICATIONS`, `aku -p start`, `aku -p end`, `aku -p clean`, `AKU_REPLICATION_RESET_AT_END`, `AKU started with START option.`, `Replication sync has ended.`, `AKU run successfully.`, `AKU started with END option.`
+- Focused routing anchors: AKU lifecycle questions route to `Exact block: AKU purpose and scale-out boundary`, `Exact block: StatefulSet controls for safe startup`, and `Exact block: safe shutdown and abnormal termination`; keep `AKU_SERVER_COUNT`, `1`, `6`, `aku -p start`, `aku -p end`, `OrderedReady`, `startupProbe`, `/tmp/aku_start_completed`, `publishNotReadyAddresses: true`, `terminationGracePeriodSeconds`, `altiEncrypt`, `REPLICATIONS`, and the expected AKU output strings.
 - Answer route: use this file for Kubernetes object patterns and AKU lifecycle; use `09_replication_ha_cdc.md` for replication object SQL and unsafe state changes; use `14_utilities_operation_tools.md` for utility command context; use `18_security_ssl_tls.md` for TLS/certificate placement.
 - Stop condition: before production or cleanup commands, ask for Altibase version, Kubernetes version, image, storage class, replica count, target tables, backup status, replication state, downtime window, and recovery plan.
 
@@ -92,11 +92,16 @@ Exact block: StatefulSet controls for safe startup
 - Runtime order: start the Altibase server first, then run `aku -p start`.
 - Startup safety rule: Pods should be created sequentially so several Pods do not run
   `aku -p start` at the same time.
+- Expected startup output anchors include `AKU started with START option.`,
+  `Replication sync has ended.`, and `AKU run successfully.` If they are absent, inspect
+  AKU logs, StatefulSet ordering, and replication state before forcing progress.
 
 Exact block: safe shutdown and abnormal termination
 
 - Runtime order: `aku -p end` must run before the Altibase server stops and must
   complete before Pod termination.
+- Expected shutdown output anchor includes `AKU started with END option.` followed by a
+  successful AKU exit before the server stop path continues.
 - If `aku -p end` does not complete, or if `AKU_REPLICATION_RESET_AT_END=0` leaves
   replication information, replication information may remain on other Pods.
 - Long-lived remaining replication information can cause online logs to accumulate for a

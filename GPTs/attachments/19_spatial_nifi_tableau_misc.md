@@ -1691,7 +1691,8 @@ Tableau purpose: Tableau Desktop connects to Altibase through `Other Databases (
 
 Tableau requirements:
 
-- Tableau Desktop with JDBC support. The guide's interoperability test used Tableau Desktop 64-bit 2021.4.4.
+- Tableau Desktop with JDBC support. The guide baseline token is
+  `TableauDesktop-64bit-2021-4-4`, equivalent to Tableau Desktop 64-bit 2021.4.4.
 - JDK 1.8 64-bit or higher.
 - JDBC API Specification 4.0 or higher support.
 - Type-4 JDBC driver.
@@ -1720,8 +1721,10 @@ CONNECT sys/manager;
 Tableau JDBC driver procedure:
 
 1. Install Tableau Desktop.
-2. Copy the Altibase JDBC driver into the Tableau driver directory.
-3. Use Tableau's `Drivers` directory for the installed desktop edition.
+2. Copy the Altibase JDBC driver into the Tableau driver directory. For the Windows
+   guide baseline, use `C:\Program Files\Tableau\Drivers`.
+3. Use Tableau's `Drivers` directory for the installed desktop edition when Tableau is
+   installed in a different path.
 4. For Altibase 7.1, use `$ALTIBASE_HOME/lib/Altibase42.jar`.
 5. For 7.3, 8.1, or other installed versions, use the JDBC driver supplied with that installed Altibase client or server package unless a certified package states otherwise.
 
