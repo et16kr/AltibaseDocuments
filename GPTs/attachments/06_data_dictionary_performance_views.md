@@ -382,6 +382,8 @@ SELECT id,
        utrans_time_limit,
        idle_time_limit,
        time_zone,
+       nls_territory,
+       nls_numeric_characters,
        lob_cache_threshold,
        query_rewrite_enable
 FROM V$SESSION
@@ -390,8 +392,42 @@ WHERE id = SESSION_ID();
 
 Use this after `ALTER SESSION` changes for `AUTO_COMMIT`, `QUERY_TIMEOUT`,
 `DDL_TIMEOUT`, `FETCH_TIMEOUT`, `UTRANS_TIMEOUT`, `IDLE_TIMEOUT`, `TIME_ZONE`,
-`LOB_CACHE_THRESHOLD`, or `QUERY_REWRITE_ENABLE`. Use `V$PROPERTY` for server defaults
-and bounds, then use `V$SESSION` to confirm the current session's runtime value.
+`NLS_TERRITORY`, `NLS_NUMERIC_CHARACTERS`, `LOB_CACHE_THRESHOLD`, or
+`QUERY_REWRITE_ENABLE`. Use `V$PROPERTY` for server defaults and bounds, then use
+`V$SESSION` to confirm the current session's runtime value.
+
+Current-session verification example for autocommit, locale, and timeout answers.
+Run the `ALTER SESSION` statements only in the session whose behavior is being tested;
+they do not change the server default:
+
+```sql
+SELECT name, value1, min, max
+FROM V$PROPERTY
+WHERE name IN (
+  'AUTO_COMMIT',
+  'NLS_TERRITORY',
+  'NLS_NUMERIC_CHARACTERS',
+  'QUERY_TIMEOUT',
+  'FETCH_TIMEOUT',
+  'IDLE_TIMEOUT',
+  'UTRANS_TIMEOUT'
+)
+ORDER BY name;
+
+ALTER SESSION SET AUTOCOMMIT = FALSE;
+ALTER SESSION SET NLS_NUMERIC_CHARACTERS='.,';
+
+SELECT id,
+       autocommit_flag,
+       nls_territory,
+       nls_numeric_characters,
+       query_time_limit,
+       fetch_time_limit,
+       idle_time_limit,
+       utrans_time_limit
+FROM V$SESSION
+WHERE id = SESSION_ID();
+```
 
 Replication ports:
 
@@ -3439,7 +3475,7 @@ ORDER BY job_name;
 
 Purpose: shows current client sessions. This view is the first stop for session ownership, current transaction ID, current statement ID, timeout settings, client identity, session state, autocommit mode, replication mode, transaction mode, failover source, TLS client certificate fields, and application/module/action text.
 
-Key columns: `ID`, `TRANS_ID`, `TASK_STATE`, `SESSION_STATE`, `ACTIVE_FLAG`, `OPENED_STMT_COUNT`, `CURRENT_STMT_ID`, `DB_USERNAME`, `DB_USERID`, `COMM_NAME`, `CLIENT_PACKAGE_VERSION`, `CLIENT_PROTOCOL_VERSION`, `CLIENT_PID`, `CLIENT_TYPE`, `CLIENT_APP_INFO`, `CLIENT_INFO`, `MODULE`, `ACTION`, `AUTOCOMMIT_FLAG`, `ISOLATION_LEVEL`, `REPLICATION_MODE`, `TRANSACTION_MODE`, `COMMIT_WRITE_WAIT_MODE`, `QUERY_TIME_LIMIT`, `DDL_TIME_LIMIT`, `FETCH_TIME_LIMIT`, `UTRANS_TIME_LIMIT`, `IDLE_TIME_LIMIT`, `IDLE_START_TIME`, `LOGIN_TIME`, `FAILOVER_SOURCE`, `TIME_ZONE`, `LOB_CACHE_THRESHOLD`, `QUERY_REWRITE_ENABLE`, `SSL_CIPHER`, `SSL_CERTIFICATE_SUBJECT`, `SSL_CERTIFICATE_ISSUER`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_TIMELIMIT`, `MESSAGE_CALLBACK`.
+Key columns: `ID`, `TRANS_ID`, `TASK_STATE`, `SESSION_STATE`, `ACTIVE_FLAG`, `OPENED_STMT_COUNT`, `CURRENT_STMT_ID`, `DB_USERNAME`, `DB_USERID`, `COMM_NAME`, `CLIENT_PACKAGE_VERSION`, `CLIENT_PROTOCOL_VERSION`, `CLIENT_PID`, `CLIENT_TYPE`, `CLIENT_APP_INFO`, `CLIENT_INFO`, `MODULE`, `ACTION`, `AUTOCOMMIT_FLAG`, `ISOLATION_LEVEL`, `REPLICATION_MODE`, `TRANSACTION_MODE`, `COMMIT_WRITE_WAIT_MODE`, `QUERY_TIME_LIMIT`, `DDL_TIME_LIMIT`, `FETCH_TIME_LIMIT`, `UTRANS_TIME_LIMIT`, `IDLE_TIME_LIMIT`, `IDLE_START_TIME`, `LOGIN_TIME`, `FAILOVER_SOURCE`, `OPTIMIZER_MODE`, `NLS_TERRITORY`, `NLS_ISO_CURRENCY`, `NLS_CURRENCY`, `NLS_NUMERIC_CHARACTERS`, `TIME_ZONE`, `LOB_CACHE_THRESHOLD`, `QUERY_REWRITE_ENABLE`, `SSL_CIPHER`, `SSL_CERTIFICATE_SUBJECT`, `SSL_CERTIFICATE_ISSUER`, `REPLICATION_DDL_SYNC`, `REPLICATION_DDL_TIMELIMIT`, `MESSAGE_CALLBACK`.
 
 Value notes: `TRANS_ID = -1` means no transaction is currently underway. `ACTIVE_FLAG = 1` means the session is executing a statement. `AUTOCOMMIT_FLAG` values are `0` non-autocommit and `1` autocommit. `TRANSACTION_MODE` values include `0` read/write and `4` read only. `COMMIT_WRITE_WAIT_MODE` values are `0` do not wait for commit logs to be written to disk and `1` wait for commit logs to be written. `REPLICATION_MODE` values include `0` default and `16` none. `QUERY_REWRITE_ENABLE` values include `FALSE` and `TRUE`. `MESSAGE_CALLBACK` values include `REG`, `UNREG`, and `UNKNOWN`.
 
@@ -3458,6 +3494,12 @@ SELECT id,
        opened_stmt_count,
        autocommit_flag,
        transaction_mode,
+       query_time_limit,
+       fetch_time_limit,
+       utrans_time_limit,
+       idle_time_limit,
+       nls_territory,
+       nls_numeric_characters,
        client_app_info,
        client_info,
        module,
