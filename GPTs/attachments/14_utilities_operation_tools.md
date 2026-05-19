@@ -22,8 +22,8 @@
 Use this compact index before scanning utility command blocks. It is intentionally redundant with later headings so lexical retrieval can land on the exact migration, comparison, synchronization, monitoring, diagnostic, or dump-family block.
 
 - Aliases and customer wording: utility, aexport, logical migration, altiComp, data comparison, data synchronization, dataCompJ, XML configuration, dumptrc, dumpla, dumpddf, altierr, altimon, altiMon, altiAudit, altiProfile, checkServer, server command, AKU utility.
-- Exact-token anchors: `aexport`, `altiComp`, `dataCompJ`, `SYNC`, `SU`, `SI`, `MI`, `SD`, `Connections`, `Options`, `TablePairs`, `Materialized View`, `dataCompJ 7.2`, `dataCompJ7.2.zip`, `dataCompJ7.2.tar.gz`, `BUG-45222`, `BUG-46675`, `BUG-46689`, `BUG-49501`, `Log4j 2.17.1`, `altiMon`, `Java 17 ~ 21`, `7.1.0.2.6`, `altierr`, `dumptrc`, `dumpla`, `dumpddf`, `checkServer`, `server`, `aku -p start`, `aku -p end`, `aku -p clean`, `ERR-00015`, `ERR-91144`.
-- Focused routing anchors: `aexport` prerequisite questions route to `Exact block: DBMS_METADATA prerequisite for aexport` and must keep `DBMS_METADATA`, `ERR-91144`, and `GRANT`; generated-file permission questions route to `Exact block: aexport generated-file permissions` and must keep `AEXPORT_FILE_PERMISSION`, `ALTIBASE_UT_FILE_PERMISSION`, `iLoader`, `iSQL`, `666`, and `600`; comparison questions route to `Exact block: altiComp DIFF, SYNC, and policy codes`; error lookup routes to `Exact block: altierr lookup forms`.
+- Exact-token anchors: `aexport`, `altiComp`, `dataCompJ`, `SYNC`, `SU`, `SI`, `MI`, `SD`, `Connections`, `Options`, `TablePairs`, `Materialized View`, `dataCompJ 7.2`, `dataCompJ7.2.zip`, `dataCompJ7.2.tar.gz`, `BUG-45222`, `BUG-46675`, `BUG-46689`, `BUG-49501`, `Log4j 2.17.1`, `altiMon`, `Java 17 ~ 21`, `7.1.0.2.6`, `altierr`, `0x4102E`, `SQLCODE`, `ODBC return code`, `dumptrc`, `dumpla`, `dumpddf`, `checkServer`, `server`, `aku -p start`, `aku -p end`, `aku -p clean`, `ERR-00015`, `ERR-91144`.
+- Focused routing anchors: `aexport` prerequisite questions route to `Exact block: DBMS_METADATA prerequisite for aexport` and must keep `DBMS_METADATA`, `ERR-91144`, and `GRANT`; generated-file permission questions route to `Exact block: aexport generated-file permissions` and must keep `AEXPORT_FILE_PERMISSION`, `ALTIBASE_UT_FILE_PERMISSION`, `iLoader`, `iSQL`, `666`, and `600`; comparison questions route to `Exact block: altiComp DIFF, SYNC, and policy codes`; error lookup routes to `Exact block: altierr lookup forms`; utility-reported server errors route to `Exact block: utility error evidence bridge`.
 - Answer route: use this file for utilities and diagnostics; use `13_isql_iloader_basic_tools.md` for iSQL and iLoader; use `17_kubernetes_aku_cloud.md` for Kubernetes AKU lifecycle; use `09_replication_ha_cdc.md` for Replication Manager topology and operation context.
 - Stop condition: before `SYNC`, `aku -p clean`, generated import scripts, or corrective utility commands, require version, target host, port, database role, backup status, replication status, downtime window, and rollback plan.
 
@@ -133,6 +133,15 @@ Exact block: `altierr` lookup forms
 - For `ERR-00015`, examples include `altierr 0x00015`, `altierr -w 00015`, and `altierr 21`.
 - For SQLCODE or ODBC-return-code style negative integers, examples include `altierr -266286`, `altierr 266286`, and `altierr 0x4102E`.
 - Keyword search uses `altierr -w keyword_pattern`, such as `altierr -w connect`.
+
+Exact block: utility error evidence bridge
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source for the utility routes in this attachment; exact error cause/action routes through `07_error_messages_troubleshooting.md`.
+- Preserve the utility name, command line, configuration file, generated log path, output file path, full error line, and installed utility version before explaining cause/action.
+- For application `SQLCODE` or ODBC-style return codes, keep equivalent forms together when known: negative integer, positive decimal, and hexadecimal. The documented lookup examples include `altierr -266286`, `altierr 266286`, and `altierr 0x4102E`.
+- If `aexport`, `altiComp`, `dataCompJ`, `dumptrc`, `dumpla`, `dumpddf`, `server`, `checkServer`, or `aku` reports an Altibase server error, route the exact code to `07_error_messages_troubleshooting.md` instead of diagnosing only from the tool name.
+- Common routed examples include `0x0001F (31)` / `Unable to bind the INET socket`, `0x11041 (69697)` / `deadlock`, `long-term lock`, `0x31010` through `0x31017` object-not-found errors, and privilege errors `0x311B1`, `0x31293`, and `0x4107C`.
+- Stop before corrective utility actions such as `altiComp SYNC`, `dataCompJ SYNC`, generated import scripts, `server kill`, or `aku -p clean` unless current role, replication state, backup status, downtime window, and rollback plan are known.
 
 Exact block: dump-family diagnostic dispatch
 

@@ -23,6 +23,7 @@ Use this compact index before scanning iSQL and iLoader cookbooks. It is intenti
 
 - Aliases and customer wording: iSQL connect, iSQL script, iSQL output, host variables, PREPARE, object inspection, transaction command, iLoader export, iLoader import, load mode, CSV delimiter, FORM file, bad file, log file, errors limit, LOB file, geom WKB, replication load, secure login.
 - Exact-token anchors: `isql`, `CONNECT`, `-s`, `-u`, `-p`, `-f`, `-silent`, `PREPARE`, `HOST VARIABLE`, `ALTIBASE_NLS_NCHAR_LITERAL_REPLACE`, `-NLS_NCHAR_LITERAL_REPLACE 0|1`, `NCHAR`, `NVARCHAR`, `N`, `-bad`, `-log`, `-errors`, `-KEEP_SYSDBA`, `APPEND`, `REPLACE`, `TRUNCATE`, `structout`, `-displayquery`, `-partition`, `-geom WKB`, `-replication`, `employees.dat`, `employees.fmt`, `t1.dat`, `t1.fmt`.
+- Troubleshooting anchors: `ERR-`, `SQLCODE`, `0x4102E`, `0x31010`, `0x31011`, `0x31012`, `0x31013`, `0x31014`, `0x31017`, `deadlock`, `long-term lock`, `test.log`, `test.bad`.
 - Focused routing anchors: iLoader table export/import questions route to `Exact block: iLoader FORM, data, and import sequence` and must keep `iLoader`, `formout`, `out`, `in`, `-T`, `-f`, `-d`, `employees.fmt`, `employees.dat`, and `-mode replace`; failed-load questions route to `Exact block: iLoader row-load error evidence` and must keep `-log`, `-bad`, `-errors`, `test.log`, and `test.bad`.
 - Answer route: use this file for direct iSQL/iLoader commands; use `14_utilities_operation_tools.md` for `aexport`, `altiComp`, `dataCompJ`, dump tools, and `altierr`; use `02_administration_operations.md` for backup/recovery decisions; use `07_error_messages_troubleshooting.md` for failed-load error handling.
 - Safety route: before production import, ask for version, target table, load mode, row count, character set, delimiter, LOB handling, replication impact, backup status, and retry plan.
@@ -108,6 +109,15 @@ Exact block: iLoader row-load error evidence
 - Use `-bad test.bad` to record failed records.
 - Use `-errors count` to control the allowed error count; default is `50`, and `-errors 0` continues regardless of error count.
 - Inspect both `test.log` and `test.bad` before claiming a single root cause.
+
+Exact block: iSQL and iLoader error-code routing
+
+- Version scope: 7.1, 7.3, and Altibase 8.1 verified source for the referenced iSQL/iLoader commands; exact error cause/action routes through `07_error_messages_troubleshooting.md`.
+- Preserve the tool command, FORM file, data file, `-log` file, `-bad` file, `ALTIBASE_NLS_USE`, `DATA_NLS_USE`, load mode, and full error line before diagnosing.
+- If the failure is reported as an Altibase code, keep every supplied form such as `ERR-`, hexadecimal, decimal, negative `SQLCODE`, or ODBC-return-code text. Use `14_utilities_operation_tools.md` for `altierr` lookup forms such as `altierr 0x4102E`.
+- Object-resolution errors from iSQL or iLoader SQL should route to the exact not-found family in `07_error_messages_troubleshooting.md`: `0x31010` user not found, `0x31011` table not found, `0x31012` column not found, `0x31013` sequence not found, `0x31014` index not found, and `0x31017` replication not found.
+- Lock and transaction symptoms such as `deadlock`, `long-term lock`, or `ROLLBACK` require the exact error line plus current transaction and lock evidence before recommending retry, timeout, or data-load changes.
+- Stop before giving production import remediation when the command uses `REPLACE`, `TRUNCATE`, `-parallel`, `-replication`, or corrective retry after partial failure unless backup status, bad-row preservation, target table impact, and rollback plan are known.
 
 Exact block: iLoader load modes
 
