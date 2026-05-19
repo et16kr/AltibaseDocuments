@@ -32,8 +32,8 @@
 | ID | Status | Title | Goal |
 | --- | --- | --- | --- |
 | `SPF-J001` | `ToDo` | Preflight and package boundary gate | Verify the source-preserving package baseline, clean handoff rules, finalization plan, and unresolved live-benchmark approval boundary before any package edits. |
-| `SPF-J002` | `ToDo` | Final-upload wording normalization | Normalize wrapper and header wording in the source-preserving upload package while preserving source block bodies byte-for-byte. |
-| `SPF-J003` | `ToDo` | Source-preserving package validator | Create and document a validator dedicated to GPTs/upload_package_source_preserving with count, size, token, SHA, block-boundary, and final-wording checks. |
+| `SPF-J002` | `ToDo` | Source-preserving package validator | Create and document a validator dedicated to GPTs/upload_package_source_preserving with count, size, token, SHA, block-boundary, and final-wording checks before package wording edits. |
+| `SPF-J003` | `ToDo` | Final-upload wording normalization | Normalize wrapper and header wording in the source-preserving upload package using the source-preserving validator while preserving source block bodies byte-for-byte. |
 | `SPF-J004` | `ToDo` | GPT Codex retrieval instructions | Add final GPT/Codex/LLM usage instructions that define the package as the primary source corpus and enforce source-grounded answer behavior. |
 | `SPF-J005` | `ToDo` | Shard retrieval metadata | Add non-source-body shard retrieval metadata to improve semantic search while preserving all source block bytes. |
 | `SPF-J006` | `ToDo` | Package-aware benchmark harness | Retarget benchmark tooling or manifests so the existing 270-question benchmark can dry-run against GPTs/upload_package_source_preserving without changing questions or expected answers. |
@@ -57,7 +57,7 @@
 - `run-all.sh` invokes `codex exec --cd "$exec_root"` by default, with
   `$exec_root` resolving to the repository root unless `CODEX_WORKDIR` is set.
 - `SPF-J001` writes or updates the preflight report before package edits.
-- `SPF-J003` adds a validator dedicated to
+- `SPF-J002` adds a validator dedicated to
   `GPTs/upload_package_source_preserving/`.
 - `SPF-J006` preserves the existing 270-question baseline while adding a
   package-aware dry-run route.

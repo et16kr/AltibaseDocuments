@@ -64,11 +64,11 @@ job_ids() {
 }
 
 inside_git_repo() {
-  git rev-parse --is-inside-work-tree >/dev/null 2>&1
+  git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1
 }
 
 git_repo_root() {
-  git rev-parse --show-toplevel
+  git -C "$SCRIPT_DIR" rev-parse --show-toplevel
 }
 
 workflow_rel_path() {
@@ -80,7 +80,11 @@ workflow_rel_path() {
 }
 
 git_head() {
-  git rev-parse --verify HEAD 2>/dev/null || printf '%s\n' "__NO_HEAD__"
+  if inside_git_repo; then
+    git -C "$(git_repo_root)" rev-parse --verify HEAD 2>/dev/null || printf '%s\n' "__NO_HEAD__"
+  else
+    printf '%s\n' "__NO_HEAD__"
+  fi
 }
 
 git_blocking_status() {
@@ -125,6 +129,20 @@ codex_workdir() {
   fi
 }
 
+validate_exec_root() {
+  local exec_root="$1"
+  if ! inside_git_repo; then
+    return 0
+  fi
+
+  local root exec_git_root
+  root="$(git_repo_root)"
+  exec_git_root="$(git -C "$exec_root" rev-parse --show-toplevel 2>/dev/null || true)"
+  if [[ "$exec_git_root" != "$root" ]]; then
+    die "Codex workdir $exec_root is not inside workflow repository $root. Do not override CODEX_WORKDIR to another repo."
+  fi
+}
+
 preserve_and_clear_progress() {
   local id="$1"
   local timestamp
@@ -147,6 +165,18 @@ preserve_and_clear_progress() {
   git -C "$root" diff --staged > "$dir/staged.diff" || true
   git -C "$root" ls-files -o --exclude-standard > "$dir/untracked.txt" || true
 
+  local before_head_file before_head current_head
+  before_head_file="$RUNTIME_DIR/$id.before_head"
+  if [[ -f "$before_head_file" ]]; then
+    before_head="$(cat "$before_head_file")"
+    current_head="$(git_head)"
+    if [[ "$before_head" != "$current_head" ]]; then
+      printf '%s\n' "$before_head" > "$dir/before_head.txt"
+      printf '%s\n' "$current_head" > "$dir/current_head.txt"
+      die "Job $id is Progress and HEAD advanced from $before_head to $current_head. Inspect the commit and set the job status manually before rerunning."
+    fi
+  fi
+
   if git_dirty_blocking; then
     print_blocking_status
     die "Job $id is Progress and uncommitted project files exist. Commit, stash, or inspect them manually before retrying."
@@ -155,6 +185,7 @@ preserve_and_clear_progress() {
   fi
 
   set_status "$id" "ToDo"
+  rm -f "$before_head_file"
   printf 'Reset interrupted job %s to ToDo. Preserved details in %s\n' "$id" "$dir"
 }
 
@@ -199,7 +230,7 @@ ensure_commit_after_job() {
   fi
 
   local changed_paths
-  changed_paths="$(git diff --name-only "$before_head..$after_head" --)"
+  changed_paths="$(git -C "$(git_repo_root)" diff --name-only "$before_head..$after_head" --)"
   if [[ -z "$changed_paths" ]]; then
     set_status "$id" "Fail"
     die "Job $id advanced HEAD but no changed paths were found in the commit range."
@@ -242,6 +273,7 @@ build_runtime_prompt() {
 
 validate_workflow_files() {
   command -v "$CODEX_BIN" >/dev/null 2>&1 || die "Codex binary not found: $CODEX_BIN"
+  [[ -f "$COMMON_PROMPT" ]] || die "Missing common prompt file: $COMMON_PROMPT"
 
   local id seen_ids
   seen_ids="$(mktemp)"
@@ -271,12 +303,14 @@ run_job() {
   local log_file="$LOG_DIR/$id.log"
   local exec_root
   exec_root="$(codex_workdir)"
+  validate_exec_root "$exec_root"
 
   printf '\n==> %s: %s\n' "$id" "$title"
   printf 'Codex workdir: %s\n' "$exec_root"
   ensure_clean_before_job "$id"
   local before_head
   before_head="$(git_head)"
+  printf '%s\n' "$before_head" > "$RUNTIME_DIR/$id.before_head"
   set_status "$id" "Progress"
 
   set +e
@@ -297,6 +331,7 @@ run_job() {
   ensure_clean_after_job "$id"
   ensure_commit_after_job "$id" "$before_head"
   set_status "$id" "Done"
+  rm -f "$RUNTIME_DIR/$id.before_head"
   printf 'Done: %s\n' "$id"
 }
 

@@ -35,7 +35,7 @@ tests practical Codex/LLM agent use of the source-preserving package.
 6. Self-review for overlap with the original 270 benchmark and for unsafe
    prompts that would encourage destructive actions.
 7. Run targeted checks:
-   - source-preserving validator from `SPF-J003`;
+   - source-preserving validator from `SPF-J002`;
    - benchmark schema validation for the new coding-agent manifest;
    - answer-runner and judge self-tests;
    - dry run for the coding-agent manifest;

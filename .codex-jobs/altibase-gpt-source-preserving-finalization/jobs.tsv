@@ -1,7 +1,7 @@
 id	status	kind	title	goal
 SPF-J001	ToDo	mixed	Preflight and package boundary gate	Verify the source-preserving package baseline, clean handoff rules, finalization plan, and unresolved live-benchmark approval boundary before any package edits.
-SPF-J002	ToDo	mixed	Final-upload wording normalization	Normalize wrapper and header wording in the source-preserving upload package while preserving source block bodies byte-for-byte.
-SPF-J003	ToDo	mixed	Source-preserving package validator	Create and document a validator dedicated to GPTs/upload_package_source_preserving with count, size, token, SHA, block-boundary, and final-wording checks.
+SPF-J002	ToDo	mixed	Source-preserving package validator	Create and document a validator dedicated to GPTs/upload_package_source_preserving with count, size, token, SHA, block-boundary, and final-wording checks before package wording edits.
+SPF-J003	ToDo	mixed	Final-upload wording normalization	Normalize wrapper and header wording in the source-preserving upload package using the source-preserving validator while preserving source block bodies byte-for-byte.
 SPF-J004	ToDo	mixed	GPT Codex retrieval instructions	Add final GPT/Codex/LLM usage instructions that define the package as the primary source corpus and enforce source-grounded answer behavior.
 SPF-J005	ToDo	mixed	Shard retrieval metadata	Add non-source-body shard retrieval metadata to improve semantic search while preserving all source block bytes.
 SPF-J006	ToDo	mixed	Package-aware benchmark harness	Retarget benchmark tooling or manifests so the existing 270-question benchmark can dry-run against GPTs/upload_package_source_preserving without changing questions or expected answers.

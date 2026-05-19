@@ -30,7 +30,7 @@ source-grounded answer behavior.
 4. Self-review for internal contradictions, obsolete Stage 1 wording, and
    over-claims about live benchmark readiness.
 5. Run targeted checks:
-   - source-preserving validator from `SPF-J003`;
+   - source-preserving validator from `SPF-J002`;
    - grep checks for contradictory package role wording;
    - `git diff --check -- GPTs/upload_package_source_preserving GPTs/reports`.
 6. Review the final diff.

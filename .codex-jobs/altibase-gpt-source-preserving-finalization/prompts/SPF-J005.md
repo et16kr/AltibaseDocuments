@@ -28,7 +28,7 @@ search while preserving all source block bytes.
 5. Self-review for source-body changes, excessive metadata, and misleading
    keywords.
 6. Run targeted checks:
-   - source-preserving validator from `SPF-J003`;
+   - source-preserving validator from `SPF-J002`;
    - source-block body preservation check;
    - `git diff --check -- GPTs/upload_package_source_preserving GPTs/reports/source_preserving_shard_metadata_report.md`.
 7. Review the final diff.

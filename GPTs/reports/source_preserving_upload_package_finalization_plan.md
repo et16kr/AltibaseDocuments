@@ -46,6 +46,10 @@ boundaries.
 
 ## Remaining Finalization Work
 
+Execution note: the job workflow creates the source-preserving validator before
+normalizing final-upload wording, so shard-wrapper edits are guarded by a
+source-body integrity check.
+
 ### 1. Normalize Final-Upload Wording
 
 The source body must stay byte-preserved, but wrapper/header text should be made

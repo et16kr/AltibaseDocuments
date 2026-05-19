@@ -31,7 +31,7 @@ existing questions, expected answers, or judge policy.
    `evals/altibase_answerability/reports/full_benchmark/`.
 5. Self-review for leakage regressions and accidental baseline mutation.
 6. Run targeted checks:
-   - source-preserving validator from `SPF-J003`;
+   - source-preserving validator from `SPF-J002`;
    - `python3 evals/altibase_answerability/scripts/validate_benchmark.py --manifest <new-package-aware-manifest>`;
    - `python3 evals/altibase_answerability/scripts/answer_runner.py --self-test`;
    - `python3 evals/altibase_answerability/scripts/judge_report.py --self-test`;
