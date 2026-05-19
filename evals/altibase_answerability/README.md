@@ -215,15 +215,17 @@ Use `run-test.sh` from the repository root for the common test routes:
 ./run-test.sh coding-agent
 ```
 
-For mechanical smoke checks without live model calls, set `MODE=dry_run`. For a live
-Codex command-provider run with a specific model, set both `CODEX_EXEC_MODEL` and
-`ALTIBASE_TEST_MODEL`, for example:
+For mechanical smoke checks without live model calls, set `MODE=dry_run`. Live
+Codex command-provider runs default to `gpt-5.3-codex-spark`; override
+`ALTIBASE_TEST_MODEL` or `CODEX_EXEC_MODEL` only when intentionally comparing another
+model:
 
 ```bash
 MODE=dry_run ./run-test.sh coding-agent
 
-CODEX_EXEC_MODEL=gpt-5.3-codex-spark \
-ALTIBASE_TEST_MODEL=gpt-5.3-codex-spark \
+./run-test.sh source-preserving
+
+ALTIBASE_TEST_MODEL=gpt-5.4 \
 ./run-test.sh source-preserving
 ```
 

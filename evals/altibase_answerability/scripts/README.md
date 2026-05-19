@@ -21,6 +21,9 @@ For normal operation, prefer the repository-root wrapper:
 ./run-test.sh coding-agent
 ```
 
+Live command-provider runs default to `gpt-5.3-codex-spark`. Use
+`ALTIBASE_TEST_MODEL` or `CODEX_EXEC_MODEL` only for an intentional model override.
+
 The lower-level commands below remain useful for targeted validation and debugging.
 
 `validate_benchmark.py` validates the durable schemas, `policy.json`,

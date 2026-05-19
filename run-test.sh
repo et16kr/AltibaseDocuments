@@ -12,6 +12,7 @@ Usage:
 Default:
   ./run-test.sh
     Runs the original attachment-based 270-question full benchmark.
+    Live command-provider runs use gpt-5.3-codex-spark unless overridden.
 
 Suites:
   attachments        GPTs/attachments full benchmark (default)
@@ -20,12 +21,12 @@ Suites:
 
 Common examples:
   MODE=dry_run ./run-test.sh source-preserving
-  CODEX_EXEC_MODEL=gpt-5.3-codex-spark ALTIBASE_TEST_MODEL=gpt-5.3-codex-spark ./run-test.sh source-preserving
-  CODEX_EXEC_MODEL=gpt-5.3-codex-spark ALTIBASE_TEST_MODEL=gpt-5.3-codex-spark ./run-test.sh coding-agent
+  ./run-test.sh source-preserving
+  ./run-test.sh coding-agent
 
 Environment overrides:
   MANIFEST, PROFILE, RUN_ID, MODE/ALTIBASE_TEST_MODE, PROVIDER/ALTIBASE_TEST_PROVIDER,
-  ALTIBASE_TEST_MODEL, CODEX_EXEC_MODEL, LIMIT, QUESTION_ID, RUN_ROOT
+  ALTIBASE_TEST_MODEL, CODEX_EXEC_MODEL, DEFAULT_CODEX_MODEL, LIMIT, QUESTION_ID, RUN_ROOT
 USAGE
 }
 
@@ -65,7 +66,14 @@ SUITE_ID="${TEST_SUITE//-/_}"
 RUN_ID="${RUN_ID:-altibase_${SUITE_ID}_$(date +%Y%m%d_%H%M%S)}"
 MODE="${ALTIBASE_TEST_MODE:-${MODE:-live}}"
 PROVIDER="${ALTIBASE_TEST_PROVIDER:-${PROVIDER:-command}}"
-MODEL="${ALTIBASE_TEST_MODEL:-${OPENAI_MODEL:-${MODEL_NAME:-codex-exec}}}"
+DEFAULT_CODEX_MODEL="${DEFAULT_CODEX_MODEL:-gpt-5.3-codex-spark}"
+MODEL="${ALTIBASE_TEST_MODEL:-${OPENAI_MODEL:-${MODEL_NAME:-}}}"
+if [[ -z "$MODEL" && "$PROVIDER" == "command" ]]; then
+  MODEL="${CODEX_EXEC_MODEL:-$DEFAULT_CODEX_MODEL}"
+fi
+if [[ "$PROVIDER" == "command" ]]; then
+  export CODEX_EXEC_MODEL="${CODEX_EXEC_MODEL:-$MODEL}"
+fi
 PROVIDER_COMMAND="${PROVIDER_COMMAND:-evals/altibase_answerability/scripts/codex_exec_provider.sh}"
 CONTEXT_MODE="${CONTEXT_MODE:-lexical}"
 MAX_CONTEXT_CHARS="${MAX_CONTEXT_CHARS:-180000}"
@@ -135,6 +143,7 @@ PY
       if [[ -z "$MODEL" ]]; then
         MODEL="command-provider"
       fi
+      export CODEX_EXEC_MODEL="${CODEX_EXEC_MODEL:-$MODEL}"
       ;;
     *)
       log "ERROR: unsupported live provider: ${PROVIDER}"
@@ -266,6 +275,7 @@ log "profile=${PROFILE}"
 log "mode=${MODE} provider=${PROVIDER} model=${MODEL:-fixture} context=${CONTEXT_MODE}"
 if [[ "$PROVIDER" == "command" ]]; then
   log "provider_command=${PROVIDER_COMMAND}"
+  log "codex_exec_model=${CODEX_EXEC_MODEL:-}"
 fi
 log "artifacts=${RUN_ROOT}"
 
