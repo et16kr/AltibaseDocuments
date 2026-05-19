@@ -116,6 +116,8 @@ Design note for `S3-J014`: this job does not change attachment architecture or u
 
 Design note for `S3-J015`: this job does not change attachment architecture or upload-package structure. It closes the J016 PSM, external-procedure, C/CLI/ODBC/ACI/APRE, iSQL/iLoader, utility, and LOB/API row inside the existing client-tool attachments by adding compact answer bridges for exact commands, options, methods, handles, file paths, call order, verification output, and common error-handling packets. The completed scope row now makes the attachment validator enforce the J016 exact-token anchors.
 
+Design note for `S3-J017`: this job does not change attachment architecture or upload-package structure. It consolidates Stage 3 retrieval routing by adding targeted cross-reference anchors, generating source-pack-to-attachment, Korean-aligned-English-to-attachment, and playbook-to-attachment crosswalks from the completed scope ledger, and extending attachment validation so completed scope targets must have source, baseline, and playbook routes. `APB-000014` remains deferred; scenario files remain `Not run` scenario definitions.
+
 ## Required Attachment Edit Pattern
 
 Each domain remediation job should keep attachment edits answer-ready and

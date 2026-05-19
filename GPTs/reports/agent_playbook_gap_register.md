@@ -2,8 +2,8 @@
 
 - Created: 2026-05-18
 - Updated: 2026-05-19
-- Current job: `S2-J012`
-- Status: Stage 2 playbook validation gap register
+- Current job: `S3-J017`
+- Status: Stage 2/3 playbook validation and attachment-route gap register
 
 ## Reconfirmed Requirement And Boundary
 
@@ -17,6 +17,10 @@ ready/pass for guarded Stage 2 routing. `CONF-000008` stays closed only as a Sta
 routing blocker, and `CONF-000009` stays a nonblocking exclusion guardrail.
 No open Stage 2 blockers remain for `CONF-000008` or `CONF-000009`.
 CONF-000009 remains a nonblocking exclusion guardrail.
+
+`S3-J017` updates only the Stage 3 attachment-routing disposition. It does not run
+scenario tests, does not create a source-ID-backed test-generation playbook, and does
+not assemble `GPTs/upload_package/` content.
 
 ## Current Validation Snapshot
 
@@ -50,7 +54,7 @@ final-upload claims.
 
 | Gap ID | Status | Severity | Scope | Evidence | Required handling |
 | --- | --- | --- | --- | --- | --- |
-| APG-S2-J012-001 | Open | Medium | `APB-000014` / Test generation | `playbook_manifest.tsv` keeps `APB-000014` at `validation_status=planned`; it has baseline block routes but no source IDs, no source-pack block IDs, and no `GPTs/agent_playbooks/test_generation.md` playbook file. The scenario-test suite exists in `test_scenarios.md`, but that is not a source-backed generated-test playbook. | Before declaring complete Stage 2 playbook readiness, create a source-ID-backed test-generation playbook or record an explicit readiness decision that test generation remains deferred. Until then, use the existing scenario tests only as validation scenarios, not as a customer-facing test-generation playbook. |
+| APG-S2-J012-001 | Open | Medium | `APB-000014` / Test generation | `playbook_manifest.tsv` keeps `APB-000014` at `validation_status=planned`; it has baseline block routes but no source IDs, no source-pack block IDs, and no `GPTs/agent_playbooks/test_generation.md` playbook file. The scenario-test suite exists in `test_scenarios.md`, but that is not a source-backed generated-test playbook. `S3-J017` rechecked this condition and did not close it. | Before declaring complete Stage 2 playbook readiness, create a source-ID-backed test-generation playbook or record an explicit readiness decision that test generation remains deferred. Until then, use the existing scenario tests only as validation scenarios, not as a customer-facing test-generation playbook. |
 
 ## Accepted Limitations
 
@@ -68,7 +72,7 @@ final-upload claims.
 
 | Gap ID | Status | Severity | Scope | Evidence | Required handling |
 | --- | --- | --- | --- | --- | --- |
-| APG-S2-J012-004 | Open downstream work | Low | Answer-ready attachment integration, scenario execution, AID upload composition, and final upload package assembly | Stage 2 now has source and baseline crosswalks, but the final GPT Knowledge package still must be assembled later under the global 20 Markdown file limit. Scenario rows are defined with `Not run` placeholders. AID upload-content candidates remain governed by `CONF-000007`. | Stage 3/4 jobs must decide attachment integration, run or judge scenario coverage where required, preserve AID labels, choose final upload files, and revalidate the final package before upload readiness. |
+| APG-S2-J012-004 | Partially closed; open downstream work | Low | Answer-ready attachment integration, scenario execution, AID upload composition, and final upload package assembly | Stage 3 domain attachment integration rows are `done`, and `S3-J017` generated source-pack, Korean-aligned English, and playbook-to-attachment crosswalks plus attachment validation evidence. The final GPT Knowledge package still must be assembled later under the global 20 Markdown file limit. Scenario rows are defined with `Not run` placeholders. AID upload-content candidates remain governed by `CONF-000007`. | Treat Stage 3 attachment crosswalk integration as closed for this gap. Stage 3/4 still must run or judge scenario coverage where required, preserve AID labels, choose final upload files, and revalidate the final package before upload readiness. |
 
 ## Carry-Forward Stage 1 Gap Closure
 

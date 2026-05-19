@@ -1597,6 +1597,7 @@ Verification Method:
 - Use `07_error_messages_troubleshooting.md` with `altierr`, trace logs, dump-family output, and tool-reported Altibase error codes.
 - Use `09_replication_ha_cdc.md` when tool output involves replication state, Replication Manager GUI actions, Log Analyzer CDC, XLog Sender, or replication log diagnostics.
 - Use `13_isql_iloader_basic_tools.md` for iSQL and iLoader command-line workflows that complement `aexport`, migration, and data-load operations.
+- Use `17_kubernetes_aku_cloud.md` for AKU lifecycle commands and Kubernetes object state before treating `aku -p start`, `aku -p end`, or `aku -p clean` as ordinary utility commands.
 - Use `18_security_ssl_tls.md` for `altiAudit`, `altipasswd`, audit policy, password handling, and SSL/TLS-sensitive operational tooling.
 
 ## Operational Guardrails

@@ -1821,6 +1821,7 @@ Tableau cannot sign in:
 - Use `03_sql_ddl_generation.md` for executable spatial table, R-Tree index, user, privilege, and object DDL.
 - Use `05_data_types_properties.md` for `GEOMETRY`, LOB, character, datetime, and property behavior that affects spatial or integration data.
 - Use `11_java_jdbc_spring.md` for JDBC driver class, URL, Java compatibility, SSL URL keys, connection attributes, and third-party JDBC troubleshooting.
+- Use `15_migration_oracle_compatibility.md` when Spatial, NiFi, or Tableau work is part of a broader Oracle-to-Altibase or heterogeneous migration.
 - Use `16_dblink_external_connectors.md` when the question involves DB Link, external connectors, Hadoop connectors, or integration boundaries outside NiFi and Tableau.
 
 ## Residual Scope

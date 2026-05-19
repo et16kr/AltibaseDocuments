@@ -881,6 +881,7 @@ If the first StatefulSet Pod is Running but not Ready, check whether /tmp/aku_st
 - Use `02_administration_operations.md` for startup, shutdown, backup, recovery, archive log, and tablespace operations around Kubernetes incidents.
 - Use `06_data_dictionary_performance_views.md` for SQL checks that verify server, session, tablespace, replication, and runtime state from a Pod.
 - Use `09_replication_ha_cdc.md` for replication object design, state interpretation, failover, gap handling, and CDC context behind AKU.
+- Use `14_utilities_operation_tools.md` when AKU appears as an Altibase utility command or when operational tool output must be interpreted beside Kubernetes state.
 - Use `18_security_ssl_tls.md` for secrets, listener exposure, certificate, TLS, audit, and security policy decisions in Kubernetes deployments.
 
 ## Residual Scope
