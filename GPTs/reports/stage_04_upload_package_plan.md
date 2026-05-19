@@ -89,6 +89,23 @@ The package remains progressive, not final-upload ready. Integration slices, fin
 AID selection, retrieval checks, benchmark dry runs, and Stage 4 readiness remain
 deferred to later scoped jobs.
 
+## S4-J007 Assembly Update
+
+`S4-J007` assembles the migration and integration package slice without changing the
+20-file topic architecture. It creates package files for Migration Center and Oracle
+compatibility, DB Link and external connectors, Kubernetes and AKU, and Spatial/NiFi/
+Tableau/miscellaneous integrations. The slice preserves full answer-ready attachment
+content under `Answer-Ready Reference`, adds package-level source and playbook routing
+for migration runtime state, source/target schemas, connector and tool versions,
+third-party configuration, Kubernetes cluster state, Spatial metadata, NiFi/Tableau
+driver evidence, runtime output, rollback or reload plans, and live-environment
+limitations, and records source-pack, Korean-aligned English, playbook, and
+attachment crosswalk rows for the assembled files.
+
+The package remains progressive, not final-upload ready. Final AID selection,
+retrieval checks, benchmark dry runs, and Stage 4 readiness remain deferred to later
+scoped jobs.
+
 ## Package Shape Decision
 
 The final package will use the existing 20 attachment topic filenames as the upload
