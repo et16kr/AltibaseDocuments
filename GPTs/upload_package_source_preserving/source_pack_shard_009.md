@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: 8.1 data dictionary manuals plus getting-started, installation, JDBC, iSQL, and iLoader manuals across 7.1/7.3/8.1.
+- Major source families/manuals: `general_reference_2_dictionary_views`, `getting_started_installation`, `jdbc_java`, `isql_iloader`.
+- Version/language span: Altibase 7.1, 7.3, and `8.1_verified`; English extraction aids and Korean authoritative manuals.
+- Representative IDs: ordered source range `SRC-000151` to `SRC-000080`; block range `BLOCK-000524` to `BLOCK-000554`.
+- Retrieval aliases: data dictionary, V$ view, installation, getting started, server create, server start, JDBC URL, Altibase.jar, iSQL commands, iLoader import export, formout, data migration.
+
 ## SRC-000151 - General Reference-2.The Data Dictionary
 
 | Field | Value |

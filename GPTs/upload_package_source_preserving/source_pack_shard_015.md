@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: stored procedure manuals, utilities manuals, technical support documents, and third-party guides for frameworks and integrations.
+- Major source families/manuals: `stored_external_procedures`, `utilities_datacompj`, `technical_documents_support`, `third_party_guides`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, and multi-version guides; English, Korean, and mixed rows.
+- Representative IDs: ordered source range `SRC-000075` to `SRC-000106`; block range `BLOCK-000897` to `BLOCK-000928`.
+- Retrieval aliases: PSM, stored procedure, stored function, trigger, external procedure, utilities, aexport, iLoader, Kubernetes, aku, Spring Data JPA, Hibernate, Tableau, NiFi, technical support guide.
+
 ## SRC-000075 - Altibase 7.1
 
 | Field | Value |

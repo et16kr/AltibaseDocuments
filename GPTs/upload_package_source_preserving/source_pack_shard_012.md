@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: later patch notes, release/new-features notes, source indexes, Replication Manager, performance tuning, replication, and SSL/TLS security manuals.
+- Major source families/manuals: `patch_notes`, `release_notes_platform`, `source_index`, `replication_manager`, `performance_tuning`, `replication_manual`, `security_ssl_tls`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, 7.3.0.0.8 through 7.3.0.2.0 patch notes, 8.1.0.0.1, ShardManager 7.2, and Replication Manager 1.2 through 1.4.
+- Representative IDs: ordered source range `SRC-000411` to `SRC-000479`; block range `BLOCK-000793` to `BLOCK-000868`.
+- Retrieval aliases: release notes, new features, LOCK_TABLE_STATS, performance tuning, optimizer, execution plan, replication, Sender, Receiver, Replication Manager, SSL, TLS, certificate, source inventory.
+
 ## SRC-000411 - BUG-48885<a name=bug-48885></a> 통계 잠금 기능(LOCK_TABLE_STATS) 추가
 
 | Field | Value |

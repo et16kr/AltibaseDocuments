@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: Error Message Reference manuals for 7.3 and 8.1 plus the 7.1 English General Reference for data types and properties.
+- Major source families/manuals: `error_message_reference`, `general_reference_1_datatypes_properties`.
+- Version/language span: Altibase 7.1, 7.3, and `8.1_verified`; English extraction aids and Korean authoritative manuals.
+- Representative IDs: ordered source range `SRC-000087` to `SRC-000025`; block range `BLOCK-000510` to `BLOCK-000514`.
+- Retrieval aliases: ERR, error code, SQLCODE, SQLSTATE, cause, action, diagnostic message, data types, Altibase properties, property defaults, limits.
+
 ## SRC-000087 - Error Message Reference
 
 | Field | Value |

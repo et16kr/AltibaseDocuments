@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: support gap/source-inventory evidence, Altibase 7.1 SQL Reference, and Spatial SQL plus related integration guides.
+- Major source families/manuals: `source_inventory_support`, `sql_reference`, `spatial_nifi_tableau`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, and multi-version third-party integration evidence; English, Korean, and mixed rows.
+- Representative IDs: ordered source range `SRC-000480` to `SRC-000072`; block range `BLOCK-000869` to `BLOCK-000884`.
+- Retrieval aliases: SQL Reference, DDL, DML, DCL, SELECT, ALTER, CREATE, DROP, functions, expressions, Spatial SQL, geometry, ST_ functions, NiFi, Tableau, GeoServer, gap register.
+
 ## SRC-000480 - Altibase GPTs Gap Register
 
 | Field | Value |

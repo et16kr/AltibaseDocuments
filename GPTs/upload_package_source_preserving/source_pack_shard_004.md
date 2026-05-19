@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: AID GPT knowledge encyclopedia and evidence files followed by Altibase 7.1 client API, CLI, C Interface, ODBC, and precompiler manuals.
+- Major source families/manuals: `aid_llm_reference`, `aid_review_evidence`, `aid_source_classification`, `aid_manifest`, `c_cli_odbc_precompiler`.
+- Version/language span: AID evidence and source-backed English files plus Altibase 7.1 English/Korean client-interface manuals.
+- Representative IDs: ordered source range `AID-SRC-000438` to `SRC-000065`; block range `BLOCK-000452` to `BLOCK-000470`.
+- Retrieval aliases: GPT knowledge encyclopedia, AID manifest, source classification, CLI, SQLCLI, C Interface, API User's Manual, ODBC, APRE, Precompiler, DSN, connection string, LOB, SQLLEN.
+
 ## AID-SRC-000438 - Altibase GPT Knowledge Encyclopedia
 
 | Field | Value |

@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: AID troubleshooting, error-response, monitoring, development/API, framework integration, migration, and coverage evidence.
+- Major source families/manuals: `aid_07_troubleshooting_error_messages`, `aid_10_application_framework_integration`, `aid_06_monitoring_diagnostics`, `aid_09_development_client_api`, `aid_11_migration_conversion_tools`, `aid_coverage_ledger`.
+- Version/language span: AID English working sources, English-only auxiliary rows, link-validated Korean-source-verified rows, and mixed evidence ledgers.
+- Representative IDs: ordered source range `AID-SRC-000070` to `AID-000025`; block range `BLOCK-000126` to `BLOCK-000432`.
+- Retrieval aliases: ERR, SQLCODE, SQLSTATE, altibase_qp.log, fetch timeout, task pool overflow, altiProfile, Spring, Hibernate, MyBatis, WebLogic, Tomcat, JBoss, JEUS, Oracle migration, MSSQL migration, attachment register.
+
 ## AID-SRC-000070 - How to log queries performed in Altibase (altiProfile)?
 
 | Field | Value |

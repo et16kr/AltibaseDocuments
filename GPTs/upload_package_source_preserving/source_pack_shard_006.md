@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: Korean 8.1 client-interface manuals, DB Link and Hadoop/external connector manuals, and Altibase 7.1 error message references.
+- Major source families/manuals: `c_cli_odbc_precompiler`, `dblink_hadoop_external_connectors`, `error_message_reference`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, and multi-version tool manuals; English extraction aids and Korean authoritative sources.
+- Representative IDs: ordered source range `SRC-000174` to `SRC-000054`; block range `BLOCK-000488` to `BLOCK-000509`.
+- Retrieval aliases: DB Link, Hadoop Connector, external connector, CLI Korean manual, Precompiler Korean manual, C Interface Korean manual, Error Message Reference, ERR codes, SQLCODE, SQLSTATE.
+
 ## SRC-000174 - Trunk
 
 | Field | Value |

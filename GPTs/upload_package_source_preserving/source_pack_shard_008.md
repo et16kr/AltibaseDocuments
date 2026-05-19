@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: General Reference data type/property manuals and data dictionary/view manuals across 7.1, 7.3, and 8.1.
+- Major source families/manuals: `general_reference_1_datatypes_properties`, `general_reference_2_dictionary_views`.
+- Version/language span: Altibase 7.1, 7.3, and `8.1_verified`; English extraction aids and Korean authoritative manuals.
+- Representative IDs: ordered source range `SRC-000056` to `SRC-000121`; block range `BLOCK-000515` to `BLOCK-000523`.
+- Retrieval aliases: data type, property, altibase.properties, V$ views, X$ tables, SYS meta tables, data dictionary, performance view, memory/disk tablespace metadata, limits.
+
 ## SRC-000056 - Altibase 7.1
 
 | Field | Value |

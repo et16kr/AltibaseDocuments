@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: Altibase client API and embedded-SQL manuals centered on CLI, C Interface, ODBC, and Precompiler/APRE across supported versions.
+- Major source families/manuals: `c_cli_odbc_precompiler`.
+- Version/language span: Altibase 7.1, 7.3, and `8.1_verified`; English extraction aids and Korean authoritative manuals.
+- Representative IDs: ordered source range `SRC-000068` to `SRC-000170`; block range `BLOCK-000471` to `BLOCK-000487`.
+- Retrieval aliases: CLI manual, C Interface, ODBC driver, APRE, Precompiler, embedded SQL, SQL descriptors, bind parameters, arrays, DSN setup, LOB locator, client SQLSTATE.
+
 ## SRC-000068 - Altibase 7.1
 
 | Field | Value |

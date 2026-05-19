@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: SQL Reference manuals for 7.3 and 8.1, stored/external procedure manuals for 7.1, and Stage 1 source-pack support evidence.
+- Major source families/manuals: `sql_reference`, `stored_external_procedures`, `stage1_aid_tiering`, `stage1_source_pack_shards`, `stage1_source_selection`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, multi-version support evidence, and AID tiering reports.
+- Representative IDs: ordered source range `SRC-000103` to `SRC-000055`; block range `BLOCK-000885` to `BLOCK-000896`.
+- Retrieval aliases: SQL syntax, DDL, DML, DCL, expressions, built-in functions, PSM, stored procedure, stored function, trigger, external procedure, C/C++ external procedure, source pack validation.
+
 ## SRC-000103 - SQL Reference
 
 | Field | Value |

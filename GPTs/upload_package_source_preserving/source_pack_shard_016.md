@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: utilities manuals and tool manuals, including dataCompJ and Altibase Heartbeat, across 7.3, 8.1, and multi-version releases.
+- Major source families/manuals: `utilities_datacompj`.
+- Version/language span: Altibase 7.3, `8.1_verified`, multi-version release tools, and dataCompJ 7.2; English and Korean manuals.
+- Representative IDs: ordered source range `SRC-000137` to `SRC-000213`; block range `BLOCK-000929` to `BLOCK-000941`.
+- Retrieval aliases: Utilities Manual, dataCompJ, Altibase Heartbeat, aexport, iLoader, iloader, backup utility, export import, compare data, tool command, command option.
+
 ## SRC-000137 - Altibase 7.3
 
 | Field | Value |

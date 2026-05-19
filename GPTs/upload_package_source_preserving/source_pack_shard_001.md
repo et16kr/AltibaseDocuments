@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: administrator operations manuals plus AID installation, operation, architecture, backup/recovery, replication, and monitoring notes.
+- Major source families/manuals: `administrator_operations`, `aid_01_installation_upgrade_platform`, `aid_03_operation_administration_security`, `aid_04_backup_recovery`, `aid_05_replication_ha`, `aid_06_monitoring_diagnostics`.
+- Version/language span: Altibase 7.1, 7.3, and `8.1_verified` administrator manuals; AID English references with selected Korean authoritative rows.
+- Representative IDs: ordered source range `SRC-000018` to `AID-SRC-000069`; block range `BLOCK-000001` to `BLOCK-000125`.
+- Retrieval aliases: create database, startup shutdown, tablespaces, backup, recovery, archive log, replication basics, capacity, CPU memory checks, V$ monitoring, rollback, disk tablespace usage.
+
 ## SRC-000018 - Altibase 7.1
 
 | Field | Value |

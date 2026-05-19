@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: Monitoring API and SNMP manuals followed by dense Altibase 7.1 and 7.3 patch notes.
+- Major source families/manuals: `monitoring_api_snmp`, `patch_notes`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, and patch-note versions from 7.1.0.1.x through 7.3.0.0.7; English, Korean, and mixed rows.
+- Representative IDs: ordered source range `SRC-000063` to `SRC-000410`; block range `BLOCK-000605` to `BLOCK-000792`.
+- Retrieval aliases: Monitoring API, SNMP Agent, patch notes, BUG, change log, fixed issue, APRE change, property change, optimizer statistics, compatibility note, release regression.
+
 ## SRC-000063 - Altibase 7.1
 
 | Field | Value |

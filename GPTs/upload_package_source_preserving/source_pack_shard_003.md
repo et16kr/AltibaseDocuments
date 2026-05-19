@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: AID LLM reference package, source inventory, source-to-topic coverage, semantic-unit coverage, and answerability evidence.
+- Major source families/manuals: `aid_llm_reference`, `aid_coverage_ledger`.
+- Version/language span: AID English reference documents with mixed TSV coverage ledgers and accepted-limitation evidence.
+- Representative IDs: ordered source range `AID-000022` to `AID-SRC-000423`; block range `BLOCK-000433` to `BLOCK-000451`.
+- Retrieval aliases: LLM reference, source index, source inventory, source-to-topic map, semantic coverage, answerability backtest, accepted limitations, installation topic, backup topic, replication topic, monitoring topic, troubleshooting topic, SQL performance topic, client API topic.
+
 ## AID-000022 - AID Semantic Unit Coverage Ledger
 
 | Field | Value |

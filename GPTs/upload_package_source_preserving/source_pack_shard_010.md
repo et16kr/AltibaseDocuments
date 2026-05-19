@@ -4,6 +4,14 @@
 - Upload role: primary source-preserving upload candidate
 - Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
+## Shard Retrieval Metadata
+
+- Topic summary: JDBC manuals, Log Analyzer, SNMP/monitoring manuals, and migration/Oracle compatibility tools including Migration Center.
+- Major source families/manuals: `jdbc_java`, `log_analyzer`, `migration_oracle`, `monitoring_api_snmp`.
+- Version/language span: Altibase 7.1, 7.3, `8.1_verified`, multi-version release tools, and Migration Center 7.7 through 7.19 sources.
+- Representative IDs: ordered source range `SRC-000094` to `SRC-000039`; block range `BLOCK-000555` to `BLOCK-000604`.
+- Retrieval aliases: JDBC driver, Altibase.jar, connection URL, Log Analyzer, replication log analysis, Migration Center, Oracle conversion, schema migration, data migration, SNMP Agent, monitoring API.
+
 ## SRC-000094 - Altibase 7.3
 
 | Field | Value |
