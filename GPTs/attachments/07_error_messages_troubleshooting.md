@@ -152,6 +152,7 @@ Protected recovery and destructive-operation triage:
 - Ask for exact version and patch level, startup phase, `ARCHIVELOG` or `NOARCHIVELOG`, full error line, affected tablespace or file path, backup manifest, `loganchor*` source, archive and online log inventory, and `altibase_boot.log` or `altibase_sm.log` excerpts.
 - Complete media recovery uses `ALTER DATABASE RECOVER DATABASE` in `CONTROL` when required archive logs and online logs are available. Incomplete recovery uses `UNTIL TIME` or `UNTIL CANCEL`; after that, require `ALTER DATABASE db_name META RESETLOGS` and a `full database backup`.
 - For ordinary complete recovery, use the `current loganchor` files whenever possible. Use historical `loganchor*` only for source-backed cases such as accidental `DROP TABLESPACE`, planned past-time recovery, or incremental tag recovery.
+- If only a `SYS_TBS_DISK_TEMP` temporary datafile is lost in a source-backed `NOARCHIVELOG` case, recreate the temporary file in `CONTROL` and return with `ALTER DATABASE dbname SERVICE`; do not generalize that exception to permanent datafiles or memory checkpoint images.
 - Do not recommend `ALTER TABLESPACE ... DISCARD` unless media recovery is impossible or rejected and the customer explicitly accepts losing the damaged disk or memory data tablespace. After `DISCARD`, the tablespace is inaccessible and the only later action is `DROP TABLESPACE ... INCLUDING CONTENTS`, usually with `AND DATAFILES` when deleting files is intended.
 - Do not suggest `REUSE` for an existing datafile path unless overwriting that file is explicitly approved and backed by recovery evidence.
 
@@ -1011,6 +1012,7 @@ Check SQL or Command:
 
 ```bash
 tail -200 "$ALTIBASE_HOME/trc/altibase_boot.log"
+grep -F "Database-Level Backup Completed [SUCCESS]" "$ALTIBASE_HOME/trc/altibase_sm.log"
 ls -l "$ALTIBASE_HOME/logs"
 ls -l '<BACKUP_DIRECTORY>'
 ```

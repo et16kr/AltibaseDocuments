@@ -110,6 +110,8 @@ topic shape, it must refactor within the existing `00` through `19` files.
 
 Design note for `S3-J010`: this job does not change attachment architecture or upload-package structure. It adds compact answer-route anchors inside the existing installation, administration, and iSQL attachments so long runbooks retrieve as beginner-to-veteran sequences with prerequisites, commands, expected states, validation SQL, and missing-input stop points.
 
+Design note for `S3-J011`: this job does not change attachment architecture or upload-package structure. It closes the J012 backup/recovery protected-operation row inside the existing administration, SQL-generation, and troubleshooting attachments by using compact answer anchors for archive-log mode, online backup, media recovery, `RESETLOGS`, current-versus-historical log anchors, temporary datafile recovery, `DROP`/`DISCARD`/`REUSE`, and escalation inputs. The completed scope row now makes the attachment validator enforce the J012 exact-token anchors.
+
 ## Required Attachment Edit Pattern
 
 Each domain remediation job should keep attachment edits answer-ready and

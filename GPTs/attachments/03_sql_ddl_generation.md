@@ -1720,6 +1720,7 @@ Protected backup and destructive-operation SQL generation:
 
 - Before generating online backup SQL, require `ARCHIVELOG` mode, writable backup storage, archive destination capacity, and target scope. Preserve `CREATE DATABASE`, `ARCHIVELOG`, `NOARCHIVELOG`, `ARCHIVE_DIR`, `V$LOG`, and `V$ARCHIVE` when explaining why online backup and ordinary media recovery depend on archive logs.
 - For DBA-driven tablespace backup, generate the full sequence: `ALTER TABLESPACE ... BEGIN BACKUP`, OS copy, `ALTER TABLESPACE ... END BACKUP`, then `ALTER SYSTEM SWITCH LOGFILE`. Tell the user to check `altibase_sm.log` for `Database-Level Backup Completed [SUCCESS]`.
+- If the request is table-level logical backup rather than DDL, tablespace backup, or media recovery SQL, route to iLoader and preserve sample file tokens such as `t1.fmt` and `t1.dat`; do not present iLoader export/import as physical database recovery.
 - Generate `ALTER DATABASE db_name META RESETLOGS` only after incomplete recovery. State that it resets `online logs` and requires an immediate `full database backup`.
 - For a lost temporary file in `NOARCHIVELOG`, preserve the exact service transition token `ALTER DATABASE dbname SERVICE`; do not generalize that temporary-file path to permanent datafiles.
 - For datafile relocation, use `ALTER DATABASE RENAME DATAFILE old_absolute_path TO new_absolute_path`; the target must be an `absolute path` that already exists. Do not substitute `ALTER TABLESPACE` for datafile path rename.
