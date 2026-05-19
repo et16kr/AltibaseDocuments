@@ -1,8 +1,8 @@
 # Altibase Source Pack Shard 012
 
 - Shard ID: `SHARD-012`
-- Upload intended: `no`
-- Purpose: Stage 1 source-preserving evidence artifact.
+- Upload role: primary source-preserving upload candidate
+- Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
 ## SRC-000411 - BUG-48885<a name=bug-48885></a> 통계 잠금 기능(LOCK_TABLE_STATS) 추가
 

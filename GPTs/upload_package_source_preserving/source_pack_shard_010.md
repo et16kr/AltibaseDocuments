@@ -1,8 +1,8 @@
 # Altibase Source Pack Shard 010
 
 - Shard ID: `SHARD-010`
-- Upload intended: `no`
-- Purpose: Stage 1 source-preserving evidence artifact.
+- Upload role: primary source-preserving upload candidate
+- Purpose: Final source-preserving package shard for GPT Knowledge, Codex, and LLM/RAG retrieval.
 
 ## SRC-000094 - Altibase 7.3
 
