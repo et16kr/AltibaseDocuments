@@ -22,6 +22,8 @@ SOURCE_MANIFEST = ROOT / "GPTs/source_pack/source_manifest.tsv"
 SOURCE_TO_SHARD = ROOT / "GPTs/source_pack/source_to_shard_manifest.tsv"
 
 EXPECTED_COUNT = 20
+ASSEMBLY_STATUSES = {"planned_not_assembled", "assembled"}
+VALIDATION_STATUSES = {"planned_scaffold", "assembled_validated"}
 EXPECTED_AID_CANDIDATES = {
     "AID-000001",
     "AID-000002",
@@ -79,6 +81,65 @@ MANIFEST_COLUMNS = [
     "notes",
 ]
 
+SOURCE_UPLOAD_CROSSWALK = REPORTS_DIR / "source_pack_to_upload_package_crosswalk.tsv"
+BASELINE_UPLOAD_CROSSWALK = REPORTS_DIR / "korean_aligned_english_to_upload_package_crosswalk.tsv"
+PLAYBOOK_UPLOAD_CROSSWALK = REPORTS_DIR / "playbook_to_upload_package_crosswalk.tsv"
+ATTACHMENT_UPLOAD_CROSSWALK = REPORTS_DIR / "attachment_to_upload_package_crosswalk.tsv"
+
+SOURCE_UPLOAD_COLUMNS = [
+    "upload_file_id",
+    "upload_path",
+    "route_type",
+    "source_id",
+    "source_pack_block_id",
+    "source_pack_block_ref",
+    "authority_label",
+    "version_scope",
+    "source_family",
+    "route_status",
+    "notes",
+]
+
+BASELINE_UPLOAD_COLUMNS = [
+    "upload_file_id",
+    "upload_path",
+    "baseline_route_scope",
+    "baseline_block_ids",
+    "source_ids",
+    "source_pack_block_refs",
+    "authority_label_policy",
+    "upload_visibility",
+    "route_status",
+    "notes",
+]
+
+PLAYBOOK_UPLOAD_COLUMNS = [
+    "upload_file_id",
+    "upload_path",
+    "playbook_id",
+    "playbook_title",
+    "validation_status",
+    "generated_artifact_types",
+    "required_missing_input_prompts",
+    "protected_topic",
+    "guardrail_ids",
+    "upload_visibility",
+    "route_status",
+    "notes",
+]
+
+ATTACHMENT_UPLOAD_COLUMNS = [
+    "upload_file_id",
+    "upload_path",
+    "source_attachment_path",
+    "attachment_title",
+    "included_sections",
+    "transformation_policy",
+    "required_sections_status",
+    "route_status",
+    "notes",
+]
+
 FORBIDDEN_UPLOAD_PATTERNS = [
     (re.compile(r"/home/et16"), "local workstation path"),
     (re.compile(r"~/AID"), "local AID workspace path"),
@@ -132,6 +193,26 @@ def read_any_tsv(path: Path, errors: list[str]) -> list[dict[str, str]]:
         return []
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle, delimiter="\t"))
+
+
+def read_tsv_with_columns(
+    path: Path, expected_columns: list[str], errors: list[str]
+) -> list[dict[str, str]]:
+    if not path.exists():
+        errors.append(f"missing TSV: {rel(path)}")
+        return []
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle, delimiter="\t")
+        if reader.fieldnames != expected_columns:
+            errors.append(
+                f"{rel(path)} has unexpected columns: {reader.fieldnames!r}; "
+                f"expected {expected_columns!r}"
+            )
+            return []
+        return [
+            {column: (row.get(column) or "").strip() for column in expected_columns}
+            for row in reader
+        ]
 
 
 def check_required_docs(errors: list[str]) -> None:
@@ -214,14 +295,30 @@ def check_manifest_rows(rows: list[dict[str, str]], errors: list[str]) -> None:
         if Path(attachment_path).name not in attachment_files:
             errors.append(f"{row_label} source attachment is not a numbered attachment")
 
-        if row["assembly_status"] != "planned_not_assembled":
-            errors.append(f"{row_label} assembly_status must be planned_not_assembled")
+        if row["assembly_status"] not in ASSEMBLY_STATUSES:
+            errors.append(
+                f"{row_label} assembly_status must be one of: "
+                + ", ".join(sorted(ASSEMBLY_STATUSES))
+            )
         if row["counts_against_20"] != "yes":
             errors.append(f"{row_label} counts_against_20 must be yes")
         if row["merge_policy"] != "preserve_attachment_filename":
             errors.append(f"{row_label} merge_policy must preserve attachment filename")
-        if row["validation_status"] != "planned_scaffold":
-            errors.append(f"{row_label} validation_status must be planned_scaffold")
+        if row["validation_status"] not in VALIDATION_STATUSES:
+            errors.append(
+                f"{row_label} validation_status must be one of: "
+                + ", ".join(sorted(VALIDATION_STATUSES))
+            )
+        if (
+            row["assembly_status"] == "planned_not_assembled"
+            and row["validation_status"] != "planned_scaffold"
+        ):
+            errors.append(f"{row_label} planned rows must keep validation_status=planned_scaffold")
+        if (
+            row["assembly_status"] == "assembled"
+            and row["validation_status"] != "assembled_validated"
+        ):
+            errors.append(f"{row_label} assembled rows must use validation_status=assembled_validated")
 
         sections = split_values(row["required_sections"])
         if sections != REQUIRED_SECTIONS:
@@ -308,8 +405,66 @@ def check_scaffold_boundary(errors: list[str]) -> None:
         )
 
 
-def check_assembled_package(rows: list[dict[str, str]], errors: list[str]) -> None:
+def check_upload_crosswalks(
+    rows: list[dict[str, str]], files: list[Path], errors: list[str]
+) -> None:
+    if not files:
+        return
+
+    source_rows = read_tsv_with_columns(SOURCE_UPLOAD_CROSSWALK, SOURCE_UPLOAD_COLUMNS, errors)
+    baseline_rows = read_tsv_with_columns(BASELINE_UPLOAD_CROSSWALK, BASELINE_UPLOAD_COLUMNS, errors)
+    playbook_rows = read_tsv_with_columns(PLAYBOOK_UPLOAD_CROSSWALK, PLAYBOOK_UPLOAD_COLUMNS, errors)
+    attachment_rows = read_tsv_with_columns(
+        ATTACHMENT_UPLOAD_CROSSWALK, ATTACHMENT_UPLOAD_COLUMNS, errors
+    )
+    if errors:
+        return
+
+    source_by_path: dict[str, list[dict[str, str]]] = {}
+    baseline_by_path: dict[str, list[dict[str, str]]] = {}
+    playbook_by_path: dict[str, list[dict[str, str]]] = {}
+    attachment_by_path: dict[str, list[dict[str, str]]] = {}
+    for collection, target in (
+        (source_rows, source_by_path),
+        (baseline_rows, baseline_by_path),
+        (playbook_rows, playbook_by_path),
+        (attachment_rows, attachment_by_path),
+    ):
+        for row in collection:
+            target.setdefault(row["upload_path"], []).append(row)
+
+    manifest_by_path = {row["upload_path"]: row for row in rows}
+    for path in files:
+        upload_path = rel(path)
+        row_label = manifest_by_path.get(upload_path, {}).get("upload_file_id", upload_path)
+        for name, grouped in (
+            ("source-pack", source_by_path),
+            ("Korean-aligned English", baseline_by_path),
+            ("playbook", playbook_by_path),
+            ("attachment", attachment_by_path),
+        ):
+            if not grouped.get(upload_path):
+                errors.append(f"{row_label} missing {name} upload-package crosswalk rows")
+
+        text = path.read_text(encoding="utf-8")
+        upload_source_rows = source_by_path.get(upload_path, [])
+        crosswalk_source_ids = {row["source_id"] for row in upload_source_rows if row["source_id"]}
+        crosswalk_block_ids = {
+            row["source_pack_block_id"] for row in upload_source_rows if row["source_pack_block_id"]
+        }
+        for source_id in sorted(set(re.findall(r"\b(?:SRC|AID-SRC)-\d{6}\b", text))):
+            if source_id not in crosswalk_source_ids:
+                errors.append(f"{row_label} source ID lacks source-pack crosswalk row: {source_id}")
+        for block_id in sorted(set(re.findall(r"\bBLOCK-\d{6}\b", text))):
+            if block_id not in crosswalk_block_ids:
+                errors.append(f"{row_label} block ID lacks source-pack crosswalk row: {block_id}")
+
+
+def check_assembled_package(
+    rows: list[dict[str, str]], errors: list[str], allow_partial: bool = False
+) -> None:
     files = upload_markdown_files()
+    manifest_by_path = {row["upload_path"]: row for row in rows}
     manifest_paths = {row["upload_path"] for row in rows}
     file_paths = {rel(path) for path in files}
     known_source_ids = {
@@ -331,10 +486,26 @@ def check_assembled_package(rows: list[dict[str, str]], errors: list[str]) -> No
 
     missing = sorted(manifest_paths - file_paths)
     extra = sorted(file_paths - manifest_paths)
-    if missing:
+    if missing and not allow_partial:
         errors.append("manifest rows missing assembled files: " + ", ".join(missing))
     if extra:
         errors.append("assembled files not listed in manifest: " + ", ".join(extra))
+
+    for path in files:
+        row = manifest_by_path.get(rel(path))
+        if not row:
+            continue
+        if row["assembly_status"] != "assembled":
+            errors.append(f"{row['upload_file_id']} has file but assembly_status is not assembled")
+        if row["validation_status"] != "assembled_validated":
+            errors.append(
+                f"{row['upload_file_id']} has file but validation_status is not assembled_validated"
+            )
+
+    if not allow_partial:
+        for row in rows:
+            if row["assembly_status"] != "assembled":
+                errors.append(f"{row['upload_file_id']} full assembled mode requires assembled status")
 
     for path in files:
         text = path.read_text(encoding="utf-8")
@@ -380,6 +551,8 @@ def check_assembled_package(rows: list[dict[str, str]], errors: list[str]) -> No
             if not target.exists():
                 errors.append(f"{label} has broken upload-package link: {link}")
 
+    check_upload_crosswalks(rows, files, errors)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -387,6 +560,11 @@ def parse_args() -> argparse.Namespace:
         "--assembled",
         action="store_true",
         help="Validate assembled GPTs/upload_package Markdown files.",
+    )
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="Allow a progressive Stage 4 slice where only assembled manifest rows have files.",
     )
     return parser.parse_args()
 
@@ -400,7 +578,7 @@ def main() -> int:
     if rows:
         check_manifest_rows(rows, errors)
         if args.assembled:
-            check_assembled_package(rows, errors)
+            check_assembled_package(rows, errors, allow_partial=args.allow_partial)
         else:
             check_scaffold_boundary(errors)
 
@@ -414,6 +592,8 @@ def main() -> int:
     print(f"- Manifest rows: {len(rows)}")
     if args.assembled:
         print(f"- Upload Markdown files: {len(upload_markdown_files())}")
+        if args.allow_partial:
+            print("- Mode: assembled partial")
         print("- Required sections and upload-boundary scans: passed")
     else:
         print("- Mode: scaffold")

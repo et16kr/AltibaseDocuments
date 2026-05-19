@@ -43,9 +43,24 @@ Default validator mode checks:
 Expected current result: pass in scaffold mode, with all manifest rows reported as
 `planned_not_assembled`.
 
+
+## Progressive Assembly Mode
+
+During topic-by-topic Stage 4 assembly, run:
+
+```bash
+python3 GPTs/reports/scripts/validate_upload_package.py --assembled --allow-partial
+```
+
+Progressive mode validates the assembled slice while allowing future manifest rows to
+remain `planned_not_assembled`. It still enforces the global 20-file limit, required
+sections, forbidden internal ID and local-path scans, source ID and block ID
+resolution, and source-pack, Korean-aligned English, playbook, and attachment
+crosswalk rows for every assembled upload file.
+
 ## Assembled Mode
 
-After `S4-J003` through `S4-J008` create or update package files, run:
+After `S4-J003` through `S4-J008` create or update all package files, run:
 
 ```bash
 python3 GPTs/reports/scripts/validate_upload_package.py --assembled
@@ -73,7 +88,7 @@ Assembled mode should require:
 
 | Check | Scaffold mode | Assembled mode | Failure handling |
 | --- | --- | --- | --- |
-| File count | Validate 20 planned manifest rows and no assembled files. | Validate 20 or fewer assembled Markdown files and manifest coverage. | Do not add files beyond the limit; merge or defer content. |
+| File count | Validate 20 planned manifest rows and no assembled files. | Validate 20 or fewer assembled Markdown files and manifest coverage; progressive mode allows future rows to remain planned. | Do not add files beyond the limit; merge or defer content. |
 | Required sections | Validate section list in manifest. | Validate actual Markdown headings. | Add missing headings before readiness. |
 | Source routes | Validate source-route expectation fields. | Resolve exposed `SRC-*`, `AID-SRC-*`, and `BLOCK-*` routes through crosswalks. | Add route, remove unsupported claim, or defer. |
 | Internal ID leakage | Validate policy fields. | Scan upload Markdown for disallowed IDs and paths. | Move IDs to reports/crosswalks or rewrite as customer-readable guardrails. |

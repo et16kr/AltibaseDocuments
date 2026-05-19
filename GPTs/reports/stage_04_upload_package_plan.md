@@ -28,6 +28,22 @@ playbook routing requirements, and a reusable validator. The validator supports 
 pre-assembly scaffold mode so the repository can validate planned rows without
 creating `GPTs/upload_package/`.
 
+
+## S4-J003 Assembly Update
+
+`S4-J003` starts progressive package assembly without changing the 20-file topic
+architecture. It creates the first operational upload slice for version/release and
+platform boundaries, installation/startup, and administration/backup/recovery. The
+slice preserves full answer-ready attachment content under `Answer-Ready Reference`,
+adds package-level source and playbook routing, and records source-pack,
+Korean-aligned English, playbook, and attachment-to-upload crosswalk rows for the
+assembled files.
+
+The package is not final-upload ready after this slice. Remaining topic files, final
+AID selection, retrieval checks, benchmark dry runs, and Stage 4 readiness remain
+deferred to later scoped jobs. The validator now supports a progressive assembled
+mode so assembled rows can pass while future rows remain planned.
+
 ## Package Shape Decision
 
 The final package will use the existing 20 attachment topic filenames as the upload
@@ -232,7 +248,7 @@ Assembled-mode checks should additionally validate:
 
 ## Current Deferrals
 
-- Upload Markdown creation is deferred to `S4-J003` and later.
+- The first operational upload Markdown slice is assembled by `S4-J003`; remaining topic files are deferred to later Stage 4 assembly jobs.
 - Final AID content selection is deferred to `S4-J008` after topical package files
   exist.
 - Crosswalk generation to actual upload files is deferred to `S4-J009`.
