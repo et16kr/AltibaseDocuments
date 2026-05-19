@@ -1,0 +1,51 @@
+{
+  "$schema": "../schemas/manifest.schema.json",
+  "manifest_id": "coding_agent_source_preserving_package",
+  "description": "Separate coding-agent benchmark manifest for practical Codex and LLM agent use of the Altibase source-preserving upload package.",
+  "question_files": [
+    "evals/altibase_answerability/questions/coding_agent_source_preserving.jsonl"
+  ],
+  "run_metadata": {
+    "profile": "coding_agent",
+    "job_id": "SPF-J007",
+    "source_boundary": "source-preserving upload package only via GPTs/upload_package_source_preserving/*.md",
+    "baseline_manifest": "distinct from evals/altibase_answerability/manifests/full_benchmark.json",
+    "question_set": "coding-agent source-preserving tasks; not part of the locked 270-question full_benchmark baseline",
+    "routing_policy_reference": "GPTs/reports/source_preserving_upload_package_finalization_plan.md",
+    "rubric_reference": "evals/altibase_answerability/reports/coding_agent_source_preserving_rubric.md"
+  },
+  "answer_generation": {
+    "attachment_glob": "GPTs/upload_package_source_preserving/*.md",
+    "context_root": "GPTs/upload_package_source_preserving",
+    "allowlisted_question_fields": [
+      "id",
+      "question",
+      "version_scope",
+      "user_level",
+      "answer_type",
+      "answer_language",
+      "requested_language"
+    ],
+    "default_answer_language": "en",
+    "include_gpt_instruction_draft": true,
+    "gpt_instruction_draft_path": "GPTs/reports/source_preserving_gpt_codex_usage_instructions.md",
+    "provider": "offline",
+    "model": "fixture",
+    "mode": "dry_run"
+  },
+  "judge": {
+    "mode": "rule",
+    "threshold_policy": "evals/altibase_answerability/policy.json"
+  },
+  "reporting": {
+    "output_dir": "evals/altibase_answerability/reports/coding_agent_source_preserving",
+    "aggregate_dimensions": [
+      "domain",
+      "subdomain",
+      "user_level",
+      "version_scope",
+      "answer_type",
+      "retrieval_risk"
+    ]
+  }
+}

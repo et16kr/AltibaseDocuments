@@ -36,6 +36,25 @@ ALLOWED_CONTEXT_ROOTS = {
     "GPTs/attachments/*.md": "GPTs/attachments",
     "GPTs/upload_package_source_preserving/*.md": "GPTs/upload_package_source_preserving",
 }
+CODING_AGENT_TASK_TYPES = {
+    "source_navigation",
+    "sql_isql_generation",
+    "driver_api_usage",
+    "error_diagnosis",
+    "property_version_check",
+    "replication_safety",
+    "backup_recovery_safety",
+    "destructive_operation_safety",
+    "security_safety",
+}
+CODING_AGENT_REQUIRED_CITATIONS = {"source_id", "source_path", "version_scope"}
+CODING_AGENT_REQUIRED_KEYS = {
+    "agent_task_type",
+    "expected_artifacts",
+    "citation_requirements",
+    "safety_gates",
+}
+CODING_AGENT_MIN_QUESTIONS = 10
 
 
 @dataclass
@@ -122,6 +141,19 @@ def resolve_repo_path(path_text: str, state: ValidationState, label: str) -> Pat
         state.error(f"{label} escapes the repository root: {path_text}")
         return None
     return resolved
+
+
+def resolve_source_path(path_text: str, state: ValidationState, label: str) -> Path | None:
+    if path_text.startswith("~/AID/"):
+        resolved = Path(path_text).expanduser().resolve()
+        aid_root = (Path.home() / "AID").resolve()
+        try:
+            resolved.relative_to(aid_root)
+        except ValueError:
+            state.error(f"{label} escapes ~/AID: {path_text}")
+            return None
+        return resolved
+    return resolve_repo_path(path_text, state, label)
 
 
 def validate_policy(policy_path: Path, state: ValidationState) -> dict[str, Any] | None:
@@ -334,9 +366,42 @@ def validate_question_custom(
             continue
         source_path = ref.get("source_path")
         if source_path:
-            resolved = resolve_repo_path(source_path, state, f"{label} source_path")
+            resolved = resolve_source_path(source_path, state, f"{label} source_path")
             if resolved and not resolved.exists():
                 state.error(f"{label} source_path does not exist: {source_path}")
+
+    present_coding_keys = CODING_AGENT_REQUIRED_KEYS & set(record)
+    if present_coding_keys:
+        missing_coding_keys = sorted(CODING_AGENT_REQUIRED_KEYS - set(record))
+        if missing_coding_keys:
+            state.error(
+                f"{label} coding-agent records must include: {', '.join(missing_coding_keys)}"
+            )
+        if not str(record.get("id", "")).startswith("AGENT-"):
+            state.error(f"{label} coding-agent question ids must use the AGENT- prefix")
+        citations = set(record.get("citation_requirements", []))
+        missing_citations = sorted(CODING_AGENT_REQUIRED_CITATIONS - citations)
+        if missing_citations:
+            state.error(
+                f"{label} citation_requirements missing: {', '.join(missing_citations)}"
+            )
+        if not ({"block_id", "manual_evidence"} & citations):
+            state.error(
+                f"{label} citation_requirements must include block_id or manual_evidence"
+            )
+        cited_blocks = [
+            ref
+            for ref in source_refs
+            if isinstance(ref, dict)
+            and ref.get("source_id")
+            and ref.get("block_id")
+            and ref.get("source_path")
+        ]
+        if not cited_blocks:
+            state.error(
+                f"{label} coding-agent records need at least one source_ref with "
+                "source_id, block_id, and source_path"
+            )
 
     fact_ids = [fact.get("id") for fact in record.get("expected_facts", []) if isinstance(fact, dict)]
     duplicate_fact_ids = [fact_id for fact_id, count in Counter(fact_ids).items() if count > 1]
@@ -484,10 +549,56 @@ def validate_question_files(
     return records
 
 
-def enforce_count_gates(policy: dict[str, Any], profile: str, state: ValidationState) -> None:
+def enforce_coding_agent_profile(
+    records: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    state: ValidationState,
+) -> None:
+    if state.question_count < CODING_AGENT_MIN_QUESTIONS:
+        state.error(
+            f"Coding-agent benchmark has {state.question_count} questions; "
+            f"required minimum is {CODING_AGENT_MIN_QUESTIONS}"
+        )
+
+    answer_generation = manifest.get("answer_generation", {})
+    if answer_generation.get("attachment_glob") != "GPTs/upload_package_source_preserving/*.md":
+        state.error("Coding-agent benchmark must use GPTs/upload_package_source_preserving/*.md")
+    if answer_generation.get("context_root") != "GPTs/upload_package_source_preserving":
+        state.error("Coding-agent benchmark must set context_root to GPTs/upload_package_source_preserving")
+
+    task_counts = Counter(record.get("agent_task_type") for record in records)
+    missing_task_types = sorted(
+        task_type for task_type in CODING_AGENT_TASK_TYPES if not task_counts[task_type]
+    )
+    if missing_task_types:
+        state.error(
+            "Coding-agent benchmark is missing required task type(s): "
+            + ", ".join(missing_task_types)
+        )
+
+    non_agent_ids = sorted(
+        record.get("id", "<missing>")
+        for record in records
+        if not str(record.get("id", "")).startswith("AGENT-")
+    )
+    if non_agent_ids:
+        state.error("Coding-agent benchmark selected non-AGENT ids: " + ", ".join(non_agent_ids))
+
+
+def enforce_count_gates(
+    policy: dict[str, Any],
+    profile: str,
+    records: list[dict[str, Any]],
+    manifest: dict[str, Any],
+    state: ValidationState,
+) -> None:
     if profile == "fixture":
         if state.question_count == 0:
             state.error("Fixture validation requires at least one question record")
+        return
+
+    if profile == "coding_agent":
+        enforce_coding_agent_profile(records, manifest, state)
         return
 
     total_minimum = policy.get("question_total_minimum", 200)
@@ -522,9 +633,13 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--profile",
-        choices=["full", "fixture"],
+        choices=["full", "fixture", "coding_agent"],
         default="full",
-        help="Use 'full' to enforce 200-question/domain gates; use 'fixture' for small offline samples.",
+        help=(
+            "Use 'full' to enforce 200-question/domain gates; use 'fixture' for "
+            "small offline samples; use 'coding_agent' for the separate "
+            "source-preserving coding-agent benchmark."
+        ),
     )
     parser.add_argument(
         "--policy",
@@ -557,8 +672,8 @@ def main() -> int:
             manifest = validate_manifest(manifest_path.resolve(), policy, state)
         if manifest is not None and policy is not None:
             question_files = expand_question_files(manifest, state)
-            validate_question_files(question_files, manifest, policy, state)
-            enforce_count_gates(policy, args.profile, state)
+            records = validate_question_files(question_files, manifest, policy, state)
+            enforce_count_gates(policy, args.profile, records, manifest, state)
 
     for warning in state.warnings:
         print(f"WARNING: {warning}", file=sys.stderr)

@@ -17,8 +17,13 @@ running answer generation or judging.
 `../scripts/validate_benchmark.py` checks that every schema is itself valid,
 then validates policy, taxonomy, manifest, and question JSONL records. It also applies
 cross-record rules that JSON Schema cannot express, including unique question IDs,
-source-reference integrity, canonical-English expected facts, repository-local
-`source_path` existence, and answer-projection leakage boundaries.
+source-reference integrity, canonical-English expected facts, repository-local or
+selected `~/AID` `source_path` existence, and answer-projection leakage boundaries.
+
+`question.schema.json` also supports optional judge-only coding-agent metadata:
+`agent_task_type`, `expected_artifacts`, `citation_requirements`, and `safety_gates`.
+These fields are used by the separate source-preserving coding-agent benchmark and
+must not be added to the answer-generation allowlist.
 
 `../scripts/answer_runner.py --validate-output` validates generated answer records
 against `answer_record.schema.json` while running dry-run, offline fixture, or live

@@ -41,3 +41,19 @@ answer-generation context to `GPTs/upload_package_source_preserving/*.md`. It ke
 same answer-input allowlist, judge configuration, and reporting dimensions, and adds an
 explicit `context_root` so package dry-runs cannot escape the source-preserving upload
 package.
+
+## Coding-Agent Manifest
+
+`coding_agent_source_preserving_package.json` is a separate benchmark for practical
+Codex, customer-owned LLM, and RAG-agent use of the source-preserving package. It
+selects only `../questions/coding_agent_source_preserving.jsonl`, uses
+`GPTs/upload_package_source_preserving/*.md` as answer context, and is not part of the
+locked 270-question `full_benchmark` baseline.
+
+Validate it with the dedicated small-profile gate:
+
+```bash
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/coding_agent_source_preserving_package.json \
+  --profile coding_agent
+```

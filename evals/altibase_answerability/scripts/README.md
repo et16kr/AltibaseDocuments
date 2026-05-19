@@ -90,6 +90,21 @@ python3 evals/altibase_answerability/scripts/answer_runner.py \
   --output-dir /tmp/altibase-source-preserving-package-dry-run
 ```
 
+Coding-agent source-preserving validation and dry-run:
+
+```bash
+python3 evals/altibase_answerability/scripts/validate_benchmark.py \
+  --manifest evals/altibase_answerability/manifests/coding_agent_source_preserving_package.json \
+  --profile coding_agent
+
+python3 evals/altibase_answerability/scripts/answer_runner.py \
+  --manifest evals/altibase_answerability/manifests/coding_agent_source_preserving_package.json \
+  --mode dry_run \
+  --context-mode lexical \
+  --validate-output \
+  --output-dir /tmp/altibase-coding-agent-source-preserving-dry-run
+```
+
 Judge/report self-test:
 
 ```bash

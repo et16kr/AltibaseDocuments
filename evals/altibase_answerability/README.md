@@ -11,6 +11,10 @@ supporting sources already present in this repository. Answer generation is then
 restricted to the rebuilt attachment files so the benchmark can expose remaining
 answerability gaps.
 
+The separate coding-agent source-preserving benchmark uses the same runner and judge
+contracts but targets `GPTs/upload_package_source_preserving/` and practical agent
+artifacts. It is not part of the locked 270-question full answerability baseline.
+
 ## Scope
 
 - Supported Altibase versions: `7.1`, `7.3`, and `8.1`.
@@ -61,6 +65,13 @@ evals/altibase_answerability/
   run payloads should stay out of version control.
 - `fixtures/`: small calibration samples that can run without the full benchmark or live
   model calls.
+
+The coding-agent extension adds
+`questions/coding_agent_source_preserving.jsonl`,
+`manifests/coding_agent_source_preserving_package.json`, and
+`reports/coding_agent_source_preserving_rubric.md`. Validate it with
+`--profile coding_agent` so the small agent-task set stays distinct from the full
+readiness count gates.
 
 The `.codex-jobs/altibase-gpt-answerability-benchmark/` directory is only orchestration
 state. Durable benchmark implementation belongs here.
