@@ -70,7 +70,10 @@ The new validator must enforce:
 
 - exactly 20 final upload files;
 - each file below GPT file-size and token safety limits;
-- all 16 shard copies match the source-pack originals by SHA-256;
+- source block bodies remain byte-preserved against their recorded
+  `source_sha256` values even when final-upload wrapper/header wording changes;
+- all 16 shard files remain represented and their wrapper changes are recorded
+  separately from source-body integrity;
 - all selected sources remain represented;
 - every `SOURCE_BLOCK_BEGIN` has a matching `SOURCE_BLOCK_END`;
 - no final package wrapper contains reverse-routing language such as
