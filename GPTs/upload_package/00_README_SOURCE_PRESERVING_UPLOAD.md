@@ -6,15 +6,13 @@ This directory is the upload package to use when the goal is an Altibase
 encyclopedia for Codex, GPTs, or other LLM/RAG systems that must contain the
 original selected source content.
 
-The package is source-preserving. It includes the exact source-pack shard bodies
-from `GPTs/source_pack/source_pack_shard_001.md` through
-`GPTs/source_pack/source_pack_shard_016.md`, plus upload order and lookup
-manifests.
+The package is source-preserving. It includes `source_pack_shard_001.md`
+through `source_pack_shard_016.md` in this directory, plus upload order and
+lookup manifests.
 
-Do not confuse this package with `GPTs/upload_package/`. The topical files in
-`GPTs/upload_package/` are answer-ready routing and synthesis documents. They are
-useful as a compact guide, but they are not the full source-preserving
-encyclopedia by themselves.
+For package-only upload and benchmark runs, use only the Markdown files in this
+directory. Do not route to answer-ready attachment files, source-pack baselines,
+reports, original manuals, or any other repository paths outside this package.
 
 ## Upload Set
 
@@ -57,9 +55,10 @@ are part of one package and count against the same 20-file GPT Knowledge limit.
   to the shard that contains the exact source body.
 - Use the shard files for exact source text. Each shard contains
   `SOURCE_BLOCK_BEGIN` / `SOURCE_BLOCK_END` wrappers and the copied source body.
-- For concise answer synthesis, `GPTs/upload_package/` can still be used as a
-  secondary routing layer, but it must not replace the source-preserving upload
-  set when exact original content is required.
+- For concise answer synthesis during package-only runs, use this README,
+  `01_upload_order.md`, `02_source_manifest.md`, and
+  `03_source_to_shard_manifest.md` only as in-package routing aids, and use the
+  shard source blocks for exact behavior.
 
 ## GPT, Codex, And LLM Usage Instructions
 
@@ -78,9 +77,8 @@ Use this lookup workflow:
 3. Read the matching source block in `source_pack_shard_*.md`, using the
    `SOURCE_BLOCK_BEGIN` metadata to confirm `source_id`, `source_path`,
    `version_scope`, `language`, `authority_label`, `sha256`, and `block_id`.
-4. Answer or generate artifacts from the source block text. Use concise topic
-   files in `GPTs/upload_package/` only as secondary answer-routing and
-   synthesis guidance, not as a replacement for exact source-block evidence.
+4. Answer or generate artifacts from the source block text. During package-only
+   runs, do not consult files outside this directory.
 
 When citing or preserving provenance, include the practical metadata available
 for the answer: `source_id`, `block_id`, `source_path`, `version_scope`,

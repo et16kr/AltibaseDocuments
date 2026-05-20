@@ -11,7 +11,7 @@
     "source_boundary": "source-preserving upload package only via GPTs/upload_package/*.md",
     "baseline_manifest": "distinct from evals/altibase_answerability/manifests/full_benchmark.json",
     "question_set": "coding-agent source-preserving tasks; not part of the locked 270-question full_benchmark baseline",
-    "routing_policy_reference": "GPTs/reports/source_preserving_upload_package_finalization_plan.md",
+    "routing_policy_reference": "GPTs/upload_package/00_README_SOURCE_PRESERVING_UPLOAD.md",
     "rubric_reference": "evals/altibase_answerability/reports/coding_agent_source_preserving_rubric.md"
   },
   "answer_generation": {
@@ -27,8 +27,7 @@
       "requested_language"
     ],
     "default_answer_language": "en",
-    "include_gpt_instruction_draft": true,
-    "gpt_instruction_draft_path": "GPTs/reports/source_preserving_gpt_codex_usage_instructions.md",
+    "include_gpt_instruction_draft": false,
     "provider": "offline",
     "model": "fixture",
     "mode": "dry_run"

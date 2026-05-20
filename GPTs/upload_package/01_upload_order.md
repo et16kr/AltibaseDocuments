@@ -11,9 +11,10 @@ candidate for Altibase GPT Knowledge, Codex, and LLM/RAG usage. Upload all 20
 Markdown files in this directory together when the objective is selected-source
 retrieval with preserved source bodies.
 
-`GPTs/source_pack/` remains the evidence baseline, and `GPTs/upload_package/`
-remains an optional compact topic-routing layer. The source-preserving package
-files below count against the global 20 Markdown file upload limit.
+For package-only upload and benchmark runs, treat the files below as the complete
+allowed context. Do not route to source-pack baselines, answer-ready attachment
+files, reports, original manuals, or any other repository paths outside this
+package.
 
 ## Current Package Order
 

@@ -17,7 +17,7 @@
     "source_boundary": "repository-local selected sources via GPTs/upload_package/*.md",
     "baseline_manifest": "evals/altibase_answerability/manifests/full_benchmark.json",
     "question_set": "unchanged 270 full_benchmark question records",
-    "routing_policy_reference": "GPTs/reports/source_preserving_upload_package_finalization_plan.md"
+    "routing_policy_reference": "GPTs/upload_package/00_README_SOURCE_PRESERVING_UPLOAD.md"
   },
   "answer_generation": {
     "attachment_glob": "GPTs/upload_package/*.md",
@@ -32,8 +32,7 @@
       "requested_language"
     ],
     "default_answer_language": "en",
-    "include_gpt_instruction_draft": true,
-    "gpt_instruction_draft_path": "GPTs/reports/source_preserving_upload_package_finalization_plan.md",
+    "include_gpt_instruction_draft": false,
     "provider": "offline",
     "model": "fixture",
     "mode": "dry_run"

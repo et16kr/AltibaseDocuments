@@ -12,11 +12,11 @@ Usage:
 Default:
   ./run-test.sh
     Runs the original attachment-based 270-question full benchmark.
-    Live command-provider runs use gpt-5.3-codex-spark unless overridden.
+    Live command-provider runs use gpt-5.5 via the Codex CLI unless overridden.
 
 Suites:
   attachments        GPTs/attachments full benchmark (default)
-  source-preserving  GPTs/upload_package_source_preserving full benchmark
+  source-preserving  GPTs/upload_package full benchmark
   coding-agent       Source-preserving coding-agent benchmark
 
 Common examples:
@@ -66,7 +66,7 @@ SUITE_ID="${TEST_SUITE//-/_}"
 RUN_ID="${RUN_ID:-altibase_${SUITE_ID}_$(date +%Y%m%d_%H%M%S)}"
 MODE="${ALTIBASE_TEST_MODE:-${MODE:-live}}"
 PROVIDER="${ALTIBASE_TEST_PROVIDER:-${PROVIDER:-command}}"
-DEFAULT_CODEX_MODEL="${DEFAULT_CODEX_MODEL:-gpt-5.3-codex-spark}"
+DEFAULT_CODEX_MODEL="${DEFAULT_CODEX_MODEL:-gpt-5.5}"
 case "$PROVIDER" in
   command)
     MODEL="${ALTIBASE_TEST_MODEL:-${CODEX_EXEC_MODEL:-${MODEL_NAME:-$DEFAULT_CODEX_MODEL}}}"
