@@ -64,8 +64,15 @@ runs.
   manifest/shard arguments into `build_context()` so the diagnostic reconstructs
   the routed context faithfully.
 - **C2-04 — Judge re-calibration gate.** Run `calibrate_judge.py` with the LLM
-  judge enabled against the 52-entry gold set. Gate: agreement ≥ 90%, precision
-  ≥ 0.711 (no regression). Writes the gate decision record.
+  judge enabled against the 52-entry gold set, three times with a fresh cache.
+  Gate: mean agreement ≥ 90% and lowest ≥ 88%, precision ≥ 0.711 (no
+  regression). Writes the gate decision record.
+
+The LLM fact judge is reached by benchmark runs through the `JUDGE_LLM_FACT=1`
+environment toggle (`run-test.sh` passes `judge_report.py` a fixed argument
+list and takes no judge flag). The live command provider is therefore needed
+from C2-02/C2-04 onward, not only in Phase 3. The 52-entry gold set is small;
+expanding it is noted as cycle-3 work.
 
 ## Phase 2 — Retrieval / coverage
 

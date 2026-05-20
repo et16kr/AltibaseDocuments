@@ -21,18 +21,25 @@ provider calls). It is the final measurement job of cycle 2.
 
 1. Confirm the live provider is usable. If not, do NOT hang — write a FAIL
    result explaining what is missing.
-2. Before spending the run, check whether a complete post-job-07 full run
+2. **Enable the LLM fact judge for the run's judging.** Export
+   `JUDGE_LLM_FACT=1` for both `run-test.sh` invocations — `run-test.sh` passes
+   `judge_report.py` a fixed argument list, so without the env toggle the
+   pass-rate scorecard would use the rule judge and the cycle-2 judge work would
+   not show up in the headline number. If you reuse an existing run (step 3),
+   confirm its judging was produced with the LLM judge enabled; if not, re-judge
+   the answers with `JUDGE_LLM_FACT=1` before scoring.
+3. Before spending the run, check whether a complete post-job-07 full run
    already exists under
    `evals/altibase_answerability/reports/full_benchmark/runs/` and
    `.../coding_agent_source_preserving/runs/` (a run newer than job 08 with a
    valid `summary.txt`). If so, reuse it instead of re-running.
-3. Otherwise run both suites. Long runs: start each in the background and poll
+4. Otherwise run both suites. Long runs: start each in the background and poll
    for `summary.txt` rather than blocking one foreground call.
    ```bash
-   ./run-test.sh source-preserving
-   ./run-test.sh coding-agent
+   JUDGE_LLM_FACT=1 ./run-test.sh source-preserving
+   JUDGE_LLM_FACT=1 ./run-test.sh coding-agent
    ```
-4. Produce a regression analysis report at
+5. Produce a regression analysis report at
    `evals/altibase_answerability/reports/full_rerun_analysis_cycle2_20260520.md`
    with **three separate scorecards** (do not collapse them into one number):
    - **Retrieval scorecard:** routed-source-in-context rate,
@@ -45,9 +52,11 @@ provider calls). It is the final measurement job of cycle 2.
    - **Pass-rate scorecard:** pass rate, gained/lost question IDs, critical fact
      coverage delta, required token preservation delta, protected-topic blocker
      delta, prohibited-claim count (genuine vs false-positive).
-5. Decompose the pass-rate movement into the judge track and the
-   retrieval/answer track, as the cycle-1 report did.
-6. State plainly whether each scorecard improved versus the job-11 baseline, and
+6. Decompose the pass-rate movement into the judge track and the
+   retrieval/answer track, as the cycle-1 report did. Note that cycle 1 saw ~4
+   of its 5 lost questions move purely from live answer-generation variance —
+   account for that non-deterministic noise floor when reporting gains/losses.
+7. State plainly whether each scorecard improved versus the job-11 baseline, and
    list the top remaining remediation targets for cycle 3.
 
 ## Acceptance criteria for PASS

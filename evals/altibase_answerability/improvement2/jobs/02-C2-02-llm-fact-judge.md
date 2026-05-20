@@ -23,14 +23,21 @@ work end to end, verify it, and report the result exactly as specified.
 Add an optional LLM-assisted fact judge to
 `evals/altibase_answerability/scripts/judge_report.py`.
 
-1. **Opt-in, off by default.** Add an `--llm-fact-judge` flag (and/or a
-   `JUDGE_LLM_FACT` env toggle). When OFF, behaviour is byte-for-byte the
-   current deterministic rule judge. `--self-test` must run with it OFF so the
-   self-test stays hermetic and deterministic.
+1. **Opt-in, off by default — flag AND env toggle, both mandatory.** Add an
+   `--llm-fact-judge` CLI flag *and* a `JUDGE_LLM_FACT=1` environment toggle;
+   either one enables the LLM judge. The env toggle is **not optional**:
+   `run-test.sh` invokes `judge_report.py` with a fixed argument list and will
+   not pass a CLI flag, so the env toggle is the only way the live benchmark
+   runs (jobs 08–09) can enable the LLM judge. When OFF (the default),
+   behaviour is byte-for-byte the current deterministic rule judge. `--self-test`
+   must always run with it OFF so the self-test, and the `run-all.sh` preflight,
+   stay hermetic and deterministic.
 2. **Adjudicate only the uncertain band.** The LLM judge is consulted only for
    facts whose rule-judge `term_score` falls in a paraphrase-suspect band
-   (about 0.40–0.75 — confirm against the gold set notes). Facts the rule judge
-   scores clearly covered or clearly missed are not sent to the LLM.
+   bracketing the rule judge's coverage threshold (cycle 1 built the gold set
+   around the 0.40–0.62 band — confirm the exact band against the gold-set
+   `term_score` distribution and the rule judge's current threshold). Facts the
+   rule judge scores clearly covered or clearly missed are not sent to the LLM.
 3. **Provider.** Reuse the existing command-provider plumbing the harness
    already uses for answer generation (Codex CLI; see
    `evals/altibase_answerability/scripts/codex_exec_provider.sh` and how

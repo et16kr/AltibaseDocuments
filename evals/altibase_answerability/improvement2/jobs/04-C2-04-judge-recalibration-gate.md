@@ -25,14 +25,18 @@ job must FAIL on purpose so the judge work (jobs 01–02) can be revised.
    python3 evals/altibase_answerability/scripts/calibrate_judge.py \
      --gold evals/altibase_answerability/fixtures/judge_gold_set.jsonl
    ```
-2. Run the calibration with the LLM-assisted fact judge enabled:
+2. Run the calibration with the LLM-assisted fact judge enabled. Because the
+   LLM judge is non-deterministic at first computation, run it **three times
+   with a fresh verdict cache each time** (clear or bypass the C2-02 cache
+   between runs) so the gate measures a stable result, not one lucky draw:
    ```bash
    python3 evals/altibase_answerability/scripts/calibrate_judge.py \
      --gold evals/altibase_answerability/fixtures/judge_gold_set.jsonl --llm-fact-judge
    ```
    The LLM judge requires the live command provider (Codex CLI). Confirm it is
    usable first; if it is not, do NOT hang — this job FAILs with a clear reason
-   (the gate cannot be evaluated without it).
+   (the gate cannot be evaluated without it). Record all three agreement /
+   precision / recall numbers and their spread in the report.
 3. Re-judge the cycle-1 job-11 run and confirm the round-2 prohibited-claim fix
    still holds end to end (0 of the six C2-01 false positives fire).
 4. Write the gate decision record to
@@ -43,12 +47,19 @@ job must FAIL on purpose so the judge work (jobs 01–02) can be revised.
 
 ## Gate criteria (all must hold for PASS)
 
-- Judge-vs-gold agreement with the LLM judge enabled is **>= 90.0%**.
-- Precision is **>= 0.711** (no regression versus the cycle-1 baseline).
-- Recall does not drop below the cycle-1 baseline by more than a small margin
-  (>= 0.90).
+- Judge-vs-gold agreement with the LLM judge enabled: the **mean of the three
+  runs is >= 90.0%** and the **lowest of the three is >= 88.0%**. A wide spread
+  (lowest well under 88%) is itself a stop signal — the LLM judge is too flaky
+  to gate on; FAIL and record it.
+- Precision is **>= 0.711** in every run (no regression versus the cycle-1
+  baseline of 0.711).
+- Recall does not drop below 0.90 in any run (cycle-1 baseline 0.931).
 - Re-judging the job-11 run produces **zero** prohibited-claim findings on
   PROP-140, PROP-142, SQL-137, TOOL-003, TOOL-019, TOOL-033.
+
+The 52-entry gold set is small — one entry is ~1.9% — so treat a result that
+only barely clears the gate as fragile and say so in the report (cycle 3 should
+consider expanding the gold set).
 
 If any criterion fails, that is a real stop signal: write a FAIL result so jobs
 01–02 can be revised before any retrieval work or live run.

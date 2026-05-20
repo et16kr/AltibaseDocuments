@@ -72,7 +72,7 @@ python3 evals/altibase_answerability/scripts/judge_report.py \
   --answers evals/altibase_answerability/reports/full_benchmark/runs/altibase_source_preserving_20260520_195639_job11/answers/answers.jsonl \
   --retrieval-recall \
   --output-dir /tmp/altibase-c2-03-judge
-python3 -c "import json; d=json.load(open('/tmp/altibase-c2-03-judge/retrieval_recall.json')); pq=d.get('per_question',[]); faithful=sum(1 for q in pq if q.get('faithful_reconstruction')); print(f'faithful reconstruction: {faithful}/{len(pq)}'); assert pq and faithful >= 0.9*len(pq), (faithful, len(pq))"
+python3 -c "import json; d=json.load(open('/tmp/altibase-c2-03-judge/retrieval_recall.json')); n=d['questions_evaluated']; faithful=d['faithful_reconstructions']; print(f'faithful reconstruction: {faithful}/{n}'); assert n and faithful >= 0.9*n, (faithful, n)"
 git diff --check
 ```
 

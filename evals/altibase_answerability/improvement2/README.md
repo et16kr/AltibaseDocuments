@@ -67,9 +67,9 @@ point after every completed job.
 | # | Item | Phase | Notes |
 | --- | --- | --- | --- |
 | 01 | C2-01 prohibited-claim false-positive fix round 2 | 1 | judge |
-| 02 | C2-02 LLM-assisted fact judge (T7-B) | 1 | judge |
+| 02 | C2-02 LLM-assisted fact judge (T7-B) | 1 | judge; uses live provider |
 | 03 | C2-03 `--retrieval-recall` manifest fix | 1 | tooling |
-| 04 | C2-04 judge re-calibration gate | 1 | **gate: ≥90% agreement** |
+| 04 | C2-04 judge re-calibration gate | 1 | **LIVE**; **gate: ≥90% agreement** |
 | 05 | C2-05 router scoring tuning | 2 | retrieval |
 | 06 | C2-06 `properties` domain deep-dive | 2 | retrieval |
 | 07 | C2-07 errors / views coverage | 2 | retrieval |
@@ -81,3 +81,9 @@ Job 04 is a hard gate: Phase 2 does not start until judge-vs-gold agreement
 reaches ≥ 90%. Jobs 08–09 perform live provider runs and can take a long time;
 job 08 is a stop/go gate so the retrieval jobs can be revised before spending a
 full 270-question run.
+
+The live command provider (Codex CLI) is needed earlier than Phase 3: job 02
+exercises the LLM fact judge (and degrades to the rule judge if the provider is
+absent), and job 04 **requires** it to evaluate the calibration gate. The LLM
+fact judge is enabled for benchmark runs with `JUDGE_LLM_FACT=1` in the
+environment — `run-test.sh` does not take a judge flag.

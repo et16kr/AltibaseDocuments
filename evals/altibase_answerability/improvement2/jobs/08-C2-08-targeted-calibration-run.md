@@ -22,11 +22,16 @@ purpose so the cycle-2 jobs can be revised before a full 270-question run.
 
 1. Confirm the live provider is usable. If it is not configured/available, do
    NOT hang — write a FAIL result explaining what is missing.
-2. Run the targeted coding-agent suite (all 10 `AGENT-*` questions):
+2. **Enable the LLM fact judge for all judging in this job.** `run-test.sh`
+   invokes `judge_report.py` with a fixed argument list, so export
+   `JUDGE_LLM_FACT=1` in the environment for every run below — otherwise the
+   judging falls back to the rule judge and the deltas do not reflect the
+   cycle-2 judge. Confirm `JUDGE_LLM_FACT` is the toggle C2-02 implemented.
+3. Run the targeted coding-agent suite (all 10 `AGENT-*` questions):
    ```bash
-   RUN_ID=c2_08_coding_agent RUN_ROOT=/tmp/altibase-c2-08-agent ./run-test.sh coding-agent
+   JUDGE_LLM_FACT=1 RUN_ID=c2_08_coding_agent RUN_ROOT=/tmp/altibase-c2-08-agent ./run-test.sh coding-agent
    ```
-3. Run the targeted full-benchmark questions one at a time. Cover the three
+4. Run the targeted full-benchmark questions one at a time. Cover the three
    cycle-2 work areas:
    - the six prohibited-claim questions: `PROP-140`, `PROP-142`, `SQL-137`,
      `TOOL-003`, `TOOL-019`, `TOOL-033`;
@@ -36,13 +41,13 @@ purpose so the cycle-2 jobs can be revised before a full 270-question run.
      at least three previously-failing `ERR-*` and three `VPM-*` questions
      identified by job 07.
    ```bash
-   RUN_ID=c2_08_prop101 RUN_ROOT=/tmp/altibase-c2-08-prop101 QUESTION_ID=PROP-101 ./run-test.sh source-preserving
+   JUDGE_LLM_FACT=1 RUN_ID=c2_08_prop101 RUN_ROOT=/tmp/altibase-c2-08-prop101 QUESTION_ID=PROP-101 ./run-test.sh source-preserving
    ```
    Long runs: start each in the background and poll for the run's `summary.txt`
    rather than blocking a single foreground call.
-4. Compare every result against the job-11 baseline (critical fact coverage,
+5. Compare every result against the job-11 baseline (critical fact coverage,
    required token preservation, severity, prohibited-claim findings).
-5. Write a calibration report to
+6. Write a calibration report to
    `evals/altibase_answerability/reports/targeted_calibration_cycle2_20260520.md`
    with the per-question deltas and the explicit gate decision.
 
