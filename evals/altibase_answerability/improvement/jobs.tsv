@@ -1,0 +1,19 @@
+# Job manifest for run-all.sh  —  tab-separated:  id <TAB> title <TAB> prompt_file
+# Order is execution order. Lines starting with # are ignored.
+# Phase 0 — instrumentation
+01	T1 Retrieval audit instrumentation	01-T1-retrieval-audit.md
+# Phase 1 — judge validity (makes the measuring instrument trustworthy)
+02	T9 Judge calibration gold set	02-T9-judge-gold-set.md
+03	T6 Prohibited-claim false-positive fix	03-T6-prohibited-claim-fix.md
+04	T7a Semantic-tolerant fact matching	04-T7a-semantic-fact-matching.md
+05	T8 Pass-logic and threshold consistency	05-T8-pass-logic-consistency.md
+# Phase 2 — retrieval
+06	T2 Source-block metadata propagation	06-T2-block-metadata-propagation.md
+07	T3 Query tokenization fix	07-T3-query-tokenization.md
+08	T4 Manifest-aware routing stage	08-T4-manifest-routing.md
+09	T5 Budgeted context assembly	09-T5-budget-assembly.md
+# Phase 3 — validation runs (LIVE, long-running, expensive)
+10	Targeted calibration run (stop/go gate)	10-targeted-calibration-run.md
+11	Full re-run and regression analysis	11-full-rerun-analysis.md
+# Phase 4 — documentation
+12	Harness documentation update	12-docs-update.md
