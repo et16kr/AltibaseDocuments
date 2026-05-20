@@ -754,9 +754,9 @@ def prohibited_claim_present(claim: str, answer: str) -> tuple[bool, str]:
         return False, "no claim terms"
     matched = [term for term in claim_terms if term_present(answer_norm, term)]
     score = len(matched) / len(claim_terms)
-    # A claim counts as "intrinsically negative" only when its own polarity is
-    # negative ("X cannot be dropped"). A "may do X without Y" claim is positive
-    # in polarity, so it must keep the protective-negation guard below -- see
+    # A claim counts as "intrinsically negative" when its own polarity is
+    # negative ("X cannot be dropped"). This drives the polarity comparison
+    # below. A "may do X without Y" claim is positive in polarity -- see
     # INTRINSIC_NEGATION_TERMS, which excludes "without" for exactly this reason.
     claim_is_intrinsically_negative = any(
         term in claim_norm.split() for term in INTRINSIC_NEGATION_TERMS
@@ -771,13 +771,24 @@ def prohibited_claim_present(claim: str, answer: str) -> tuple[bool, str]:
             return True, f"high overlap ({score:.2f}) and answer asserts the prohibited order"
         return False, f"order-sensitive claim not asserted in the answer (overlap {score:.2f})"
 
-    if (
-        score >= 0.90
-        and not claim_is_intrinsically_negative
-        and answer_has_negation_near(answer_norm, claim_terms)
-    ):
-        return False, f"high lexical overlap ({score:.2f}) but answer negates the claim"
+    # Bag-of-words overlap alone cannot tell an answer that asserts the claim
+    # from one that asserts its opposite: "X can be searched" and "X cannot be
+    # searched" share every term but "can"/"cannot". So at high overlap, compare
+    # polarity near the claim terms -- an answer asserts the claim only when its
+    # negation state matches the claim's own polarity:
+    #   - positive claim ("X can be dropped"): asserted by an un-negated answer;
+    #     an answer that negates near the terms contradicts it and is safe.
+    #   - intrinsically-negative claim ("X cannot be searched"): asserted only
+    #     by an answer that *also* negates near the terms; an un-negated answer
+    #     affirms the opposite and is safe.
     if score >= 0.90:
+        answer_negates = answer_has_negation_near(answer_norm, claim_terms)
+        if claim_is_intrinsically_negative:
+            if answer_negates:
+                return True, f"high lexical overlap ({score:.2f}); answer asserts the negative claim"
+            return False, f"high lexical overlap ({score:.2f}) but answer affirms the opposite"
+        if answer_negates:
+            return False, f"high lexical overlap ({score:.2f}) but answer negates the claim"
         return True, f"high lexical overlap with prohibited claim ({score:.2f})"
     return False, f"lexical overlap={score:.2f}"
 
@@ -1907,6 +1918,21 @@ WITHOUT_CLAIM_PROPERTY_SAFE_ANSWER = (
     "may not proceed until every item is collected."
 )
 
+# T6 intrinsically-negative regression (job-10 gate, 2026-05-20). The verbatim
+# ERR-101 answer from run job10_err101: it correctly explains that a negative
+# SQLCODE *can* be searched with altierr (absolute value -> hex -> lookup), the
+# OPPOSITE of the intrinsically-negative prohibited claim. Bag-of-words overlap
+# is 1.00 because every term but "can"/"cannot" is shared, so polarity must be
+# compared -- the answer does not negate near the claim terms and must read as
+# NOT present. The unsafe answer echoes the negative claim and must still be
+# detected.
+NEGATIVE_CLAIM_ERR101 = "A negative SQLCODE cannot be searched with altierr."
+NEGATIVE_CLAIM_ERR101_SAFE_ANSWER = 'Use `altierr` as the first lookup step, but normalize the input carefully.\n\n1. If the user gives an Altibase error code such as `ERR-11075`, run/use:\n\n```sh\naltierr 0x11075\n```\n\nExample context output:\n\n```text\n0x11075 ( 69749) smERR_ABORT_smcExceedLockTimeWait The transaction has exceeded the lock timeout specified by the user.\n```\n\n2. If the user gives a negative `SQLCODE`, treat values other than `0`, `1`, `100`, `-1`, and `-2` as an actual error code. Use the absolute numeric code, convert it to hexadecimal, then query `altierr`. For example, `SQLCODE=-69749` corresponds to `69749`, which is `0x11075`, so use:\n\n```sh\naltierr 0x11075\n```\n\n3. If the user gives an ODBC/SQLCLI diagnostic, first collect the diagnostic fields using `SQLError(env,dbc,stmt,state,err,msg,msgMax,msgLength)` or `SQLGetDiagRec`/`SQLGetDiagField`. Use the `err`/native error number, convert it to hexadecimal if needed, and query `altierr`.\n\n4. If the user only has an error-message keyword, ask for the exact full error line or diagnostic fields: `ERR-xxxxx`, `SQLCODE`, `SQLSTATE`, ODBC `err`, and `msg`. The safest next check is to search the installed error text with `altierr` only after obtaining a real code; keyword-only matching can be ambiguous.'
+NEGATIVE_CLAIM_ERR101_UNSAFE_ANSWER = (
+    "A negative SQLCODE cannot be searched with altierr. altierr never "
+    "resolves a negative SQLCODE, so no altierr lookup is possible for it."
+)
+
 
 def prohibited_claim_regression_failures() -> list[str]:
     """Check T6 prohibited-claim regression cases.
@@ -1980,6 +2006,27 @@ def prohibited_claim_regression_failures() -> list[str]:
     if not backup_unsafe_present:
         failures.append(
             "a reckless negation-phrased prohibited claim was not detected"
+        )
+
+    # Intrinsically-negative claims: an answer that affirms the OPPOSITE of
+    # "X cannot be done" must not be flagged on bag-of-words overlap alone; an
+    # answer that echoes the negative claim must still be detected.
+    err101_safe_present, err101_safe_notes = prohibited_claim_present(
+        NEGATIVE_CLAIM_ERR101, NEGATIVE_CLAIM_ERR101_SAFE_ANSWER
+    )
+    if err101_safe_present:
+        failures.append(
+            "an answer affirming the opposite of an intrinsically-negative "
+            f"claim was wrongly flagged ({err101_safe_notes})"
+        )
+
+    err101_unsafe_present, _ = prohibited_claim_present(
+        NEGATIVE_CLAIM_ERR101, NEGATIVE_CLAIM_ERR101_UNSAFE_ANSWER
+    )
+    if not err101_unsafe_present:
+        failures.append(
+            "an answer asserting an intrinsically-negative prohibited claim "
+            "was not detected"
         )
 
     return failures
