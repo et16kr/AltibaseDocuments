@@ -13,13 +13,16 @@ import argparse
 import datetime as dt
 import glob
 import hashlib
+import html
 import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
-from dataclasses import dataclass
+import tempfile
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -64,10 +67,165 @@ STOPWORDS = {
     "which",
     "with",
 }
+
+# --- Lexical ranking signal (T3) -------------------------------------------
+# The retrieval ranking signal is built from the question text only. Generic
+# enumeration fields (`user_level`, `answer_type`) are deliberately excluded:
+# values like `advanced_operator` / `reference` occur in thousands of chunks
+# and drown out the technical signal. `version_scope` is applied as a separate
+# per-chunk bonus and `id` is not used as a ranking token.
+QUERY_TOKEN_RE = re.compile(r"[A-Za-z0-9_$#./:+-]{2,}")
+
+# Identifier-like technical tokens are weighted this many times higher than
+# ordinary prose tokens in score_chunk().
+TECHNICAL_TOKEN_WEIGHT = 4
+
+# Flat score bonus added to an already-relevant chunk whose source-block
+# version_scope matches the question's version_scope. Kept small so it
+# tie-breaks between topically similar chunks without overriding lexical
+# relevance, and it is never applied to a chunk with no token overlap.
+VERSION_SCOPE_BONUS = 6
+
+# A `_`, `$`, or `.` flanked by alphanumerics marks an identifier-like token
+# (`mem_max_db_size`, `V$PROPERTY`, `altibase.properties`) while ignoring
+# ordinary sentence punctuation such as a trailing period.
+INTERIOR_SPECIAL_RE = re.compile(r"[A-Za-z0-9][_$.][A-Za-z0-9]")
+
+# Error-code-like tokens: hex codes (`0x4102e`) and long numeric or signed
+# numeric codes (`-266286`, `594171`).
+ERROR_CODE_RE = re.compile(r"0x[0-9a-f]+|-?[0-9]{4,}")
+
+# SQL-keyword-like tokens carry technical weight even when written in lowercase
+# prose. Restricted to distinctive statement / object / type keywords so that
+# generic words do not inflate the technical signal.
+SQL_KEYWORDS = frozenset(
+    {
+        "select",
+        "insert",
+        "update",
+        "delete",
+        "merge",
+        "upsert",
+        "create",
+        "alter",
+        "drop",
+        "truncate",
+        "rename",
+        "grant",
+        "revoke",
+        "commit",
+        "rollback",
+        "savepoint",
+        "table",
+        "tablespace",
+        "index",
+        "view",
+        "sequence",
+        "synonym",
+        "trigger",
+        "procedure",
+        "function",
+        "constraint",
+        "partition",
+        "primary",
+        "foreign",
+        "unique",
+        "join",
+        "union",
+        "where",
+        "replication",
+        "varchar",
+        "timestamp",
+    }
+)
+
 ALLOWED_CONTEXT_ROOTS = {
     "GPTs/attachments/*.md": "GPTs/attachments",
     "GPTs/upload_package/*.md": "GPTs/upload_package",
 }
+
+# Source bodies in the upload-package shards are wrapped in HTML comments of the
+# form `<!-- SOURCE_BLOCK_BEGIN source_id="..." block_id="..." ... -->` /
+# `<!-- SOURCE_BLOCK_END ... -->`. These regexes recognise the wrappers so block
+# provenance can be attached to every chunk carved from inside a block.
+SOURCE_BLOCK_BEGIN_RE = re.compile(r"<!--\s*SOURCE_BLOCK_BEGIN\b(.*?)-->")
+SOURCE_BLOCK_END_RE = re.compile(r"<!--\s*SOURCE_BLOCK_END\b.*?-->")
+BLOCK_ATTR_RE = re.compile(r'(\w+)\s*=\s*"([^"]*)"')
+# Provenance attributes propagated from each source block onto its chunks.
+BLOCK_META_ATTR_KEYS = (
+    "source_id",
+    "block_id",
+    "source_path",
+    "source_family",
+    "version_scope",
+    "language",
+    "authority_label",
+)
+
+# --- Manifest-aware routing (T4) -------------------------------------------
+# `02_source_manifest.md` and `03_source_to_shard_manifest.md` carry the
+# package's documented retrieval contract: match a question to rows in the
+# source manifest, carry the selected `source_id` into the shard manifest, and
+# read the matching source block. The runner parses both manifests (each a TSV
+# embedded in a fenced ```tsv block) so routed-source chunks win retrieval
+# ranking instead of the shard manifest staying unused.
+SOURCE_MANIFEST_REL = "GPTs/upload_package/02_source_manifest.md"
+SHARD_MANIFEST_REL = "GPTs/upload_package/03_source_to_shard_manifest.md"
+
+# The embedded TSV is fenced with a ```tsv ... ``` code block.
+TSV_FENCE_RE = re.compile(r"```tsv[^\n]*\n(.*?)\n```", re.DOTALL)
+
+# route_sources() scores each source-manifest row by question-token overlap
+# against these columns; the weight reflects how strongly a hit in a column
+# indicates the row is the intended source (a title hit is the strongest
+# signal, a language hit the weakest).
+ROUTE_FIELD_WEIGHTS = (
+    ("title", 5),
+    ("source_family", 4),
+    ("source_path", 3),
+    ("version_scope", 1),
+    ("language", 1),
+)
+
+# Tie-breaker added to an already-relevant source row whose `version_scope`
+# equals the question's. Mirrors VERSION_SCOPE_BONUS: it only refines ranking
+# between topically similar rows and never pulls in a zero-overlap row.
+ROUTE_VERSION_MATCH_BONUS = 4
+
+# Number of top-scoring `source_id`s route_sources() returns per question.
+ROUTE_TOP_K = 5
+
+# Flat score bonus added in score_chunk() to a chunk whose source block belongs
+# to a routed source. Deliberately far larger than any attainable lexical score
+# so routed-source chunks win ranking and fill the context budget first, while
+# lexical score still orders chunks within the routed set.
+ROUTED_SOURCE_BONUS = 100_000
+
+# --- Budgeted context assembly (T5) ----------------------------------------
+# Columns of the `02_source_manifest.md` row surfaced, in this order, in the
+# compact routing-metadata section that leads the assembled context. The
+# section carries the routing decision into the model context as a few short
+# lines instead of copying the whole manifest file.
+ROUTING_METADATA_COLUMNS = (
+    "source_id",
+    "source_family",
+    "version_scope",
+    "language",
+    "title",
+    "source_path",
+    "authority_label",
+)
+
+# Heading used for the synthetic routing-metadata chunk so it is recognisable
+# in the assembled context and the retrieval audit sidecar.
+ROUTING_METADATA_HEADING = "routed-source metadata"
+
+# Fraction of the context budget reserved for non-routed lexical chunks so a
+# routing miss degrades to baseline lexical retrieval instead of total content
+# loss. The routed + nearby sections fill at most `1 - LEXICAL_RESERVE_FRACTION`
+# of the budget on the first pass; a leftover second pass reclaims any reserve
+# the secondary lexical section did not use, so correct routing wastes nothing.
+LEXICAL_RESERVE_FRACTION = 0.30
 
 
 @dataclass(frozen=True)
@@ -90,6 +248,25 @@ class ContextBundle:
 
 
 @dataclass(frozen=True)
+class BlockMeta:
+    """Provenance for a `SOURCE_BLOCK_BEGIN`/`SOURCE_BLOCK_END` wrapped body.
+
+    `shard_path` is the upload-package shard file the block was copied into.
+    All fields are plain strings so the metadata is JSON-serialisable for the
+    retrieval audit sidecar.
+    """
+
+    source_id: str
+    block_id: str
+    source_path: str
+    source_family: str
+    version_scope: str
+    language: str
+    authority_label: str
+    shard_path: str
+
+
+@dataclass(frozen=True)
 class ContextChunk:
     rel_path: str
     heading: str
@@ -97,6 +274,33 @@ class ContextChunk:
     search_text: str
     rel_path_lower: str
     heading_lower: str
+    block_meta: BlockMeta | None = None
+
+
+@dataclass(frozen=True)
+class RankingQuery:
+    """Lexical ranking signal derived from the allowlisted question projection.
+
+    `tokens` is the ordered bag of question-text tokens used for base lexical
+    scoring. `technical_tokens` is the identifier-like subset (SQL object
+    names, `V$...` views, property names, error codes) weighted higher in
+    `score_chunk`. `version_scope` is applied as a separate per-chunk bonus,
+    never as a flat ranking token. `question_id` is retained for reference
+    only and does not influence ranking.
+
+    `routed_source_ids` and `routed_block_keys` carry the manifest-aware
+    routing decision (T4): the `source_id`s selected by `route_sources` and the
+    `(source_id, block_id)` pairs the shard manifest registers for them. They
+    are empty until `build_context` populates them and drive the
+    `ROUTED_SOURCE_BONUS` in `score_chunk`.
+    """
+
+    tokens: tuple[str, ...]
+    technical_tokens: frozenset[str]
+    version_scope: str
+    question_id: str
+    routed_source_ids: frozenset[str] = frozenset()
+    routed_block_keys: frozenset[tuple[str, str]] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -317,15 +521,269 @@ def project_question(
 
 
 def tokenize_query(projection: dict[str, Any]) -> list[str]:
-    query = " ".join(
-        str(projection.get(key, ""))
-        for key in ("id", "question", "version_scope", "user_level", "answer_type")
-    )
-    tokens = re.findall(r"[A-Za-z0-9_$#./:+-]{2,}", query.lower())
+    """Tokenize the question text into the base lexical ranking signal.
+
+    Only the `question` field feeds the lexical signal. `user_level` and
+    `answer_type` are excluded because they are generic enumeration strings
+    (`advanced_operator`, `reference`, ...) that occur in thousands of chunks
+    and dilute the technical signal. `version_scope` is handled as a separate
+    per-chunk bonus (see `build_ranking_query`) and `id` is not a ranking
+    token. The return value is question-order with duplicates preserved so the
+    retrieval audit reflects the exact ranking signal.
+    """
+    question = str(projection.get("question", "")).lower()
+    tokens = QUERY_TOKEN_RE.findall(question)
     return [token for token in tokens if token not in STOPWORDS]
 
 
-def make_context_chunk(rel_path: str, heading: str, text: str) -> ContextChunk:
+def is_technical_token(raw: str, lowered: str) -> bool:
+    """Return True if a question token looks like an Altibase technical identifier.
+
+    `raw` is the token in its original case (needed to detect all-uppercase
+    identifiers); `lowered` is its lower-cased form.
+    """
+    # Interior `_`/`$`/`.` -> identifier-like (`mem_max_db_size`, `V$PROPERTY`).
+    if INTERIOR_SPECIAL_RE.search(raw):
+        return True
+    # All-uppercase identifier with at least two letters (`SQLCODE`, `ODBC`).
+    if raw.isupper() and sum(ch.isalpha() for ch in raw) >= 2:
+        return True
+    # Error-code patterns (`0x4102e`, `-266286`).
+    if ERROR_CODE_RE.fullmatch(lowered):
+        return True
+    # SQL-keyword-like tokens, even when written in lowercase prose.
+    if lowered in SQL_KEYWORDS:
+        return True
+    return False
+
+
+def extract_technical_tokens(question: str) -> set[str]:
+    """Extract identifier-like tokens from the question text.
+
+    Recognises uppercase identifiers (`SQLCODE`, `V$PROPERTY`), tokens with an
+    interior `_` / `$` / `.` (`mem_max_db_size`, `altibase.properties`),
+    error-code patterns (`0x4102e`, `-266286`) and SQL-keyword-like tokens.
+    Tokens are returned lower-cased so they align with the base ranking tokens;
+    `score_chunk` weights them `TECHNICAL_TOKEN_WEIGHT`x higher.
+    """
+    technical: set[str] = set()
+    for raw in QUERY_TOKEN_RE.findall(question):
+        lowered = raw.lower()
+        if lowered in STOPWORDS:
+            continue
+        if is_technical_token(raw, lowered):
+            technical.add(lowered)
+    return technical
+
+
+def build_ranking_query(projection: dict[str, Any]) -> RankingQuery:
+    """Build the per-question ranking signal used by `score_chunk`.
+
+    The lexical signal comes from the question text only; identifier-like
+    technical tokens are isolated for higher weighting, and `version_scope`
+    is carried separately for a per-chunk bonus.
+    """
+    question = str(projection.get("question", ""))
+    tokens = tuple(tokenize_query(projection))
+    # Keep only technical tokens that survive into the base token list so the
+    # technical weight in score_chunk() always has a matching ranking token.
+    technical = extract_technical_tokens(question) & set(tokens)
+    return RankingQuery(
+        tokens=tokens,
+        technical_tokens=frozenset(technical),
+        version_scope=str(projection.get("version_scope", "")).strip(),
+        question_id=str(projection.get("id", "")),
+    )
+
+
+def extract_tsv_rows(text: str) -> list[dict[str, str]]:
+    """Parse the first fenced ```tsv block in `text` into header-keyed rows.
+
+    The first non-blank line inside the fence is the tab-separated header; each
+    later line is split on tabs and zipped to it. Short rows are padded with
+    empty strings and any cells beyond the header width are folded back into the
+    final column so embedded tab-free data is never silently dropped. Returns an
+    empty list when no ```tsv block is present.
+    """
+    match = TSV_FENCE_RE.search(text)
+    if match is None:
+        return []
+    lines = [line for line in match.group(1).splitlines() if line.strip()]
+    if len(lines) < 2:
+        return []
+    header = lines[0].split("\t")
+    width = len(header)
+    rows: list[dict[str, str]] = []
+    for line in lines[1:]:
+        cells = line.split("\t")
+        if len(cells) < width:
+            cells = cells + [""] * (width - len(cells))
+        elif len(cells) > width:
+            cells = cells[: width - 1] + ["\t".join(cells[width - 1 :])]
+        rows.append({header[index]: cells[index] for index in range(width)})
+    return rows
+
+
+def parse_source_manifest(path: Path | None = None) -> dict[str, dict[str, str]]:
+    """Parse `02_source_manifest.md` into source rows keyed by `source_id`.
+
+    Each row exposes the source-manifest columns (`source_id`, `source_path`,
+    `source_family`, `title`, `version_scope`, `language`, `authority_label`,
+    and the remaining provenance columns). Returns an empty mapping when the
+    manifest file is missing or carries no TSV block, so manifest-aware routing
+    degrades cleanly to plain lexical ranking.
+    """
+    if path is None:
+        path = REPO_ROOT / SOURCE_MANIFEST_REL
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    rows: dict[str, dict[str, str]] = {}
+    for row in extract_tsv_rows(text):
+        source_id = row.get("source_id", "").strip()
+        if not source_id or source_id == "source_id":
+            continue
+        rows[source_id] = row
+    return rows
+
+
+def parse_shard_manifest(path: Path | None = None) -> dict[tuple[str, str], str]:
+    """Parse `03_source_to_shard_manifest.md` into a block-to-shard map.
+
+    The mapping key is `(source_id, block_id)` and the value is the
+    upload-package context file holding that block. The manifest's `shard_path`
+    column preserves the `GPTs/source_pack/source_pack_shard_NNN.md`
+    evidence-baseline path; it is normalised by basename to the matching
+    `GPTs/upload_package/source_pack_shard_NNN.md` file actually loaded as
+    context. Returns an empty mapping when the manifest is missing.
+    """
+    if path is None:
+        path = REPO_ROOT / SHARD_MANIFEST_REL
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    mapping: dict[tuple[str, str], str] = {}
+    for row in extract_tsv_rows(text):
+        source_id = row.get("source_id", "").strip()
+        block_id = row.get("block_id", "").strip()
+        shard_path = row.get("shard_path", "").strip()
+        if not source_id or not block_id or not shard_path:
+            continue
+        basename = Path(shard_path).name
+        mapping[(source_id, block_id)] = f"GPTs/upload_package/{basename}"
+    return mapping
+
+
+def route_sources(
+    query: RankingQuery,
+    manifest_rows: dict[str, dict[str, str]],
+) -> list[str]:
+    """Score source-manifest rows against the question and return top-K ids.
+
+    Routing ranks a row first by the *breadth* of the match — how many distinct
+    question tokens hit the row — and only then by the weighted score. A single
+    ambiguous token shared across product families (e.g. the generic acronym
+    `CLI`, which appears in both the Altibase CLI and Migration Center families)
+    must not let a one-token row crowd the documented source out of the routed
+    set: a row matching two distinct tokens always outranks a row matching one.
+
+    Each distinct token contributes exactly once, via its single strongest
+    field hit (`title` > `source_family` > `source_path` > ...), so a token that
+    happens to appear in three columns of one row does not triple its weight.
+    Identifier-like technical tokens keep the `TECHNICAL_TOKEN_WEIGHT`x weight
+    used in `score_chunk`. Tokens are matched on word boundaries so a short
+    token (`cli`) never matches inside an unrelated word (`client`). An
+    already-relevant row whose `version_scope` equals the question's receives a
+    small weighted tie-breaker bonus.
+
+    Only the question text and the in-package source manifest are used — never
+    judge-only question fields. The result is sorted deterministically by
+    descending distinct-hit count, then descending weighted score, then
+    `source_id`, and limited to `ROUTE_TOP_K` entries.
+    """
+    if not manifest_rows or not query.tokens:
+        return []
+    # De-duplicate while preserving question order; a repeated token must not
+    # inflate either the distinct-hit count or the weighted score.
+    distinct_tokens: list[str] = []
+    seen: set[str] = set()
+    for token in query.tokens:
+        if token not in seen:
+            seen.add(token)
+            distinct_tokens.append(token)
+    # Word-boundary matcher per token: `(?<![a-z0-9])tok(?![a-z0-9])` keeps an
+    # ambiguous short token from matching inside a longer unrelated word.
+    matchers = {
+        token: re.compile(rf"(?<![a-z0-9]){re.escape(token)}(?![a-z0-9])")
+        for token in distinct_tokens
+    }
+    scored: list[tuple[int, int, str]] = []
+    for source_id, row in manifest_rows.items():
+        fields = {
+            name: str(row.get(name, "")).lower() for name, _ in ROUTE_FIELD_WEIGHTS
+        }
+        distinct_hits = 0
+        weighted = 0
+        for token in distinct_tokens:
+            token_weight = (
+                TECHNICAL_TOKEN_WEIGHT if token in query.technical_tokens else 1
+            )
+            best_field = 0
+            for name, field_weight in ROUTE_FIELD_WEIGHTS:
+                if matchers[token].search(fields[name]):
+                    best_field = max(best_field, field_weight)
+            if best_field:
+                distinct_hits += 1
+                weighted += best_field * token_weight
+        if distinct_hits == 0:
+            continue
+        if (
+            query.version_scope
+            and str(row.get("version_scope", "")).strip() == query.version_scope
+        ):
+            weighted += ROUTE_VERSION_MATCH_BONUS
+        scored.append((distinct_hits, weighted, source_id))
+    scored.sort(key=lambda item: (-item[0], -item[1], item[2]))
+    return [source_id for _, _, source_id in scored[:ROUTE_TOP_K]]
+
+
+def build_routing_metadata(
+    routed_source_ids: list[str],
+    manifest_rows: dict[str, dict[str, str]],
+) -> str:
+    """Render the compact routing-metadata section for the routed sources (T5).
+
+    Emits one short line per routed `source_id`, in the deterministic order
+    `route_sources()` returned them, using only `02_source_manifest.md`
+    columns. This is the highest-priority context section: it makes the routing
+    decision explicit in the model context without copying a manifest-sized
+    block. Returns an empty string when nothing was routed or no manifest row
+    is available, so assembly degrades cleanly to plain lexical context.
+    """
+    lines: list[str] = []
+    for source_id in routed_source_ids:
+        row = manifest_rows.get(source_id)
+        if not row:
+            continue
+        lines.append(
+            " ".join(
+                f"{column}={str(row.get(column, '')).strip()}"
+                for column in ROUTING_METADATA_COLUMNS
+            )
+        )
+    if not lines:
+        return ""
+    return "Routed sources (02_source_manifest.md):\n" + "\n".join(lines)
+
+
+def make_context_chunk(
+    rel_path: str,
+    heading: str,
+    text: str,
+    block_meta: BlockMeta | None = None,
+) -> ContextChunk:
     search_text = f"{rel_path}\n{heading}\n{text}".lower()
     return ContextChunk(
         rel_path=rel_path,
@@ -334,7 +792,55 @@ def make_context_chunk(rel_path: str, heading: str, text: str) -> ContextChunk:
         search_text=search_text,
         rel_path_lower=rel_path.lower(),
         heading_lower=heading.lower(),
+        block_meta=block_meta,
     )
+
+
+def parse_block_meta(attr_text: str, shard_path: str) -> BlockMeta:
+    """Parse `SOURCE_BLOCK_BEGIN` comment attributes into a `BlockMeta`.
+
+    HTML entities in attribute values (e.g. `&#x27;` in `source_path`) are
+    decoded so the metadata matches the plain-text form used by the source
+    manifests. Missing attributes default to an empty string.
+    """
+    raw = {
+        match.group(1): html.unescape(match.group(2))
+        for match in BLOCK_ATTR_RE.finditer(attr_text)
+    }
+    return BlockMeta(
+        source_id=raw.get("source_id", ""),
+        block_id=raw.get("block_id", ""),
+        source_path=raw.get("source_path", ""),
+        source_family=raw.get("source_family", ""),
+        version_scope=raw.get("version_scope", ""),
+        language=raw.get("language", ""),
+        authority_label=raw.get("authority_label", ""),
+        shard_path=shard_path,
+    )
+
+
+def chunk_header(chunk: ContextChunk) -> str:
+    """Build a context section header, prefixed with block provenance.
+
+    A chunk carved from inside a source block prepends compact provenance
+    (`source_id` / `block_id` / version / language) so the `SRC-*` / `BLOCK-*` /
+    version and shard-path tokens are literally present in the model context.
+    Chunks outside any block keep the plain `rel_path :: heading` header.
+    """
+    meta = chunk.block_meta
+    if meta is not None:
+        provenance = (
+            f"source_id={meta.source_id} block_id={meta.block_id} "
+            f"version={meta.version_scope} lang={meta.language} :: "
+        )
+    else:
+        provenance = ""
+    return f"\n\n===== {provenance}{chunk.rel_path} :: {chunk.heading} =====\n"
+
+
+def block_meta_audit(chunk: ContextChunk) -> dict[str, str] | None:
+    """Return the chunk's source-block provenance for the retrieval audit."""
+    return asdict(chunk.block_meta) if chunk.block_meta is not None else None
 
 
 def split_markdown_chunks(document: AttachmentDocument, chunk_chars: int) -> list[ContextChunk]:
@@ -342,16 +848,36 @@ def split_markdown_chunks(document: AttachmentDocument, chunk_chars: int) -> lis
     current_heading = document.rel_path
     current_lines: list[str] = []
     current_size = 0
+    current_block_meta: BlockMeta | None = None
 
     def flush() -> None:
         nonlocal current_lines, current_size
         text = "".join(current_lines).strip()
         if text:
-            chunks.append(make_context_chunk(document.rel_path, current_heading, text))
+            chunks.append(
+                make_context_chunk(
+                    document.rel_path, current_heading, text, current_block_meta
+                )
+            )
         current_lines = []
         current_size = 0
 
     for line in document.text.splitlines(keepends=True):
+        begin_match = SOURCE_BLOCK_BEGIN_RE.search(line)
+        end_match = SOURCE_BLOCK_END_RE.search(line) if begin_match is None else None
+        # SOURCE_BLOCK boundaries split chunks so each chunk lies wholly inside
+        # or wholly outside a source block; the wrapper comment line itself is
+        # metadata and is not emitted into chunk text.
+        if begin_match is not None:
+            flush()
+            current_block_meta = parse_block_meta(begin_match.group(1), document.rel_path)
+            current_heading = document.rel_path
+            continue
+        if end_match is not None:
+            flush()
+            current_block_meta = None
+            current_heading = document.rel_path
+            continue
         heading = re.match(r"^(#{1,4})\s+(.+?)\s*$", line)
         if heading and current_lines:
             flush()
@@ -372,16 +898,50 @@ def collect_markdown_chunks(documents: list[AttachmentDocument], chunk_chars: in
     return chunks
 
 
-def score_chunk(chunk: ContextChunk, query_tokens: list[str]) -> int:
+def score_chunk(chunk: ContextChunk, query: RankingQuery) -> int:
+    """Score a chunk against the question ranking signal.
+
+    Each question token contributes body / path / heading hits. Identifier-like
+    technical tokens are weighted `TECHNICAL_TOKEN_WEIGHT`x higher so the
+    technical signal dominates generic prose overlap. A chunk that already has
+    token overlap and whose source block targets the question's `version_scope`
+    receives a flat `VERSION_SCOPE_BONUS`; the version match is a tie-breaker
+    and never pulls in a zero-overlap chunk.
+
+    A chunk whose source block belongs to a manifest-routed source (T4) gets a
+    flat `ROUTED_SOURCE_BONUS` so routed-source chunks win ranking and fill the
+    context budget ahead of plain lexical matches. When the shard manifest is
+    available the bonus is restricted to `(source_id, block_id)` pairs it
+    registers; otherwise it falls back to matching on `source_id` alone.
+    """
     score = 0
-    for token in query_tokens:
+    for token in query.tokens:
+        weight = TECHNICAL_TOKEN_WEIGHT if token in query.technical_tokens else 1
         occurrences = chunk.search_text.count(token)
         if occurrences:
-            score += min(occurrences, 5)
+            score += min(occurrences, 5) * weight
         if token in chunk.rel_path_lower:
-            score += 3
+            score += 3 * weight
         if token in chunk.heading_lower:
-            score += 5
+            score += 5 * weight
+    meta = chunk.block_meta
+    if (
+        score > 0
+        and query.version_scope
+        and meta is not None
+        and meta.version_scope == query.version_scope
+    ):
+        score += VERSION_SCOPE_BONUS
+    if (
+        meta is not None
+        and query.routed_source_ids
+        and meta.source_id in query.routed_source_ids
+        and (
+            not query.routed_block_keys
+            or (meta.source_id, meta.block_id) in query.routed_block_keys
+        )
+    ):
+        score += ROUTED_SOURCE_BONUS
     return score
 
 
@@ -393,9 +953,17 @@ def build_context(
     max_context_chars: int,
     context_source_glob: str,
     context_root: str,
-) -> ContextBundle:
+    manifest_rows: dict[str, dict[str, str]] | None = None,
+    shard_map: dict[tuple[str, str], str] | None = None,
+) -> tuple[ContextBundle, dict[str, Any]]:
     if max_context_chars < 0:
         raise RunnerError("--max-context-chars must be 0 or a positive integer")
+
+    # Manifest-aware routing (T4): score the in-package source manifest against
+    # the question and carry the routed `source_id`s forward. This is computed
+    # for every mode so the retrieval audit always records the routing decision.
+    ranking_query = build_ranking_query(projection)
+    routed_source_ids = route_sources(ranking_query, manifest_rows or {})
 
     if mode == "full":
         parts = [
@@ -409,7 +977,7 @@ def build_context(
                 "increase the limit or use --context-mode lexical"
             )
         files = [document.rel_path for document in documents]
-        return ContextBundle(
+        bundle = ContextBundle(
             text=text,
             files=files,
             digest=digest_text(text),
@@ -419,54 +987,203 @@ def build_context(
             context_source_glob=context_source_glob,
             context_root=context_root,
         )
+        audit = {
+            "question_id": projection["id"],
+            "query_tokens": tokenize_query(projection),
+            "budget": max_context_chars,
+            "routed_source_ids": routed_source_ids,
+            "selected_chunks": [
+                {
+                    "rel_path": document.rel_path,
+                    "heading": document.rel_path,
+                    "char_count": len(document.text),
+                    "score": None,
+                    "block_meta": None,
+                }
+                for document in documents
+            ],
+        }
+        return bundle, audit
 
     if mode != "lexical":
         raise RunnerError(f"Unknown context mode: {mode}")
 
-    query_tokens = tokenize_query(projection)
+    # Restrict the routed-source bonus to blocks the shard manifest actually
+    # registers for a routed source — the documented 02 -> source_id -> 03 ->
+    # block retrieval contract. When the shard manifest is unavailable the
+    # bonus in score_chunk falls back to matching on `source_id` alone.
+    routed_set = frozenset(routed_source_ids)
+    routed_block_keys = frozenset(
+        key for key in (shard_map or {}) if key[0] in routed_set
+    )
+    ranking_query = replace(
+        ranking_query,
+        routed_source_ids=routed_set,
+        routed_block_keys=routed_block_keys,
+    )
+    query_tokens = list(ranking_query.tokens)
     scored_chunks: list[tuple[int, ContextChunk]] = []
     for chunk in context_chunks:
-        scored_chunks.append((score_chunk(chunk, query_tokens), chunk))
+        scored_chunks.append((score_chunk(chunk, ranking_query), chunk))
 
     scored_chunks.sort(key=lambda item: (-item[0], item[1].rel_path, item[1].heading))
-    selected: list[ContextChunk] = []
-    selected_size = 0
-    budget = max_context_chars or sum(len(item.text) for _, item in scored_chunks)
-    for score, chunk in scored_chunks:
-        if score <= 0 and selected:
-            continue
-        header = f"\n\n===== {chunk.rel_path} :: {chunk.heading} =====\n"
-        candidate_size = len(header) + len(chunk.text) + 1
-        if candidate_size > budget and not selected:
-            remaining = max(budget - len(header) - 1, 0)
-            selected.append(
-                make_context_chunk(chunk.rel_path, chunk.heading, chunk.text[:remaining].rstrip())
+
+    # --- Budgeted context assembly (T5) ------------------------------------
+    # Partition `max_context_chars` deterministically across four sections, in
+    # priority order, so manifest-routed source content leads the context but a
+    # routing miss still degrades gracefully to baseline lexical retrieval:
+    #   1. compact routing metadata for the routed sources (02-manifest rows);
+    #   2. routed-source chunks, each carrying the job-06 provenance prefix;
+    #   3. nearby heading / wrapper context — lexically relevant chunks from a
+    #      routed source's shard file that are not themselves routed blocks;
+    #   4. secondary lexical chunks — chunks with token overlap from any other
+    #      file.
+    # Sections 2-3 fill only up to `1 - LEXICAL_RESERVE_FRACTION` of the budget
+    # on the first pass; the remainder is reserved for section 4 so that even a
+    # total mis-route (routed set points at the wrong product) leaves correct
+    # lexical content in context. A leftover second pass then re-offers the
+    # routed and nearby sections any reserve section 4 did not consume, so
+    # correct routing still fills the whole budget and nothing is wasted.
+    # Each section is filled with whole-chunk greedy packing against the shared
+    # running budget: a chunk is taken only when it fits the remaining budget,
+    # otherwise it is skipped, so a manual-sized routed block contributes its
+    # best-ranked source-internal chunks rather than being taken or dropped
+    # whole. Truncations are deterministic and applied only at section
+    # boundaries: the routing-metadata section is clipped if it alone exceeds
+    # the budget, and a single best-ranked chunk is clipped as a last resort
+    # when nothing else fit. The assembled context never exceeds the budget.
+    def chunk_is_routed(chunk: ContextChunk) -> bool:
+        # Mirrors the ROUTED_SOURCE_BONUS condition in score_chunk() exactly,
+        # so the routed section is precisely the set of bonus-carrying chunks.
+        meta = chunk.block_meta
+        return (
+            meta is not None
+            and bool(routed_set)
+            and meta.source_id in routed_set
+            and (
+                not routed_block_keys
+                or (meta.source_id, meta.block_id) in routed_block_keys
             )
-            selected_size = budget
-            break
-        if selected_size + candidate_size > budget:
-            continue
-        selected.append(make_context_chunk(chunk.rel_path, chunk.heading, chunk.text.rstrip()))
-        selected_size += candidate_size
-        if selected_size >= budget:
-            break
+        )
+
+    routed_section = [(s, c) for s, c in scored_chunks if chunk_is_routed(c)]
+    routed_paths = {c.rel_path for _, c in routed_section}
+    non_routed = [(s, c) for s, c in scored_chunks if not chunk_is_routed(c)]
+    # Section 3: lexically relevant chunks that share a shard file with a routed
+    # block (adjacent headings / wrapper text). Section 4: everything else with
+    # token overlap. Zero-overlap chunks are dropped from both.
+    nearby_section = [
+        (s, c) for s, c in non_routed if s > 0 and c.rel_path in routed_paths
+    ]
+    secondary_section = [
+        (s, c) for s, c in non_routed if s > 0 and c.rel_path not in routed_paths
+    ]
+
+    routing_metadata = build_routing_metadata(routed_source_ids, manifest_rows or {})
+
+    selected: list[ContextChunk] = []
+    selected_scores: list[int | None] = []
+    selected_size = 0
+    budget = max_context_chars or (
+        len(routing_metadata)
+        + sum(len(chunk_header(c)) + len(c.text) + 1 for _, c in scored_chunks)
+    )
+
+    # Section 1: routing metadata. Highest priority; clipped only if it alone
+    # would not fit the whole budget.
+    if routing_metadata:
+        meta_chunk = make_context_chunk(
+            SOURCE_MANIFEST_REL, ROUTING_METADATA_HEADING, routing_metadata
+        )
+        meta_header_len = len(chunk_header(meta_chunk))
+        meta_size = meta_header_len + len(meta_chunk.text) + 1
+        if meta_size <= budget:
+            selected.append(meta_chunk)
+            selected_scores.append(None)
+            selected_size += meta_size
+        else:
+            remaining = max(budget - meta_header_len - 1, 0)
+            if remaining > 0:
+                selected.append(
+                    make_context_chunk(
+                        SOURCE_MANIFEST_REL,
+                        ROUTING_METADATA_HEADING,
+                        meta_chunk.text[:remaining].rstrip(),
+                    )
+                )
+                selected_scores.append(None)
+                selected_size = budget
+
+    # Chunks already taken, so a section re-offered on the leftover second pass
+    # is not double-counted.
+    consumed: set[ContextChunk] = set()
+
+    def fill_section(
+        section: list[tuple[int, ContextChunk]], ceiling: int | None = None
+    ) -> None:
+        nonlocal selected_size
+        limit = budget if ceiling is None else min(budget, ceiling)
+        for score, chunk in section:
+            if chunk in consumed:
+                continue
+            if selected_size >= limit:
+                break
+            candidate_size = len(chunk_header(chunk)) + len(chunk.text) + 1
+            if selected_size + candidate_size > limit:
+                # Too large for the remaining budget; skip it and keep trying
+                # smaller chunks rather than truncating mid-section.
+                continue
+            consumed.add(chunk)
+            selected.append(
+                make_context_chunk(
+                    chunk.rel_path,
+                    chunk.heading,
+                    chunk.text.rstrip(),
+                    chunk.block_meta,
+                )
+            )
+            selected_scores.append(score)
+            selected_size += candidate_size
+
+    # First pass: routed (section 2) and nearby (section 3) fill only up to the
+    # routed ceiling, leaving LEXICAL_RESERVE_FRACTION of the budget for the
+    # secondary lexical section so a mis-route cannot starve correct content.
+    lexical_reserve = int(budget * LEXICAL_RESERVE_FRACTION)
+    routed_ceiling = max(budget - lexical_reserve, 0)
+    fill_section(routed_section, ceiling=routed_ceiling)
+    fill_section(nearby_section, ceiling=routed_ceiling)
+    # Section 4: secondary lexical chunks, against the full remaining budget.
+    fill_section(secondary_section)
+    # Second pass: re-offer routed and nearby chunks any reserve the secondary
+    # section did not use, so correct routing still fills the whole budget.
+    fill_section(routed_section)
+    fill_section(nearby_section)
 
     if not selected and scored_chunks:
-        _, chunk = scored_chunks[0]
+        # Last resort: no routing metadata was emitted and not even the
+        # best-ranked chunk fit whole. Clip it to the budget so the assembled
+        # context is never empty. Deterministic — scored_chunks is fully
+        # ordered, so scored_chunks[0] is a stable choice.
+        score, chunk = scored_chunks[0]
+        header_len = len(chunk_header(chunk))
+        remaining = max(budget - header_len - 1, 0)
         selected.append(
-            make_context_chunk(chunk.rel_path, chunk.heading, chunk.text[:budget].rstrip())
+            make_context_chunk(
+                chunk.rel_path,
+                chunk.heading,
+                chunk.text[:remaining].rstrip(),
+                chunk.block_meta,
+            )
         )
+        selected_scores.append(score)
 
     if not selected:
         raise RunnerError("No context chunks were selected")
 
-    parts = [
-        f"\n\n===== {chunk.rel_path} :: {chunk.heading} =====\n{chunk.text}\n"
-        for chunk in selected
-    ]
+    parts = [f"{chunk_header(chunk)}{chunk.text}\n" for chunk in selected]
     text = "".join(parts).strip()
     files = sorted({chunk.rel_path for chunk in selected})
-    return ContextBundle(
+    bundle = ContextBundle(
         text=text,
         files=files,
         digest=digest_text(text),
@@ -476,6 +1193,23 @@ def build_context(
         context_source_glob=context_source_glob,
         context_root=context_root,
     )
+    audit = {
+        "question_id": projection["id"],
+        "query_tokens": query_tokens,
+        "budget": max_context_chars,
+        "routed_source_ids": routed_source_ids,
+        "selected_chunks": [
+            {
+                "rel_path": chunk.rel_path,
+                "heading": chunk.heading,
+                "char_count": len(chunk.text),
+                "score": score,
+                "block_meta": block_meta_audit(chunk),
+            }
+            for chunk, score in zip(selected, selected_scores)
+        ],
+    }
+    return bundle, audit
 
 
 def load_instruction_draft(manifest: dict[str, Any]) -> tuple[str | None, str | None]:
@@ -809,6 +1543,47 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+SHARD_AUDIT_RE = re.compile(r"^source_pack_shard_\d+\.md$")
+
+
+def write_retrieval_audit(output_dir: Path, audits: list[dict[str, Any]]) -> Path:
+    """Write a per-question retrieval audit sidecar next to answers.jsonl.
+
+    The audit is observability only: it is derived entirely from the allowlisted
+    question projection and the in-package manifests/context, never from
+    judge-only fields, and does not influence answer generation. Each
+    selected-chunk record carries the chunk's `block_meta` (source-block
+    provenance: `source_id`, `block_id`, `source_path`, `source_family`,
+    `version_scope`, `language`, `authority_label`, `shard_path`), or `null` for
+    chunks outside any block.
+
+    `routed_source_ids` records the `source_id`s `route_sources()` selected for
+    the question (T4). It is the meaningful routing observable for downstream
+    jobs: "routing used the manifest" (a non-empty `routed_source_ids`) is not
+    the same as "the manifest file appeared in selected context"
+    (`included_03_manifest`), so consumers must not rely on the latter alone.
+    """
+    audit_path = output_dir / "retrieval_audit.jsonl"
+    with audit_path.open("w", encoding="utf-8") as handle:
+        for audit in audits:
+            selected = audit.get("selected_chunks", [])
+            names = [Path(chunk["rel_path"]).name for chunk in selected]
+            distinct_shards = {name for name in names if SHARD_AUDIT_RE.match(name)}
+            record = {
+                "question_id": audit["question_id"],
+                "query_tokens": audit["query_tokens"],
+                "budget": audit["budget"],
+                "routed_source_ids": audit.get("routed_source_ids", []),
+                "selected_chunks": selected,
+                "included_02_manifest": "02_source_manifest.md" in names,
+                "included_03_manifest": "03_source_to_shard_manifest.md" in names,
+                "included_readme": any("readme" in name.lower() for name in names),
+                "distinct_shards": len(distinct_shards),
+            }
+            handle.write(canonical_json(record) + "\n")
+    return audit_path
+
+
 def filter_questions(
     questions: list[dict[str, Any]],
     question_ids: list[str] | None,
@@ -857,7 +1632,336 @@ def run_self_test(policy_path: Path) -> int:
         print(f"SELF-TEST FAILED: policy missing expected judge-only keys: {missing}", file=sys.stderr)
         return 1
 
+    audit_dir = Path(tempfile.mkdtemp(prefix="answer-runner-audit-"))
+    try:
+        sample_audit = {
+            "question_id": "PROP-001",
+            "query_tokens": ["mem_max_db_size"],
+            "budget": 180_000,
+            "routed_source_ids": ["SRC-000018", "SRC-000049"],
+            "selected_chunks": [
+                {
+                    "rel_path": "GPTs/upload_package/02_source_manifest.md",
+                    "heading": "Source manifest",
+                    "char_count": 12,
+                    "score": 7,
+                },
+                {
+                    "rel_path": "GPTs/upload_package/source_pack_shard_001.md",
+                    "heading": "Shard one",
+                    "char_count": 34,
+                    "score": 4,
+                },
+                {
+                    "rel_path": "GPTs/upload_package/source_pack_shard_001.md",
+                    "heading": "Shard one tail",
+                    "char_count": 8,
+                    "score": 1,
+                },
+            ],
+        }
+        audit_path = write_retrieval_audit(audit_dir, [sample_audit])
+        lines = [line for line in audit_path.read_text(encoding="utf-8").splitlines() if line]
+        if len(lines) != 1:
+            print("SELF-TEST FAILED: retrieval audit did not write one record per question", file=sys.stderr)
+            return 1
+        audit_record = json.loads(lines[0])
+        if not (
+            audit_record["included_02_manifest"]
+            and not audit_record["included_03_manifest"]
+            and not audit_record["included_readme"]
+            and audit_record["distinct_shards"] == 1
+            and audit_record["question_id"] == "PROP-001"
+            and audit_record["routed_source_ids"] == ["SRC-000018", "SRC-000049"]
+        ):
+            print(f"SELF-TEST FAILED: retrieval audit derivation: {audit_record}", file=sys.stderr)
+            return 1
+    finally:
+        shutil.rmtree(audit_dir, ignore_errors=True)
+
+    # Source-block metadata propagation: chunks carved from inside a
+    # SOURCE_BLOCK_BEGIN/END wrapper must carry that block's provenance, and the
+    # provenance must reach both the assembled context and the retrieval audit.
+    block_rel_path = "GPTs/upload_package/source_pack_shard_999.md"
+    block_doc = AttachmentDocument(
+        path=Path(block_rel_path),
+        rel_path=block_rel_path,
+        text=(
+            "Intro text outside any source block.\n\n"
+            "## SRC-000999 - Sample\n\n"
+            "Table-style heading section about the widget property.\n\n"
+            '<!-- SOURCE_BLOCK_BEGIN source_id="SRC-000999" '
+            "source_path=\"Manuals/Altibase_X/eng/Sample &#x27;Widget&#x27; Manual.md\" "
+            'source_family="sample_family" version_scope="9.9" language="en" '
+            'authority_label="English extraction aid" block_id="BLOCK-000999" -->\n'
+            "## Widget Configuration\n\n"
+            "The widget property controls the sample widget behaviour.\n"
+            "Configure the widget property before starting the widget service.\n\n"
+            '<!-- SOURCE_BLOCK_END source_id="SRC-000999" block_id="BLOCK-000999" -->\n\n'
+            "Trailing text outside any source block.\n"
+        ),
+    )
+    block_chunks = split_markdown_chunks(block_doc, 8_000)
+    in_block = [chunk for chunk in block_chunks if chunk.block_meta is not None]
+    out_block = [chunk for chunk in block_chunks if chunk.block_meta is None]
+    if not in_block or not out_block:
+        print(
+            "SELF-TEST FAILED: source-block parsing did not separate in-block "
+            f"and out-of-block chunks: {block_chunks}",
+            file=sys.stderr,
+        )
+        return 1
+    meta = in_block[0].block_meta
+    if not (
+        meta is not None
+        and meta.source_id == "SRC-000999"
+        and meta.block_id == "BLOCK-000999"
+        and meta.version_scope == "9.9"
+        and meta.language == "en"
+        and meta.source_family == "sample_family"
+        and meta.authority_label == "English extraction aid"
+        and meta.source_path == "Manuals/Altibase_X/eng/Sample 'Widget' Manual.md"
+        and meta.shard_path == block_rel_path
+    ):
+        print(f"SELF-TEST FAILED: source-block metadata fields: {meta}", file=sys.stderr)
+        return 1
+    header = chunk_header(in_block[0])
+    if "source_id=SRC-000999" not in header or "block_id=BLOCK-000999" not in header:
+        print(f"SELF-TEST FAILED: provenance header missing tokens: {header!r}", file=sys.stderr)
+        return 1
+    if chunk_header(out_block[0]).lstrip().startswith("===== source_id="):
+        print("SELF-TEST FAILED: out-of-block chunk gained provenance prefix", file=sys.stderr)
+        return 1
+
+    block_projection = {
+        "id": "BLOCK-SELFTEST",
+        "question": "How does the widget property work?",
+        "version_scope": "9.9",
+        "user_level": "developer",
+        "answer_type": "reference",
+        "answer_language": "en",
+    }
+    # Manifest-aware routing (T4): a source manifest row whose title/family
+    # overlaps the question must be routed, and chunks from that routed source
+    # must receive the ROUTED_SOURCE_BONUS so they win retrieval ranking.
+    block_manifest_rows = {
+        "SRC-000999": {
+            "source_id": "SRC-000999",
+            "source_path": "Manuals/Altibase_X/eng/Sample Widget Manual.md",
+            "source_family": "widget_family",
+            "title": "Widget Property Manual",
+            "version_scope": "9.9",
+            "language": "en",
+            "authority_label": "English extraction aid",
+        },
+        "SRC-000888": {
+            "source_id": "SRC-000888",
+            "source_path": "Manuals/Altibase_X/eng/Unrelated Topic.md",
+            "source_family": "other_family",
+            "title": "Unrelated Reference",
+            "version_scope": "9.9",
+            "language": "en",
+            "authority_label": "English extraction aid",
+        },
+    }
+    block_shard_map = {
+        ("SRC-000999", "BLOCK-000999"): "GPTs/upload_package/source_pack_shard_999.md",
+    }
+    block_bundle, block_audit = build_context(
+        [block_doc],
+        block_chunks,
+        block_projection,
+        "lexical",
+        180_000,
+        "GPTs/upload_package/*.md",
+        "GPTs/upload_package",
+        block_manifest_rows,
+        block_shard_map,
+    )
+    if "source_id=SRC-000999" not in block_bundle.text or "block_id=BLOCK-000999" not in block_bundle.text:
+        print("SELF-TEST FAILED: provenance tokens absent from assembled context", file=sys.stderr)
+        return 1
+    audited_meta = [
+        chunk.get("block_meta")
+        for chunk in block_audit["selected_chunks"]
+        if chunk.get("block_meta")
+    ]
+    if not audited_meta or audited_meta[0].get("source_id") != "SRC-000999":
+        print(f"SELF-TEST FAILED: retrieval audit missing block_meta: {block_audit}", file=sys.stderr)
+        return 1
+    if any("block_meta" not in chunk for chunk in block_audit["selected_chunks"]):
+        print("SELF-TEST FAILED: audit chunk missing block_meta key", file=sys.stderr)
+        return 1
+    if block_bundle.char_count > 180_000:
+        print("SELF-TEST FAILED: assembled context exceeded the budget", file=sys.stderr)
+        return 1
+    if block_audit.get("routed_source_ids") != ["SRC-000999"]:
+        print(
+            f"SELF-TEST FAILED: routing did not select SRC-000999: {block_audit.get('routed_source_ids')}",
+            file=sys.stderr,
+        )
+        return 1
+    routed_chunk_scores = [
+        chunk["score"]
+        for chunk in block_audit["selected_chunks"]
+        if chunk.get("block_meta")
+        and chunk["block_meta"].get("source_id") == "SRC-000999"
+    ]
+    if not routed_chunk_scores or min(routed_chunk_scores) < ROUTED_SOURCE_BONUS:
+        print(
+            f"SELF-TEST FAILED: routed-source chunk missing routing bonus: {routed_chunk_scores}",
+            file=sys.stderr,
+        )
+        return 1
+
+    if run_routing_self_test() != 0:
+        return 1
+
     print("OK: answer runner self-test passed")
+    return 0
+
+
+def run_routing_self_test() -> int:
+    """Exercise the manifest parsers and source router on synthetic fixtures."""
+    source_md = (
+        "# Source Manifest\n\n"
+        "```tsv\n"
+        "source_id\tsource_path\tsource_family\ttitle\tversion_scope\tlanguage\tauthority_label\n"
+        "SRC-000999\tManuals/Altibase_X/eng/Widget Manual.md\twidget_family\t"
+        "Widget Property Manual\t9.9\ten\tEnglish extraction aid\n"
+        "SRC-000888\tManuals/Altibase_X/eng/Unrelated.md\tother_family\t"
+        "Unrelated Reference\t9.9\ten\tEnglish extraction aid\n"
+        "```\n"
+    )
+    shard_md = (
+        "# Source To Shard Manifest\n\n"
+        "```tsv\n"
+        "source_id\tshard_id\tshard_path\tblock_id\n"
+        "SRC-000999\tSHARD-099\tGPTs/source_pack/source_pack_shard_099.md\tBLOCK-000999\n"
+        "```\n"
+    )
+    manifest_dir = Path(tempfile.mkdtemp(prefix="answer-runner-manifest-"))
+    try:
+        source_path = manifest_dir / "02_source_manifest.md"
+        shard_path = manifest_dir / "03_source_to_shard_manifest.md"
+        source_path.write_text(source_md, encoding="utf-8")
+        shard_path.write_text(shard_md, encoding="utf-8")
+
+        rows = parse_source_manifest(source_path)
+        if set(rows) != {"SRC-000999", "SRC-000888"}:
+            print(f"SELF-TEST FAILED: source manifest keys: {sorted(rows)}", file=sys.stderr)
+            return 1
+        widget_row = rows["SRC-000999"]
+        if not (
+            widget_row["title"] == "Widget Property Manual"
+            and widget_row["source_family"] == "widget_family"
+            and widget_row["version_scope"] == "9.9"
+            and widget_row["language"] == "en"
+            and widget_row["authority_label"] == "English extraction aid"
+        ):
+            print(f"SELF-TEST FAILED: source manifest columns: {widget_row}", file=sys.stderr)
+            return 1
+
+        shard_lookup = parse_shard_manifest(shard_path)
+        # The preserved GPTs/source_pack path must be normalised by basename to
+        # the matching GPTs/upload_package context file.
+        if shard_lookup.get(("SRC-000999", "BLOCK-000999")) != (
+            "GPTs/upload_package/source_pack_shard_099.md"
+        ):
+            print(f"SELF-TEST FAILED: shard manifest normalisation: {shard_lookup}", file=sys.stderr)
+            return 1
+
+        if parse_source_manifest(manifest_dir / "missing.md") != {}:
+            print("SELF-TEST FAILED: missing source manifest did not degrade to empty", file=sys.stderr)
+            return 1
+        if parse_shard_manifest(manifest_dir / "missing.md") != {}:
+            print("SELF-TEST FAILED: missing shard manifest did not degrade to empty", file=sys.stderr)
+            return 1
+    finally:
+        shutil.rmtree(manifest_dir, ignore_errors=True)
+
+    route_query = build_ranking_query(
+        {
+            "id": "ROUTE-SELFTEST",
+            "question": "How do I configure the widget property?",
+            "version_scope": "9.9",
+            "user_level": "developer",
+            "answer_type": "reference",
+            "answer_language": "en",
+        }
+    )
+    routed = route_sources(route_query, rows)
+    if routed != ["SRC-000999"]:
+        print(f"SELF-TEST FAILED: route_sources selection: {routed}", file=sys.stderr)
+        return 1
+    if route_sources(route_query, {}) != []:
+        print("SELF-TEST FAILED: route_sources with no manifest rows must be empty", file=sys.stderr)
+        return 1
+
+    # Ambiguous-token regression (job-10 gate). A generic acronym ("CLI")
+    # shared across product families must not let single-token rows crowd the
+    # documented source out of the routed set: routing ranks by the breadth of
+    # the match first, so the row matching the question on several distinct
+    # tokens outranks any number of one-token "CLI" rows. The word-boundary
+    # match also keeps "cli" from matching inside "client".
+    def cli_row(source_id: str, title: str, family: str, path: str) -> dict[str, str]:
+        return {
+            "source_id": source_id,
+            "source_path": path,
+            "source_family": family,
+            "title": title,
+            "version_scope": "7.3",
+            "language": "en",
+            "authority_label": "English extraction aid",
+        }
+
+    ambiguous_rows = {
+        "SRC-CLI-1": cli_row(
+            "SRC-CLI-1", "Altibase CLI Function Reference",
+            "c_cli_odbc_precompiler", "Manuals/eng/CLI_Reference.md"),
+        "SRC-CLI-2": cli_row(
+            "SRC-CLI-2", "Altibase CLI Datatype Guide",
+            "c_cli_odbc_precompiler", "Manuals/eng/CLI_Datatype.md"),
+        "SRC-CLI-3": cli_row(
+            "SRC-CLI-3", "Altibase CLI Connection Handling",
+            "aid_09_development_client_api", "Manuals/eng/CLI_Connect.md"),
+        "SRC-CLI-4": cli_row(
+            "SRC-CLI-4", "Altibase CLI Diagnostics",
+            "aid_09_development_client_api", "Manuals/eng/CLI_Diag.md"),
+        "SRC-CLI-5": cli_row(
+            "SRC-CLI-5", "Altibase CLI Environment Setup",
+            "c_cli_odbc_precompiler", "Manuals/eng/CLI_Env.md"),
+        "SRC-CLIENT": cli_row(
+            "SRC-CLIENT", "Client Application Programming",
+            "client_library", "Manuals/eng/Client.md"),
+        "SRC-MC": cli_row(
+            "SRC-MC", "Migration Center CLI Export Guide",
+            "migration_center_tool", "Manuals/eng/Migration_Center.md"),
+    }
+    ambiguous_query = build_ranking_query(
+        {
+            "id": "ROUTE-AMBIGUOUS",
+            "question": "Run the Migration Center CLI export command sequence.",
+            "version_scope": "7.3",
+            "user_level": "developer",
+            "answer_type": "procedure",
+            "answer_language": "en",
+        }
+    )
+    ambiguous_routed = route_sources(ambiguous_query, ambiguous_rows)
+    if not ambiguous_routed or ambiguous_routed[0] != "SRC-MC":
+        print(
+            "SELF-TEST FAILED: ambiguous-token routing did not rank the "
+            f"broader-matching source first: {ambiguous_routed}",
+            file=sys.stderr,
+        )
+        return 1
+    if "SRC-CLIENT" in ambiguous_routed:
+        print(
+            "SELF-TEST FAILED: token 'cli' matched inside the word 'client'",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
@@ -941,15 +2045,21 @@ def main() -> int:
         documents = load_attachment_documents(context_source_glob, context_root)
         context_chunks = collect_markdown_chunks(documents, args.chunk_chars)
         draft_path, draft_text = load_instruction_draft(manifest)
+        # Parse the in-package source/shard manifests once for manifest-aware
+        # routing (T4). Both degrade to empty mappings when absent, leaving
+        # retrieval as plain lexical ranking.
+        manifest_rows = parse_source_manifest()
+        shard_map = parse_shard_manifest()
         validator = load_answer_record_validator() if args.validate_output else None
 
         answer_path = output_dir / "answers.jsonl"
         records_written = 0
         error_count = 0
+        retrieval_audits: list[dict[str, Any]] = []
         with answer_path.open("w", encoding="utf-8") as answer_handle:
             for question in questions:
                 projection = project_question(question, manifest, policy)
-                context = build_context(
+                context, retrieval_audit = build_context(
                     documents,
                     context_chunks,
                     projection,
@@ -957,7 +2067,10 @@ def main() -> int:
                     args.max_context_chars,
                     context_source_glob,
                     context_root,
+                    manifest_rows,
+                    shard_map,
                 )
+                retrieval_audits.append(retrieval_audit)
                 prompt_text, prompt_scaffold = build_prompt(projection, context, draft_text)
                 request_payload = build_request_payload(provider, model, mode, prompt_text)
                 leakage_check = run_leakage_check(
@@ -1005,6 +2118,8 @@ def main() -> int:
                 answer_handle.write(canonical_json(record) + "\n")
                 records_written += 1
 
+        retrieval_audit_path = write_retrieval_audit(output_dir, retrieval_audits)
+
         run_summary = {
             "run_id": run_id,
             "manifest_id": manifest["manifest_id"],
@@ -1016,6 +2131,7 @@ def main() -> int:
             "answer_records": records_written,
             "errors": error_count,
             "answers_path": repo_rel(answer_path),
+            "retrieval_audit_path": repo_rel(retrieval_audit_path),
             "attachment_glob": answer_generation["attachment_glob"],
             "context_source_glob": context_source_glob,
             "context_root": context_root,
@@ -1028,7 +2144,7 @@ def main() -> int:
 
     print(
         f"OK: wrote {records_written} answer record(s) to {repo_rel(answer_path)} "
-        f"(errors={error_count})"
+        f"(errors={error_count}); retrieval audit at {repo_rel(retrieval_audit_path)}"
     )
     return 1 if error_count else 0
 
