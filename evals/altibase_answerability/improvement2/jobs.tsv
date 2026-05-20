@@ -1,0 +1,17 @@
+# Job manifest for run-all.sh  —  tab-separated:  id <TAB> title <TAB> prompt_file
+# Order is execution order. Lines starting with # are ignored.
+# Cycle 2. Plan: GPTs/reports/answerability_improvement_cycle2_plan_20260520.md
+# Phase 1 — judge validity (gate: gold-set agreement >= 90%)
+01	C2-01 Prohibited-claim false-positive fix round 2	01-C2-01-prohibited-claim-fix-round2.md
+02	C2-02 LLM-assisted fact judge	02-C2-02-llm-fact-judge.md
+03	C2-03 retrieval-recall manifest fix	03-C2-03-retrieval-recall-fix.md
+04	C2-04 Judge re-calibration gate	04-C2-04-judge-recalibration-gate.md
+# Phase 2 — retrieval / coverage
+05	C2-05 Router scoring tuning for under-specified questions	05-C2-05-router-scoring-tuning.md
+06	C2-06 properties domain deep-dive	06-C2-06-properties-deep-dive.md
+07	C2-07 errors and views coverage	07-C2-07-errors-views-coverage.md
+# Phase 3 — validation runs (LIVE, long-running, expensive)
+08	C2-08 Targeted calibration run (stop/go gate)	08-C2-08-targeted-calibration-run.md
+09	C2-09 Full re-run and regression analysis	09-C2-09-full-rerun-analysis.md
+# Phase 4 — documentation
+10	C2-10 Harness documentation update	10-C2-10-docs-update.md
