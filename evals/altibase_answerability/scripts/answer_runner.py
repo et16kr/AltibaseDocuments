@@ -197,8 +197,11 @@ ROUTE_TOP_K = 5
 
 # Flat score bonus added in score_chunk() to a chunk whose source block belongs
 # to a routed source. Deliberately far larger than any attainable lexical score
-# so routed-source chunks win ranking and fill the context budget first, while
-# lexical score still orders chunks within the routed set.
+# so routed-source chunks rank ahead of plain lexical matches, while lexical
+# score still orders chunks within the routed set. Note this bonus governs
+# ranking only: build_context() partitions routed vs lexical chunks into
+# separate budget sections (see LEXICAL_RESERVE_FRACTION), so it does not by
+# itself let routed chunks consume the whole budget.
 ROUTED_SOURCE_BONUS = 100_000
 
 # --- Budgeted context assembly (T5) ----------------------------------------
@@ -909,10 +912,12 @@ def score_chunk(chunk: ContextChunk, query: RankingQuery) -> int:
     and never pulls in a zero-overlap chunk.
 
     A chunk whose source block belongs to a manifest-routed source (T4) gets a
-    flat `ROUTED_SOURCE_BONUS` so routed-source chunks win ranking and fill the
-    context budget ahead of plain lexical matches. When the shard manifest is
-    available the bonus is restricted to `(source_id, block_id)` pairs it
-    registers; otherwise it falls back to matching on `source_id` alone.
+    flat `ROUTED_SOURCE_BONUS` so routed-source chunks rank ahead of plain
+    lexical matches. (`build_context` then partitions routed and lexical chunks
+    into separate budget sections — see `LEXICAL_RESERVE_FRACTION`.) When the
+    shard manifest is available the bonus is restricted to `(source_id,
+    block_id)` pairs it registers; otherwise it falls back to matching on
+    `source_id` alone.
     """
     score = 0
     for token in query.tokens:
