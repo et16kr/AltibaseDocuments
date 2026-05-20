@@ -145,9 +145,20 @@ The durable runner is `scripts/answer_runner.py`. It supports:
   and optional OpenAI client support.
 
 By default the runner requests English answers, preserves literal technical tokens, and
-uses lexical chunk selection from `GPTs/attachments/*.md` to keep prompts bounded. Use
-`--context-mode full` only when the selected model can safely accept the whole attachment
-set.
+uses bounded lexical chunk selection from the manifest-selected context root. Lexical
+selection is manifest-aware and source-block-aware: it parses the package source
+manifests (`02_source_manifest.md`, `03_source_to_shard_manifest.md`) to route each
+question to the documented source blocks, propagates per-chunk source-block metadata
+(`source_id`, `block_id`, version, language) into the context headers, and partitions
+`max_context_chars` into priority sections so routed-source content leads the context
+without crowding out secondary lexical chunks. Use `--context-mode full` only when the
+selected model can safely accept the whole attachment set.
+
+Each run also writes a `retrieval_audit.jsonl` sidecar next to `answers.jsonl`. The
+audit records, per question, the ranking tokens, the routed source ids, and the
+selected chunks with their source-block provenance. It is observability only — derived
+from the allowlisted projection and in-package context, never from judge-only fields —
+and does not affect answer generation. See `scripts/README.md` for the field list.
 
 ## Judge Contract
 
@@ -161,6 +172,20 @@ answer records produced by the attachments-only runner, uses only judge-side que
 metadata for evaluation, writes per-question judgments, and emits JSON plus Markdown
 aggregate reports. It supports an offline self-test and fixture calibration answers, so
 judge/report validation does not require live model calls.
+
+Fact coverage is semantic-tolerant: a deterministic suffix stemmer and a small curated
+equivalence map let correct paraphrases and word-form variants count as covered, while
+literal required-token preservation stays exact. Prohibited-claim detection is polarity-
+and order-aware, so a correct, safe answer is not flagged merely for sharing vocabulary
+with a prohibited claim. A question's `passed` decision is made directly against the
+`readiness_thresholds` in `policy.json` — no `blocker` finding, critical fact coverage
+and required-token preservation at or above their policy minimums, and no prohibited
+claim — and near-miss `high`/`medium` findings remain as remediation signal without
+auto-failing an otherwise in-policy answer.
+
+`scripts/calibrate_judge.py` measures judge-vs-human agreement against the labelled
+gold set `fixtures/judge_gold_set.jsonl`, reporting a confusion matrix with precision,
+recall, and overall agreement. It is a measurement tool and never fails a run.
 
 Judgments must score at least:
 

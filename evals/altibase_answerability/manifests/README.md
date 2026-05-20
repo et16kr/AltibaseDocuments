@@ -42,6 +42,13 @@ same answer-input allowlist, judge configuration, and reporting dimensions, and 
 explicit `context_root` so package dry-runs cannot escape the source-preserving upload
 package.
 
+Because the context root is the upload package, the runner's manifest-aware retrieval
+also reads the package's `02_source_manifest.md` and `03_source_to_shard_manifest.md`
+to route each question to its documented source blocks. These two files are part of
+the selected context, not a separate input; routing degrades cleanly to plain lexical
+ranking when they are absent. See `../scripts/README.md` for the context-selection and
+retrieval-audit details.
+
 ## Coding-Agent Manifest
 
 `coding_agent_source_preserving_package.json` is a separate benchmark for practical
