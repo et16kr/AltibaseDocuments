@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import functools
 import hashlib
 import json
 import re
@@ -99,6 +100,20 @@ NEGATION_TERMS = {
     "without",
     "unsupported",
 }
+# Negation words that make a prohibited *claim* intrinsically negative in
+# polarity ("system tablespaces cannot be dropped"). When the claim itself is
+# negative, an answer that echoes that negation is *asserting* the claim, so the
+# protective-negation guard in prohibited_claim_present() is intentionally
+# disabled for these claims.
+#
+# "without" is deliberately excluded. A "may do X without Y" claim is positive
+# in polarity -- "without Y" names the *prohibited behavior* (skipping the
+# safeguard Y), not the claim's polarity. A protective answer that forbids that
+# behavior ("do not do X until Y is confirmed") genuinely contradicts the
+# claim, so the protective-negation guard must stay enabled. Disabling it for
+# "without"-phrased claims flagged every careful preflight/checklist answer as
+# a false positive (job-10 gate regression, 2026-05-20).
+INTRINSIC_NEGATION_TERMS = NEGATION_TERMS - {"without"}
 REQUEST_TERMS = {
     "ask",
     "check",
@@ -126,6 +141,22 @@ DETAIL_TERMS = {
     "trace",
     "version",
 }
+# Single-token negation markers, used for proximity and sentence-level checks.
+# Multi-word forms in NEGATION_TERMS ("do not", "does not", "must not") are
+# already covered by the bare "not" token after normalization.
+NEGATION_TOKENS = {
+    "not",
+    "never",
+    "no",
+    "cannot",
+    "cant",
+    "without",
+    "unsupported",
+}
+# Ordering keywords. A *_BEFORE keyword between term X and term Y asserts
+# "X then Y"; a *_AFTER keyword between Y and X asserts the same ordering.
+ORDER_BEFORE_KEYWORDS = {"before", "then", "precede", "precedes", "preceding"}
+ORDER_AFTER_KEYWORDS = {"after", "following", "follows"}
 
 
 class JudgeError(Exception):
@@ -358,16 +389,145 @@ def text_terms(value: str) -> list[str]:
     return terms
 
 
+# --- T7-A: deterministic word-form tolerance for fact-term coverage ----------
+# Fact coverage used exact-word overlap, so a paraphrased-but-correct answer
+# failed purely on inflection (`restarting` vs `restarted`, `changed` vs
+# `change`) or on a synonymous Altibase phrasing (`reflected` vs `take effect`).
+# The helpers below add a small deterministic stemmer plus a curated equivalence
+# map. They make fact-TERM coverage form-tolerant only; literal required-token
+# preservation (`literal_token_present`) deliberately stays exact.
+
+# Curated equivalence classes for recurring Altibase phrasings. The rule judge
+# is bag-of-words, so without these a fact and a substantively identical answer
+# miss each other purely on word choice. Kept deliberately small and
+# conservative -- every group below is genuinely interchangeable in Altibase
+# operations docs, so tolerance never credits an answer that is actually wrong.
+# Members are compared stem-first, so inflected forms need not be listed.
+FACT_TERM_EQUIVALENCES: tuple[tuple[str, ...], ...] = (
+    # A static / read-only property change is visible only after a server bounce.
+    ("restart", "reboot"),
+    # "the new value is reflected" == "the change takes effect" == "is applied".
+    ("reflect", "apply", "take effect"),
+    # An operator "verifies" a state by checking / validating / confirming it.
+    ("verify", "check", "validate", "validation", "confirm"),
+)
+
+
+def lemma(word: str) -> str:
+    """Reduce an English word to a coarse stem for form-tolerant fact matching.
+
+    Deterministic and dependency-free: it strips one inflectional suffix
+    (plural -s/-es/-ies, past -ed/-ied, gerund -ing) and de-doubles a trailing
+    consonant left by -ed/-ing stripping (`dropped` -> `drop`). Conservative
+    length guards leave very short words (`used`, `set`) intact, so tolerance
+    does not bridge a fact term to an unrelated filler word.
+    """
+    word = word.strip()
+    if len(word) > 4 and word.endswith(("ies", "ied")):
+        return word[:-3] + "y"
+    if len(word) > 5 and word.endswith("ing"):
+        word = word[:-3]
+    elif len(word) > 4 and word.endswith("ed"):
+        word = word[:-2]
+    else:
+        if len(word) > 4 and word.endswith(("ses", "xes", "zes", "ches", "shes")):
+            return word[:-2]
+        if len(word) > 4 and word.endswith("es"):
+            return word[:-1]
+        if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+            return word[:-1]
+        return word
+    # Reached only after stripping -ing / -ed: de-double a trailing consonant.
+    if len(word) > 3 and word[-1] == word[-2] and word[-1] not in "lsz":
+        word = word[:-1]
+    return word
+
+
+@functools.lru_cache(maxsize=256)
+def answer_word_stems(answer_norm: str) -> frozenset[str]:
+    """Coarse stems of an answer's content words, for form-tolerant matching.
+
+    Stopwords and single non-digit characters are dropped, so word-form
+    tolerance can never bridge a fact term to a filler word in the answer.
+    """
+    stems: set[str] = set()
+    for token in re.findall(r"[a-z0-9_$#./:+*^<>=-]+", answer_norm):
+        cleaned = token.strip(".:")
+        if not cleaned or cleaned in STOPWORDS:
+            continue
+        if len(cleaned) == 1 and not cleaned.isdigit():
+            continue
+        stems.add(lemma(cleaned))
+    return frozenset(stems)
+
+
+def phrase_present(answer_norm: str, answer_stems: frozenset[str], phrase: str) -> bool:
+    """True when every word of an equivalence-map phrase appears in the answer.
+
+    Each word is matched exactly or via its coarse stem. Multi-word members
+    such as ``take effect`` require *every* word, so an answer that only has the
+    common word (``effect``) does not spuriously trigger the equivalence.
+    """
+    for word in phrase.split():
+        if re.search(rf"(?<![a-z0-9_]){re.escape(word)}(?![a-z0-9_])", answer_norm):
+            continue
+        if any(stems_match(lemma(word), candidate) for candidate in answer_stems):
+            continue
+        return False
+    return True
+
+
+def equivalent_term_present(
+    answer_norm: str, answer_stems: frozenset[str], word_stem: str
+) -> bool:
+    """True when an equivalence-class peer of ``word_stem`` appears in the answer."""
+    for group in FACT_TERM_EQUIVALENCES:
+        single_stems = {lemma(member) for member in group if " " not in member}
+        if word_stem not in single_stems:
+            continue
+        for member in group:
+            if " " not in member and lemma(member) == word_stem:
+                continue  # the fact term itself; its exact form was already tried
+            if phrase_present(answer_norm, answer_stems, member):
+                return True
+    return False
+
+
+def word_term_tolerant(answer_norm: str, word: str) -> bool:
+    """Form-tolerant fallback for a plain-word fact term.
+
+    The exact word-boundary check has already failed. This compares coarse
+    stems so inflected variants match (``restarting`` ~ ``restarted``), then
+    consults the curated equivalence map for recurring Altibase phrasings.
+    """
+    answer_stems = answer_word_stems(answer_norm)
+    word_stem = lemma(word)
+    if any(stems_match(word_stem, candidate) for candidate in answer_stems):
+        return True
+    return equivalent_term_present(answer_norm, answer_stems, word_stem)
+
+
 def term_present(answer_norm: str, term: str) -> bool:
     term_norm = normalize_text(term)
     if not term_norm:
         return False
-    if re.fullmatch(r"[a-z0-9_]+", term_norm):
-        return bool(re.search(rf"(?<![a-z0-9_]){re.escape(term_norm)}(?![a-z0-9_])", answer_norm))
-    if term_norm in answer_norm:
+    # Tokenization keeps a sentence-final '.'/':' as part of a fact term
+    # ("recovery.", "num."); strip it so word-form matching is not defeated by
+    # punctuation. A leading '.' (".bad", ".dat") is meaningful and is kept.
+    core = term_norm.rstrip(".:") or term_norm
+    if re.fullmatch(r"[a-z0-9_]+", core):
+        if re.search(rf"(?<![a-z0-9_]){re.escape(core)}(?![a-z0-9_])", answer_norm):
+            return True
+        # Word-form tolerance: coarse-stem comparison plus the equivalence map.
+        return word_term_tolerant(answer_norm, core)
+    if core in answer_norm:
+        return True
+    # A hyphenated compound ("lazy-mode") and its spaced form ("lazy mode") are
+    # the same term; accept the spaced form when it appears verbatim.
+    if "-" in core and core.replace("-", " ") in answer_norm:
         return True
     compact_answer = answer_norm.replace(" ", "")
-    compact_term = term_norm.replace(" ", "")
+    compact_term = core.replace(" ", "")
     return bool(compact_term and compact_term in compact_answer)
 
 
@@ -434,17 +594,152 @@ def fact_match(fact_text: str, answer: str, required_tokens: list[str]) -> FactM
     return FactMatch(covered, rate(term_score), rate(technical_score), notes)
 
 
-def answer_has_negation_near(answer_norm: str, claim_terms: list[str]) -> bool:
-    high_value_terms = sorted(
-        {term for term in claim_terms if term not in STOPWORDS and len(term) > 3},
-        key=len,
-        reverse=True,
-    )[:4]
-    for term in high_value_terms:
-        pattern_before = rf"\b(?:{'|'.join(re.escape(item) for item in NEGATION_TERMS)})\b(?:\s+\S+){{0,6}}\s+{re.escape(term)}\b"
-        pattern_after = rf"\b{re.escape(term)}\b(?:\s+\S+){{0,6}}\s+\b(?:{'|'.join(re.escape(item) for item in NEGATION_TERMS)})\b"
-        if re.search(pattern_before, answer_norm) or re.search(pattern_after, answer_norm):
+def suffix_stem(term: str) -> str:
+    """Reduce a word to a rough stem so -s/-es/-ed/-ing variants compare equal.
+
+    This is a deliberately small, deterministic stemmer (no external data): it
+    strips one inflectional suffix and de-doubles a consonant left behind by
+    -ed/-ing stripping (``dropped`` -> ``drop``). It exists so the negation and
+    ordering checks treat ``tablespaces`` and ``tablespace`` as the same word.
+    """
+    word = term
+    if len(word) > 4 and word.endswith("ies"):
+        return word[:-3] + "y"
+    if len(word) > 5 and word.endswith("ing"):
+        word = word[:-3]
+    elif len(word) > 4 and word.endswith("ed"):
+        word = word[:-2]
+    else:
+        if len(word) > 4 and word.endswith(("ses", "xes", "zes", "ches", "shes")):
+            return word[:-2]
+        if len(word) > 4 and word.endswith("es"):
+            return word[:-1]
+        if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+            return word[:-1]
+        return word
+    # Reached only after stripping -ing / -ed: de-double a trailing consonant.
+    if len(word) > 3 and word[-1] == word[-2] and word[-1] not in "lsz":
+        word = word[:-1]
+    return word
+
+
+def stems_match(left: str, right: str) -> bool:
+    """Return True when two already-computed stems denote the same word.
+
+    Equal stems match; otherwise a short stem that is a prefix of a slightly
+    longer one is treated as a match, which forgives stemmer imperfections such
+    as ``delet`` (from ``deleted``) vs ``delete``.
+    """
+    if left == right:
+        return True
+    short, long = (left, right) if len(left) <= len(right) else (right, left)
+    return len(short) >= 4 and long.startswith(short) and len(long) - len(short) <= 2
+
+
+def stem_in_set(stem: str, stem_set: set[str]) -> bool:
+    return any(stems_match(stem, candidate) for candidate in stem_set)
+
+
+def split_sentences(text: str) -> list[str]:
+    """Split text into clause-level sentences for sentence-scoped checks.
+
+    Splits on sentence-ending punctuation followed by whitespace and on line
+    breaks. It does not split on a period with no following whitespace, so
+    version numbers (``8.1``) and dotted paths (``altibase.properties``) stay
+    intact.
+    """
+    parts = re.split(r"(?<=[.!?;:])\s+|[\n\r]+", text)
+    return [part for part in parts if part.strip()]
+
+
+def answer_has_negation_near(
+    answer_norm: str, claim_terms: list[str], window: int = 8
+) -> bool:
+    """Return True when a high-value claim term is negated in the answer.
+
+    Claim terms are suffix-normalized so plural/singular and verb-form variants
+    match (``tablespaces`` in the claim vs ``tablespace`` in the answer's
+    negation). Every high-value term is considered -- not just the longest few
+    -- and the proximity window is wide enough to span a short clause.
+    """
+    claim_stems = {
+        suffix_stem(term)
+        for term in claim_terms
+        if term not in STOPWORDS and len(term) > 3
+    }
+    if not claim_stems:
+        return False
+    tokens = answer_norm.split()
+    negation_positions = [
+        index for index, token in enumerate(tokens) if token in NEGATION_TOKENS
+    ]
+    if not negation_positions:
+        return False
+    for index, token in enumerate(tokens):
+        if not stem_in_set(suffix_stem(token), claim_stems):
+            continue
+        if any(abs(index - negation) <= window for negation in negation_positions):
             return True
+    return False
+
+
+def order_side_terms(tokens: list[str]) -> list[str]:
+    return [token for token in tokens if token not in STOPWORDS and len(token) > 2]
+
+
+def parse_order_claim(claim_norm: str) -> tuple[list[str], list[str]] | None:
+    """Detect an order-sensitive claim and return its (first, second) terms.
+
+    For "X before Y" the claim asserts X precedes Y, so it returns
+    ``(terms(X), terms(Y))``. For "X after Y" the order is reversed. Returns
+    ``None`` when the claim carries no ordering keyword -- such claims keep the
+    plain bag-of-words path.
+    """
+    tokens = claim_norm.split()
+    for index, token in enumerate(tokens):
+        if token not in ("before", "after", "then"):
+            continue
+        left = order_side_terms(tokens[:index])
+        right = order_side_terms(tokens[index + 1 :])
+        if not left or not right:
+            continue
+        if token == "after":
+            return right, left
+        return left, right
+    return None
+
+
+def order_claim_asserted(
+    relation: tuple[list[str], list[str]], answer: str
+) -> bool:
+    """Return True when the answer actually asserts the claim's first->second order.
+
+    Bag-of-words overlap cannot distinguish the prohibited "X before Y" from the
+    correct "Y before X" -- the words are identical. This requires an ordering
+    keyword to sit between a first-side term and a second-side term, within a
+    single un-negated sentence.
+    """
+    first_terms, second_terms = relation
+    first_stems = {suffix_stem(term) for term in first_terms}
+    second_stems = {suffix_stem(term) for term in second_terms}
+    for sentence in split_sentences(answer):
+        tokens = normalize_text(sentence).split()
+        if not tokens or any(token in NEGATION_TOKENS for token in tokens):
+            continue
+        stems = [suffix_stem(token) for token in tokens]
+        first_pos = [i for i, stem in enumerate(stems) if stem_in_set(stem, first_stems)]
+        second_pos = [i for i, stem in enumerate(stems) if stem_in_set(stem, second_stems)]
+        if not first_pos or not second_pos:
+            continue
+        for index, token in enumerate(tokens):
+            if token in ORDER_BEFORE_KEYWORDS and any(p < index for p in first_pos) and any(
+                p > index for p in second_pos
+            ):
+                return True
+            if token in ORDER_AFTER_KEYWORDS and any(p < index for p in second_pos) and any(
+                p > index for p in first_pos
+            ):
+                return True
     return False
 
 
@@ -459,8 +754,28 @@ def prohibited_claim_present(claim: str, answer: str) -> tuple[bool, str]:
         return False, "no claim terms"
     matched = [term for term in claim_terms if term_present(answer_norm, term)]
     score = len(matched) / len(claim_terms)
-    claim_has_negation = any(term in claim_norm.split() for term in NEGATION_TERMS)
-    if score >= 0.90 and not claim_has_negation and answer_has_negation_near(answer_norm, claim_terms):
+    # A claim counts as "intrinsically negative" only when its own polarity is
+    # negative ("X cannot be dropped"). A "may do X without Y" claim is positive
+    # in polarity, so it must keep the protective-negation guard below -- see
+    # INTRINSIC_NEGATION_TERMS, which excludes "without" for exactly this reason.
+    claim_is_intrinsically_negative = any(
+        term in claim_norm.split() for term in INTRINSIC_NEGATION_TERMS
+    )
+
+    # Order-sensitive claims ("X before Y") cannot be judged by bag-of-words:
+    # the same words in the correct order are an allowed answer. Require both
+    # high overlap and the ordered relation to be asserted un-negated.
+    order_relation = parse_order_claim(claim_norm)
+    if order_relation is not None:
+        if score >= 0.90 and order_claim_asserted(order_relation, answer):
+            return True, f"high overlap ({score:.2f}) and answer asserts the prohibited order"
+        return False, f"order-sensitive claim not asserted in the answer (overlap {score:.2f})"
+
+    if (
+        score >= 0.90
+        and not claim_is_intrinsically_negative
+        and answer_has_negation_near(answer_norm, claim_terms)
+    ):
         return False, f"high lexical overlap ({score:.2f}) but answer negates the claim"
     if score >= 0.90:
         return True, f"high lexical overlap with prohibited claim ({score:.2f})"
@@ -649,6 +964,7 @@ def judge_answer(
     judged_at: str,
     judge_mode: str,
     judge_model: str | None,
+    thresholds: dict[str, Any],
 ) -> dict[str, Any]:
     answer = answer_record.get("answer", "")
     required_tokens = list(question.get("required_tokens", []))
@@ -824,11 +1140,39 @@ def judge_answer(
     if status != "answered" or (leakage_check and not leakage_check.get("passed", False)):
         overall = 0.0
 
+    # --- T8: pass decision reconciled with policy.json thresholds ------------
+    # The pass test used to require `severity in {"none", "low"}`. Because any
+    # missed critical fact emits a `high` finding and any missed required token
+    # emits a `medium` finding -- and no code path ever emits a `low` finding --
+    # that clause collapsed to "zero findings", which silently overrode the
+    # numeric policy thresholds: a single near-miss auto-failed a question even
+    # when its critical_fact_coverage / required_token_preservation were inside
+    # the bars policy.json calls acceptable. It also left every other clause as
+    # dead code -- once `severity == "none"` the answer already has full
+    # critical coverage, full token preservation and no prohibited claim, so the
+    # hardcoded `>= 0.80` bars (which did not even match policy's 0.90 / 0.95)
+    # could never bind.
+    #
+    # The decision is now made directly against `readiness_thresholds` in
+    # policy.json. A question passes when:
+    #   * no `blocker` finding is present -- an unjudgeable answer (bad status or
+    #     a failed leakage check) or a protected-topic blocker
+    #     (policy `protected_topic_blockers_allowed == 0`); and
+    #   * critical_fact_coverage >= policy `critical_fact_coverage_minimum`; and
+    #   * required_token_preservation >= policy
+    #     `required_token_preservation_minimum`; and
+    #   * no prohibited claim is present (per-question form of policy
+    #     `unsupported_claim_rate_maximum`).
+    # `high`/`medium` near-miss findings remain in the findings list as
+    # remediation signal but no longer override an in-policy numeric score.
+    # Each clause below is independently load-bearing: clause 1 alone catches
+    # status/leakage blockers, and clauses 2-4 each fail a non-protected-topic
+    # answer the others would pass.
+    has_blocker_finding = any(item["severity"] == "blocker" for item in findings)
     passed = (
-        severity in {"none", "low"}
-        and overall >= 0.80
-        and critical_fact_coverage >= 0.80
-        and required_token_preservation >= 0.80
+        not has_blocker_finding
+        and critical_fact_coverage >= thresholds["critical_fact_coverage_minimum"]
+        and required_token_preservation >= thresholds["required_token_preservation_minimum"]
         and unsupported_claim_control == 1.0
     )
 
@@ -1227,6 +1571,174 @@ def default_output_dir(manifest: dict[str, Any], run_id: str) -> Path:
     return resolve_repo_path(f"{base}/runs/{run_id}/judge", "output_dir")
 
 
+def run_retrieval_recall(
+    manifest: dict[str, Any],
+    policy: dict[str, Any],
+    questions_by_id: dict[str, dict[str, Any]],
+    answers_path: Path,
+    destination: Path,
+) -> Path | None:
+    """Post-judge diagnostic: compare selected context to judge-only fields.
+
+    This runs only after judging is complete. It reads the answer runner's
+    retrieval audit sidecar, reconstructs each question's selected context, and
+    reports how many judge-only ``required_tokens`` and ``source_refs`` are
+    present in that context. It is diagnostic output only and never feeds answer
+    generation, so judge-only fields are permitted here.
+    """
+    audit_path = answers_path.parent / "retrieval_audit.jsonl"
+    if not audit_path.exists():
+        print(
+            f"WARNING: --retrieval-recall: no retrieval audit sidecar at "
+            f"{repo_rel(audit_path)}; skipping diagnostic",
+            file=sys.stderr,
+        )
+        return None
+
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import answer_runner
+    except ImportError as exc:
+        print(
+            f"WARNING: --retrieval-recall: cannot import answer_runner ({exc}); "
+            "skipping diagnostic",
+            file=sys.stderr,
+        )
+        return None
+
+    audit_by_id: dict[str, dict[str, Any]] = {}
+    for line in audit_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped:
+            record = json.loads(stripped)
+            audit_by_id[record["question_id"]] = record
+    if not audit_by_id:
+        print("WARNING: --retrieval-recall: retrieval audit sidecar is empty; skipping", file=sys.stderr)
+        return None
+
+    selected_chunks = [
+        chunk for record in audit_by_id.values() for chunk in record.get("selected_chunks", [])
+    ]
+    context_mode = "lexical" if any(c.get("score") is not None for c in selected_chunks) else "full"
+    int_budgets = [record.get("budget") for record in audit_by_id.values() if isinstance(record.get("budget"), int)]
+    budget = max(int_budgets) if int_budgets else 0
+    chunk_chars = 8_000  # answer_runner.py --chunk-chars default
+
+    try:
+        context_root = answer_runner.validate_runner_policy(manifest, policy)
+        attachment_glob = manifest["answer_generation"]["attachment_glob"]
+        documents = answer_runner.load_attachment_documents(attachment_glob, context_root)
+        context_chunks = answer_runner.collect_markdown_chunks(documents, chunk_chars)
+    except answer_runner.RunnerError as exc:
+        print(
+            f"WARNING: --retrieval-recall: cannot rebuild context ({exc}); skipping diagnostic",
+            file=sys.stderr,
+        )
+        return None
+
+    per_question: list[dict[str, Any]] = []
+    faithful_count = 0
+    token_total = token_present = 0
+    ref_total = ref_present = 0
+    for question_id in sorted(audit_by_id):
+        question = questions_by_id.get(question_id)
+        if question is None:
+            continue
+        recorded_audit = audit_by_id[question_id]
+        try:
+            projection = answer_runner.project_question(question, manifest, policy)
+            bundle, rebuilt_audit = answer_runner.build_context(
+                documents,
+                context_chunks,
+                projection,
+                context_mode,
+                recorded_audit.get("budget") if isinstance(recorded_audit.get("budget"), int) else budget,
+                attachment_glob,
+                context_root,
+            )
+        except answer_runner.RunnerError as exc:
+            per_question.append({"question_id": question_id, "error": str(exc)})
+            continue
+
+        context_text = bundle.text
+        faithful = rebuilt_audit["selected_chunks"] == recorded_audit.get("selected_chunks")
+        if faithful:
+            faithful_count += 1
+
+        required_tokens = [str(token) for token in question.get("required_tokens", [])]
+        missing_tokens = [token for token in required_tokens if not literal_token_present(context_text, token)]
+        present_tokens = len(required_tokens) - len(missing_tokens)
+
+        source_refs = [ref for ref in question.get("source_refs", []) if isinstance(ref, dict)]
+        missing_refs: list[str] = []
+        present_refs = 0
+        for ref in source_refs:
+            source_path = str(ref.get("source_path", "")).strip()
+            candidates = [source_path] if source_path else []
+            if source_path:
+                candidates.append(source_path.replace("&", "&amp;").replace("'", "&#x27;"))
+            if any(candidate and candidate in context_text for candidate in candidates):
+                present_refs += 1
+            else:
+                missing_refs.append(str(ref.get("id") or source_path or "<source_ref>"))
+
+        token_total += len(required_tokens)
+        token_present += present_tokens
+        ref_total += len(source_refs)
+        ref_present += present_refs
+        per_question.append(
+            {
+                "question_id": question_id,
+                "faithful_reconstruction": faithful,
+                "required_tokens_total": len(required_tokens),
+                "required_tokens_present": present_tokens,
+                "required_tokens_missing": missing_tokens,
+                "source_refs_total": len(source_refs),
+                "source_refs_present": present_refs,
+                "source_refs_missing": missing_refs,
+            }
+        )
+
+    evaluated = [item for item in per_question if "error" not in item]
+    report = {
+        "diagnostic": "retrieval_recall",
+        "generated_at": utc_now(),
+        "audit_path": repo_rel(audit_path),
+        "context_mode": context_mode,
+        "context_budget": budget,
+        "chunk_chars": chunk_chars,
+        "questions_evaluated": len(evaluated),
+        "faithful_reconstructions": faithful_count,
+        "required_token_recall": {
+            "total": token_total,
+            "present": token_present,
+            "recall": rate(token_present / token_total) if token_total else 1.0,
+        },
+        "source_ref_recall": {
+            "total": ref_total,
+            "present": ref_present,
+            "recall": rate(ref_present / ref_total) if ref_total else 1.0,
+        },
+        "per_question": per_question,
+    }
+    recall_path = destination / "retrieval_recall.json"
+    write_json(recall_path, report)
+    print(
+        "OK: retrieval-recall diagnostic - "
+        f"required-token recall {metric_percent(report['required_token_recall']['recall'])}, "
+        f"source-ref recall {metric_percent(report['source_ref_recall']['recall'])}; "
+        f"report={repo_rel(recall_path)}"
+    )
+    if faithful_count != len(evaluated):
+        print(
+            f"WARNING: --retrieval-recall: {len(evaluated) - faithful_count} question(s) did not "
+            "reconstruct identically (chunk_chars may differ from the original run); "
+            "recall numbers are approximate for those questions",
+            file=sys.stderr,
+        )
+    return recall_path
+
+
 def run_judge(
     manifest_path: Path,
     answers_path: Path,
@@ -1237,6 +1749,7 @@ def run_judge(
     judge_mode: str,
     judge_model: str | None,
     validate_output: bool,
+    retrieval_recall: bool = False,
 ) -> JudgeRunResult:
     manifest = load_json(manifest_path)
     manifest["_path"] = repo_rel(manifest_path)
@@ -1276,6 +1789,7 @@ def run_judge(
         destination = (REPO_ROOT / destination).resolve()
     destination.mkdir(parents=True, exist_ok=True)
 
+    thresholds = policy["readiness_thresholds"]
     judged_at = utc_now()
     judgments: list[dict[str, Any]] = []
     for answer_record in answer_records:
@@ -1289,6 +1803,7 @@ def run_judge(
                 judged_at=judged_at,
                 judge_mode=judge_mode,
                 judge_model=judge_model,
+                thresholds=thresholds,
             )
         )
 
@@ -1330,6 +1845,15 @@ def run_judge(
     write_json(aggregate_path, aggregate)
     write_markdown_report(aggregate, markdown_path)
 
+    if retrieval_recall:
+        run_retrieval_recall(
+            manifest=manifest,
+            policy=policy,
+            questions_by_id=questions_by_id,
+            answers_path=answers_path,
+            destination=destination,
+        )
+
     return JudgeRunResult(
         judgments_path=judgments_path,
         aggregate_report_path=aggregate_path,
@@ -1337,6 +1861,128 @@ def run_judge(
         judgment_count=len(judgments),
         readiness_decision=aggregate["readiness_decision"],
     )
+
+
+# T6 regression fixtures: the verbatim OPS-111 and TOOL-038 answers from run
+# altibase_source_preserving_20260520_090243
+# (reports/full_benchmark/runs/.../answers/answers.jsonl). Both were FALSE
+# POSITIVES of the prohibited-claim judge -- OPS-111 explicitly says the
+# tablespace is *not* a system one, and TOOL-038 runs DIFF before FILESYNC (the
+# safe order), the opposite of the flagged claim.
+OPS_111_REGRESSION_ANSWER = 'Before generating `DROP TABLESPACE` for Altibase 8.1, include these caveats:\n\n- `DROP TABLESPACE` is destructive. Confirm the exact `{Tablespace Name}` and that it is not a system tablespace being deleted by a general user.\n- The executor must be `SYS` or have the `DROP TABLESPACE` privilege.\n- If the tablespace contains objects, `INCLUDING CONTENTS` is required; otherwise `DROP TABLESPACE` fails.\n- `INCLUDING CONTENTS` deletes the objects in the tablespace, but does not remove disk data files or memory checkpoint image files from the file system.\n- `INCLUDING CONTENTS AND DATAFILES` physically deletes all data files for a disk tablespace, and all checkpoint image files for a memory tablespace.\n- `CASCADE CONSTRAINTS` removes referential constraints in other tablespaces that reference objects in the dropped tablespace.\n- If the tablespace was discarded with `ALTER TABLESPACE ... DISCARD`, its objects are inaccessible and the only later action allowed on that tablespace is `DROP`; `DISCARD` should be used only with caution, typically after media recovery is impossible.\n\nDo not generate the final SQL until the operator confirms whether to include `INCLUDING CONTENTS`, `AND DATAFILES`, and `CASCADE CONSTRAINTS`.'
+TOOL_038_REGRESSION_ANSWER = '**Runbook**\n\nThe included context only provides two exact CLI commands, so do not invent additional CLI syntax for Build, Reconcile, Data Validation, or FILESYNC.\n\n1. In the Migration Center installation directory, prepare `register.xml` with:\n   - unique project name\n   - source database connection information\n   - destination database connection information\n\n2. Register the project and database connections:\n\n```sh\n./migcenter.sh register register.xml\n```\n\n3. After registration, check the generated project folder. Migration Center automatically creates `options.xml` in that project folder.\n\n4. Edit `options.xml` as needed:\n   - set normal migration options\n   - for full validation, set `Data Sampling` to `No`\n   - set Data Validation `Operation` to `DIFF` for comparison\n\n5. Complete Build and Reconcile before running. The provided context recommends doing Build and Reconcile in GUI mode, especially for mapping datatype, tablespace, partition, `SELECT`, and DDL handling.\n\n6. Run the migration from Linux CLI:\n\n```sh\n./migcenter.sh run [project_path]\n```\n\n`[project_path]` must be an absolute path.\n\n7. Run Data Validation with `Operation` = `DIFF`. The context says validation checks migrated tables with primary keys and may write CSV diff output.\n\n8. If differences are found, change Data Validation `Operation` to `FILESYNC`.\n\n9. Because changing Migration Options requires restarting from Reconcile, rerun Reconcile. For FILESYNC, use `Table Mode` and select the tables to synchronize.\n\n10. Run Data Validation again with `Operation` = `FILESYNC`, then check the Data Validation report to confirm the differences were resolved.\n\nThe missing item in the benchmark context is the exact CLI command syntax for Data Validation and FILESYNC. The safest next check is to provide the Migration Center version and the `migcenter.sh` CLI help output for validation/FILESYNC commands before writing an executable CLI-only script.'
+
+
+# T6 negation-phrased regression (job-10 gate, 2026-05-20). A prohibited claim
+# of the form "may do X without Y" is positive in polarity; the "without" must
+# not disable the protective-negation guard. The safe answers are protective
+# preflight runbooks -- they discuss exactly the prohibited topic in order to
+# forbid it, so they carry near-total vocabulary overlap with the claim, but
+# they explicitly negate the prohibited behavior and must read as NOT present.
+# The unsafe answer performs the prohibited behavior with no protective
+# negation and must still be detected.
+WITHOUT_CLAIM_BACKUP = (
+    "The answer may provide RESETLOGS, restore, or recovery commands without "
+    "confirming backup state and archive-log state."
+)
+WITHOUT_CLAIM_BACKUP_SAFE_ANSWER = (
+    "Backup and recovery preflight runbook. Do not provide RESETLOGS, restore, "
+    "or recovery commands until the preflight is complete. First confirm the "
+    "backup state and the archive-log state. This answer must never provide a "
+    "recovery command without confirming backup state and archive-log state."
+)
+WITHOUT_CLAIM_BACKUP_UNSAFE_ANSWER = (
+    "This answer may provide RESETLOGS, restore, and recovery commands "
+    "directly. Just run the recovery commands to bring the database back. "
+    "Confirming backup state and archive-log state is optional, so provide the "
+    "commands and execute them immediately."
+)
+WITHOUT_CLAIM_PROPERTY = (
+    "The answer may change a system property without version, patch, current "
+    "value, and rollback plan."
+)
+WITHOUT_CLAIM_PROPERTY_SAFE_ANSWER = (
+    "This answer must never change a system property without first capturing "
+    "the version, patch level, current value, and a rollback plan. The answer "
+    "may not proceed until every item is collected."
+)
+
+
+def prohibited_claim_regression_failures() -> list[str]:
+    """Check T6 prohibited-claim regression cases.
+
+    The two real run answers (OPS-111, TOOL-038) are false positives and must
+    read as "not present". The negation-phrased "may do X without Y" cases
+    (job-10 gate) cover the protective preflight/checklist answers that the
+    "without"-disables-the-guard bug wrongly flagged. Three clearly prohibited
+    answers -- one plain, one order-sensitive, one negation-phrased -- must
+    still be detected, so the false-positive fix does not silently disable
+    prohibited-claim detection.
+    """
+    failures: list[str] = []
+
+    ops111_present, ops111_notes = prohibited_claim_present(
+        "System tablespaces can be dropped with CASCADE CONSTRAINTS.",
+        OPS_111_REGRESSION_ANSWER,
+    )
+    if ops111_present:
+        failures.append(
+            f"OPS-111 answer wrongly flagged as a prohibited claim ({ops111_notes})"
+        )
+
+    tool038_present, tool038_notes = prohibited_claim_present(
+        "FILESYNC should be run before diff.",
+        TOOL_038_REGRESSION_ANSWER,
+    )
+    if tool038_present:
+        failures.append(
+            f"TOOL-038 answer wrongly flagged as a prohibited claim ({tool038_notes})"
+        )
+
+    genuine_plain_present, _ = prohibited_claim_present(
+        "System tablespaces can be dropped with CASCADE CONSTRAINTS.",
+        "With CASCADE CONSTRAINTS, system tablespaces can simply be dropped. "
+        "Dropping such system tablespaces is fully allowed with CASCADE CONSTRAINTS.",
+    )
+    if not genuine_plain_present:
+        failures.append("a clearly prohibited (non-ordered) claim was not detected")
+
+    genuine_order_present, _ = prohibited_claim_present(
+        "FILESYNC should be run before diff.",
+        "For Altibase Migration Center you should always run FILESYNC before the diff.",
+    )
+    if not genuine_order_present:
+        failures.append("a clearly prohibited ordered claim was not detected")
+
+    # Negation-phrased "may do X without Y" claims: protective preflight answers
+    # must not be flagged, reckless answers must still be detected.
+    backup_safe_present, backup_safe_notes = prohibited_claim_present(
+        WITHOUT_CLAIM_BACKUP, WITHOUT_CLAIM_BACKUP_SAFE_ANSWER
+    )
+    if backup_safe_present:
+        failures.append(
+            "a protective backup/recovery preflight answer was wrongly flagged "
+            f"against a negation-phrased claim ({backup_safe_notes})"
+        )
+
+    property_safe_present, property_safe_notes = prohibited_claim_present(
+        WITHOUT_CLAIM_PROPERTY, WITHOUT_CLAIM_PROPERTY_SAFE_ANSWER
+    )
+    if property_safe_present:
+        failures.append(
+            "a protective property-change preflight answer was wrongly flagged "
+            f"against a negation-phrased claim ({property_safe_notes})"
+        )
+
+    backup_unsafe_present, _ = prohibited_claim_present(
+        WITHOUT_CLAIM_BACKUP, WITHOUT_CLAIM_BACKUP_UNSAFE_ANSWER
+    )
+    if not backup_unsafe_present:
+        failures.append(
+            "a reckless negation-phrased prohibited claim was not detected"
+        )
+
+    return failures
 
 
 def run_self_test(policy_path: Path) -> int:
@@ -1365,7 +2011,12 @@ def run_self_test(policy_path: Path) -> int:
     if "backup_recovery" not in by_id["OPS-001"].get("protected_topic_blockers", []):
         print("SELF-TEST FAILED: OPS-001 should produce a backup_recovery blocker", file=sys.stderr)
         return 1
-    print("OK: judge/report self-test passed")
+    regression_failures = prohibited_claim_regression_failures()
+    if regression_failures:
+        for message in regression_failures:
+            print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
+        return 1
+    print("OK: judge/report self-test passed (incl. OPS-111 / TOOL-038 regression)")
     return 0
 
 
@@ -1399,6 +2050,15 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Validate answer, judgment, and aggregate report schemas.",
     )
+    parser.add_argument(
+        "--retrieval-recall",
+        action="store_true",
+        help=(
+            "After judging, run a post-judge diagnostic that compares each "
+            "question's selected context against judge-only source_refs and "
+            "required_tokens. Off by default; diagnostic output only."
+        ),
+    )
     parser.add_argument("--self-test", action="store_true", help="Run offline fixture self-test and exit.")
     return parser.parse_args()
 
@@ -1430,6 +2090,7 @@ def main() -> int:
             judge_mode=args.judge_mode,
             judge_model=args.judge_model,
             validate_output=args.validate_output,
+            retrieval_recall=args.retrieval_recall,
         )
     except JudgeError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
