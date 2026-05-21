@@ -1,3 +1,4 @@
-# Runtime state and logs are not durable artifacts.
+# Runtime state, logs, and the LLM verdict cache are not durable artifacts.
 state/
 logs/
+cache/

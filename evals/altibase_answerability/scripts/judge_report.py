@@ -15,7 +15,10 @@ import datetime as dt
 import functools
 import hashlib
 import json
+import os
 import re
+import shlex
+import subprocess
 import sys
 import tempfile
 from collections import defaultdict
@@ -88,23 +91,32 @@ STOPWORDS = {
     "while",
     "with",
 }
-NEGATION_TERMS = {
-    "not",
-    "never",
-    "no",
-    "cannot",
-    "can't",
-    "do not",
-    "does not",
-    "must not",
-    "without",
-    "unsupported",
+# Subordinating conjunctions. A negation inside a clause they introduce ("if no
+# rule matches, ...", "... when expr1 is not NULL") states a *condition*, not
+# the claim's own polarity, so claim_is_negative() ignores such negations and
+# judges polarity from the main clause alone.
+SUBORDINATOR_KEYWORDS = {
+    "if",
+    "when",
+    "whenever",
+    "unless",
+    "while",
+    "until",
+    "where",
+    "wherever",
+    "because",
+    "since",
+    "although",
+    "though",
 }
 # Negation words that make a prohibited *claim* intrinsically negative in
-# polarity ("system tablespaces cannot be dropped"). When the claim itself is
-# negative, an answer that echoes that negation is *asserting* the claim, so the
-# protective-negation guard in prohibited_claim_present() is intentionally
-# disabled for these claims.
+# polarity when they sit in the claim's main clause ("system tablespaces cannot
+# be dropped", "anonymous blocks cannot use OUTPUT bind variables"). This covers
+# the "cannot / can not / may not / must not / does not / is not" phrasings:
+# every two-word form contains the bare "not" token, and "cannot"/"cant" are
+# listed directly. When the claim itself is negative, an answer that echoes that
+# negation is *asserting* the claim; an answer that affirms the affirmative is
+# safe -- see answer_asserts_negative_claim().
 #
 # "without" is deliberately excluded. A "may do X without Y" claim is positive
 # in polarity -- "without Y" names the *prohibited behavior* (skipping the
@@ -113,7 +125,7 @@ NEGATION_TERMS = {
 # claim, so the protective-negation guard must stay enabled. Disabling it for
 # "without"-phrased claims flagged every careful preflight/checklist answer as
 # a false positive (job-10 gate regression, 2026-05-20).
-INTRINSIC_NEGATION_TERMS = NEGATION_TERMS - {"without"}
+MAIN_CLAUSE_NEGATION_TOKENS = {"not", "never", "no", "cannot", "cant", "unsupported"}
 REQUEST_TERMS = {
     "ask",
     "check",
@@ -142,8 +154,8 @@ DETAIL_TERMS = {
     "version",
 }
 # Single-token negation markers, used for proximity and sentence-level checks.
-# Multi-word forms in NEGATION_TERMS ("do not", "does not", "must not") are
-# already covered by the bare "not" token after normalization.
+# Multi-word negation forms ("do not", "does not", "must not") are already
+# covered by the bare "not" token after normalization.
 NEGATION_TOKENS = {
     "not",
     "never",
@@ -157,6 +169,62 @@ NEGATION_TOKENS = {
 # "X then Y"; a *_AFTER keyword between Y and X asserts the same ordering.
 ORDER_BEFORE_KEYWORDS = {"before", "then", "precede", "precedes", "preceding"}
 ORDER_AFTER_KEYWORDS = {"after", "following", "follows"}
+# Asymmetric relation keywords. A claim "A <relation> B" asserts a direction (A
+# acts on, or precedes, B); the same words with A and B swapped are a
+# different -- often correct -- statement that bag-of-words cannot tell apart.
+# Such a claim is flagged only when the answer asserts the *same* relation in
+# the *same* direction. ("takes precedence over" is collapsed to "supersedes"
+# by collapse_relation_phrases() so it parses as a single relation token.)
+DIRECTION_RELATION_FAMILIES = (
+    frozenset({"overrides", "override", "overriding", "overrode", "overridden"}),
+    frozenset({"precedes", "precede", "preceding", "preceded"}),
+    frozenset({"replaces", "replace", "replacing", "replaced"}),
+    frozenset({"supersedes", "supersede", "superseding", "superseded"}),
+)
+DIRECTION_RELATION_KEYWORDS = frozenset().union(*DIRECTION_RELATION_FAMILIES)
+
+# --- C2-02: optional LLM-assisted fact judge (T7-B) --------------------------
+# The deterministic rule judge stays the DEFAULT and the FALLBACK. When opted in
+# (--llm-fact-judge or JUDGE_LLM_FACT=1) the LLM judge adjudicates only the
+# paraphrase-suspect band -- facts whose rule-judge term_score lands between
+# LLM_FACT_JUDGE_BAND_LOW and LLM_FACT_JUDGE_BAND_HIGH. The band brackets the
+# rule judge's 0.62 coverage threshold (see fact_match()): cycle 1 sampled the
+# judge gold set around the 0.40-0.62 term_score band, and confirming that
+# against the gold-set distribution (reports/full_rerun_analysis_20260520.md
+# section 4) shows the rule judge's residual over-credits run from term_score
+# 0.56 all the way to a full 1.00 bag-of-words overlap -- the SQL-101 / SQL-129
+# paraphrase-suspect facts score 1.00 yet are wrong, because bag-of-words cannot
+# tell a correct paraphrase from a near-miss even at total overlap. The band low
+# bound therefore sits at 0.40 (below it the rule judge has clearly missed the
+# fact) and the high bound at 1.00 so those documented over-credits are
+# adjudicated. A fact matched by exact normalized fact-text containment is
+# genuinely, literally covered and is never sent to the LLM.
+LLM_FACT_JUDGE_BAND_LOW = 0.40
+LLM_FACT_JUDGE_BAND_HIGH = 1.00
+# fact_match() emits this exact note for a literal fact-text containment hit.
+EXACT_FACT_MATCH_NOTE = "exact normalized fact text found"
+# Provider plumbing reused from answer generation: the same command provider
+# answer_runner.py shells out to (Codex CLI via codex_exec_provider.sh).
+DEFAULT_LLM_FACT_JUDGE_COMMAND = str(BENCHMARK_ROOT / "scripts" / "codex_exec_provider.sh")
+DEFAULT_LLM_FACT_JUDGE_CACHE = (
+    BENCHMARK_ROOT / "improvement2" / "cache" / "llm_fact_judge_cache.json"
+)
+DEFAULT_LLM_FACT_JUDGE_TIMEOUT_SECONDS = 180
+# After this many consecutive provider failures the judge stops shelling out for
+# the rest of the run and falls back to the rule verdict directly, so a missing
+# or broken provider never spawns a doomed subprocess for every in-band fact.
+LLM_FACT_JUDGE_MAX_CONSECUTIVE_FAILURES = 3
+# The LLM provider is non-deterministic, so each in-band fact is graded by a
+# majority vote over this many independent provider calls (env
+# JUDGE_LLM_FACT_VOTES). Voting removes the per-fact verdict flakiness that made
+# the C2-04 gate spread ~3.8 pp across fresh runs (OPS-126 F01/F02 flipped on
+# identical input). The majority verdict is what gets cached, so re-runs against
+# a warm cache are free and stable.
+DEFAULT_LLM_FACT_JUDGE_VOTES = 3
+# The verdict cache is keyed by (prompt version, fact, answer). Bump this token
+# whenever build_llm_fact_judge_prompt() changes so stale verdicts graded under
+# an older prompt are never reused.
+LLM_FACT_JUDGE_PROMPT_VERSION = "c2-04-balanced-2"
 
 
 class JudgeError(Exception):
@@ -594,6 +662,439 @@ def fact_match(fact_text: str, answer: str, required_tokens: list[str]) -> FactM
     return FactMatch(covered, rate(term_score), rate(technical_score), notes)
 
 
+def env_flag(name: str) -> bool:
+    """True when an environment toggle is set to an affirmative value."""
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def build_llm_fact_judge_prompt(fact_text: str, answer: str) -> str:
+    """Build the single, tightly scoped grading question for the LLM fact judge.
+
+    The LLM is asked one thing only -- does the ANSWER convey the core assertion
+    of the EXPECTED FACT, judged by meaning -- and to reply with a single bare
+    verdict word so parse_llm_fact_verdict() can read it reliably.
+
+    The decision rule is deliberately balanced. It must keep rejecting answers
+    that state a different or opposite fact (so the rule judge's bag-of-words
+    over-credits stay rejected -- this is what lifted precision to 1.00), while
+    crediting a correct paraphrase that omits secondary or incidental detail (a
+    strict-grader framing under-credited those genuine partial paraphrases and
+    sank recall to ~0.79 in the C2-04 gate). If this prompt changes, bump
+    LLM_FACT_JUDGE_PROMPT_VERSION so the verdict cache is invalidated.
+    """
+    return (
+        "You grade one fact for an Altibase database documentation "
+        "answerability benchmark. Decide ONE thing only: does the ANSWER "
+        "convey the core assertion of the EXPECTED FACT?\n\n"
+        "Decision rule:\n"
+        "- Reply 'covered' if the ANSWER states the main point of the fact, "
+        "judged by meaning. A correct paraphrase counts. Different wording, a "
+        "different sentence structure, or omission of secondary or incidental "
+        "detail does not matter, as long as the core assertion is present and "
+        "correct. Do not require every clause or qualifier of the expected "
+        "fact to appear.\n"
+        "- When the fact states a rule together with an exception or "
+        "qualifier, an ANSWER that correctly states the rule is covered even "
+        "if it omits the exception or qualifier.\n"
+        "- When the fact lists several items (for example several things that "
+        "are restricted, disallowed, or returned), the ANSWER is covered if it "
+        "conveys the restriction and most of the listed items; it need not "
+        "name every item. But an ANSWER that names none of the listed items, "
+        "or omits the restriction itself, is not covered.\n"
+        "- Reply 'not_covered' only if the ANSWER omits the core assertion, "
+        "contradicts it, or states a materially different or opposite claim. "
+        "Wrong or opposite information is not coverage, and mere keyword "
+        "overlap with no real assertion of the fact is not coverage.\n\n"
+        "When the ANSWER clearly conveys the substance of the fact, prefer "
+        "'covered'.\n\n"
+        f"EXPECTED FACT:\n{fact_text}\n\n"
+        f"ANSWER:\n{answer}\n\n"
+        "Respond with exactly one word, lower-case, on its own final line: "
+        "covered or not_covered."
+    )
+
+
+def parse_llm_fact_verdict(reply: str) -> bool | None:
+    """Read a covered / not_covered verdict from a provider reply.
+
+    Returns True for ``covered``, False for ``not_covered``, or ``None`` when no
+    verdict can be read -- the caller then falls back to the rule verdict. Lines
+    are scanned bottom-up because the judge asks the model to end with the
+    verdict, and ``not_covered`` is tested before ``covered`` because the former
+    contains the latter as a substring.
+    """
+    if not reply:
+        return None
+    for line in reversed(reply.splitlines()):
+        cleaned = re.sub(r"[^a-z_ ]+", " ", line.lower())
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if not cleaned:
+            continue
+        if "not_covered" in cleaned or "not covered" in cleaned:
+            return False
+        if "covered" in cleaned:
+            return True
+    return None
+
+
+def majority_verdict(verdicts: list[bool]) -> bool | None:
+    """Majority vote over independent LLM verdicts.
+
+    Returns ``True`` / ``False`` for a clear majority, or ``None`` for an empty
+    list or an exact tie -- on a tie the caller keeps the deterministic rule
+    verdict. The LLM provider is non-deterministic per call, so voting over an
+    odd number of calls is what makes a fact's verdict stable across runs.
+    """
+    if not verdicts:
+        return None
+    covered = sum(1 for verdict in verdicts if verdict)
+    not_covered = len(verdicts) - covered
+    if covered > not_covered:
+        return True
+    if not_covered > covered:
+        return False
+    return None
+
+
+def llm_fact_judge_helper_failures() -> list[str]:
+    """Deterministic self-test for the LLM fact judge's pure helpers.
+
+    Exercises only verdict parsing and majority voting -- no provider call --
+    so the judge self-test stays hermetic with the LLM judge OFF.
+    """
+    failures: list[str] = []
+    parse_cases: list[tuple[str, bool | None]] = [
+        ("the verdict is below\ncovered", True),
+        ("not_covered", False),
+        ("final: not covered", False),
+        ("COVERED", True),
+        ("maybe", None),
+        ("", None),
+    ]
+    for reply, expected in parse_cases:
+        got = parse_llm_fact_verdict(reply)
+        if got is not expected:
+            failures.append(
+                f"parse_llm_fact_verdict({reply!r}) -> {got!r}, expected {expected!r}"
+            )
+    vote_cases: list[tuple[list[bool], bool | None]] = [
+        ([True, True, False], True),
+        ([False, False, True], False),
+        ([True, False], None),
+        ([True], True),
+        ([], None),
+    ]
+    for verdicts, expected in vote_cases:
+        got = majority_verdict(verdicts)
+        if got is not expected:
+            failures.append(
+                f"majority_verdict({verdicts!r}) -> {got!r}, expected {expected!r}"
+            )
+    return failures
+
+
+class LLMFactJudge:
+    """Optional LLM-assisted adjudicator for paraphrase-suspect fact coverage.
+
+    Opt-in (``--llm-fact-judge`` / ``JUDGE_LLM_FACT=1``); OFF by default. The
+    deterministic rule judge stays the default and the fallback. This judge is
+    consulted only for facts whose rule-judge ``term_score`` lands in the
+    paraphrase-suspect band (see ``in_band``); a clearly covered or clearly
+    missed fact keeps the rule verdict untouched.
+
+    Verdicts are cached, keyed by a hash of ``(fact_text, answer)``, so re-runs
+    are stable and cheap. On any provider error, timeout, missing provider, or
+    unparseable reply the judge falls back to the rule verdict and records the
+    fallback; it never raises and never hangs -- every provider call is bounded
+    by ``timeout_seconds`` and a run of failures trips a circuit breaker.
+
+    Only ``FactMatch.covered`` may be overridden; ``term_score`` /
+    ``technical_score`` / literal-token preservation stay the rule judge's
+    deterministic values.
+    """
+
+    def __init__(
+        self,
+        command: str,
+        timeout_seconds: int = DEFAULT_LLM_FACT_JUDGE_TIMEOUT_SECONDS,
+        cache_path: Path | None = None,
+        votes: int = DEFAULT_LLM_FACT_JUDGE_VOTES,
+    ) -> None:
+        self.command = command
+        self.timeout_seconds = max(1, int(timeout_seconds))
+        self.cache_path = cache_path
+        self.votes = max(1, int(votes))
+        self._cache: dict[str, str] = {}
+        self._cache_loaded = False
+        self._consecutive_failures = 0
+        self._provider_disabled = False
+        self.stats: dict[str, int] = {
+            "in_band": 0,
+            "rule_covered_in_band": 0,
+            "cache_hits": 0,
+            "provider_calls": 0,
+            "llm_covered": 0,
+            "llm_not_covered": 0,
+            "overrides": 0,
+            "fallbacks": 0,
+        }
+
+    def in_band(self, rule_match: FactMatch) -> bool:
+        """True when a fact is paraphrase-suspect and should be adjudicated."""
+        if rule_match.notes.startswith(EXACT_FACT_MATCH_NOTE):
+            return False  # literal fact-text containment -- genuinely covered
+        return (
+            LLM_FACT_JUDGE_BAND_LOW
+            <= rule_match.term_score
+            <= LLM_FACT_JUDGE_BAND_HIGH
+        )
+
+    def adjudicate(self, fact_text: str, answer: str, rule_match: FactMatch) -> FactMatch:
+        """Return a FactMatch whose .covered reflects the LLM verdict in-band.
+
+        Out-of-band facts are returned untouched. In-band, the LLM verdict
+        overrides ``.covered``; on any failure the rule verdict is kept and the
+        fallback is recorded in the notes and stats. ``term_score`` and
+        ``technical_score`` are always the rule judge's values -- only
+        ``.covered`` may change.
+        """
+        if not self.in_band(rule_match):
+            return rule_match
+        self.stats["in_band"] += 1
+        if rule_match.covered:
+            self.stats["rule_covered_in_band"] += 1
+
+        verdict, origin = self._verdict(fact_text, answer)
+        if verdict is None:
+            self.stats["fallbacks"] += 1
+            return FactMatch(
+                rule_match.covered,
+                rule_match.term_score,
+                rule_match.technical_score,
+                f"{rule_match.notes}; llm_fact_judge=fallback->rule ({origin})",
+            )
+
+        if verdict:
+            self.stats["llm_covered"] += 1
+        else:
+            self.stats["llm_not_covered"] += 1
+        if verdict != rule_match.covered:
+            self.stats["overrides"] += 1
+        return FactMatch(
+            verdict,
+            rule_match.term_score,
+            rule_match.technical_score,
+            f"{rule_match.notes}; llm_fact_judge="
+            f"{'covered' if verdict else 'not_covered'} ({origin})",
+        )
+
+    def _verdict(self, fact_text: str, answer: str) -> tuple[bool | None, str]:
+        """Return ``(verdict, origin)``; verdict None means fall back to rule.
+
+        A fresh verdict is a majority vote over ``self.votes`` independent
+        provider calls -- the LLM provider is non-deterministic per call, and
+        voting removes the per-fact flakiness. The majority verdict is cached
+        (keyed by prompt version + fact + answer), so a warm cache returns it
+        directly. A tie, or no usable reply at all, yields ``None`` and the
+        caller keeps the deterministic rule verdict.
+        """
+        key = digest_text(
+            f"{LLM_FACT_JUDGE_PROMPT_VERSION}\x00{fact_text}\x00{answer}"
+        )
+        cached = self._cache_get(key)
+        if cached is not None:
+            self.stats["cache_hits"] += 1
+            return cached == "covered", "cache"
+        verdicts: list[bool] = []
+        for _ in range(self.votes):
+            if self._provider_disabled:
+                break
+            reply = self._call_provider(fact_text, answer)
+            if reply is None:
+                continue
+            parsed = parse_llm_fact_verdict(reply)
+            if parsed is not None:
+                verdicts.append(parsed)
+        if not verdicts:
+            return None, "provider-unavailable"
+        tally = f"{sum(1 for v in verdicts if v)}/{len(verdicts)} covered"
+        verdict = majority_verdict(verdicts)
+        if verdict is None:
+            return None, f"llm-tie ({tally})"
+        self._cache_put(key, "covered" if verdict else "not_covered")
+        return verdict, f"llm {tally}"
+
+    def _call_provider(self, fact_text: str, answer: str) -> str | None:
+        """Shell out to the command provider; return stdout or None on failure.
+
+        Never raises and never hangs: the call is bounded by ``timeout_seconds``
+        and, once the circuit breaker has tripped, no further subprocess is
+        spawned for the rest of the run.
+        """
+        if self._provider_disabled or not self.command:
+            return None
+        try:
+            argv = shlex.split(self.command)
+        except ValueError:
+            self._record_failure()
+            return None
+        if not argv:
+            self._record_failure()
+            return None
+        self.stats["provider_calls"] += 1
+        prompt = build_llm_fact_judge_prompt(fact_text, answer)
+        try:
+            completed = subprocess.run(
+                argv,
+                input=prompt,
+                text=True,
+                capture_output=True,
+                timeout=self.timeout_seconds,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            self._record_failure()
+            return None
+        if completed.returncode != 0 or not completed.stdout.strip():
+            self._record_failure()
+            return None
+        self._consecutive_failures = 0
+        return completed.stdout
+
+    def _record_failure(self) -> None:
+        self._consecutive_failures += 1
+        if self._consecutive_failures >= LLM_FACT_JUDGE_MAX_CONSECUTIVE_FAILURES:
+            self._provider_disabled = True
+
+    def _cache_get(self, key: str) -> str | None:
+        if not self._cache_loaded:
+            self._load_cache()
+        return self._cache.get(key)
+
+    def _cache_put(self, key: str, value: str) -> None:
+        if not self._cache_loaded:
+            self._load_cache()
+        self._cache[key] = value
+        self._persist_cache()
+
+    def _load_cache(self) -> None:
+        self._cache_loaded = True
+        if self.cache_path is None or not self.cache_path.is_file():
+            return
+        try:
+            raw = json.loads(self.cache_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return
+        if isinstance(raw, dict):
+            for key, value in raw.items():
+                if value in ("covered", "not_covered"):
+                    self._cache[str(key)] = value
+
+    def _persist_cache(self) -> None:
+        """Write the verdict cache atomically; a cache failure never fails a run."""
+        if self.cache_path is None:
+            return
+        try:
+            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+            payload = json.dumps(
+                self._cache, ensure_ascii=False, indent=2, sort_keys=True
+            )
+            tmp = self.cache_path.with_suffix(self.cache_path.suffix + ".tmp")
+            tmp.write_text(payload + "\n", encoding="utf-8")
+            tmp.replace(self.cache_path)
+        except OSError:
+            pass  # the cache is an optimization, never a correctness dependency
+
+
+def judge_fact(
+    fact_text: str,
+    answer: str,
+    required_tokens: list[str],
+    llm_fact_judge: LLMFactJudge | None = None,
+) -> FactMatch:
+    """Rule-judge a fact, then let the optional LLM judge adjudicate it in-band.
+
+    With ``llm_fact_judge`` None (the default) this is exactly ``fact_match`` --
+    the deterministic rule judge, byte-for-byte. With an LLM judge supplied, a
+    paraphrase-suspect fact's ``.covered`` may be overridden by the LLM verdict;
+    ``term_score``, ``technical_score``, and literal required-token preservation
+    are unchanged. ``fact_match`` itself stays stable for ``calibrate_judge.py``.
+    """
+    rule_match = fact_match(fact_text, answer, required_tokens)
+    if llm_fact_judge is None:
+        return rule_match
+    return llm_fact_judge.adjudicate(fact_text, answer, rule_match)
+
+
+def make_llm_fact_judge(
+    *,
+    flag: bool = False,
+    command: str | None = None,
+    cache_path: Path | None = None,
+    timeout_seconds: int | None = None,
+) -> LLMFactJudge | None:
+    """Build an LLMFactJudge when opted in, else None (rule judge only).
+
+    Enabled by the ``--llm-fact-judge`` CLI flag OR the ``JUDGE_LLM_FACT=1``
+    environment toggle. The env toggle is mandatory plumbing: run-test.sh
+    invokes judge_report.py with a fixed argument list and passes no judge flag,
+    so the live benchmark runs reach the LLM judge only through the env toggle.
+    When neither is set this returns None and judging behaves byte-for-byte like
+    the deterministic rule judge. The provider command, cache path, and per-call
+    timeout each fall back: explicit argument, then environment variable, then a
+    built-in default (the Codex command provider, as answer_runner.py uses).
+    """
+    if not (flag or env_flag("JUDGE_LLM_FACT")):
+        return None
+    resolved_command = (
+        command
+        or os.environ.get("JUDGE_LLM_FACT_COMMAND", "").strip()
+        or DEFAULT_LLM_FACT_JUDGE_COMMAND
+    )
+    if cache_path is None:
+        env_cache = os.environ.get("JUDGE_LLM_FACT_CACHE", "").strip()
+        cache_path = Path(env_cache) if env_cache else DEFAULT_LLM_FACT_JUDGE_CACHE
+    if timeout_seconds is None:
+        env_timeout = os.environ.get("JUDGE_LLM_FACT_TIMEOUT", "").strip()
+        timeout_seconds = (
+            int(env_timeout)
+            if env_timeout.isdigit() and int(env_timeout) > 0
+            else DEFAULT_LLM_FACT_JUDGE_TIMEOUT_SECONDS
+        )
+    env_votes = os.environ.get("JUDGE_LLM_FACT_VOTES", "").strip()
+    votes = (
+        int(env_votes)
+        if env_votes.isdigit() and int(env_votes) > 0
+        else DEFAULT_LLM_FACT_JUDGE_VOTES
+    )
+    return LLMFactJudge(
+        command=resolved_command,
+        timeout_seconds=timeout_seconds,
+        cache_path=cache_path,
+        votes=votes,
+    )
+
+
+def llm_fact_judge_summary(judge: LLMFactJudge) -> str:
+    """One-line human-readable summary of an LLM fact judge's run statistics."""
+    stats = judge.stats
+    detail = (
+        "llm fact judge: "
+        f"votes={judge.votes} "
+        f"in_band={stats['in_band']} "
+        f"provider_calls={stats['provider_calls']} "
+        f"cache_hits={stats['cache_hits']} "
+        f"covered={stats['llm_covered']} not_covered={stats['llm_not_covered']} "
+        f"overrides={stats['overrides']} fallbacks={stats['fallbacks']}"
+    )
+    if stats["in_band"] and stats["fallbacks"] == stats["in_band"]:
+        detail += (
+            " (provider unavailable -- every in-band fact fell back "
+            "to the rule judge)"
+        )
+    return detail
+
+
 def suffix_stem(term: str) -> str:
     """Reduce a word to a rough stem so -s/-es/-ed/-ing variants compare equal.
 
@@ -687,43 +1188,81 @@ def order_side_terms(tokens: list[str]) -> list[str]:
     return [token for token in tokens if token not in STOPWORDS and len(token) > 2]
 
 
-def parse_order_claim(claim_norm: str) -> tuple[list[str], list[str]] | None:
-    """Detect an order-sensitive claim and return its (first, second) terms.
+def collapse_relation_phrases(text: str) -> str:
+    """Collapse the multi-word relation "takes precedence over" to one token.
 
-    For "X before Y" the claim asserts X precedes Y, so it returns
-    ``(terms(X), terms(Y))``. For "X after Y" the order is reversed. Returns
-    ``None`` when the claim carries no ordering keyword -- such claims keep the
-    plain bag-of-words path.
+    Order/direction parsing is token-based; collapsing the phrase lets
+    "A takes precedence over B" be handled exactly like "A supersedes B".
     """
-    tokens = claim_norm.split()
+    return re.sub(r"\btakes?\s+precedence\s+over\b", "supersedes", text)
+
+
+def direction_relation_family(token: str) -> set[str]:
+    """Return the inflected forms of the asymmetric relation ``token`` belongs to."""
+    for family in DIRECTION_RELATION_FAMILIES:
+        if token in family:
+            return set(family)
+    return {token}
+
+
+def parse_order_claim(
+    claim_norm: str,
+) -> tuple[list[str], list[str], set[str], set[str]] | None:
+    """Detect an order- or direction-sensitive claim.
+
+    Returns ``(first_terms, second_terms, forward_keywords, reverse_keywords)``
+    or ``None`` for a plain claim that keeps the bag-of-words path. The claim is
+    asserted by the answer when a ``forward`` keyword sits between a first-side
+    term and a second-side term, or a ``reverse`` keyword sits between a
+    second-side term and a first-side term, inside one un-negated sentence.
+
+    Two claim shapes are recognised:
+
+    * Ordering -- "X before Y" / "X after Y". For "before" the claim asserts X
+      precedes Y; "after" swaps the sides. Either ordering keyword can assert it
+      in the answer, so both keyword sets are returned.
+    * Asymmetric relation -- "A overrides B", "A replaces B", "A precedes B",
+      "A takes precedence over B". Only the same relation in the same direction
+      asserts the claim, so the reverse set is empty.
+    """
+    tokens = collapse_relation_phrases(claim_norm).split()
     for index, token in enumerate(tokens):
-        if token not in ("before", "after", "then"):
-            continue
-        left = order_side_terms(tokens[:index])
-        right = order_side_terms(tokens[index + 1 :])
-        if not left or not right:
-            continue
-        if token == "after":
-            return right, left
-        return left, right
+        if token in ("before", "after", "then"):
+            left = order_side_terms(tokens[:index])
+            right = order_side_terms(tokens[index + 1 :])
+            if not left or not right:
+                continue
+            if token == "after":
+                return right, left, ORDER_BEFORE_KEYWORDS, ORDER_AFTER_KEYWORDS
+            return left, right, ORDER_BEFORE_KEYWORDS, ORDER_AFTER_KEYWORDS
+        if token in DIRECTION_RELATION_KEYWORDS:
+            left = order_side_terms(tokens[:index])
+            right = order_side_terms(tokens[index + 1 :])
+            if not left or not right:
+                continue
+            return left, right, direction_relation_family(token), set()
     return None
 
 
 def order_claim_asserted(
-    relation: tuple[list[str], list[str]], answer: str
+    first_terms: list[str],
+    second_terms: list[str],
+    forward_keywords: set[str],
+    reverse_keywords: set[str],
+    answer: str,
 ) -> bool:
-    """Return True when the answer actually asserts the claim's first->second order.
+    """Return True when the answer asserts the claim's first->second direction.
 
     Bag-of-words overlap cannot distinguish the prohibited "X before Y" from the
-    correct "Y before X" -- the words are identical. This requires an ordering
-    keyword to sit between a first-side term and a second-side term, within a
-    single un-negated sentence.
+    correct "Y before X", nor "A overrides B" from "B overrides A" -- the words
+    are identical. This requires a forward keyword to sit between a first-side
+    term and a second-side term (or a reverse keyword between a second-side term
+    and a first-side term), within a single un-negated sentence.
     """
-    first_terms, second_terms = relation
     first_stems = {suffix_stem(term) for term in first_terms}
     second_stems = {suffix_stem(term) for term in second_terms}
     for sentence in split_sentences(answer):
-        tokens = normalize_text(sentence).split()
+        tokens = normalize_text(collapse_relation_phrases(sentence)).split()
         if not tokens or any(token in NEGATION_TOKENS for token in tokens):
             continue
         stems = [suffix_stem(token) for token in tokens]
@@ -732,14 +1271,129 @@ def order_claim_asserted(
         if not first_pos or not second_pos:
             continue
         for index, token in enumerate(tokens):
-            if token in ORDER_BEFORE_KEYWORDS and any(p < index for p in first_pos) and any(
-                p > index for p in second_pos
+            if (
+                token in forward_keywords
+                and any(p < index for p in first_pos)
+                and any(p > index for p in second_pos)
             ):
                 return True
-            if token in ORDER_AFTER_KEYWORDS and any(p < index for p in second_pos) and any(
-                p > index for p in first_pos
+            if (
+                reverse_keywords
+                and token in reverse_keywords
+                and any(p < index for p in second_pos)
+                and any(p > index for p in first_pos)
             ):
                 return True
+    return False
+
+
+def strip_markdown_emphasis(text: str) -> str:
+    """Remove Markdown emphasis markers so an emphasised word tokenises plainly.
+
+    ``**not**`` / ``*not*`` / ``_not_`` / `` `not` `` all collapse to ``not``,
+    so an emphasised negation word is still recognised by the negation and
+    ordering checks. Asterisks and backticks are removed outright; underscores
+    are removed only at word boundaries, so identifier underscores
+    (``SSL_PORT_NO``) survive.
+    """
+    text = text.replace("*", "").replace("`", "")
+    text = re.sub(r"(?<![A-Za-z0-9])_+", "", text)
+    text = re.sub(r"_+(?![A-Za-z0-9])", "", text)
+    return text
+
+
+def claim_is_negative(claim: str) -> bool:
+    """True when a prohibited claim's own *main* clause is negative in polarity.
+
+    A negation inside a subordinate clause ("if no rule matches, ...", "... when
+    expr1 is not NULL") states a *condition*, not the claim's polarity: the
+    claim "Altibase denies access by default" is positive even though its
+    "if no ..." condition contains "no". Only a negation in the main clause
+    ("X cannot be dropped", "anonymous blocks cannot use OUTPUT bind variables")
+    makes the claim intrinsically negative. "without" is excluded -- see
+    MAIN_CLAUSE_NEGATION_TOKENS.
+    """
+    for segment in claim.lower().replace("'", "").split(","):
+        words = re.findall(r"[a-z0-9_]+", segment)
+        if not words or words[0] in SUBORDINATOR_KEYWORDS:
+            continue  # an empty segment or a fronted subordinate clause
+        main_words: list[str] = []
+        for word in words:
+            if word in SUBORDINATOR_KEYWORDS:
+                break  # a trailing subordinate clause starts here
+            main_words.append(word)
+        if any(word in MAIN_CLAUSE_NEGATION_TOKENS for word in main_words):
+            return True
+    return False
+
+
+def answer_asserts_negative_claim(answer: str, claim_terms: list[str]) -> bool:
+    """Decide whether an answer asserts an intrinsically-negative prohibited claim.
+
+    An intrinsically-negative claim ("X cannot do Y") is asserted only when the
+    answer *also* negates X near Y. Whole-answer proximity is too coarse: an
+    answer can affirm the claim's point ("Unlike stored procedures, it can use
+    BIND variables for ... OUTPUT") while carrying unrelated negations elsewhere
+    ("It does not create or store a PSM object"). So the decision is
+    sentence-scoped -- the answer sentence covering the most claim terms decides
+    the polarity. If that sentence negates, the answer asserts the negative
+    claim; otherwise it affirms the opposite and is safe.
+    """
+    claim_stems = {
+        suffix_stem(term)
+        for term in claim_terms
+        if term not in STOPWORDS and len(term) > 3
+    }
+    if not claim_stems:
+        return False
+    best_cover = 0
+    best_has_negation = False
+    for sentence in split_sentences(answer):
+        tokens = normalize_text(sentence).split()
+        if not tokens:
+            continue
+        stems = {suffix_stem(token) for token in tokens}
+        cover = sum(1 for stem in stems if stem_in_set(stem, claim_stems))
+        if cover > best_cover:
+            best_cover = cover
+            best_has_negation = any(token in NEGATION_TOKENS for token in tokens)
+    return best_cover > 0 and best_has_negation
+
+
+def claim_has_incidental_literal_only(claim_terms: list[str], answer: str) -> bool:
+    """True when a purely-numeric claim token matches only unrelated answer text.
+
+    A claim like "SSL_PORT_NO defaults to 20300" must not be flagged when the
+    answer's only "20300" sits in an unrelated TCP-listener log line. A numeric
+    token is incidental unless it shares an answer sentence with another claim
+    term; an incidental match means the claim's subject and predicate never
+    co-occur, so the claim is not actually asserted.
+    """
+    numeric_terms = [
+        term
+        for term in claim_terms
+        if any(char.isdigit() for char in term)
+        and not any(char.isalpha() for char in term)
+    ]
+    if not numeric_terms:
+        return False
+    other_stems = {
+        suffix_stem(term) for term in claim_terms if term not in numeric_terms
+    }
+    if not other_stems:
+        return False
+    for numeric in numeric_terms:
+        co_occurs = False
+        for sentence in split_sentences(answer):
+            sentence_norm = normalize_text(sentence)
+            if not term_present(sentence_norm, numeric):
+                continue
+            sentence_stems = {suffix_stem(token) for token in sentence_norm.split()}
+            if any(stem_in_set(stem, other_stems) for stem in sentence_stems):
+                co_occurs = True
+                break
+        if not co_occurs:
+            return True
     return False
 
 
@@ -754,40 +1408,57 @@ def prohibited_claim_present(claim: str, answer: str) -> tuple[bool, str]:
         return False, "no claim terms"
     matched = [term for term in claim_terms if term_present(answer_norm, term)]
     score = len(matched) / len(claim_terms)
-    # A claim counts as "intrinsically negative" when its own polarity is
-    # negative ("X cannot be dropped"). This drives the polarity comparison
-    # below. A "may do X without Y" claim is positive in polarity -- see
-    # INTRINSIC_NEGATION_TERMS, which excludes "without" for exactly this reason.
-    claim_is_intrinsically_negative = any(
-        term in claim_norm.split() for term in INTRINSIC_NEGATION_TERMS
-    )
 
-    # Order-sensitive claims ("X before Y") cannot be judged by bag-of-words:
-    # the same words in the correct order are an allowed answer. Require both
-    # high overlap and the ordered relation to be asserted un-negated.
+    # Markdown emphasis around a negation word ("does **not** commit") would
+    # otherwise leave the negation un-tokenised. Strip emphasis markers before
+    # any negation/ordering analysis; the bag-of-words overlap above keeps using
+    # the untouched answer, so SQL tokens such as `*` are unaffected.
+    answer_for_analysis = strip_markdown_emphasis(answer)
+    answer_norm_for_analysis = normalize_text(answer_for_analysis)
+
+    # A claim counts as intrinsically negative only when its *main* clause is
+    # negative ("X cannot be dropped"). A negation confined to a subordinate
+    # clause ("if no rule matches", "when expr1 is not NULL") is a condition,
+    # not the claim's polarity -- see claim_is_negative().
+    claim_negative = claim_is_negative(claim)
+
+    # Order- and direction-sensitive claims ("X before Y", "A overrides B")
+    # cannot be judged by bag-of-words: the same words in the other direction
+    # are an allowed answer. Require both high overlap and the directed relation
+    # to be asserted un-negated.
     order_relation = parse_order_claim(claim_norm)
     if order_relation is not None:
-        if score >= 0.90 and order_claim_asserted(order_relation, answer):
-            return True, f"high overlap ({score:.2f}) and answer asserts the prohibited order"
-        return False, f"order-sensitive claim not asserted in the answer (overlap {score:.2f})"
+        first_terms, second_terms, forward_kw, reverse_kw = order_relation
+        if score >= 0.90 and order_claim_asserted(
+            first_terms, second_terms, forward_kw, reverse_kw, answer_for_analysis
+        ):
+            return True, f"high overlap ({score:.2f}) and answer asserts the prohibited direction"
+        return False, f"order/direction-sensitive claim not asserted in the answer (overlap {score:.2f})"
 
-    # Bag-of-words overlap alone cannot tell an answer that asserts the claim
-    # from one that asserts its opposite: "X can be searched" and "X cannot be
-    # searched" share every term but "can"/"cannot". So at high overlap, compare
-    # polarity near the claim terms -- an answer asserts the claim only when its
-    # negation state matches the claim's own polarity:
-    #   - positive claim ("X can be dropped"): asserted by an un-negated answer;
-    #     an answer that negates near the terms contradicts it and is safe.
-    #   - intrinsically-negative claim ("X cannot be searched"): asserted only
-    #     by an answer that *also* negates near the terms; an un-negated answer
-    #     affirms the opposite and is safe.
     if score >= 0.90:
-        answer_negates = answer_has_negation_near(answer_norm, claim_terms)
-        if claim_is_intrinsically_negative:
-            if answer_negates:
+        # Incidental-token guard: a purely-numeric claim token ("20300") that
+        # surfaces only in unrelated answer text does not assert the claim.
+        if claim_has_incidental_literal_only(claim_terms, answer_for_analysis):
+            return False, (
+                f"high overlap ({score:.2f}) but a numeric claim token appears "
+                "only in unrelated answer text"
+            )
+        # Bag-of-words overlap alone cannot tell an answer that asserts the
+        # claim from one that asserts its opposite: "X can be searched" and
+        # "X cannot be searched" share every term but "can"/"cannot". So at high
+        # overlap, compare polarity -- an answer asserts the claim only when its
+        # negation state matches the claim's own polarity:
+        #   - positive claim ("X can be dropped"): asserted by an un-negated
+        #     answer; an answer that negates near the terms contradicts it.
+        #   - intrinsically-negative claim ("X cannot use OUTPUT bind
+        #     variables"): asserted only by an answer whose best-covering
+        #     sentence also negates; an answer that affirms the affirmative
+        #     ("it can use ... OUTPUT") is safe even if it negates elsewhere.
+        if claim_negative:
+            if answer_asserts_negative_claim(answer_for_analysis, claim_terms):
                 return True, f"high lexical overlap ({score:.2f}); answer asserts the negative claim"
             return False, f"high lexical overlap ({score:.2f}) but answer affirms the opposite"
-        if answer_negates:
+        if answer_has_negation_near(answer_norm_for_analysis, claim_terms):
             return False, f"high lexical overlap ({score:.2f}) but answer negates the claim"
         return True, f"high lexical overlap with prohibited claim ({score:.2f})"
     return False, f"lexical overlap={score:.2f}"
@@ -976,6 +1647,7 @@ def judge_answer(
     judge_mode: str,
     judge_model: str | None,
     thresholds: dict[str, Any],
+    llm_fact_judge: LLMFactJudge | None = None,
 ) -> dict[str, Any]:
     answer = answer_record.get("answer", "")
     required_tokens = list(question.get("required_tokens", []))
@@ -984,7 +1656,7 @@ def judge_answer(
 
     fact_results: list[dict[str, Any]] = []
     for fact in question.get("expected_facts", []):
-        match = fact_match(fact.get("fact", ""), answer, required_tokens)
+        match = judge_fact(fact.get("fact", ""), answer, required_tokens, llm_fact_judge)
         result = {
             "fact_id": fact["id"],
             "covered": match.covered,
@@ -1647,6 +2319,28 @@ def run_retrieval_recall(
         )
         return None
 
+    # Manifest-aware routing inputs (cycle-1 jobs 08-09): parse the in-package
+    # source/shard manifests exactly as answer_runner.main() does, so the
+    # reconstructed context matches a routed run's recorded audit instead of the
+    # pre-routing lexical context. Each parser returns an empty mapping when its
+    # manifest is absent; build_context() then degrades to plain pre-routing
+    # lexical ranking -- the same un-routed reconstruction produced before this
+    # fix -- so the diagnostic stays resilient rather than crashing.
+    manifest_rows = answer_runner.parse_source_manifest()
+    shard_map = answer_runner.parse_shard_manifest()
+    if not manifest_rows or not shard_map:
+        missing = []
+        if not manifest_rows:
+            missing.append(repo_rel(answer_runner.REPO_ROOT / answer_runner.SOURCE_MANIFEST_REL))
+        if not shard_map:
+            missing.append(repo_rel(answer_runner.REPO_ROOT / answer_runner.SHARD_MANIFEST_REL))
+        print(
+            "WARNING: --retrieval-recall: source/shard manifest(s) absent or empty "
+            f"({', '.join(missing)}); reconstructing pre-routing lexical context -- "
+            "faithful_reconstruction will be approximate for manifest-routed runs",
+            file=sys.stderr,
+        )
+
     per_question: list[dict[str, Any]] = []
     faithful_count = 0
     token_total = token_present = 0
@@ -1666,6 +2360,8 @@ def run_retrieval_recall(
                 recorded_audit.get("budget") if isinstance(recorded_audit.get("budget"), int) else budget,
                 attachment_glob,
                 context_root,
+                manifest_rows,
+                shard_map,
             )
         except answer_runner.RunnerError as exc:
             per_question.append({"question_id": question_id, "error": str(exc)})
@@ -1761,6 +2457,7 @@ def run_judge(
     judge_model: str | None,
     validate_output: bool,
     retrieval_recall: bool = False,
+    llm_fact_judge: LLMFactJudge | None = None,
 ) -> JudgeRunResult:
     manifest = load_json(manifest_path)
     manifest["_path"] = repo_rel(manifest_path)
@@ -1815,6 +2512,7 @@ def run_judge(
                 judge_mode=judge_mode,
                 judge_model=judge_model,
                 thresholds=thresholds,
+                llm_fact_judge=llm_fact_judge,
             )
         )
 
@@ -1934,16 +2632,45 @@ NEGATIVE_CLAIM_ERR101_UNSAFE_ANSWER = (
 )
 
 
+# C2-01 prohibited-claim false-positive regression fixtures. The verbatim
+# answers for PROP-140, PROP-142, SQL-137, TOOL-003, TOOL-019, and TOOL-033 are
+# from the cycle-1 job-11 run altibase_source_preserving_20260520_195639_job11
+# (reports/full_benchmark/runs/.../answers/answers.jsonl). The cycle-1 full run
+# flagged all six as prohibited claims; section 5.2 of
+# reports/full_rerun_analysis_20260520.md confirms every one is a FALSE
+# POSITIVE -- each answer asserts the correct or opposite statement. They cover
+# four distinct failure modes: claim-condition polarity (PROP-142, SQL-137),
+# Markdown-emphasised negation (TOOL-019), a `cannot`-phrased claim the answer
+# affirms (TOOL-003), a reversed-direction relation (TOOL-033), and an
+# incidental numeric token (PROP-140). All six must read as NOT present.
+PROP_140_C2_CLAIM = "SSL_PORT_NO defaults to 20300."
+PROP_142_C2_CLAIM = "If no ACCESS_LIST rule matches, Altibase denies access by default."
+SQL_137_C2_CLAIM = "NVL2 returns expr3 when expr1 is not NULL."
+TOOL_003_C2_CLAIM = "Anonymous blocks cannot use OUTPUT bind variables in iSQL."
+TOOL_019_C2_CLAIM = "SQLFreeLob2 commits the JSON LOB update."
+TOOL_033_C2_CLAIM = (
+    "ALTIBASE_UT_FILE_PERMISSION overrides AEXPORT_FILE_PERMISSION when both are set."
+)
+PROP_140_C2_ANSWER = 'In Altibase 7.3, `SSL_PORT_NO` is the server property for the ordinary SSL/TLS database listener. Its default is `20443`, range is `[1024, 65535]`, and it specifies the listening port number for SSL connections. The SSL/TLS guide shows it starting beside the normal TCP listener, for example:\n\n```text\n[CM] Listener started : TCP on port 20300 [IPV4]\n[CM] Listener started : SSL on port 20443 [IPV4]\n```\n\nIt must not be treated as the replication SSL port because the 7.3 replication context identifies the replication endpoint port as `REPLICATION_PORT_NO`: `remote_host_port_no` is the port where the remote server Receiver thread listens, specifically the port specified in `REPLICATION_PORT_NO`.\n\nSo for 7.3, keep the roles separate:\n\n- `SSL_PORT_NO`: ordinary client/server SSL/TLS listener, used by SSL clients such as JDBC/ODBC/ADO.NET/iSQL.\n- `REPLICATION_PORT_NO`: replication Receiver listener port in the 7.3 replication manual.\n\nThe provided 7.3 context does not provide a source-backed `REPLICATION_SSL_PORT_NO` property for 7.3. If you need to validate replication-over-SSL specifically, the safe next check is the exact Altibase 7.3 patch level and the actual replication DDL/properties/log excerpt showing whether a supported `USING SSL` or replication SSL port mechanism exists in that build.'
+PROP_142_C2_ANSWER = '**ACCESS_LIST Runbook For Altibase 7.3**\n\n`ACCESS_LIST` rules are evaluated in the order they are written. For each incoming IP packet, Altibase checks the rule’s `address` and `mask`; if it matches, the rule’s `operation` is applied: `PERMIT` allows access, `DENY` blocks access. If it does not match, Altibase skips that entry and checks the next `ACCESS_LIST` entry.\n\nIf no `ACCESS_LIST` entry matches, access is allowed. Therefore, for a default-deny policy, add an explicit final catch-all `DENY` rule after the intended `PERMIT` rules, for example:\n\n```bash\nACCESS_LIST = permit, 192.168.3.0, 255.255.255.0\nACCESS_LIST = permit, 219.211.253.0, 255.255.255.0\nACCESS_LIST = deny ,0.0.0.0, 0.0.0.0\n```\n\n`limit` is optional:\n\n```bash\nACCESS_LIST = operation, address, mask, [limit]\n```\n\nWhen `limit` is specified, Altibase checks the maximum number of sessions allowed from the accessible IP address range in that `ACCESS_LIST` entry. If an allowed IP exceeds `limit`, the new connection is rejected. If `limit` is omitted, the limit condition is not checked. A limit rejection can appear as `0x410FD` / `mmERR_ABORT_IP_ACL_CONNECT_OVER`.\n\n`RELOAD ACCESS LIST` scope is only new connections. When `ACCESS_LIST` is updated with `ALTER SYSTEM RELOAD ACCESS LIST` while the server is running, existing connected sessions are not affected. The changed `ACCESS_LIST` applies only to new connection requests after the reload. Because of that, `V$ACCESS_LIST.CONNECTED` can be greater than `V$ACCESS_LIST.LIMIT`.\n\nOperational checks:\n\n```sql\nSELECT ID, ADDRESS, OPERATION, MASK, LIMIT, CONNECTED\nFROM V$ACCESS_LIST;\n```\n\n`RELOAD ACCESS LIST` rebuilds the list from the file configured by `ACCESS_LIST_FILE`; if `ACCESS_LIST_FILE` is omitted or disabled, `0x410F0` / `mmERR_ABORT_RELOAD_ACL_NOT_PERMITTED` applies.'
+SQL_137_C2_ANSWER = 'An Altibase answer should say:\n\n- `DECODE` is similar to `CASE WHEN` when `CASE WHEN` uses `simple_case_expr`. `expr` is compared sequentially with each `comparison_expr` using `=`, and the matching `ret_expr` is returned. If nothing matches, `default` is returned; if `default` is omitted, `NULL` is returned.\n- `CASE WHEN` has two forms:\n  - With `simple_case_expr`, `expr` is compared with each `comparison_expr` using `=`.\n  - With `searched_case_expr`, it behaves like `CASE2`: it returns `return_expr` for the first condition that evaluates to `TRUE`; if no condition is `TRUE`, it returns `else_expr` if specified, otherwise `NULL`.\n- `NVL2 (expr1, expr2, expr3)` returns `expr2` when `expr1` is not `NULL`; it returns `expr3` when `expr1` is `NULL`.\n\nFor cross-version scope, the included `7.1`, `7.3`, and `8.1_verified` references show the same descriptions for these behaviors. Sources: `SRC-000040`, `SRC-000103`, `SRC-000163`, and `AID-SRC-000328`.'
+TOOL_003_C2_ANSWER = 'In Altibase 7.3, an anonymous block is a stored procedure block used independently without a header.\n\nMain differences from a stored procedure:\n\n- It does not create or store a PSM object in the database.\n- It does not return the value of a RETURN clause.\n- Unlike stored procedures, it can use BIND variables for INPUT, OUTPUT, and INOUTPUT.\n\nStored procedures are created as database objects with `CREATE [OR REPLACE] PROCEDURE`, have a header and body, and are managed with statements such as `ALTER PROCEDURE`, `DROP PROCEDURE`, and `EXECUTE`.\n\nExample of BIND variables in an anonymous block:\n\n```sql\niSQL> VAR OUT1 OUTPUT INTEGER;\niSQL> VAR INOUT1 INOUTPUT INTEGER;\niSQL> EXEC :INOUT1 := 1;\n\niSQL> DECLARE\n    VAR1 INTEGER;\nBEGIN\n    VAR1 := :INOUT1;\n    :OUT1 := VAR1;\n    :INOUT1 := VAR1 + 1;\nEND;\n/\nExecute success.\n\niSQL> PRINT VAR;\n[ HOST VARIABLE ]\n-------------------------------------------------------\nNAME                 TYPE                 VALUE\n-------------------------------------------------------\nOUT1                 INTEGER              1\nINOUT1               INTEGER              2\n```\n\nHere, `:INOUT1` is read and then updated, and `:OUT1` receives the output value.'
+TOOL_019_C2_ANSWER = 'In 8.1, after using `SQLPutLob` to update `JSON` data through an Altibase CLI LOB locator, you must call `SQLFreeLob2`.\n\n`SQLFreeLob2` releases resources related to the `LOB Locator` for the `JSON` data type.\n\nIt does **not** `commit` or `rollback` the changes to the LOB pointed to by the locator. Transaction completion still has to be handled separately with an explicit `commit` or `rollback`.'
+TOOL_033_C2_ANSWER = '**Runbook**\n\nFor aexport-generated files, permission is selected in this order:\n\n1. `AEXPORT_FILE_PERMISSION`\n2. `ALTIBASE_UT_FILE_PERMISSION`\n3. Default `666` (`user:rw, group:rw, other: rw`)\n\n`ALTIBASE_UT_FILE_PERMISSION` is the common environment variable for files created by `aexport`, `iLoader`, and `iSQL`.\n\n```bash\nexport ALTIBASE_UT_FILE_PERMISSION=600\n```\n\nWith only this set, files created by `aexport` use `600` (`user:rw, group:--, other:--`).\n\n`AEXPORT_FILE_PERMISSION` is specific to files created by `aexport`. If it is set, it overrides `ALTIBASE_UT_FILE_PERMISSION` for `aexport` output.\n\n```bash\nexport ALTIBASE_UT_FILE_PERMISSION=660\nexport AEXPORT_FILE_PERMISSION=600\n```\n\nIn this case, `aexport`-generated files use `AEXPORT_FILE_PERMISSION=600`, not `ALTIBASE_UT_FILE_PERMISSION=660`.\n\nIf neither variable is set, `aexport`-generated files default to `666` (`user:rw, group:rw, other: rw`).\n\nIf an invalid permission value is used, the documented error is:\n\n```text\n326, HY000, utERR_ABORT_FilePerm_OutOfRange_Error = File permission value is out of range (<0%s>=<1%s>)\n# *Cause: File permission value is out of range.\n# *Action: Use valid file permission value.\n```'
+
+
 def prohibited_claim_regression_failures() -> list[str]:
-    """Check T6 prohibited-claim regression cases.
+    """Check prohibited-claim regression cases.
 
     The two real run answers (OPS-111, TOOL-038) are false positives and must
     read as "not present". The negation-phrased "may do X without Y" cases
     (job-10 gate) cover the protective preflight/checklist answers that the
-    "without"-disables-the-guard bug wrongly flagged. Three clearly prohibited
-    answers -- one plain, one order-sensitive, one negation-phrased -- must
-    still be detected, so the false-positive fix does not silently disable
-    prohibited-claim detection.
+    "without"-disables-the-guard bug wrongly flagged. The six C2-01 fixtures are
+    the cycle-1 job-11 prohibited-claim false positives -- polarity-, emphasis-,
+    `cannot`-, and direction-blind misfires -- and must all read as "not
+    present". Four clearly prohibited answers -- one plain, one order-sensitive,
+    one direction-sensitive, one negation-phrased -- must still be detected, so
+    the false-positive fixes do not silently disable prohibited-claim detection.
     """
     failures: list[str] = []
 
@@ -2029,6 +2756,36 @@ def prohibited_claim_regression_failures() -> list[str]:
             "was not detected"
         )
 
+    # C2-01: the six cycle-1 job-11 prohibited-claim false positives. Each
+    # answer asserts the correct or opposite statement and must read as NOT
+    # present (see reports/full_rerun_analysis_20260520.md section 5.2).
+    c2_cases = [
+        ("PROP-140", PROP_140_C2_CLAIM, PROP_140_C2_ANSWER, "incidental numeric token"),
+        ("PROP-142", PROP_142_C2_CLAIM, PROP_142_C2_ANSWER, "claim-condition polarity"),
+        ("SQL-137", SQL_137_C2_CLAIM, SQL_137_C2_ANSWER, "claim-condition polarity"),
+        ("TOOL-003", TOOL_003_C2_CLAIM, TOOL_003_C2_ANSWER, "affirmed cannot-phrased claim"),
+        ("TOOL-019", TOOL_019_C2_CLAIM, TOOL_019_C2_ANSWER, "markdown-emphasised negation"),
+        ("TOOL-033", TOOL_033_C2_CLAIM, TOOL_033_C2_ANSWER, "reversed-direction relation"),
+    ]
+    for question_id, claim, answer, mode in c2_cases:
+        present, notes = prohibited_claim_present(claim, answer)
+        if present:
+            failures.append(
+                f"{question_id} answer wrongly flagged as a prohibited claim "
+                f"[{mode}] ({notes})"
+            )
+
+    # A genuine reversed-direction ("A overrides B") claim that the answer
+    # asserts in the same direction must still be detected, so the
+    # direction-sensitivity fix does not disable prohibited-claim detection.
+    genuine_direction_present, _ = prohibited_claim_present(
+        "ALTIBASE_UT_FILE_PERMISSION overrides AEXPORT_FILE_PERMISSION.",
+        "In Altibase, ALTIBASE_UT_FILE_PERMISSION overrides AEXPORT_FILE_PERMISSION "
+        "for every utility.",
+    )
+    if not genuine_direction_present:
+        failures.append("a clearly prohibited direction-sensitive claim was not detected")
+
     return failures
 
 
@@ -2063,7 +2820,16 @@ def run_self_test(policy_path: Path) -> int:
         for message in regression_failures:
             print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
         return 1
-    print("OK: judge/report self-test passed (incl. OPS-111 / TOOL-038 regression)")
+    llm_helper_failures = llm_fact_judge_helper_failures()
+    if llm_helper_failures:
+        for message in llm_helper_failures:
+            print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
+        return 1
+    print(
+        "OK: judge/report self-test passed (incl. OPS-111 / TOOL-038 and "
+        "C2-01 PROP-140 / PROP-142 / SQL-137 / TOOL-003 / TOOL-019 / TOOL-033 "
+        "regression, LLM-fact-judge verdict/vote helpers)"
+    )
     return 0
 
 
@@ -2106,6 +2872,36 @@ def parse_args() -> argparse.Namespace:
             "required_tokens. Off by default; diagnostic output only."
         ),
     )
+    parser.add_argument(
+        "--llm-fact-judge",
+        action="store_true",
+        help=(
+            "Enable the optional LLM-assisted fact-coverage judge for "
+            "paraphrase-suspect facts. Also enabled by the JUDGE_LLM_FACT=1 "
+            "environment toggle. Off by default; the deterministic rule judge "
+            "stays the default and the fallback. Ignored by --self-test."
+        ),
+    )
+    parser.add_argument(
+        "--llm-fact-judge-command",
+        help=(
+            "Provider command for the LLM fact judge (default: the Codex "
+            "command provider; env JUDGE_LLM_FACT_COMMAND)."
+        ),
+    )
+    parser.add_argument(
+        "--llm-fact-judge-cache",
+        type=Path,
+        help="Cache file for LLM fact-judge verdicts (env JUDGE_LLM_FACT_CACHE).",
+    )
+    parser.add_argument(
+        "--llm-fact-judge-timeout",
+        type=int,
+        help=(
+            "Per-call timeout in seconds for the LLM fact judge "
+            "(env JUDGE_LLM_FACT_TIMEOUT)."
+        ),
+    )
     parser.add_argument("--self-test", action="store_true", help="Run offline fixture self-test and exit.")
     return parser.parse_args()
 
@@ -2127,6 +2923,15 @@ def main() -> int:
         output_dir = args.output_dir
         if output_dir is not None and not output_dir.is_absolute():
             output_dir = (REPO_ROOT / output_dir).resolve()
+        # Opt-in LLM fact judge. The self-test path returned above, so the
+        # self-test (and the run-all.sh preflight) is always hermetic and never
+        # builds this, even with JUDGE_LLM_FACT=1 set in the environment.
+        llm_fact_judge = make_llm_fact_judge(
+            flag=args.llm_fact_judge,
+            command=args.llm_fact_judge_command,
+            cache_path=args.llm_fact_judge_cache,
+            timeout_seconds=args.llm_fact_judge_timeout,
+        )
         result = run_judge(
             manifest_path=manifest_path.resolve(),
             answers_path=answers_path.resolve(),
@@ -2138,6 +2943,7 @@ def main() -> int:
             judge_model=args.judge_model,
             validate_output=args.validate_output,
             retrieval_recall=args.retrieval_recall,
+            llm_fact_judge=llm_fact_judge,
         )
     except JudgeError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -2148,6 +2954,8 @@ def main() -> int:
         f"{result.judgment_count} judgment(s) to {repo_rel(result.judgments_path)}; "
         f"readiness={result.readiness_decision}; report={repo_rel(result.markdown_report_path)}"
     )
+    if llm_fact_judge is not None:
+        print("OK: " + llm_fact_judge_summary(llm_fact_judge))
     return 0
 
 
