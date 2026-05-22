@@ -1,0 +1,13 @@
+# Job manifest for run-all.sh  —  tab-separated:  id <TAB> title <TAB> prompt_file
+# Order is execution order. Lines starting with # are ignored.
+# Spec: GPTs/reports/image_content_recovery_spec_20260522.md
+# Phase 0 — inventory
+01	IMG-01 Image inventory	01-IMG-01-inventory.md
+# Phase 1 — classification / audit (soft stop/go)
+02	IMG-02 Image classification and audit	02-IMG-02-classification.md
+# Phase 2 — conversion
+03	IMG-03 Convert C/D/E images	03-IMG-03-conversion.md
+# Phase 3 — pipeline integration
+04	IMG-04 Build-sidecar integration and shard rebuild	04-IMG-04-pipeline-integration.md
+# Phase 4 — validation / docs
+05	IMG-05 Validation and documentation	05-IMG-05-validation-docs.md

@@ -1,0 +1,5 @@
+# Runtime state and logs are not durable artifacts.
+# The inventory / classification / conversion outputs ARE deliverables and are
+# committed (they live in this directory but are not ignored).
+state/
+logs/
