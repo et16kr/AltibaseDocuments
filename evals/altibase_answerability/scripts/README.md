@@ -64,12 +64,41 @@ Context selection is manifest-aware and source-block-aware:
   so routed-source content wins ranking. When the manifests are missing, routing
   degrades cleanly to plain lexical ranking.
 - **Budgeted assembly.** `build_context()` partitions `max_context_chars`
-  deterministically into priority sections: routing metadata, routed-source chunks
-  (with provenance prefixes), nearby heading/wrapper context, then secondary lexical
-  chunks from leftover budget. A lexical reserve keeps a routing miss degrading
-  gracefully to baseline lexical retrieval. Whole-chunk greedy packing and
-  deterministic section-boundary truncation guarantee the assembled context never
-  exceeds the budget.
+  deterministically into priority sections: routing metadata; the named-definition
+  section (below); routed-source chunks (with provenance prefixes); nearby
+  heading/wrapper context; then secondary lexical chunks from leftover budget. A
+  lexical reserve keeps a routing miss degrading gracefully to baseline lexical
+  retrieval. Whole-chunk greedy packing and deterministic section-boundary
+  truncation guarantee the assembled context never exceeds the budget.
+- **Named-definition admission.** Every per-version manual row in the source
+  manifest carries the same generic title, so `route_sources()` cannot single out
+  the manual that documents a specific property, error code, or view, and a
+  generic-titled mis-route can flood the saturated budget with the wrong manual.
+  To stay resilient, `build_context()` admits the chunks the question's own named
+  identifier points at into a dedicated highest-priority section, regardless of the
+  routing decision:
+  - a **property-definition section** (`build_definition_section`) for
+    `properties` questions — the General Reference-1 block whose heading is a
+    property identifier from the question text, plus the `V$PROPERTY`
+    data-dictionary companion;
+  - an **error-reference / dictionary-view section** for `errors_troubleshooting`
+    and `views_performance_monitoring` questions — the Error Message Reference
+    entry for a named error symbol, hex code, or `ERR-<hex>` runtime code
+    (`build_error_reference_section`), and the full General Reference-2 section of
+    a named `V$`/`X$`/`SYS_..._` identifier (`build_dict_view_section`).
+  Each builder is anchored on identifiers in the question text and confined to the
+  relevant `source_family`, so it returns nothing — and `build_context()` is
+  byte-identical to before — for a question that names no such identifier.
+  `route_sources()` itself is unchanged; the fix makes assembly resilient to the
+  unavoidable routing miss.
+- **Exact-block deduplication.** After the budgeted fill passes, `build_context()`
+  drops any chunk whose body byte-identically repeats an already-selected chunk
+  and reinvests the freed budget — duplicate-aware and add-only — in unique
+  content. The source-preserving package re-serialises many blocks verbatim across
+  the 7.1/7.3/8.1 version trees and shared shard boilerplate, so on a saturated
+  budget this recovers context space without losing any token. The pass removes
+  only proven duplicates and only adds, so the assembled context is a
+  token-superset of the pre-dedup context.
 
 ### Retrieval audit sidecar
 
@@ -101,6 +130,12 @@ preservation, version handling, Altibase-specific correctness, prohibited claims
 missing-input handling, then applies readiness thresholds from `policy.json`.
 `--retrieval-recall` adds an off-by-default post-judge diagnostic that compares each
 question's selected context against judge-only `source_refs` and `required_tokens`.
+It reconstructs each question's context manifest-aware — parsing the in-package
+`02_source_manifest.md` and `03_source_to_shard_manifest.md` exactly as
+`answer_runner.main()` does — so the rebuild matches a routed run's recorded audit
+instead of a pre-routing lexical context; when those manifests are absent it warns
+and degrades to a plain pre-routing lexical rebuild. It writes
+`retrieval_recall.json` reporting required-token and source-ref recall.
 
 ### Judge behaviour
 
@@ -112,14 +147,18 @@ question's selected context against judge-only `source_refs` and `required_token
   (`restart`/`reboot`; `reflect`/`apply`/`take effect`;
   `verify`/`check`/`validate`/`confirm`). Literal **required-token** preservation
   (`literal_token_present()`) stays exact — only fact-term coverage is form-tolerant.
-- **Prohibited-claim detection.** `answer_has_negation_near()` suffix-normalizes
-  terms (so a claim's `tablespaces` matches a negated `tablespace` in the answer)
-  and considers every high-value claim term. `prohibited_claim_present()` handles
-  order-sensitive claims ("X before Y") separately: high bag-of-words overlap flags
-  only when the answer actually asserts the prohibited order un-negated. For plain
-  claims it compares polarity near the claim terms, so an answer that negates a
-  positive claim — or affirms the opposite of an intrinsically-negative one — is no
-  longer a false positive.
+- **Prohibited-claim detection (round 2).** `prohibited_claim_present()` is
+  polarity-, direction-, and markdown-emphasis-aware. Before any negation or
+  ordering analysis the answer passes through `strip_markdown_emphasis()`, so an
+  emphasised negation (`does **not** commit`) still tokenises as `not` while
+  identifier underscores (`SSL_PORT_NO`) survive. `parse_order_claim()` separates
+  ordering claims ("X before Y") from asymmetric-relation claims ("A overrides B",
+  "A replaces / supersedes / precedes B", "A takes precedence over B"): the same
+  words in the other direction are an allowed answer, so such a claim flags only
+  when high bag-of-words overlap is paired with the answer actually asserting the
+  prohibited direction un-negated. For a plain claim it compares polarity near the
+  claim terms, so an answer that negates a positive claim — or affirms the opposite
+  of an intrinsically-negative one — is no longer a false positive.
 - **Pass logic.** A judgment's `passed` decision is made directly against the
   `readiness_thresholds` in `policy.json`. A question passes when it has no
   `blocker` finding, `critical_fact_coverage` is at or above
@@ -129,6 +168,38 @@ question's selected context against judge-only `source_refs` and `required_token
   in-policy numeric score; `high`/`medium` near-miss findings now remain as
   remediation signal without auto-failing the question.
 
+### Optional LLM-assisted fact judge
+
+`judge_report.py` carries an optional LLM-assisted fact judge, **off by default**.
+`--llm-fact-judge` (or the `JUDGE_LLM_FACT=1` environment toggle) enables it; with
+neither set, judging is byte-for-byte the deterministic rule judge, which stays the
+default and the fallback.
+
+- **Paraphrase-suspect band only.** The LLM is consulted only for facts whose
+  rule-judge `term_score` lands in the paraphrase-suspect band (`0.40`–`1.00`) —
+  the band where bag-of-words coverage cannot tell a correct paraphrase from a
+  near-miss. A fact matched by exact normalized fact-text containment, or one the
+  rule judge clearly missed, keeps the rule verdict untouched. Only
+  `FactMatch.covered` may be overridden; `term_score`, `technical_score`, and
+  literal required-token preservation stay the rule judge's deterministic values.
+- **Majority vote.** Each in-band fact is graded by a majority vote over several
+  independent provider calls (`JUDGE_LLM_FACT_VOTES`, default 3), since the
+  provider is non-deterministic per call; a tie keeps the rule verdict.
+- **Cached verdicts.** Majority verdicts are cached, keyed by prompt version, fact,
+  and answer, so warm-cache re-runs are free and stable. The default cache is
+  `improvement2/cache/llm_fact_judge_cache.json`.
+- **Rule-judge fallback.** On any provider error, timeout, missing provider,
+  unparseable reply, or vote tie the judge falls back to the deterministic rule
+  verdict and records the fallback. Consecutive provider failures trip a circuit
+  breaker that stops shelling out for the rest of the run, so a broken or missing
+  provider never hangs or fails a run.
+- **Configuration.** `--llm-fact-judge-command`, `--llm-fact-judge-cache`, and
+  `--llm-fact-judge-timeout` (env `JUDGE_LLM_FACT_COMMAND`, `JUDGE_LLM_FACT_CACHE`,
+  `JUDGE_LLM_FACT_TIMEOUT`) override the provider command, cache path, and per-call
+  timeout; each falls back to a built-in default (the same Codex command provider
+  `answer_runner.py` uses). `--self-test` never builds the LLM judge, so the
+  self-test stays hermetic even with `JUDGE_LLM_FACT=1` set.
+
 ### Judge calibration
 
 `calibrate_judge.py` measures how well the rule judge agrees with hand-labelled
@@ -137,7 +208,10 @@ over each entry of the gold set `fixtures/judge_gold_set.jsonl` — labelled
 `(question_id, fact_id)` pairs each marked `covered` or `not_covered` — compares the
 judge's `.covered` verdict against the human label, and prints and writes a confusion
 matrix with precision, recall, F1, and overall agreement. It is a measurement tool:
-it always exits 0 and never fails on low agreement.
+it always exits 0 and never fails on low agreement. With `--llm-fact-judge` (or
+`JUDGE_LLM_FACT=1`) it routes each gold entry through `judge_fact(...)` instead, so
+agreement can be measured with the LLM-assisted judge enabled; with the flag off it
+uses `fact_match` exactly as before.
 
 ```bash
 python3 evals/altibase_answerability/scripts/calibrate_judge.py \

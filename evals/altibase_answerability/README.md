@@ -151,8 +151,13 @@ manifests (`02_source_manifest.md`, `03_source_to_shard_manifest.md`) to route e
 question to the documented source blocks, propagates per-chunk source-block metadata
 (`source_id`, `block_id`, version, language) into the context headers, and partitions
 `max_context_chars` into priority sections so routed-source content leads the context
-without crowding out secondary lexical chunks. Use `--context-mode full` only when the
-selected model can safely accept the whole attachment set.
+without crowding out secondary lexical chunks. When a question names a specific
+property, error code, or `V$`/`X$`/`SYS_` view, the runner also admits that
+identifier's own documented definition block into a dedicated highest-priority
+section, so a generic-titled routing miss cannot starve it, and a final exact-block
+deduplication pass reinvests budget otherwise spent on byte-identical chunks. Use
+`--context-mode full` only when the selected model can safely accept the whole
+attachment set. See `scripts/README.md` for the context-selection details.
 
 Each run also writes a `retrieval_audit.jsonl` sidecar next to `answers.jsonl`. The
 audit records, per question, the ranking tokens, the routed source ids, and the
@@ -175,17 +180,28 @@ judge/report validation does not require live model calls.
 
 Fact coverage is semantic-tolerant: a deterministic suffix stemmer and a small curated
 equivalence map let correct paraphrases and word-form variants count as covered, while
-literal required-token preservation stays exact. Prohibited-claim detection is polarity-
-and order-aware, so a correct, safe answer is not flagged merely for sharing vocabulary
-with a prohibited claim. A question's `passed` decision is made directly against the
-`readiness_thresholds` in `policy.json` — no `blocker` finding, critical fact coverage
-and required-token preservation at or above their policy minimums, and no prohibited
-claim — and near-miss `high`/`medium` findings remain as remediation signal without
-auto-failing an otherwise in-policy answer.
+literal required-token preservation stays exact. Prohibited-claim detection is
+polarity-, direction-, and markdown-emphasis-aware, so a correct, safe answer is not
+flagged merely for sharing vocabulary with a prohibited claim. A question's `passed`
+decision is made directly against the `readiness_thresholds` in `policy.json` — no
+`blocker` finding, critical fact coverage and required-token preservation at or above
+their policy minimums, and no prohibited claim — and near-miss `high`/`medium`
+findings remain as remediation signal without auto-failing an otherwise in-policy
+answer.
+
+`judge_report.py` also carries an optional LLM-assisted fact judge
+(`--llm-fact-judge`, or the `JUDGE_LLM_FACT=1` environment toggle), off by default.
+When enabled it adjudicates only paraphrase-suspect facts — those whose rule-judge
+term score cannot distinguish a correct paraphrase from a near-miss — by majority vote
+over a configurable provider, caches verdicts, and falls back to the deterministic
+rule verdict on any provider failure or tie. With it off, judging is byte-for-byte the
+rule judge. See `scripts/README.md` for the band, caching, and fallback details.
 
 `scripts/calibrate_judge.py` measures judge-vs-human agreement against the labelled
 gold set `fixtures/judge_gold_set.jsonl`, reporting a confusion matrix with precision,
-recall, and overall agreement. It is a measurement tool and never fails a run.
+recall, and overall agreement. It is a measurement tool and never fails a run, and it
+accepts the same `--llm-fact-judge` flag to measure agreement with the LLM-assisted
+judge enabled.
 
 Judgments must score at least:
 
