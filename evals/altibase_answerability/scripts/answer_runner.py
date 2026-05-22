@@ -230,6 +230,83 @@ ROUTING_METADATA_HEADING = "routed-source metadata"
 # the secondary lexical section did not use, so correct routing wastes nothing.
 LEXICAL_RESERVE_FRACTION = 0.30
 
+# --- Property-definition block admission (C2-06) ----------------------------
+# A properties-domain question names an Altibase server property as an ALL-CAPS
+# identifier with at least one interior underscore (`HASH_AREA_SIZE`,
+# `MEM_DB_DIR`, `LOG_FILE_SIZE`). The property's documented default, range,
+# attribute, and behaviour live in a General Reference-1 manual section whose
+# heading IS that identifier. Every per-version manual row in
+# `02_source_manifest.md` carries the same generic title (`Altibase 7.3`), so
+# `route_sources()` cannot tell the property manual from the same version's
+# JDBC or migration manual: the rows tie and routing falls back to `source_id`
+# order, which usually selects the wrong manual and then floods the budget with
+# its blocks via `ROUTED_SOURCE_BONUS`. To keep the named property's own
+# definition block reachable regardless of that routing miss, `build_context()`
+# admits the chunk whose heading is a property identifier from the question
+# into a dedicated highest-priority section. The pattern is anchored token-wise
+# (see `extract_property_names`) so it is inert for questions that name no
+# property.
+PROPERTY_NAME_RE = re.compile(r"[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+")
+
+# A properties-domain question is also recognised by the bare word
+# "property" / "properties" — e.g. PROP-102 asks how to "check an Altibase
+# property value" without naming an identifier.
+PROPERTY_WORD_RE = re.compile(r"\bpropert(?:y|ies)\b", re.IGNORECASE)
+
+# Heading of the data-dictionary view that documents how to inspect any
+# Altibase property's installed value, attribute, and bounds. The source
+# records pair every properties-domain question with a V$PROPERTY check, so it
+# is the documented companion of the property's own definition block and
+# build_context() admits it alongside. The manuals markdown-escape the `$`
+# (`V\$PROPERTY`), so headings are matched with backslashes stripped.
+PROPERTY_INSPECTION_VIEW = "v$property"
+
+# The definition section is scoped to these two `source_family` values so it
+# stays inert outside the properties domain. A property's documented section
+# lives only in the General Reference-1 property manual; an error macro or a
+# SQL function with the same ALL-CAPS-underscore shape has no section there, so
+# `build_definition_section` finds nothing and changes no other domain's
+# context. `V$PROPERTY` is matched only inside the General Reference-2
+# data-dictionary manual.
+PROPERTY_MANUAL_FAMILY = "general_reference_1_datatypes_properties"
+PROPERTY_VIEW_FAMILY = "general_reference_2_dictionary_views"
+
+# --- Error-reference and dictionary-view block admission (C2-07) -------------
+# errors_troubleshooting and views_performance_monitoring lean on two reference
+# structures the manifest router cannot single out: the Error Message
+# Reference's per-error entry and General Reference-2's per-view / per-meta-
+# table section. Every per-version manual row in `02_source_manifest.md`
+# carries the same generic title, so `route_sources()` cannot tell the Error
+# Message Reference or the data-dictionary manual from the same version's other
+# manuals; the routed wrong manual then floods the budget via
+# `ROUTED_SOURCE_BONUS`. As with the C2-06 property-definition section,
+# `build_context()` admits these blocks into the dedicated highest-priority
+# section instead, anchored on the identifier the question itself names so the
+# admission is inert for any question that names no error or view.
+#
+# An error identifier is an Altibase error symbol (`qpERR_ABORT_MEMORY_ALLOCATION`,
+# `idERR_FATAL_idc_SVC_INET_BIND_ERROR`), a hex reference code (`0x311D6`), or
+# the `ERR-<hex>` runtime form (`ERR-31001`), which is also expanded to its
+# `0x<hex>` reference form because the manual documents each error under the
+# 0x code. The patterns are Altibase-error-specific, so they match only inside
+# errors_troubleshooting question text.
+ERROR_SYMBOL_RE = re.compile(r"[a-z]{2}ERR_[A-Za-z0-9_]+")
+ERROR_HEX_RE = re.compile(r"0x[0-9A-Fa-f]{3,}")
+ERROR_RUNTIME_RE = re.compile(r"\bERR-([0-9A-Fa-f]{4,6})\b")
+ERROR_REFERENCE_FAMILY = "error_message_reference"
+
+# A dictionary-view identifier is a `V$`/`X$` performance view or a `SYS_..._`
+# meta table; General Reference-2 heads each section with one. The patterns
+# match only inside views_performance_monitoring question text.
+DICT_VIEW_RE = re.compile(r"[VX]\$[A-Za-z][A-Za-z0-9_]*")
+DICT_META_RE = re.compile(r"\bSYS_[A-Za-z][A-Za-z0-9_]*_")
+DICT_VIEW_FAMILY = "general_reference_2_dictionary_views"
+# Lower-cased forms used to recognise a chunk heading that *is* a view /
+# meta-table identifier (headings are matched with backslashes stripped, so the
+# markdown-escaped `V\$STATEMENT` / `SYS_TABLES\_` headings still match).
+DICT_VIEW_HEADING_RE = re.compile(r"[vx]\$[a-z0-9_]+")
+DICT_META_HEADING_RE = re.compile(r"sys_[a-z0-9_]+_")
+
 
 @dataclass(frozen=True)
 class AttachmentDocument:
@@ -950,6 +1027,243 @@ def score_chunk(chunk: ContextChunk, query: RankingQuery) -> int:
     return score
 
 
+def extract_property_names(question: str) -> list[str]:
+    """Return the lower-cased Altibase property identifiers named in a question.
+
+    A property identifier is an ALL-CAPS token with at least one interior
+    underscore (`HASH_AREA_SIZE`, `MEM_DB_DIR`). Identifiers are returned in
+    first-mention order with duplicates removed so definition-block admission
+    in `build_context` is deterministic. The list is empty for a question that
+    names no property, which makes the C2-06 definition section inert outside
+    the properties domain.
+    """
+    seen: set[str] = set()
+    names: list[str] = []
+    for match in PROPERTY_NAME_RE.finditer(question):
+        lowered = match.group(0).lower()
+        if lowered not in seen:
+            seen.add(lowered)
+            names.append(lowered)
+    return names
+
+
+def version_scope_serves(question_scope: str, block_scope: str) -> bool:
+    """Return True when a source block's version serves the question's scope.
+
+    A `cross-version` or `patch-specific` question accepts any version tree, so
+    the definition section can offer every documented copy. A plain `7.1` /
+    `7.3` question wants that exact tree. An `8.1` question accepts any `8.1*`
+    block scope (`8.1_verified`, `8.1.0.0.1`). An empty or unrecognised
+    question scope accepts any block.
+    """
+    q = (question_scope or "").strip().lower()
+    b = (block_scope or "").strip().lower()
+    if q in ("", "cross-version", "patch-specific", "multi", "any"):
+        return True
+    if q == b:
+        return True
+    if q.startswith("8.1") and b.startswith("8.1"):
+        return True
+    return False
+
+
+def build_definition_section(
+    scored_chunks: list[tuple[int, ContextChunk]],
+    projection: dict[str, Any],
+) -> list[tuple[int, ContextChunk]]:
+    """Select the property-definition chunks for a properties-domain question (C2-06).
+
+    Two block kinds qualify, both restricted to source blocks whose
+    `version_scope` serves the question:
+
+    * the property's own definition block — a chunk in the General Reference-1
+      property manual (`PROPERTY_MANUAL_FAMILY`) whose heading token set
+      contains a property identifier named in the question (the
+      `HASH_AREA_SIZE (단위: 바이트)` section for a `HASH_AREA_SIZE` question);
+    * the `V$PROPERTY` data-dictionary section — the documented inspection
+      companion that carries the `NAME` / `STOREDCOUNT` / `ATTR` / `MIN` /
+      `MAX` / `VALUE1..VALUE8` columns.
+
+    The V$PROPERTY companion is admitted only when the question is genuinely
+    about properties: either a property-definition block was found above (the
+    named identifier really is a documented Altibase property) or the question
+    uses the word "property"/"properties". Both passes are confined to the two
+    property-manual families, so an error macro or a SQL function that shares
+    the ALL-CAPS-underscore shape (`ERR_ABORT`, `JSON_VALUE`) matches no block
+    and the whole section stays empty and inert for non-properties questions.
+
+    Headings are tokenised with backslashes stripped so the markdown-escaped
+    `V\\$PROPERTY` heading still matches. The exact heading-token match (rather
+    than a substring test) keeps `RESULT_CACHE_ENABLE` from also pulling
+    `RESULT_CACHE_MEMORY_MAXIMUM`. The incoming `scored_chunks` order
+    (`-score`, `rel_path`, `heading`) is preserved, so the result is
+    deterministic.
+    """
+    question = str(projection.get("question", ""))
+    property_names = set(extract_property_names(question))
+    question_scope = str(projection.get("version_scope", ""))
+
+    definition_blocks: list[tuple[int, ContextChunk]] = []
+    if property_names:
+        for score, chunk in scored_chunks:
+            meta = chunk.block_meta
+            if meta is None or meta.source_family != PROPERTY_MANUAL_FAMILY:
+                continue
+            heading_tokens = set(QUERY_TOKEN_RE.findall(chunk.heading_lower))
+            if not (heading_tokens & property_names):
+                continue
+            if not version_scope_serves(question_scope, meta.version_scope):
+                continue
+            definition_blocks.append((score, chunk))
+
+    # The question is a properties-domain question when it names a documented
+    # property (a definition block was found) or uses the word "property".
+    if not definition_blocks and not PROPERTY_WORD_RE.search(question):
+        return []
+
+    companion: list[tuple[int, ContextChunk]] = []
+    for score, chunk in scored_chunks:
+        meta = chunk.block_meta
+        if meta is None or meta.source_family != PROPERTY_VIEW_FAMILY:
+            continue
+        heading_tokens = set(
+            QUERY_TOKEN_RE.findall(chunk.heading_lower.replace("\\", ""))
+        )
+        if PROPERTY_INSPECTION_VIEW not in heading_tokens:
+            continue
+        if not version_scope_serves(question_scope, meta.version_scope):
+            continue
+        companion.append((score, chunk))
+
+    return definition_blocks + companion
+
+
+def extract_error_identifiers(question: str) -> set[str]:
+    """Return the lower-cased Altibase error identifiers a question names (C2-07).
+
+    Recognises error symbols (`qpERR_ABORT_MEMORY_ALLOCATION`), hex reference
+    codes (`0x311D6`), and the `ERR-<hex>` runtime form — the latter also
+    expanded to its `0x<hex>` reference form, the form the Error Message
+    Reference documents each error under. An all-zero runtime code such as
+    `ERR-00000` is not expanded: it is a runtime status, not a reference code,
+    and `0x00000` is not an error entry to anchor on. The set is empty for a
+    question that names no error, which keeps the C2-07 error-reference section
+    inert outside the errors_troubleshooting domain.
+    """
+    ids: set[str] = set()
+    for match in ERROR_SYMBOL_RE.finditer(question):
+        ids.add(match.group(0).lower())
+    for match in ERROR_HEX_RE.finditer(question):
+        ids.add(match.group(0).lower())
+    for match in ERROR_RUNTIME_RE.finditer(question):
+        hex_part = match.group(1).lower()
+        if set(hex_part) != {"0"}:
+            ids.add("0x" + hex_part)
+    return ids
+
+
+def build_error_reference_section(
+    scored_chunks: list[tuple[int, ContextChunk]],
+    projection: dict[str, Any],
+) -> list[tuple[int, ContextChunk]]:
+    """Select Error Message Reference entry chunks for an errors question (C2-07).
+
+    For every error identifier the question names, the chunk of the Error
+    Message Reference (`ERROR_REFERENCE_FAMILY`) carrying that error's
+    documented entry — the `0x... (decimal) symbol message` line plus its
+    Cause/Action — is admitted, version-filtered to the source blocks whose
+    `version_scope` serves the question. The match is on the chunk body because
+    the manual documents each error as bold text under a generic
+    `FATAL`/`ABORT`/`IGNORE`/`RETRY` heading rather than under a per-error
+    heading. Confined to the error-reference family and anchored on an
+    identifier from the question text, so it is empty (and `build_context`
+    byte-identical to before) for any question that names no error.
+
+    The incoming `scored_chunks` order (`-score`, `rel_path`, `heading`) is
+    preserved, so the result is deterministic.
+    """
+    question = str(projection.get("question", ""))
+    identifiers = extract_error_identifiers(question)
+    if not identifiers:
+        return []
+    question_scope = str(projection.get("version_scope", ""))
+    selected: list[tuple[int, ContextChunk]] = []
+    for score, chunk in scored_chunks:
+        meta = chunk.block_meta
+        if meta is None or meta.source_family != ERROR_REFERENCE_FAMILY:
+            continue
+        if not version_scope_serves(question_scope, meta.version_scope):
+            continue
+        if any(ident in chunk.search_text for ident in identifiers):
+            selected.append((score, chunk))
+    return selected
+
+
+def extract_dict_view_names(question: str) -> set[str]:
+    """Return the lower-cased data-dictionary identifiers a question names (C2-07).
+
+    Recognises `V$`/`X$` performance views and `SYS_..._` meta tables. Empty
+    for a question that names neither, which keeps the C2-07 view section inert
+    outside the views_performance_monitoring domain.
+    """
+    names: set[str] = set()
+    for match in DICT_VIEW_RE.finditer(question):
+        names.add(match.group(0).lower())
+    for match in DICT_META_RE.finditer(question):
+        names.add(match.group(0).lower())
+    return names
+
+
+def build_dict_view_section(
+    context_chunks: list[ContextChunk],
+    scored_chunks: list[tuple[int, ContextChunk]],
+    projection: dict[str, Any],
+) -> list[tuple[int, ContextChunk]]:
+    """Select General Reference-2 view / meta-table chunks for a views question (C2-07).
+
+    For every `V$`/`X$`/`SYS_..._` identifier the question names,
+    `build_context()` admits the whole documented section — the view's
+    description chunk and every following column-detail chunk — from the
+    data-dictionary manual (`DICT_VIEW_FAMILY`), version-filtered.
+
+    Heading-token matching alone is not enough: the manual breaks a view's
+    column list under a generic `Column Information` / `칼럼 정보` sub-heading,
+    so the column chunks do not carry the view-name heading. The section is
+    therefore built by walking `context_chunks` in document order and tracking
+    the most recent view-name heading: a chunk belongs to view V when the last
+    view / meta-table heading seen at or before it was V. Headings are matched
+    with backslashes stripped so the escaped `V\\$STATEMENT` / `SYS_TABLES\\_`
+    headings still match. Confined to the data-dictionary family and anchored
+    on a question-named identifier, so it is empty for any question that names
+    no view.
+
+    Chunks are returned in document order with their lexical score attached,
+    so the result is deterministic.
+    """
+    question = str(projection.get("question", ""))
+    view_names = extract_dict_view_names(question)
+    if not view_names:
+        return []
+    question_scope = str(projection.get("version_scope", ""))
+    score_by_chunk = {chunk: score for score, chunk in scored_chunks}
+    selected: list[tuple[int, ContextChunk]] = []
+    current_view: str | None = None
+    for chunk in context_chunks:
+        meta = chunk.block_meta
+        if meta is None or meta.source_family != DICT_VIEW_FAMILY:
+            current_view = None
+            continue
+        head = chunk.heading_lower.replace("\\", "").strip()
+        if DICT_VIEW_HEADING_RE.fullmatch(head) or DICT_META_HEADING_RE.fullmatch(head):
+            current_view = head
+        if (
+            current_view in view_names
+            and version_scope_serves(question_scope, meta.version_scope)
+        ):
+            selected.append((score_by_chunk.get(chunk, 0), chunk))
+    return selected
+
+
 def build_context(
     documents: list[AttachmentDocument],
     context_chunks: list[ContextChunk],
@@ -1034,10 +1348,15 @@ def build_context(
     scored_chunks.sort(key=lambda item: (-item[0], item[1].rel_path, item[1].heading))
 
     # --- Budgeted context assembly (T5) ------------------------------------
-    # Partition `max_context_chars` deterministically across four sections, in
+    # Partition `max_context_chars` deterministically across five sections, in
     # priority order, so manifest-routed source content leads the context but a
     # routing miss still degrades gracefully to baseline lexical retrieval:
     #   1. compact routing metadata for the routed sources (02-manifest rows);
+    #   1b. property-definition blocks (C2-06) and error-reference /
+    #      dictionary-view blocks (C2-07) — the chunk(s) the question's own
+    #      named property, error code, or V$/SYS_ identifier point at, admitted
+    #      regardless of the manifest routing decision so a generic-titled
+    #      mis-route cannot starve a named definition's documented section;
     #   2. routed-source chunks, each carrying the job-06 provenance prefix;
     #   3. nearby heading / wrapper context — lexically relevant chunks from a
     #      routed source's shard file that are not themselves routed blocks;
@@ -1057,6 +1376,10 @@ def build_context(
     # boundaries: the routing-metadata section is clipped if it alone exceeds
     # the budget, and a single best-ranked chunk is clipped as a last resort
     # when nothing else fit. The assembled context never exceeds the budget.
+    #
+    # A final exact-block deduplication pass (C2-05) then drops any chunk whose
+    # body byte-identically repeats an already-selected chunk and reinvests the
+    # freed budget in unique content; see the dedup block after the fill passes.
     def chunk_is_routed(chunk: ContextChunk) -> bool:
         # Mirrors the ROUTED_SOURCE_BONUS condition in score_chunk() exactly,
         # so the routed section is precisely the set of bonus-carrying chunks.
@@ -1083,6 +1406,18 @@ def build_context(
     secondary_section = [
         (s, c) for s, c in non_routed if s > 0 and c.rel_path not in routed_paths
     ]
+    # Section 1b (C2-06): the property-definition chunk(s) for the named
+    # property, drawn from the whole scored set so they are admitted even when
+    # they belong to a mis-routed source. Empty for non-property questions.
+    definition_section = build_definition_section(scored_chunks, projection)
+    # Section 1b (C2-07): Error Message Reference entry chunks and General
+    # Reference-2 view / meta-table chunks for the error or view identifiers
+    # the question names — admitted regardless of routing, like the C2-06
+    # definition section. Empty for any question that names no error or view,
+    # so build_context is byte-identical to before outside the two domains.
+    reference_section = build_error_reference_section(
+        scored_chunks, projection
+    ) + build_dict_view_section(context_chunks, scored_chunks, projection)
 
     routing_metadata = build_routing_metadata(routed_source_ids, manifest_rows or {})
 
@@ -1155,6 +1490,13 @@ def build_context(
     # secondary lexical section so a mis-route cannot starve correct content.
     lexical_reserve = int(budget * LEXICAL_RESERVE_FRACTION)
     routed_ceiling = max(budget - lexical_reserve, 0)
+    # Section 1b (C2-06 / C2-07): admit the named property / error / view
+    # definition block(s) before the routed section so a generic-titled
+    # mis-route cannot bury them. These chunks are scoped to the question's
+    # named identifiers and share the routed ceiling, so the lexical reserve is
+    # untouched.
+    fill_section(definition_section, ceiling=routed_ceiling)
+    fill_section(reference_section, ceiling=routed_ceiling)
     fill_section(routed_section, ceiling=routed_ceiling)
     fill_section(nearby_section, ceiling=routed_ceiling)
     # Section 4: secondary lexical chunks, against the full remaining budget.
@@ -1163,6 +1505,76 @@ def build_context(
     # section did not use, so correct routing still fills the whole budget.
     fill_section(routed_section)
     fill_section(nearby_section)
+
+    # --- Exact-block deduplication (C2-05) ----------------------------------
+    # The source-preserving package carries many documented blocks verbatim in
+    # more than one place (the same section across the 7.1/7.3/8.1 version
+    # trees, English extraction aids that re-quote a manual block, boilerplate
+    # shared between shards). With the context budget effectively saturated, the
+    # fill passes above can therefore spend budget on byte-identical chunk
+    # bodies. Dropping a chunk whose body exactly repeats an already-selected
+    # body removes no token — every token survives in the retained copy — and
+    # the freed budget is reinvested below in unique content.
+    #
+    # This runs as a post-process so the budgeted assembly above stays the
+    # regression-safe floor: the dedup pass only removes proven duplicates and
+    # the refill pass only adds, so for every question the assembled context is
+    # a token-superset of the pre-dedup context. `refill_section` re-walks the
+    # same sections in priority order and is duplicate-aware, so it too can only
+    # add unique content and never evicts a chunk the floor selected.
+    seen_bodies: set[str] = set()
+    deduped_chunks: list[ContextChunk] = []
+    deduped_scores: list[int | None] = []
+    for chunk, score in zip(selected, selected_scores):
+        body = chunk.text.rstrip()
+        if body in seen_bodies:
+            continue
+        seen_bodies.add(body)
+        deduped_chunks.append(chunk)
+        deduped_scores.append(score)
+    selected = deduped_chunks
+    selected_scores = deduped_scores
+    selected_size = sum(
+        len(chunk_header(chunk)) + len(chunk.text) + 1 for chunk in selected
+    )
+
+    def refill_section(section: list[tuple[int, ContextChunk]]) -> None:
+        # Reinvest budget freed by deduplication. Skips chunks already taken and
+        # any chunk whose body duplicates one already in context, so this pass
+        # only ever adds unique content — it never evicts a floor chunk.
+        nonlocal selected_size
+        for score, chunk in section:
+            if chunk in consumed:
+                continue
+            if selected_size >= budget:
+                break
+            body = chunk.text.rstrip()
+            if body in seen_bodies:
+                continue
+            candidate_size = len(chunk_header(chunk)) + len(chunk.text) + 1
+            if selected_size + candidate_size > budget:
+                continue
+            consumed.add(chunk)
+            seen_bodies.add(body)
+            selected.append(
+                make_context_chunk(
+                    chunk.rel_path, chunk.heading, chunk.text.rstrip(), chunk.block_meta
+                )
+            )
+            selected_scores.append(score)
+            selected_size += candidate_size
+
+    # Refill in the cycle-1 priority order: the definition / reference blocks
+    # first (C2-06, C2-07), then the lexical reserve (so a mis-route still
+    # degrades gracefully), then routed, then nearby. The priority sections are
+    # normally fully consumed by the first pass; they are re-offered here only
+    # so a budget freed by dedup can still admit a block the first pass could
+    # not fit.
+    refill_section(definition_section)
+    refill_section(reference_section)
+    refill_section(secondary_section)
+    refill_section(routed_section)
+    refill_section(nearby_section)
 
     if not selected and scored_chunks:
         # Last resort: no routing metadata was emitted and not even the
