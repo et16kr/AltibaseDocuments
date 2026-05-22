@@ -27940,6 +27940,16 @@ This chapter discusses in detail the SQL statements and REMOTE functions provide
 
 ![](media/DBLink/create_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00181" source_md="Manuals/Altibase_7.1/eng/DB Link User&#x27;s Manual.md" line_no="1010" image_path_raw="media/DBLink/create_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database_link ::=
+    CREATE [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name
+    CONNECT TO user_id IDENTIFIED BY password
+    USING target_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00181" -->
+
+
 #### Prerequisites
 
 Only the SYS user or the user granted the CREATE DATABASE LINK system privilege can create a database link object.
@@ -27998,6 +28008,14 @@ USING Altibase;
 
 ![](media/DBLink/drop_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00182" source_md="Manuals/Altibase_7.1/eng/DB Link User&#x27;s Manual.md" line_no="1068" image_path_raw="media/DBLink/drop_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database_link ::=
+    DROP [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00182" -->
+
+
 #### Prerequisites 
 
 Only the SYS user or the user granted the DROP DATABASE LINK system privilege can remove a database link object.
@@ -28037,6 +28055,14 @@ DROP DATABASE LINK dblink1;
 **alter_database_linker ::=**
 
 ![](media/DBLink/alter_dblink.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00183" source_md="Manuals/Altibase_7.1/eng/DB Link User&#x27;s Manual.md" line_no="1108" image_path_raw="media/DBLink/alter_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database_linker ::=
+    ALTER DATABASE LINKER { START | STOP [ FORCE ] | DUMP } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00183" -->
+
 
 #### Prerequisites
 
@@ -28082,6 +28108,15 @@ Alter success.
 **close_database_link ::=**
 
 ![](media/DBLink/alter_session.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00184" source_md="Manuals/Altibase_7.1/eng/DB Link User&#x27;s Manual.md" line_no="1153" image_path_raw="media/DBLink/alter_session.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_database_link ::=
+    ALTER SESSION
+    CLOSE DATABASE LINK { ALL | dblink_name } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00184" -->
+
 
 #### Prerequisites
 
@@ -31419,6 +31454,16 @@ Altibase 데이터베이스 링크를 사용하기 위해서는 먼저 altibase.
 
 ![](media/DBLink/create_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01307" source_md="Manuals/Altibase_7.1/kor/DB Link User&#x27;s Manual.md" line_no="1150" image_path_raw="media/DBLink/create_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database_link ::=
+    CREATE [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name
+    CONNECT TO user_id IDENTIFIED BY password
+    USING target_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01307" -->
+
+
 #### 전제조건
 
 SYS 사용자 또는 CREATE DATABASE LINK 시스템 권한을 가진 사용자만이 데이터베이스 링크 객체를 생성할 수 있다.
@@ -31477,6 +31522,14 @@ USING Altibase;
 
 ![](media/DBLink/drop_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01308" source_md="Manuals/Altibase_7.1/kor/DB Link User&#x27;s Manual.md" line_no="1208" image_path_raw="media/DBLink/drop_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database_link ::=
+    DROP [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01308" -->
+
+
 #### 전제조건
 
 SYS 사용자이거나 DROP DATABASE LINK 시스템 권한을 가진 사용자만이 데이터베이스 링크 객체를 제거할 수 있다.
@@ -31516,6 +31569,14 @@ DROP DATABASE LINK dblink1;
 **alter_database_linker ::=**
 
 ![](media/DBLink/alter_dblink.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01309" source_md="Manuals/Altibase_7.1/kor/DB Link User&#x27;s Manual.md" line_no="1248" image_path_raw="media/DBLink/alter_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database_linker ::=
+    ALTER DATABASE LINKER { START | STOP [ FORCE ] | DUMP } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01309" -->
+
 
 #### 전제조건
 
@@ -31561,6 +31622,15 @@ Alter success.
 **close_database_link ::=**
 
 ![](media/DBLink/alter_session.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01310" source_md="Manuals/Altibase_7.1/kor/DB Link User&#x27;s Manual.md" line_no="1293" image_path_raw="media/DBLink/alter_session.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_database_link ::=
+    ALTER SESSION
+    CLOSE DATABASE LINK { ALL | dblink_name } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01310" -->
+
 
 #### 전제조건
 
@@ -35098,6 +35168,16 @@ This chapter discusses in detail the SQL statements and REMOTE functions provide
 
 ![](media/DBLink/create_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02498" source_md="Manuals/Altibase_7.3/eng/DB Link User&#x27;s Manual.md" line_no="1012" image_path_raw="media/DBLink/create_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database_link ::=
+    CREATE [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name
+    CONNECT TO user_id IDENTIFIED BY password
+    USING target_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02498" -->
+
+
 #### Prerequisites
 
 Only the SYS user or the user granted the CREATE DATABASE LINK system privilege can create a database link object.
@@ -35156,6 +35236,14 @@ USING Altibase;
 
 ![](media/DBLink/drop_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02499" source_md="Manuals/Altibase_7.3/eng/DB Link User&#x27;s Manual.md" line_no="1070" image_path_raw="media/DBLink/drop_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database_link ::=
+    DROP [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02499" -->
+
+
 #### Prerequisites 
 
 Only the SYS user or the user granted the DROP DATABASE LINK system privilege can remove a database link object.
@@ -35195,6 +35283,14 @@ DROP DATABASE LINK dblink1;
 **alter_database_linker ::=**
 
 ![](media/DBLink/alter_dblink.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02500" source_md="Manuals/Altibase_7.3/eng/DB Link User&#x27;s Manual.md" line_no="1110" image_path_raw="media/DBLink/alter_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database_linker ::=
+    ALTER DATABASE LINKER { START | STOP [ FORCE ] | DUMP } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02500" -->
+
 
 #### Prerequisites
 
@@ -35240,6 +35336,15 @@ Alter success.
 **close_database_link ::=**
 
 ![](media/DBLink/alter_session.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02501" source_md="Manuals/Altibase_7.3/eng/DB Link User&#x27;s Manual.md" line_no="1155" image_path_raw="media/DBLink/alter_session.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_database_link ::=
+    ALTER SESSION
+    CLOSE DATABASE LINK { ALL | dblink_name } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02501" -->
+
 
 #### Prerequisites
 
@@ -38570,6 +38675,16 @@ Altibase 데이터베이스 링크를 사용하기 위해서는 먼저 altibase.
 
 ![](media/DBLink/create_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03682" source_md="Manuals/Altibase_7.3/kor/DB Link User&#x27;s Manual.md" line_no="1142" image_path_raw="media/DBLink/create_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database_link ::=
+    CREATE [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name
+    CONNECT TO user_id IDENTIFIED BY password
+    USING target_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03682" -->
+
+
 #### 전제조건
 
 SYS 사용자 또는 CREATE DATABASE LINK 시스템 권한을 가진 사용자만이 데이터베이스 링크 객체를 생성할 수 있다.
@@ -38628,6 +38743,14 @@ USING Altibase;
 
 ![](media/DBLink/drop_dblink.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03683" source_md="Manuals/Altibase_7.3/kor/DB Link User&#x27;s Manual.md" line_no="1200" image_path_raw="media/DBLink/drop_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database_link ::=
+    DROP [ PUBLIC | PRIVATE ] DATABASE LINK dblink_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03683" -->
+
+
 #### 전제조건
 
 SYS 사용자이거나 DROP DATABASE LINK 시스템 권한을 가진 사용자만이 데이터베이스 링크 객체를 제거할 수 있다.
@@ -38667,6 +38790,14 @@ DROP DATABASE LINK dblink1;
 **alter_database_linker ::=**
 
 ![](media/DBLink/alter_dblink.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03684" source_md="Manuals/Altibase_7.3/kor/DB Link User&#x27;s Manual.md" line_no="1240" image_path_raw="media/DBLink/alter_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database_linker ::=
+    ALTER DATABASE LINKER { START | STOP [ FORCE ] | DUMP } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03684" -->
+
 
 #### 전제조건
 
@@ -38712,6 +38843,15 @@ Alter success.
 **close_database_link ::=**
 
 ![](media/DBLink/alter_session.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03685" source_md="Manuals/Altibase_7.3/kor/DB Link User&#x27;s Manual.md" line_no="1285" image_path_raw="media/DBLink/alter_session.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_database_link ::=
+    ALTER SESSION
+    CLOSE DATABASE LINK { ALL | dblink_name } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03685" -->
+
 
 #### 전제조건
 
@@ -42254,6 +42394,16 @@ This chapter discusses in detail the SQL statements and REMOTE functions provide
 
 ![](media/DBLink/create_dblink.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04828" source_md="Manuals/Altibase_trunk/eng/DB Link User&#x27;s Manual.md" line_no="1011" image_path_raw="media/DBLink/create_dblink.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database_link ::=
+    CREATE [ PUBLIC | PRIVATE ] DATABASE LINK [ IF NOT EXISTS ]
+    dblink_name CONNECT TO
+    user_id IDENTIFIED BY password USING target_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04828" -->
+
+
 #### Prerequisites
 
 Only the SYS user or the user granted the CREATE DATABASE LINK system privilege can create a database link object.
@@ -42316,6 +42466,15 @@ USING Altibase;
 
 ![](media/DBLink/drop_dblink.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04829" source_md="Manuals/Altibase_trunk/eng/DB Link User&#x27;s Manual.md" line_no="1073" image_path_raw="media/DBLink/drop_dblink.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database_link ::=
+    DROP [ PUBLIC | PRIVATE ] DATABASE LINK [ IF EXISTS ]
+    dblink_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04829" -->
+
+
 #### Prerequisites 
 
 Only the SYS user or the user granted the DROP DATABASE LINK system privilege can remove a database link object.
@@ -42359,6 +42518,14 @@ DROP DATABASE LINK dblink1;
 **alter_database_linker ::=**
 
 ![](media/DBLink/alter_dblink.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04830" source_md="Manuals/Altibase_trunk/eng/DB Link User&#x27;s Manual.md" line_no="1117" image_path_raw="media/DBLink/alter_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database_linker ::=
+    ALTER DATABASE LINKER { START | STOP [ FORCE ] | DUMP } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04830" -->
+
 
 #### Prerequisites
 
@@ -42404,6 +42571,15 @@ Alter success.
 **close_database_link ::=**
 
 ![](media/DBLink/alter_session.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04831" source_md="Manuals/Altibase_trunk/eng/DB Link User&#x27;s Manual.md" line_no="1162" image_path_raw="media/DBLink/alter_session.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_database_link ::=
+    ALTER SESSION
+    CLOSE DATABASE LINK { ALL | dblink_name } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04831" -->
+
 
 #### Prerequisites
 
@@ -45733,6 +45909,16 @@ Altibase 데이터베이스 링크를 사용하기 위해서는 먼저 altibase.
 
 ![](media/DBLink/create_dblink.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06013" source_md="Manuals/Altibase_trunk/kor/DB Link User&#x27;s Manual.md" line_no="1142" image_path_raw="media/DBLink/create_dblink.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database_link ::=
+    CREATE [ PUBLIC | PRIVATE ] DATABASE LINK [ IF NOT EXISTS ]
+    dblink_name CONNECT TO
+    user_id IDENTIFIED BY password USING target_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06013" -->
+
+
 #### 전제조건
 
 SYS 사용자 또는 CREATE DATABASE LINK 시스템 권한을 가진 사용자만이 데이터베이스 링크 객체를 생성할 수 있다.
@@ -45795,6 +45981,15 @@ USING Altibase;
 
 ![](media/DBLink/drop_dblink.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06014" source_md="Manuals/Altibase_trunk/kor/DB Link User&#x27;s Manual.md" line_no="1204" image_path_raw="media/DBLink/drop_dblink.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database_link ::=
+    DROP [ PUBLIC | PRIVATE ] DATABASE LINK [ IF EXISTS ]
+    dblink_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06014" -->
+
+
 #### 전제조건
 
 SYS 사용자이거나 DROP DATABASE LINK 시스템 권한을 가진 사용자만이 데이터베이스 링크 객체를 제거할 수 있다.
@@ -45838,6 +46033,14 @@ DROP DATABASE LINK dblink1;
 **alter_database_linker ::=**
 
 ![](media/DBLink/alter_dblink.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06015" source_md="Manuals/Altibase_trunk/kor/DB Link User&#x27;s Manual.md" line_no="1248" image_path_raw="media/DBLink/alter_dblink.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database_linker ::=
+    ALTER DATABASE LINKER { START | STOP [ FORCE ] | DUMP } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06015" -->
+
 
 #### 전제조건
 
@@ -45883,6 +46086,15 @@ Alter success.
 **close_database_link ::=**
 
 ![](media/DBLink/alter_session.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06016" source_md="Manuals/Altibase_trunk/kor/DB Link User&#x27;s Manual.md" line_no="1293" image_path_raw="media/DBLink/alter_session.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_database_link ::=
+    ALTER SESSION
+    CLOSE DATABASE LINK { ALL | dblink_name } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06016" -->
+
 
 #### 전제조건
 

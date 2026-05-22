@@ -114,6 +114,30 @@ auxiliary, evidence-only, and accepted source-limitation classifications.
   finalization evidence is structural validation and dry-run routing evidence
   unless a later package-aware live benchmark report records otherwise.
 
+## Recovered Image Content
+
+The original manuals reference many diagram images that the package does not
+ship as binaries, so any information carried only inside a diagram would be
+lost. The shards therefore carry **recovered image content as text**, injected
+at build time.
+
+- **Where it appears.** Inside a shard source block, immediately after an image
+  reference, recovered text is wrapped in `<!-- IMG_RECOVERY_BEGIN … -->` /
+  `<!-- IMG_RECOVERY_END … -->` marker comments. The original `![]()` / `<img>`
+  reference line is kept unchanged directly above the block.
+- **What is recovered.** Only diagrams that are the sole source of their
+  information: railroad/syntax diagrams (as `bnf` grammar blocks), tabular data
+  rendered as an image (as Markdown tables), and process/decision flowcharts
+  (as `mermaid` flowcharts). Treat the text between the markers as authoritative
+  for that diagram's content.
+- **Originals are unmodified.** The `Manuals/` source files are byte-unchanged;
+  the recovered text is added only during the source-pack build, never written
+  back into the manuals.
+- **Where the artifacts live.** The conversion sidecar
+  (`image_conversions.jsonl`) and supporting evidence are under
+  `GPTs/image_recovery/`; the specification and audit/validation reports are
+  under `GPTs/reports/` (`image_content_recovery_spec_20260522.md`).
+
 ## Current Coverage
 
 The source pack validation baseline records `941` selected sources, `16` shards,

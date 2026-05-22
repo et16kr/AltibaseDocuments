@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import html
+import json
 import math
 import re
 import sys
@@ -20,6 +21,16 @@ MANIFEST_PATH = SOURCE_PACK_DIR / "source_manifest.tsv"
 SHARD_MANIFEST_PATH = SOURCE_PACK_DIR / "source_to_shard_manifest.tsv"
 SHARD_NAME_TEMPLATE = "source_pack_shard_{index:03d}.md"
 SHARD_TOKEN_TARGET = 900_000
+
+# Build-stage conversion sidecar (image content recovery, decisions D1/D2).
+# The Manuals/ originals stay byte-unchanged; recovered text is injected here,
+# during the source-pack build, at each image reference that has a record.
+IMAGE_CONVERSIONS_PATH = Path("GPTs/image_recovery/image_conversions.jsonl")
+
+# The source-preserving upload package mirrors the source-pack shard bodies
+# under a curated header + "Shard Retrieval Metadata" prefix.
+UPLOAD_PACKAGE_DIR = Path("GPTs/upload_package")
+UPLOAD_SHARD_MANIFEST_DOC = UPLOAD_PACKAGE_DIR / "03_source_to_shard_manifest.md"
 
 SOURCE_MANIFEST_REQUIRED_COLUMNS = [
     "source_id",
@@ -194,7 +205,7 @@ def pack_sources(sources: list[Source]) -> list[list[Source]]:
     return shards
 
 
-def render_source_block(source: Source, block_id: str) -> bytes:
+def render_source_block(source: Source, block_id: str, body: bytes) -> bytes:
     row = source.row
     metadata_rows = [
         ("source_id", row["source_id"]),
@@ -231,30 +242,227 @@ def render_source_block(source: Source, block_id: str) -> bytes:
         + "\n\n"
         + begin
     )
-    return prefix.encode("utf-8") + source.body + end.encode("utf-8")
+    return prefix.encode("utf-8") + body + end.encode("utf-8")
 
 
-def render_outputs(sources: list[Source]) -> tuple[dict[Path, bytes], str]:
+@dataclass(frozen=True)
+class ConversionRecord:
+    """One image-content-recovery conversion from the build-stage sidecar."""
+
+    ref_id: str
+    source_md: str
+    line_no: int
+    image_path_raw: str
+    image_class: str
+    fmt: str
+    converted_text: str
+    verified: bool
+
+
+def load_conversion_sidecar() -> dict[str, list[ConversionRecord]]:
+    """Load image_conversions.jsonl, grouped and sorted per source document.
+
+    The sidecar is optional: a missing file yields no conversions, so the build
+    still reproduces the byte-exact source pack when image recovery is not in
+    scope.
+    """
+    path = ROOT / IMAGE_CONVERSIONS_PATH
+    sidecar: dict[str, list[ConversionRecord]] = {}
+    if not path.exists():
+        return sidecar
+
+    errors: list[str] = []
+    with path.open("r", encoding="utf-8") as handle:
+        for line_number, raw in enumerate(handle, start=1):
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                obj = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                errors.append(f"{IMAGE_CONVERSIONS_PATH}:{line_number}: invalid JSON ({exc})")
+                continue
+            try:
+                record = ConversionRecord(
+                    ref_id=clean(obj["ref_id"]),
+                    source_md=clean(obj["source_md"]),
+                    line_no=int(obj["line_no"]),
+                    image_path_raw=clean(obj["image_path_raw"]),
+                    image_class=clean(obj.get("class", "")),
+                    fmt=clean(obj.get("format", "")),
+                    converted_text=str(obj["converted_text"]),
+                    verified=bool(obj.get("verified", False)),
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                errors.append(f"{IMAGE_CONVERSIONS_PATH}:{line_number}: malformed record ({exc})")
+                continue
+            if not record.verified:
+                errors.append(
+                    f"{IMAGE_CONVERSIONS_PATH}:{line_number}: ref_id={record.ref_id} is not "
+                    "verified; only verified conversions may be injected"
+                )
+                continue
+            if not record.converted_text.strip():
+                errors.append(f"{IMAGE_CONVERSIONS_PATH}:{line_number}: ref_id={record.ref_id} has empty converted_text")
+                continue
+            sidecar.setdefault(record.source_md, []).append(record)
+
+    if errors:
+        raise SystemExit("\n".join(f"ERROR: {error}" for error in errors))
+
+    for records in sidecar.values():
+        records.sort(key=lambda r: (r.line_no, r.image_path_raw, r.ref_id))
+    return sidecar
+
+
+def render_recovery_block(record: ConversionRecord) -> str:
+    """Render the recovered-text block inserted immediately after a reference."""
+    begin = (
+        "<!-- IMG_RECOVERY_BEGIN "
+        f"ref_id=\"{attr(record.ref_id)}\" "
+        f"source_md=\"{attr(record.source_md)}\" "
+        f"line_no=\"{attr(str(record.line_no))}\" "
+        f"image_path_raw=\"{attr(record.image_path_raw)}\" "
+        f"image_class=\"{attr(record.image_class)}\" "
+        f"format=\"{attr(record.fmt)}\" "
+        f"verified=\"{attr(str(record.verified))}\" -->"
+    )
+    end = f"<!-- IMG_RECOVERY_END ref_id=\"{attr(record.ref_id)}\" -->"
+    return f"\n{begin}\n{record.converted_text}\n{end}\n"
+
+
+def apply_conversion_sidecar(
+    source: Source, sidecar: dict[str, list[ConversionRecord]]
+) -> tuple[bytes, int]:
+    """Return the source body with recovered text inserted after each image
+    reference that has a sidecar record. The original reference line is kept
+    byte-unchanged (decision D2); sources with no record are returned as-is.
+    """
+    records = sidecar.get(source.row["source_path"], [])
+    if not records:
+        return source.body, 0
+
+    text = source.body.decode("utf-8")
+    lines = text.split("\n")
+    insertions: dict[int, list[str]] = {}
+    for record in records:
+        index = record.line_no - 1
+        if index < 0 or index >= len(lines):
+            raise SystemExit(
+                f"ERROR: {source.source_id}: conversion ref_id={record.ref_id} "
+                f"line_no {record.line_no} is out of range for {record.source_md}"
+            )
+        if record.image_path_raw not in lines[index]:
+            raise SystemExit(
+                f"ERROR: {source.source_id}: conversion ref_id={record.ref_id} line "
+                f"{record.line_no} does not contain image reference {record.image_path_raw}"
+            )
+        insertions.setdefault(index, []).append(render_recovery_block(record))
+
+    rebuilt: list[str] = []
+    for index, line in enumerate(lines):
+        rebuilt.append(line)
+        rebuilt.extend(insertions.get(index, ()))
+    return "\n".join(rebuilt).encode("utf-8"), len(records)
+
+
+def source_pack_shard_header(shard_index: int) -> bytes:
+    """The fixed source-pack shard header (everything before the first block)."""
+    return (
+        f"# Altibase Source Pack Shard {shard_index:03d}\n\n"
+        f"- Shard ID: `SHARD-{shard_index:03d}`\n"
+        "- Upload intended: `no`\n"
+        "- Purpose: Stage 1 source-preserving evidence artifact.\n\n"
+    ).encode("utf-8")
+
+
+def build_upload_shard(shard_index: int, shard_bytes: bytes) -> tuple[Path, bytes]:
+    """Rebuild the upload-package shard for the given source-pack shard.
+
+    The upload shard shares the source-pack shard body verbatim; only the
+    curated header and "Shard Retrieval Metadata" prefix differ. The prefix is
+    preserved from the existing upload shard so the recovered text reaches the
+    upload package without disturbing the curated retrieval aids.
+    """
+    header = source_pack_shard_header(shard_index)
+    if not shard_bytes.startswith(header):
+        raise SystemExit(f"ERROR: source-pack shard {shard_index:03d} has an unexpected header")
+    body = shard_bytes[len(header):]
+    first_line = body.split(b"\n", 1)[0]
+    if not first_line.startswith(b"## "):
+        raise SystemExit(
+            f"ERROR: source-pack shard {shard_index:03d} body does not start with a source block heading"
+        )
+
+    upload_path = UPLOAD_PACKAGE_DIR / SHARD_NAME_TEMPLATE.format(index=shard_index)
+    full_path = ROOT / upload_path
+    if not full_path.exists():
+        raise SystemExit(f"ERROR: missing upload-package shard to update: {upload_path}")
+    existing = full_path.read_bytes()
+    boundary = existing.find(b"\n" + first_line + b"\n")
+    if boundary == -1:
+        raise SystemExit(f"ERROR: cannot locate the source-block body start in {upload_path}")
+    prefix = existing[: boundary + 1]
+    if b"## Shard Retrieval Metadata" not in prefix:
+        raise SystemExit(f"ERROR: {upload_path} is missing its Shard Retrieval Metadata section")
+    return upload_path, prefix + body
+
+
+def build_upload_shard_manifest_doc(shard_manifest: str) -> tuple[Path, bytes]:
+    """Rewrap source_to_shard_manifest.tsv into the upload-package Markdown doc."""
+    full_path = ROOT / UPLOAD_SHARD_MANIFEST_DOC
+    if not full_path.exists():
+        raise SystemExit(f"ERROR: missing upload-package manifest doc: {UPLOAD_SHARD_MANIFEST_DOC}")
+    existing = full_path.read_text(encoding="utf-8")
+    open_fence = "```tsv\n"
+    open_at = existing.find(open_fence)
+    if open_at == -1:
+        raise SystemExit(f"ERROR: {UPLOAD_SHARD_MANIFEST_DOC} has no ```tsv fenced block")
+    content_start = open_at + len(open_fence)
+    close_at = existing.rfind("\n```")
+    if close_at < content_start:
+        raise SystemExit(f"ERROR: {UPLOAD_SHARD_MANIFEST_DOC} has no closing fence for the ```tsv block")
+    rewrapped = existing[:content_start] + shard_manifest + existing[close_at:]
+    return UPLOAD_SHARD_MANIFEST_DOC, rewrapped.encode("utf-8")
+
+
+def render_upload_outputs(
+    shard_files: dict[Path, bytes], shard_manifest: str
+) -> dict[Path, bytes]:
+    """Build every upload-package artifact derived from the source pack."""
+    upload_files: dict[Path, bytes] = {}
+    for shard_path, shard_bytes in shard_files.items():
+        shard_index = int(shard_path.stem.rsplit("_", 1)[-1])
+        upload_path, upload_bytes = build_upload_shard(shard_index, shard_bytes)
+        upload_files[upload_path] = upload_bytes
+    doc_path, doc_bytes = build_upload_shard_manifest_doc(shard_manifest)
+    upload_files[doc_path] = doc_bytes
+    return upload_files
+
+
+def render_outputs(
+    sources: list[Source], sidecar: dict[str, list[ConversionRecord]]
+) -> tuple[dict[Path, bytes], str, dict[Path, bytes], set[str], int]:
     shard_files: dict[Path, bytes] = {}
     manifest_rows: list[dict[str, str]] = []
+    injected_source_ids: set[str] = set()
+    total_conversions = 0
     block_number = 0
 
     for shard_index, shard_sources in enumerate(pack_sources(sources), start=1):
         shard_id = f"SHARD-{shard_index:03d}"
         shard_path = SOURCE_PACK_DIR / SHARD_NAME_TEMPLATE.format(index=shard_index)
-        shard_header = (
-            f"# Altibase Source Pack Shard {shard_index:03d}\n\n"
-            f"- Shard ID: `{shard_id}`\n"
-            "- Upload intended: `no`\n"
-            "- Purpose: Stage 1 source-preserving evidence artifact.\n\n"
-        ).encode("utf-8")
-        shard_body = bytearray(shard_header)
+        shard_body = bytearray(source_pack_shard_header(shard_index))
         shard_rows: list[dict[str, str]] = []
 
         for order, source in enumerate(shard_sources, start=1):
             block_number += 1
             block_id = f"BLOCK-{block_number:06d}"
-            shard_body.extend(render_source_block(source, block_id))
+            rendered_body, conversion_count = apply_conversion_sidecar(source, sidecar)
+            if conversion_count:
+                injected_source_ids.add(source.source_id)
+                total_conversions += conversion_count
+            shard_body.extend(render_source_block(source, block_id, rendered_body))
             row = source.row
             shard_rows.append(
                 {
@@ -266,14 +474,22 @@ def render_outputs(sources: list[Source]) -> tuple[dict[Path, bytes], str]:
                     "source_start_line": "1",
                     "source_end_line": row["line_count"],
                     "source_sha256": row["source_sha256"],
-                    "extracted_body_sha256": hashlib.sha256(source.body).hexdigest(),
-                    "block_byte_count": str(len(source.body)),
-                    "block_line_count": str(line_count(source.body)),
-                    "block_estimated_tokens": row["estimated_tokens"],
+                    "extracted_body_sha256": hashlib.sha256(rendered_body).hexdigest(),
+                    "block_byte_count": str(len(rendered_body)),
+                    "block_line_count": str(line_count(rendered_body)),
+                    "block_estimated_tokens": str(estimated_tokens(rendered_body)),
                     "shard_estimated_tokens": "",
                     "upload_intended": "no",
                     "validation_status": "pass",
-                    "notes": "Exact source bytes copied into the source-pack shard body.",
+                    "notes": (
+                        "Exact source bytes copied into the source-pack shard body."
+                        if conversion_count == 0
+                        else (
+                            "Source bytes copied into the source-pack shard body with "
+                            f"{conversion_count} image-recovery sidecar conversion(s) "
+                            "inserted after the matching image reference."
+                        )
+                    ),
                 }
             )
 
@@ -284,8 +500,20 @@ def render_outputs(sources: list[Source]) -> tuple[dict[Path, bytes], str]:
         manifest_rows.extend(shard_rows)
         shard_files[shard_path] = shard_bytes
 
-    validate_generated_outputs(sources, shard_files, manifest_rows)
-    return shard_files, render_tsv(manifest_rows, SHARD_MANIFEST_COLUMNS)
+    selected_paths = {source.row["source_path"] for source in sources}
+    unknown = sorted(set(sidecar) - selected_paths)
+    if unknown:
+        raise SystemExit(
+            "\n".join(
+                f"ERROR: conversion sidecar references a source not in the pack: {path}"
+                for path in unknown
+            )
+        )
+
+    validate_generated_outputs(sources, shard_files, manifest_rows, injected_source_ids)
+    shard_manifest = render_tsv(manifest_rows, SHARD_MANIFEST_COLUMNS)
+    upload_files = render_upload_outputs(shard_files, shard_manifest)
+    return shard_files, shard_manifest, upload_files, injected_source_ids, total_conversions
 
 
 def render_tsv(rows: list[dict[str, str]], columns: list[str]) -> str:
@@ -299,6 +527,7 @@ def validate_generated_outputs(
     sources: list[Source],
     shard_files: dict[Path, bytes],
     manifest_rows: list[dict[str, str]],
+    injected_source_ids: set[str],
 ) -> None:
     errors: list[str] = []
     expected_ids = [source.source_id for source in sources]
@@ -308,8 +537,13 @@ def validate_generated_outputs(
     if len(mapped_ids) != len(set(mapped_ids)):
         errors.append("duplicate source IDs in source_to_shard_manifest")
     for row in manifest_rows:
-        if row["source_sha256"] != row["extracted_body_sha256"]:
+        injected = row["source_id"] in injected_source_ids
+        if not injected and row["source_sha256"] != row["extracted_body_sha256"]:
             errors.append(f"{row['source_id']}: extracted body checksum does not match source checksum")
+        if injected and row["source_sha256"] == row["extracted_body_sha256"]:
+            errors.append(
+                f"{row['source_id']}: image-recovery conversions expected but the extracted body is unchanged"
+            )
         if row["block_byte_count"] == "0":
             errors.append(f"{row['source_id']}: empty source block")
     for path, content in shard_files.items():
@@ -323,7 +557,11 @@ def generated_shard_paths() -> set[Path]:
     return {path.relative_to(ROOT) for path in (ROOT / SOURCE_PACK_DIR).glob("source_pack_shard_*.md")}
 
 
-def write_outputs(shard_files: dict[Path, bytes], shard_manifest: str) -> None:
+def write_outputs(
+    shard_files: dict[Path, bytes],
+    shard_manifest: str,
+    upload_files: dict[Path, bytes],
+) -> None:
     target_dir = ROOT / SOURCE_PACK_DIR
     target_dir.mkdir(parents=True, exist_ok=True)
     expected_paths = set(shard_files)
@@ -335,9 +573,17 @@ def write_outputs(shard_files: dict[Path, bytes], shard_manifest: str) -> None:
         full_path.parent.mkdir(parents=True, exist_ok=True)
         full_path.write_bytes(content)
     (ROOT / SHARD_MANIFEST_PATH).write_text(shard_manifest, encoding="utf-8", newline="")
+    for path, content in upload_files.items():
+        full_path = ROOT / path
+        full_path.parent.mkdir(parents=True, exist_ok=True)
+        full_path.write_bytes(content)
 
 
-def check_outputs(shard_files: dict[Path, bytes], shard_manifest: str) -> bool:
+def check_outputs(
+    shard_files: dict[Path, bytes],
+    shard_manifest: str,
+    upload_files: dict[Path, bytes],
+) -> bool:
     ok = True
     expected_paths = set(shard_files)
     for path, content in sorted(shard_files.items()):
@@ -358,6 +604,14 @@ def check_outputs(shard_files: dict[Path, bytes], shard_manifest: str) -> bool:
     elif manifest_path.read_text(encoding="utf-8") != shard_manifest:
         print(f"generated file is stale: {SHARD_MANIFEST_PATH}", file=sys.stderr)
         ok = False
+    for path, content in sorted(upload_files.items()):
+        full_path = ROOT / path
+        if not full_path.exists():
+            print(f"missing generated file: {path}", file=sys.stderr)
+            ok = False
+        elif full_path.read_bytes() != content:
+            print(f"generated file is stale: {path}", file=sys.stderr)
+            ok = False
     return ok
 
 
@@ -373,16 +627,24 @@ def main() -> int:
         args.check = True
 
     sources = load_sources()
-    shard_files, shard_manifest = render_outputs(sources)
+    sidecar = load_conversion_sidecar()
+    shard_files, shard_manifest, upload_files, injected_source_ids, total_conversions = render_outputs(
+        sources, sidecar
+    )
 
     if args.write:
-        write_outputs(shard_files, shard_manifest)
-    elif not check_outputs(shard_files, shard_manifest):
+        write_outputs(shard_files, shard_manifest, upload_files)
+    elif not check_outputs(shard_files, shard_manifest, upload_files):
         return 1
 
     print(f"source_pack selected sources: {len(sources)}")
     print(f"source_pack shards: {len(shard_files)}")
     print(f"source_to_shard_manifest rows: {len(sources)}")
+    print(
+        f"image-recovery conversions applied: {total_conversions} "
+        f"across {len(injected_source_ids)} source(s)"
+    )
+    print(f"upload_package artifacts regenerated: {len(upload_files)}")
     return 0
 
 

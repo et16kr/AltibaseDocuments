@@ -758,13 +758,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02180" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="729" image_path_raw="media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    '(' parameter_declaration { ',' parameter_declaration } ')'
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement
+    [ EXCEPTION exception_handler ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02180" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02181" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="733" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02181" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02182" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="737" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02182" -->
+
 
 
 
@@ -1258,6 +1291,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02183" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1229" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02183" -->
+
+
 #### 기능
 
 사용자가 명시적으로 저장 프로시저를 컴파일 할 때 사용된다.
@@ -1341,6 +1382,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02184" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1312" image_path_raw="media/StoredProcedure/drop_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02184" -->
+
+
 #### 기능
 
 데이터베이스에서 저장 프로시저를 삭제하는 구문이다.
@@ -1366,13 +1415,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02185" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1337" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02185" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02186" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1341" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02186" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02187" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1345" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-02187" -->
+
 
 #### 기능
 
@@ -1454,15 +1531,48 @@ create_function::=
 
 ![](media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02188" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1425" image_path_raw="media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+        [ '(' parameter_declaration { ',' parameter_declaration } ')' ]
+        RETURN data_type
+        [ DETERMINISTIC ] [ invoker_rights_clause ]
+        { AS | IS }
+        [ declaration_section ]
+        BEGIN statement { statement }
+        [ EXCEPTION exception_handler { exception_handler } ]
+        END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02188" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02189" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1429" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02189" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02190" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1435" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02190" -->
+
 
 
 
@@ -1815,6 +1925,14 @@ USER1.FUNC1
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02191" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1786" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02191" -->
+
+
 #### 기능
 
 저장 프로시저와 마찬가지로, 저장 함수 생성 후에 함수 내에서 참조하는 데이터베이스 객체의 정의가 변경되어 현재 이 저장 함수의 실행 계획으로는 더 이상 실행할 수 없는 경우에 이 저장 함수는 무효한 상태라고 한다.
@@ -1836,6 +1954,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### 구문
 
 ![drop_function_statement](media/StoredProcedure/drop_function_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02192" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1808" image_path_raw="media/StoredProcedure/drop_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02192" -->
+
 
 #### 기능
 
@@ -1877,9 +2003,58 @@ DROP FUNCTION get_dept_name;
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02193" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1848" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02193" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02194" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1850" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02194" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02195" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1852" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02195" -->
+
 
 블록은 크게 선언부(Declare Section), 블록 바디(Block Body), 예외 처리부(Exception Handler Section)의 세 부분으로 나뉘어진다.
 
@@ -1970,7 +2145,39 @@ EXCEPTION과 END 사이의 부분으로 저장 프로시저 또는 함수 실행
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02196" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1941" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02196" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02197" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="1943" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-02197" -->
+
 
 #### 기능
 
@@ -2318,6 +2525,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02199" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="2289" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02199" -->
+
+
 *select_list*와 *rest_of_select_statement*는 SELECT 구문의 문법과 동일하므로 *SQL Reference*을 참고한다.
 
 #### 기능
@@ -2624,6 +2847,22 @@ Execute success.
 #### 구문
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02200" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="2596" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02200" -->
+
 
 #### 기능
 
@@ -2967,6 +3206,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02201" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="2938" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02201" -->
+
+
 #### 기능
 
 지역변수, OUT 또는 IN/OUT 형의 인자에 값을 할당하고자 할 때 사용하는 할당문이다.
@@ -3188,6 +3440,14 @@ LABLE문은 저장 프로시저 내부의 특정 위치에 명칭을 지정하�
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02202" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3159" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02202" -->
+
+
 #### 기능
 
 PRINT구문은 저장 프로시저 실행 시에 사용자가 원하는 텍스트를 해당 프로시저를
@@ -3317,6 +3577,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02203" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3288" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02203" -->
+
+
 #### 기능
 
 저장 프로시저의 수행을 도중에 중단 하거나, 저장 함수에서 값을 반환하고 수행을
@@ -3421,6 +3689,17 @@ FUNC_PLUS_10(I1)
 #### 구문
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02204" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3393" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02204" -->
+
 
 #### 기능
 
@@ -3527,6 +3806,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02205" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3498" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02205" -->
+
+
 #### 기능
 
 UPDATE 구문의 저장 프로시저 확장 기능이다.
@@ -3604,6 +3891,21 @@ EMP_TEL          DNO         SALARY      SEX  BIRTH   JOIN_DATE    STATUS
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02206" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3575" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02206" -->
+
+
 저장 프로시저에서 사용할 수 있는 흐름 제어문은 다음과 같다.
 
 -   조건 분기문인 IF문과 CASE문
@@ -3630,6 +3932,17 @@ EMP_TEL          DNO         SALARY      SEX  BIRTH   JOIN_DATE    STATUS
 #### 구문
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02207" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3602" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02207" -->
+
 
 #### 기능
 
@@ -3853,6 +4166,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02208" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3824" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02208" -->
+
+
 #### 기능
 
 특정 변수의 값에 따라서 처리 경로를 결정하는 조건 분기문이다.
@@ -4002,6 +4330,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02209" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="3973" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02209" -->
+
+
 #### 기능
 
 LOOP구문은 조건을 따로 지정하지 않고 반복적으로 구문(들)을 수행하고자 하는
@@ -4053,6 +4390,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02210" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4024" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02210" -->
+
+
 #### 기능
 
 조건이 참인 경우만 LOOP을 수행하고자 할 때 사용하는 반복문이다. 만약 처음부터 이
@@ -4103,6 +4450,19 @@ T1.I1       T1.I2       T1.I3
 #### 구문
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02211" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4075" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02211" -->
+
 
 #### 기능
 
@@ -4336,6 +4696,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02212" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4307" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02212" -->
+
+
 #### 기능
 
 EXIT문을 감싸고 있는 가장 가까운 LOOP 문을 빠져나간다. 그러나 *label_name*이
@@ -4482,6 +4850,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02213" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4453" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02213" -->
+
+
 #### 기능
 
 현재 CONTINUE문을 감싸고 있는 LOOP에서 CONTINUE문 이후의 문장들을 전부 무시하고
@@ -4556,6 +4932,14 @@ T8.I1       T8.MATHPOWER
 #### 구문
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02214" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4528" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02214" -->
+
 
 #### 기능
 
@@ -4709,6 +5093,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02215" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4680" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02215" -->
+
+
 #### 기능
 
 NULL문은 흐름에 영향을 미치지 않고 아무것도 수행하지 않고 다음으로 넘어감을
@@ -4823,6 +5215,22 @@ OPEN문이나 CLOSE문을 사용할 필요가 없는 경우에 편리한 구문�
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02216" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4794" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02216" -->
+
+
 #### 기능
 
 커서를 정의한다. CURSOR구문에서는 커서명과 커서가 레코드를 가져오는 데 사용할
@@ -4913,6 +5321,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### 구문
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02217" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="4885" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02217" -->
+
 
 #### 기능
 
@@ -5044,7 +5461,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02218" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5015" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02218" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02219" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5017" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02219" -->
+
 
 #### 기능
 
@@ -5185,6 +5622,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02220" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5156" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02220" -->
+
+
 #### 기능
 
 열려있는 커서를 닫고 해당 커서에 할당된 리소스를 해제한다.
@@ -5214,6 +5659,18 @@ CLOSE c1;
 #### 구문
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02221" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5186" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02221" -->
+
 
 #### 기능
 
@@ -5290,6 +5747,14 @@ Altibase가 관리하고 있는 속성값들을 참조할 수 있다.
 #### 구문
 
 ![cursor_attribute](media/StoredProcedure/cursor_attribute.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02222" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5262" image_path_raw="media/StoredProcedure/cursor_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_attribute ::=
+    cursor_name '%' { FOUND | NOTFOUND | ISOPEN | ROWCOUNT } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02222" -->
+
 
 #### 기능
 
@@ -5604,6 +6069,26 @@ Associative Array변수의 배열 요소 접근을 위해서는 다음과 같이
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02223" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5575" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+        { associative_array_type_spec
+        | record_type_spec
+        | ref_cursor_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type { ',' column_name data_type } ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+```
+<!-- IMG_RECOVERY_END ref_id="img-02223" -->
+
+
 ##### type_name
 
 사용자 정의 타입의 이름을 명시한다.
@@ -5681,6 +6166,21 @@ BEGIN
 #### 구문
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02224" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="5653" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02224" -->
+
 
 #### 기능
 
@@ -6500,6 +7000,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02226" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6471" image_path_raw="media/StoredProcedure/create_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ user_name '.' ] typeset_name
+        { AS | IS }
+        type_declaration { type_declaration }
+        END
+```
+<!-- IMG_RECOVERY_END ref_id="img-02226" -->
+
+
 #### 전제 조건
 
 SYS 사용자 또는 CREATE PROCEDURE, CREATE ANY PROCEDURE 시스템 권한을 가진
@@ -6591,6 +7102,14 @@ Execute success.
 #### 구문
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02227" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6563" image_path_raw="media/StoredProcedure/drop_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02227" -->
+
 
 #### 전제 조건
 
@@ -6688,9 +7207,39 @@ Plan Cache에 저장되고, 반복 호출 시 Plan Cache에서 실행계획을 �
 
 ![](media/StoredProcedure/execute_imme_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02229" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6659" image_path_raw="media/StoredProcedure/execute_imme_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_imme_statement ::=
+    EXECUTE IMMEDIATE dynamic_string
+    [ INTO { record_name | variable_name { ',' variable_name } }
+    | bulk_collect_clause ]
+    [ USING [ { IN | OUT | IN OUT } ] variable_name
+             { ',' [ { IN | OUT | IN OUT } ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02229" -->
+
+
 ![](media/StoredProcedure/bulk_collect_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02230" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6661" image_path_raw="media/StoredProcedure/bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+                      { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02230" -->
+
+
 ![](media/StoredProcedure/dynamic_string.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02231" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6663" image_path_raw="media/StoredProcedure/dynamic_string.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dynamic_string ::=
+    variable_name
+  | expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-02231" -->
+
 
 #### 설명
 
@@ -6790,6 +7339,15 @@ EXECUTE IMMEDIATE dynamic_string 구문은 해당 질의문을 Direct-Execute �
 #### 구문
 
 ![](media/StoredProcedure/open_for_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02232" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6762" image_path_raw="media/StoredProcedure/open_for_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_for_statement ::=
+    OPEN cursor_variable_name FOR { select_statement | dynamic_string }
+    [ USING [ IN ] variable_name { ',' [ IN ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02232" -->
+
 
 #### 설명
 
@@ -6926,6 +7484,14 @@ BEGIN
 
 ![exception_declaration](media/StoredProcedure/exception_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02233" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6897" image_path_raw="media/StoredProcedure/exception_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_declaration ::=
+    exception_name EXCEPTION ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02233" -->
+
+
 #### 설명
 
 사용자 정의 예외를 정의한다
@@ -6951,6 +7517,14 @@ DECLARE
 #### 구문
 
 ![raise_statement](media/StoredProcedure/raise_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02234" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="6923" image_path_raw="media/StoredProcedure/raise_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+raise_statement ::=
+    RAISE [ exception_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02234" -->
+
 
 #### 설명
 
@@ -7273,6 +7847,15 @@ Execute success.
 
 ![exception_handler](media/StoredProcedure/exception_handler.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02236" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7244" image_path_raw="media/StoredProcedure/exception_handler.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_handler ::=
+    WHEN { exception_name { OR exception_name } | OTHERS }
+    THEN statement { statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02236" -->
+
+
 #### 기능
 
 Exception Handler에는 예외가 발생했을 때의 처리 루틴을 기술한다.
@@ -7455,6 +8038,14 @@ Altibase에서 사용할 수 있는 프라그마는 아래와 같다. 각각의 
 
 ![](media/StoredProcedure/pragma.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02237" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7426" image_path_raw="media/StoredProcedure/pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pragma_declaration ::=
+    PRAGMA { autonomous_transaction_statement | exception_init_statement } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02237" -->
+
+
 
 
 ### 자율 트랜잭션 프라그마(Autonomous_Transaction Pragma) 
@@ -7462,6 +8053,14 @@ Altibase에서 사용할 수 있는 프라그마는 아래와 같다. 각각의 
 #### 구문
 
 ![autonomous_pragma](media/StoredProcedure/autonomous_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02238" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7434" image_path_raw="media/StoredProcedure/autonomous_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autonomous_transaction_statement ::=
+    AUTONOMOUS_TRANSACTION
+```
+<!-- IMG_RECOVERY_END ref_id="img-02238" -->
+
 
 #### 기능
 
@@ -7618,6 +8217,14 @@ C1
 #### 구문
 
 ![](media/StoredProcedure/exception_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02240" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7590" image_path_raw="media/StoredProcedure/exception_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_init_statement ::=
+    EXCEPTION_INIT '(' exception_name ',' error_code ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02240" -->
+
 
 #### 기능
 
@@ -7824,21 +8431,68 @@ at "SYS.PROC2", line 6]
 
 ![create_package](media/StoredProcedure/create_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02242" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7795" image_path_raw="media/StoredProcedure/create_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package ::=
+    CREATE [ OR REPLACE ] PACKAGE [ user_name '.' ] package_name
+    invoker_rights_clause { AS | IS } declare_section END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02242" -->
+
+
 ##### invoker_rights_clause::=
 
 ![](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02243" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7799" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02243" -->
+
 
 ##### declare_section ::=
 
 ![](media/StoredProcedure/package_declare_section.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02244" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7803" image_path_raw="media/StoredProcedure/package_declare_section.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | procedure_declaration
+    | funtion_declaration
+    | cursor_declaration
+    | exception_declaration } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-02244" -->
+
+
 ##### procedure_declaration ::=
 
 ![](media/StoredProcedure/package_proc_declare.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02245" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7807" image_path_raw="media/StoredProcedure/package_proc_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+procedure_declaration ::=
+    PROCEDURE procedure_name [ '(' expression ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02245" -->
+
+
 ##### function_declaration ::=
 
 ![](media/StoredProcedure/package_func_declare.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02246" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="7811" image_path_raw="media/StoredProcedure/package_func_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+function_declaration ::=
+    FUNCTION function_name [ '(' { expression } ')' ] RETURN data_type [ DETERMINISTIC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02246" -->
+
 
 #### 기능
 
@@ -8058,13 +8712,46 @@ Execute success.
 
 ![](media/StoredProcedure/bba17be9803aaf99425718e2904dbc23.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02247" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8029" image_path_raw="media/StoredProcedure/bba17be9803aaf99425718e2904dbc23.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package_body ::=
+    CREATE [ OR REPLACE ] PACKAGE BODY [ user_name '.' ] package_name
+    { AS | IS } declare_section [ initialize_section ] END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02247" -->
+
+
 ##### initialize_section::=
 
 ![](media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02248" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8033" image_path_raw="media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+initialize_section ::=
+    BEGIN statement { statement } [ EXCEPTION exception_handler { exception_handler } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02248" -->
+
+
 ##### declare_section ::=
 
 ![](media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02249" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8037" image_path_raw="media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | exception_declaration
+    | cursor_declaration
+    | procedure_declaration
+    | procedure_definition
+    | funtion_declaration
+    | funtion_definition } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-02249" -->
+
 
 #### 기능
 
@@ -8231,6 +8918,15 @@ Create success.
 
 ![alter_package](media/StoredProcedure/alter_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02250" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8202" image_path_raw="media/StoredProcedure/alter_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_package ::=
+    ALTER PACKAGE [ user_name '.' ] package_name COMPILE
+    [ PACKAGE | SPECIFICATION | BODY ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02250" -->
+
+
 #### 기능
 
 패키지 스펙 또는 패키지 바디 또는 패키지를 명시적으로 재컴파일한다. 패키지를
@@ -8263,6 +8959,14 @@ Alter success.
 
 ![drop_package](media/StoredProcedure/drop_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02251" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8234" image_path_raw="media/StoredProcedure/drop_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_package ::=
+    DROP PACKAGE [ BODY ] [ user_name '.' ] package_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02251" -->
+
+
 #### 기능
 
 패키지를 삭제하는 구문이다. 이 구문으로 패키지 바디만 선택적으로 삭제하거나
@@ -8288,9 +8992,27 @@ Drop success.
 
 ![execute_procedure](media/StoredProcedure/execute_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02252" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8259" image_path_raw="media/StoredProcedure/execute_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC [ UTE ] [ user_name '.' ] package_name '.' procedure_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02252" -->
+
+
 ##### execute_function_statement ::=
 
 ![execute_function](media/StoredProcedure/execute_function.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02253" source_md="Manuals/Altibase_7.1/kor/Stored Procedures Manual.md" line_no="8263" image_path_raw="media/StoredProcedure/execute_function.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC [ UTE ] variable ':=' [ user_name '.' ] package_name '.' function_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02253" -->
+
 
 #### 기능
 
@@ -17602,6 +18324,15 @@ This chapter describes SQL statements supported by Altibase for the use of exter
 
 ![](media/ExternalProcedure/image024.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02514" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="741" image_path_raw="media/ExternalProcedure/image024.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_library_statement ::=
+    CREATE [ OR REPLACE ] LIBRARY [ user_name '.' ] library_name
+    { AS | IS } file_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02514" -->
+
+
 #### Description
 
 This creates a new external library object or changes the previously existing external library into a new external library.
@@ -17627,6 +18358,14 @@ CREATE OR REPLACE LIBRARY lib1 AS 'shlib.so';
 
 ![](media/ExternalProcedure/image026.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02515" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="766" image_path_raw="media/ExternalProcedure/image026.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_library_statement ::=
+    ALTER LIBRARY [ user_name '.' ] library_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02515" -->
+
+
 #### Description
 
 This compiles the library object.
@@ -17644,6 +18383,14 @@ ALTER LIBRARY lib1 COMPILE;
 #### Syntax
 
 ![](media/ExternalProcedure/image028.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02516" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="784" image_path_raw="media/ExternalProcedure/image028.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_library_statement ::=
+    DROP LIBRARY [ user_name '.' ] library_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02516" -->
+
 
 #### Description
 
@@ -17665,25 +18412,78 @@ DROP LIBRARY lib1;
 
 ![](media/ExternalProcedure/image030.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02517" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="804" image_path_raw="media/ExternalProcedure/image030.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    [ argument_list ]
+    AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02517" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image032.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02518" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="808" image_path_raw="media/ExternalProcedure/image032.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02518" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image034.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02519" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="812" image_path_raw="media/ExternalProcedure/image034.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-02519" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02520" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="816" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02520" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image038.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02521" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="820" image_path_raw="media/ExternalProcedure/image038.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02521" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image040.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02522" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="824" image_path_raw="media/ExternalProcedure/image040.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02522" -->
+
 
 #### Description
 
@@ -17781,6 +18581,14 @@ parameters( a1, a1 LENGTH, a2 )
 
 ![](media/ExternalProcedure/image042.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02523" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="920" image_path_raw="media/ExternalProcedure/image042.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02523" -->
+
+
 #### Description
 
 This drops the external procedure object from the database. 
@@ -17802,17 +18610,54 @@ DROP PROCEDURE proc1;
 
 ![](media/ExternalProcedure/image043.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02524" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="941" image_path_raw="media/ExternalProcedure/image043.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+    [ argument_list ]
+    RETURN return_type AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02524" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image045.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02525" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="945" image_path_raw="media/ExternalProcedure/image045.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02525" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image046.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02526" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="949" image_path_raw="media/ExternalProcedure/image046.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-02526" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02527" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="953" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02527" -->
+
 
 
 
@@ -17820,9 +18665,25 @@ DROP PROCEDURE proc1;
 
 ![](media/ExternalProcedure/image048.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02528" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="959" image_path_raw="media/ExternalProcedure/image048.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02528" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image049.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02529" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="963" image_path_raw="media/ExternalProcedure/image049.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    { parameter_name | RETURN } [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02529" -->
+
 
 #### Description
 
@@ -17872,6 +18733,14 @@ Restriction:
 
 ![](media/ExternalProcedure/image051.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02530" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="1011" image_path_raw="media/ExternalProcedure/image051.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02530" -->
+
+
 #### Description
 
 Drops the external function object from the database. 
@@ -17893,13 +18762,41 @@ DROP FUNCTION func1;
 
 ![](media/ExternalProcedure/image053.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02531" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="1032" image_path_raw="media/ExternalProcedure/image053.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] [ package_name '.' ] procedure_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02531" -->
+
+
 **execute_function_statement::=**
 
 ![](media/ExternalProcedure/image055.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02532" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="1036" image_path_raw="media/ExternalProcedure/image055.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC[UTE] variable ':='
+    [ user_name '.' ] [ package_name '.' ] function_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02532" -->
+
+
 **parameter_notation::=**
 
 ![](media/ExternalProcedure/image057.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02533" source_md="Manuals/Altibase_7.3/eng/External Procedures Manual.md" line_no="1040" image_path_raw="media/ExternalProcedure/image057.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression [ { ',' expression } ]
+    | parameter_name '=>' expression [ { ',' parameter_name '=>' expression } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02533" -->
+
 
 #### Description
 
@@ -18582,13 +19479,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03305" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="635" image_path_raw="media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    '(' parameter_declaration { ',' parameter_declaration } ')'
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement
+    [ EXCEPTION exception_handler ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03305" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03306" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="639" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03306" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03307" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="643" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03307" -->
+
 
 
 
@@ -19063,6 +19993,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03308" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1116" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03308" -->
+
+
 #### Purpose
 
 A stored procedure can access various database objects, such as tables, views, and sequences, and can also call other stored procedures and stored functions. After a procedure is created, if any of these objects are altered or changed, the stored procedure can enter what is known as an invalid state.
@@ -19126,6 +20064,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03309" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1179" image_path_raw="media/StoredProcedure/drop_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03309" -->
+
+
 #### Purpose
 
 This statement removes a stored procedure from the database.
@@ -19150,13 +20096,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03310" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1203" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03310" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03311" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1207" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03311" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03312" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1211" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-03312" -->
+
 
 #### Purpose
 
@@ -19235,15 +20209,48 @@ create_function::=
 
 ![](media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03313" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1288" image_path_raw="media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+        [ '(' parameter_declaration { ',' parameter_declaration } ')' ]
+        RETURN data_type
+        [ DETERMINISTIC ] [ invoker_rights_clause ]
+        { AS | IS }
+        [ declaration_section ]
+        BEGIN statement { statement }
+        [ EXCEPTION exception_handler { exception_handler } ]
+        END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03313" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03314" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1292" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03314" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03315" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1298" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03315" -->
+
 
 
 
@@ -19586,6 +20593,14 @@ For functions used in constraints or function-based indexes, it is impossible to
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03316" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1639" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03316" -->
+
+
 #### Purpose
 
 As with a stored procedure, a stored function can enter what is known as an invalid state when one or more of the database objects that it references are changed after the function is created.
@@ -19607,6 +20622,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### Syntax
 
 ![drop_function_statement](media/StoredProcedure/drop_function_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03317" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1661" image_path_raw="media/StoredProcedure/drop_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03317" -->
+
 
 #### Purpose
 
@@ -19642,9 +20665,58 @@ A stored procedure or function consists of one or more blocks. This chapter desc
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03318" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1695" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03318" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03319" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1697" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03319" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03320" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1699" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03320" -->
+
 
 A block can be broadly divided into a declaration section, a block body and an exception handler section.
 
@@ -19726,7 +20798,39 @@ The exception handler section is delimited by the EXCEPTION and END keywords. It
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03321" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1779" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03321" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03322" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="1781" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-03322" -->
+
 
 #### Purpose
 
@@ -20052,6 +21156,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03324" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="2105" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03324" -->
+
+
 Because the syntax of select_list and rest_of_select_statement is the same as for a SELECT statement, please refer to the SQL Reference for more information on those elements.
 
 #### Purpose
@@ -20346,6 +21466,22 @@ Execute success.
 #### Syntax
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03325" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="2400" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03325" -->
+
 
 #### Function
 
@@ -20679,6 +21815,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03326" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="2732" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03326" -->
+
+
 #### Purpose
 
 These statements are used to assign a value to a local variable or to an OUT or IN/OUT parameter.
@@ -20887,6 +22036,14 @@ END;
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03327" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="2940" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03327" -->
+
+
 #### Purpose
 
 The PRINT statement is used to output desired text to the calling client or routine. PRINT is a system procedure that is provided within Altibase, and is typically used for debugging and testing. PRINTLN differs from PRINT only in that it outputs the appropriate newline sequence ( "\n" in Unix) after the string. The owner of PRINT and PRINTLN is the SYSTEM_user.
@@ -21005,6 +22162,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03328" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3058" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03328" -->
+
+
 #### Purpose
 
 This statement is used to interrupt the execution of a stored procedure. When used with a stored function, it is additionally used to specify the return value.
@@ -21106,6 +22271,17 @@ FUNC_PLUS_10(I1)
 #### Syntax
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03329" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3160" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03329" -->
+
 
 #### Purpose
 
@@ -21214,6 +22390,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03330" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3267" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03330" -->
+
+
 #### Purpose
 
 This is a stored procedure extension of the UPDATE statement.
@@ -21291,6 +22475,21 @@ This chapter describes how to use control flow statements in a stored procedure 
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03331" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3344" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03331" -->
+
+
 Altibase supports the use of the following control flow statements in stored procedures:
 
 -   The IF and CASE conditional statements
@@ -21312,6 +22511,17 @@ Any expressions containing subqueries cannot be used for condition of IF stateme
 #### Syntax
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03332" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3366" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03332" -->
+
 
 #### Purpose
 
@@ -21528,6 +22738,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03333" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3581" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03333" -->
+
+
 #### Purpose
 
 CASE is a conditional construct that determines the flow of execution on the basis of the value of some variable. Its functionality is similar to that of the IF statement, however, it is more easily legible.
@@ -21672,6 +22897,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03334" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3725" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03334" -->
+
+
 #### Purpose
 
 The LOOP construct is used to repeatedly execute a desired statement or series of statements without using a particular condition to control execution.
@@ -21721,6 +22955,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03335" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3774" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03335" -->
+
+
 #### Purpose
 
 The WHILE LOOP construct iterates the statements in the loop body as long as the condition remains true. If this condition is not true the first time it is executed, the statements in the loop will not be executed even once, and control will pass to the statement following the loop.
@@ -21769,6 +23013,19 @@ T1.I1       T1.I2       T1.I3
 #### Syntax
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03336" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="3823" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03336" -->
+
 
 #### Purpose
 
@@ -21986,6 +23243,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03337" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4039" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03337" -->
+
+
 #### Purpose
 
 The EXIT statement is used to terminate the iteration of a loop. If label_name is specified, iteration of the loop specified using label_name is terminated. If label_name is not specified, iteration of the innermost loop is terminated.
@@ -22126,6 +23391,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03338" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4179" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03338" -->
+
+
 #### Purpose
 
 The CONTINUE statement causes subsequent statements in the loop in which it is found to be ignored, and passes control to the beginning of the loop. That is, it terminates the current iteration of the loop. The CONTINUE statement can be used inside any of the following loop statements:
@@ -22197,6 +23470,14 @@ T8.I1       T8.MATHPOWER
 #### Syntax
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03339" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4251" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03339" -->
+
 
 #### Purpose
 
@@ -22345,6 +23626,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03340" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4398" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03340" -->
+
+
 #### Purpose
 
 The NULL statement does nothing. It is used to expressly pass control to the next statement. This is used to improve program readability.
@@ -22442,6 +23731,22 @@ This is the type of loop that executes all of the OPEN, FETCH, and CLOSE stateme
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03341" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4495" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03341" -->
+
+
 #### Purpose
 
 The CURSOR statement is used to declare a cursor. It must specify the name of the cursor and the SELECT statement that the cursor uses to retrieve records.
@@ -22531,6 +23836,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### Syntax
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03342" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4585" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03342" -->
+
 
 #### Purpose
 
@@ -22658,7 +23972,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03343" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4711" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03343" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03344" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4713" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03344" -->
+
 
 #### Purpose
 
@@ -22786,6 +24120,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03345" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4839" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03345" -->
+
+
 #### Purpose
 
 This statement is used to close an open cursor and free all associated resources.
@@ -22811,6 +24153,18 @@ CLOSE c1;
 #### Syntax
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03346" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="4865" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03346" -->
+
 
 #### Purpose
 
@@ -23151,6 +24505,26 @@ The difference between a cursor variable and a regular cursor is that a cursor v
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03348" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="5204" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+        { associative_array_type_spec
+        | record_type_spec
+        | ref_cursor_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type { ',' column_name data_type } ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+```
+<!-- IMG_RECOVERY_END ref_id="img-03348" -->
+
+
 ##### type_name
 
 The name of the user-defined type is specified here.
@@ -23223,6 +24597,21 @@ BEGIN
 #### Syntax
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03349" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="5277" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03349" -->
+
 
 #### Purpose
 
@@ -23998,6 +25387,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03351" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6051" image_path_raw="media/StoredProcedure/create_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ user_name '.' ] typeset_name
+        { AS | IS }
+        type_declaration { type_declaration }
+        END
+```
+<!-- IMG_RECOVERY_END ref_id="img-03351" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users having the CREATE PROCEDURE or CREATE ANY PROCEDURE system privilege can execute the CREATE TYPESET statement.
@@ -24087,6 +25487,14 @@ Execute success.
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03352" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6140" image_path_raw="media/StoredProcedure/drop_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03352" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the typeset to be dropped, and users having the DROP ANY PROCEDURE system privilege can execute the DROP TYPESET statement.
@@ -24154,9 +25562,39 @@ This statement is used to dynamically execute a DDL, DCL or DML statement, inclu
 
 ![](media/StoredProcedure/execute_imme_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03354" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6207" image_path_raw="media/StoredProcedure/execute_imme_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_imme_statement ::=
+    EXECUTE IMMEDIATE dynamic_string
+    [ INTO { record_name | variable_name { ',' variable_name } }
+    | bulk_collect_clause ]
+    [ USING [ { IN | OUT | IN OUT } ] variable_name
+             { ',' [ { IN | OUT | IN OUT } ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03354" -->
+
+
 ![](media/StoredProcedure/bulk_collect_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03355" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6209" image_path_raw="media/StoredProcedure/bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+                      { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03355" -->
+
+
 ![](media/StoredProcedure/dynamic_string.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03356" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6211" image_path_raw="media/StoredProcedure/dynamic_string.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dynamic_string ::=
+    variable_name
+  | expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-03356" -->
+
 
 #### Description
 
@@ -24245,6 +25683,15 @@ This statement is used to initialize a cursor variable (REF CURSOR), execute the
 #### Syntax
 
 ![](media/StoredProcedure/open_for_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03357" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6299" image_path_raw="media/StoredProcedure/open_for_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_for_statement ::=
+    OPEN cursor_variable_name FOR { select_statement | dynamic_string }
+    [ USING [ IN ] variable_name { ',' [ IN ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03357" -->
+
 
 #### Description
 
@@ -24367,6 +25814,14 @@ The tasks to perform in the event of a system-defined or user-defined exception 
 
 ![exception_declaration](media/StoredProcedure/exception_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03358" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6420" image_path_raw="media/StoredProcedure/exception_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_declaration ::=
+    exception_name EXCEPTION ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03358" -->
+
+
 #### Description
 
 To define the user-defined exception.
@@ -24391,6 +25846,14 @@ DECLARE
 #### Syntax
 
 ![raise_statement](media/StoredProcedure/raise_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03359" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6445" image_path_raw="media/StoredProcedure/raise_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+raise_statement ::=
+    RAISE [ exception_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03359" -->
+
 
 #### Description
 
@@ -24684,6 +26147,15 @@ The scope of SQLCODE and SQLERRM in the above example is illustrated in the foll
 
 ![exception_handler](media/StoredProcedure/exception_handler.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03361" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6737" image_path_raw="media/StoredProcedure/exception_handler.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_handler ::=
+    WHEN { exception_name { OR exception_name } | OTHERS }
+    THEN statement { statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03361" -->
+
+
 #### Purpose
 
 Exception handlers are used to specify the actions to take in response to exceptions.
@@ -24854,6 +26326,14 @@ The following pragmas can be used in Altibase. Thorough information on each prag
 
 ![](media/StoredProcedure/pragma.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03362" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6907" image_path_raw="media/StoredProcedure/pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pragma_declaration ::=
+    PRAGMA { autonomous_transaction_statement | exception_init_statement } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03362" -->
+
+
 
 
 ### Autonomous Transaction Pragma
@@ -24861,6 +26341,14 @@ The following pragmas can be used in Altibase. Thorough information on each prag
 #### Syntax
 
 ![autonomous_pragma](media/StoredProcedure/autonomous_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03363" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="6915" image_path_raw="media/StoredProcedure/autonomous_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autonomous_transaction_statement ::=
+    AUTONOMOUS_TRANSACTION
+```
+<!-- IMG_RECOVERY_END ref_id="img-03363" -->
+
 
 #### Function
 
@@ -25006,6 +26494,14 @@ C1
 #### Syntax
 
 ![](media/StoredProcedure/exception_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03365" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7060" image_path_raw="media/StoredProcedure/exception_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_init_statement ::=
+    EXCEPTION_INIT '(' exception_name ',' error_code ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03365" -->
+
 
 #### Function
 
@@ -25178,21 +26674,68 @@ The figure below is a diagram of the structure of the package specification and 
 
 ![create_package](media/StoredProcedure/create_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03367" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7231" image_path_raw="media/StoredProcedure/create_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package ::=
+    CREATE [ OR REPLACE ] PACKAGE [ user_name '.' ] package_name
+    invoker_rights_clause { AS | IS } declare_section END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03367" -->
+
+
 ##### invoker_rights_clause::=
 
 ![](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03368" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7235" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03368" -->
+
 
 ##### declare_section ::=
 
 ![](media/StoredProcedure/package_declare_section.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03369" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7239" image_path_raw="media/StoredProcedure/package_declare_section.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | procedure_declaration
+    | funtion_declaration
+    | cursor_declaration
+    | exception_declaration } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-03369" -->
+
+
 ##### procedure_declaration ::=
 
 ![](media/StoredProcedure/package_proc_declare.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03370" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7243" image_path_raw="media/StoredProcedure/package_proc_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+procedure_declaration ::=
+    PROCEDURE procedure_name [ '(' expression ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03370" -->
+
+
 ##### function_declaration ::=
 
 ![](media/StoredProcedure/package_func_declare.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03371" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7247" image_path_raw="media/StoredProcedure/package_func_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+function_declaration ::=
+    FUNCTION function_name [ '(' { expression } ')' ] RETURN data_type [ DETERMINISTIC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03371" -->
+
 
 #### Purpose
 
@@ -25406,13 +26949,46 @@ Execute success.
 
 ![](media/StoredProcedure/bba17be9803aaf99425718e2904dbc23.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03372" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7459" image_path_raw="media/StoredProcedure/bba17be9803aaf99425718e2904dbc23.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package_body ::=
+    CREATE [ OR REPLACE ] PACKAGE BODY [ user_name '.' ] package_name
+    { AS | IS } declare_section [ initialize_section ] END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03372" -->
+
+
 ##### initialize_section::=
 
 ![](media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03373" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7463" image_path_raw="media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+initialize_section ::=
+    BEGIN statement { statement } [ EXCEPTION exception_handler { exception_handler } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03373" -->
+
+
 ##### declare_section ::=
 
 ![](media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03374" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7467" image_path_raw="media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | exception_declaration
+    | cursor_declaration
+    | procedure_declaration
+    | procedure_definition
+    | funtion_declaration
+    | funtion_definition } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-03374" -->
+
 
 #### Purpose
 
@@ -25566,6 +27142,15 @@ Create success.
 
 ![alter_package](media/StoredProcedure/alter_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03375" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7619" image_path_raw="media/StoredProcedure/alter_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_package ::=
+    ALTER PACKAGE [ user_name '.' ] package_name COMPILE
+    [ PACKAGE | SPECIFICATION | BODY ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03375" -->
+
+
 #### Purpose
 
 This statement explicitly recompiles the package specification, the package body or the package. When the package is recompiled, variables, cursors, user-defined types and subprograms that compose the package are also recompiled.
@@ -25596,6 +27181,14 @@ Alter success.
 
 ![drop_package](media/StoredProcedure/drop_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03376" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7649" image_path_raw="media/StoredProcedure/drop_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_package ::=
+    DROP PACKAGE [ BODY ] [ user_name '.' ] package_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03376" -->
+
+
 #### Purpose
 
 This statement drops the package. This statement can selectively drop only the package body or the whole package.
@@ -25620,9 +27213,27 @@ Drop success.
 
 ![execute_procedure](media/StoredProcedure/execute_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03377" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7673" image_path_raw="media/StoredProcedure/execute_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC [ UTE ] [ user_name '.' ] package_name '.' procedure_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03377" -->
+
+
 ##### execute_function_statement ::=
 
 ![execute_function](media/StoredProcedure/execute_function.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03378" source_md="Manuals/Altibase_7.3/eng/Stored Procedures Manual.md" line_no="7677" image_path_raw="media/StoredProcedure/execute_function.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC [ UTE ] variable ':=' [ user_name '.' ] package_name '.' function_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03378" -->
+
 
 #### Purpose
 
@@ -34388,13 +35999,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03453" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="504" image_path_raw="media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    '(' parameter_declaration { ',' parameter_declaration } ')'
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement
+    [ EXCEPTION exception_handler ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03453" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03454" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="508" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03454" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03455" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="512" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03455" -->
+
 
 
 
@@ -34869,6 +36513,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03456" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="985" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03456" -->
+
+
 #### Purpose
 
 A stored procedure can access various database objects, such as tables, views, and sequences, and can also call other stored procedures and stored functions. After a procedure is created, if any of these objects are altered or changed, the stored procedure can enter what is known as an invalid state. 
@@ -34932,6 +36584,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03457" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1048" image_path_raw="media/StoredProcedure/drop_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03457" -->
+
+
 #### Purpose
 
 This statement removes a stored procedure from the database. 
@@ -34956,13 +36616,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03458" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1072" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03458" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03459" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1076" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03459" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03460" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1080" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-03460" -->
+
 
 #### Purpose
 
@@ -35041,15 +36729,48 @@ create_function::=
 
 ![](media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03461" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1157" image_path_raw="media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+        [ '(' parameter_declaration { ',' parameter_declaration } ')' ]
+        RETURN data_type
+        [ DETERMINISTIC ] [ invoker_rights_clause ]
+        { AS | IS }
+        [ declaration_section ]
+        BEGIN statement { statement }
+        [ EXCEPTION exception_handler { exception_handler } ]
+        END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03461" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03462" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1161" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03462" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03463" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1167" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03463" -->
+
 
 
 
@@ -35392,6 +37113,14 @@ For functions used in constraints or function-based indexes, it is impossible to
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03464" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1508" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03464" -->
+
+
 #### Purpose
 
 As with a stored procedure, a stored function can enter what is known as an invalid state when one or more of the database objects that it references are changed after the function is created. 
@@ -35413,6 +37142,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### Syntax
 
 ![drop_function_statement](media/StoredProcedure/drop_function_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03465" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1530" image_path_raw="media/StoredProcedure/drop_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03465" -->
+
 
 #### Purpose
 
@@ -35448,9 +37185,58 @@ A stored procedure or function consists of one or more blocks. This chapter desc
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03466" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1564" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03466" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03467" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1566" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03467" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03468" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1568" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03468" -->
+
 
 A block can be broadly divided into a declaration section, a block body and an exception handler section.
 
@@ -35502,7 +37288,39 @@ The exception handler section is delimited by the EXCEPTION and END keywords. It
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03469" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1618" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03469" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03470" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1620" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-03470" -->
+
 
 #### Purpose
 
@@ -35828,6 +37646,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03472" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1944" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03472" -->
+
+
 Because the syntax of select_list and rest_of_select_statement is the same as for a SELECT statement, please refer to the SQL Reference for more information on those elements.
 
 #### Purpose
@@ -36122,6 +37956,22 @@ Execute success.
 #### Syntax
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03473" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2239" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03473" -->
+
 
 #### Function
 
@@ -36455,6 +38305,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03474" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2571" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03474" -->
+
+
 #### Purpose
 
 These statements are used to assign a value to a local variable or to an OUT or IN/OUT parameter. 
@@ -36664,6 +38527,14 @@ User-defined labels are used in the following three situations:
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03475" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2780" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03475" -->
+
+
 #### Purpose
 
 The PRINT statement is used to output desired text to the calling client or routine. PRINT is a system procedure that is provided within Altibase, and is typically used for debugging and testing. PRINTLN differs from PRINT only in that it outputs the appropriate newline sequence ( "\n" in Unix) after the string. The owner of PRINT and PRINTLN is the SYSTEM_user. 
@@ -36782,6 +38653,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03476" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2898" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03476" -->
+
+
 #### Purpose
 
 This statement is used to interrupt the execution of a stored procedure. When used with a stored function, it is additionally used to specify the return value. 
@@ -36883,6 +38762,17 @@ FUNC_PLUS_10(I1)
 #### Syntax
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03477" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3000" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03477" -->
+
 
 #### Purpose
 
@@ -36991,6 +38881,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03478" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3107" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03478" -->
+
+
 #### Purpose
 
 This is a stored procedure extension of the UPDATE statement.
@@ -37068,6 +38966,21 @@ This chapter describes how to use control flow statements in a stored procedure 
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03479" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3184" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03479" -->
+
+
 Altibase supports the use of the following control flow statements in stored procedures:
 
 -   The IF and CASE conditional statements 
@@ -37089,6 +39002,17 @@ Any expressions containing subqueries cannot be used for condition of IF stateme
 #### Syntax
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03480" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3206" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03480" -->
+
 
 #### Purpose
 
@@ -37305,6 +39229,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03481" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3421" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03481" -->
+
+
 #### Purpose
 
 CASE is a conditional construct that determines the flow of execution on the basis of the value of some variable. Its functionality is similar to that of the IF statement, however, it is more easily legible. 
@@ -37449,6 +39388,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03482" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3565" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03482" -->
+
+
 #### Purpose
 
 The LOOP construct is used to repeatedly execute a desired statement or series of statements without using a particular condition to control execution. 
@@ -37498,6 +39446,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03483" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3614" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03483" -->
+
+
 #### Purpose
 
 The WHILE LOOP construct iterates the statements in the loop body as long as the condition remains true. If this condition is not true the first time it is executed, the statements in the loop will not be executed even once, and control will pass to the statement following the loop.
@@ -37546,6 +39504,19 @@ T1.I1       T1.I2       T1.I3
 #### Syntax
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03484" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3663" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03484" -->
+
 
 #### Purpose
 
@@ -37763,6 +39734,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03485" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3879" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03485" -->
+
+
 #### Purpose
 
 The EXIT statement is used to terminate the iteration of a loop. If label_name is specified, iteration of the loop specified using label_name is terminated. If label_name is not specified, iteration of the innermost loop is terminated. 
@@ -37903,6 +39882,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03486" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4019" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03486" -->
+
+
 #### Purpose
 
 The CONTINUE statement causes subsequent statements in the loop in which it is found to be ignored, and passes control to the beginning of the loop. That is, it terminates the current iteration of the loop. The CONTINUE statement can be used inside any of the following loop statements:
@@ -37974,6 +39961,14 @@ T8.I1       T8.MATHPOWER
 #### Syntax
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03487" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4091" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03487" -->
+
 
 #### Purpose
 
@@ -38122,6 +40117,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03488" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4238" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03488" -->
+
+
 #### Purpose
 
 The NULL statement does nothing. It is used to expressly pass control to the next statement. This is used to improve program readability.
@@ -38219,6 +40222,22 @@ This is the type of loop that executes all of the OPEN, FETCH, and CLOSE stateme
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03489" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4335" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03489" -->
+
+
 #### Purpose
 
 The CURSOR statement is used to declare a cursor. It must specify the name of the cursor and the SELECT statement that the cursor uses to retrieve records.
@@ -38308,6 +40327,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### Syntax
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03490" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4425" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03490" -->
+
 
 #### Purpose
 
@@ -38435,7 +40463,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03491" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4551" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03491" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03492" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4553" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03492" -->
+
 
 #### Purpose
 
@@ -38563,6 +40611,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03493" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4679" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03493" -->
+
+
 #### Purpose
 
 This statement is used to close an open cursor and free all associated resources.
@@ -38588,6 +40644,18 @@ CLOSE c1;
 #### Syntax
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03494" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4705" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03494" -->
+
 
 #### Purpose
 
@@ -38928,6 +40996,26 @@ The difference between a cursor variable and a regular cursor is that a cursor v
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03496" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5044" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+        { associative_array_type_spec
+        | record_type_spec
+        | ref_cursor_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type { ',' column_name data_type } ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+```
+<!-- IMG_RECOVERY_END ref_id="img-03496" -->
+
+
 ##### type_name
 
 The name of the user-defined type is specified here.
@@ -39000,6 +41088,21 @@ BEGIN
 #### Syntax
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03497" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5117" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03497" -->
+
 
 #### Purpose
 
@@ -39776,6 +41879,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03499" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5892" image_path_raw="media/StoredProcedure/create_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ user_name '.' ] typeset_name
+        { AS | IS }
+        type_declaration { type_declaration }
+        END
+```
+<!-- IMG_RECOVERY_END ref_id="img-03499" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users having the CREATE PROCEDURE or CREATE ANY PROCEDURE system privilege can execute the CREATE TYPESET statement.
@@ -39864,6 +41978,14 @@ Execute success.
 #### Syntax
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03500" source_md="Manuals/Altibase_7.3/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5981" image_path_raw="media/StoredProcedure/drop_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03500" -->
+
 
 #### Prerequisites
 
@@ -40786,6 +42908,15 @@ char* str_uppercase_return(char *str1, long long str1_len, char * str2)
 
 ![](media/ExternalProcedure/image024.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03698" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="878" image_path_raw="media/ExternalProcedure/image024.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_library_statement ::=
+    CREATE [ OR REPLACE ] LIBRARY [ user_name '.' ] library_name
+    { AS | IS } file_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03698" -->
+
+
 #### 설명
 
 외부 라이브러리 객체를 새로 생성하거나 이미 생성되어 있는 외부 라이브러리를
@@ -40815,6 +42946,14 @@ CREATE OR REPLACE LIBRARY lib1 AS 'shlib.so';
 
 ![](media/ExternalProcedure/image026.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03699" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="907" image_path_raw="media/ExternalProcedure/image026.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_library_statement ::=
+    ALTER LIBRARY [ user_name '.' ] library_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03699" -->
+
+
 #### 설명
 
 라이브러리 객체를 컴파일한다.
@@ -40834,6 +42973,14 @@ ALTER LIBRARY lib1 COMPILE;
 #### 구문
 
 ![](media/ExternalProcedure/image028.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03700" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="927" image_path_raw="media/ExternalProcedure/image028.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_library_statement ::=
+    DROP LIBRARY [ user_name '.' ] library_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03700" -->
+
 
 #### 설명
 
@@ -40857,25 +43004,78 @@ DROP LIBRARY lib1;
 
 ![](media/ExternalProcedure/image030.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03701" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="949" image_path_raw="media/ExternalProcedure/image030.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    [ argument_list ]
+    AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03701" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image032.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03702" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="953" image_path_raw="media/ExternalProcedure/image032.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03702" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image034.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03703" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="957" image_path_raw="media/ExternalProcedure/image034.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-03703" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03704" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="961" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03704" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image038.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03705" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="965" image_path_raw="media/ExternalProcedure/image038.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03705" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image040.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03706" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="969" image_path_raw="media/ExternalProcedure/image040.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03706" -->
+
 
 #### 설명
 
@@ -40987,6 +43187,14 @@ parameters( a1, a1 LENGTH, a2 )
 
 ![](media/ExternalProcedure/image042.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03707" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1079" image_path_raw="media/ExternalProcedure/image042.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03707" -->
+
+
 #### 설명
 
 데이터베이스에서 외부 프로시저 객체를 삭제한다.
@@ -41008,25 +43216,78 @@ DROP PROCEDURE proc1;
 
 ![](media/ExternalProcedure/image043.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03708" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1100" image_path_raw="media/ExternalProcedure/image043.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+    [ argument_list ]
+    RETURN return_type AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03708" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image045.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03709" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1104" image_path_raw="media/ExternalProcedure/image045.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03709" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image046.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03710" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1108" image_path_raw="media/ExternalProcedure/image046.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-03710" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03711" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1112" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03711" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image048.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03712" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1116" image_path_raw="media/ExternalProcedure/image048.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03712" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image049.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03713" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1120" image_path_raw="media/ExternalProcedure/image049.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    { parameter_name | RETURN } [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03713" -->
+
 
 #### 설명
 
@@ -41082,6 +43343,14 @@ CREATE PROCEDURE statement 절을 참고하라.
 
 ![](media/ExternalProcedure/image051.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03714" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1174" image_path_raw="media/ExternalProcedure/image051.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03714" -->
+
+
 #### 설명
 
 데이터베이스에서 외부 함수 객체를 삭제한다.
@@ -41103,13 +43372,41 @@ DROP FUNCTION func1;
 
 ![](media/ExternalProcedure/image053.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03715" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1195" image_path_raw="media/ExternalProcedure/image053.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] [ package_name '.' ] procedure_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03715" -->
+
+
 **execute_function_statement::=**
 
 ![](media/ExternalProcedure/image055.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03716" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1199" image_path_raw="media/ExternalProcedure/image055.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC[UTE] variable ':='
+    [ user_name '.' ] [ package_name '.' ] function_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03716" -->
+
+
 **parameter_notation::=**
 
 ![](media/ExternalProcedure/image057.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03717" source_md="Manuals/Altibase_7.3/kor/External Procedures Manual.md" line_no="1203" image_path_raw="media/ExternalProcedure/image057.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression [ { ',' expression } ]
+    | parameter_name '=>' expression [ { ',' parameter_name '=>' expression } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03717" -->
+
 
 #### 설명
 
@@ -41890,13 +44187,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04509" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="730" image_path_raw="media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    '(' parameter_declaration { ',' parameter_declaration } ')'
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement
+    [ EXCEPTION exception_handler ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04509" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04510" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="734" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04510" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04511" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="738" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04511" -->
+
 
 
 
@@ -42390,6 +44720,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04512" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1230" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04512" -->
+
+
 #### 기능
 
 사용자가 명시적으로 저장 프로시저를 컴파일 할 때 사용된다.
@@ -42476,6 +44814,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04513" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1316" image_path_raw="media/StoredProcedure/drop_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04513" -->
+
+
 #### 기능
 
 데이터베이스에서 저장 프로시저를 삭제하는 구문이다.
@@ -42501,13 +44847,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04514" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1341" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04514" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04515" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1345" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04515" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04516" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1349" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-04516" -->
+
 
 #### 기능
 
@@ -42589,15 +44963,48 @@ create_function::=
 
 ![](media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04517" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1429" image_path_raw="media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+        [ '(' parameter_declaration { ',' parameter_declaration } ')' ]
+        RETURN data_type
+        [ DETERMINISTIC ] [ invoker_rights_clause ]
+        { AS | IS }
+        [ declaration_section ]
+        BEGIN statement { statement }
+        [ EXCEPTION exception_handler { exception_handler } ]
+        END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04517" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04518" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1433" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04518" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04519" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1439" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04519" -->
+
 
 
 
@@ -42950,6 +45357,14 @@ USER1.FUNC1
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04520" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1790" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04520" -->
+
+
 #### 기능
 
 저장 프로시저와 마찬가지로, 저장 함수 생성 후에 함수 내에서 참조하는 데이터베이스 객체의 정의가 변경되어 현재 이 저장 함수의 실행 계획으로는 더 이상 실행할 수 없는 경우에 이 저장 함수는 무효한 상태라고 한다.
@@ -42971,6 +45386,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### 구문
 
 ![drop_function_statement](media/StoredProcedure/drop_function_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04521" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1812" image_path_raw="media/StoredProcedure/drop_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04521" -->
+
 
 #### 기능
 
@@ -43012,9 +45435,58 @@ DROP FUNCTION get_dept_name;
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04522" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1852" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04522" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04523" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1854" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04523" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04524" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1856" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04524" -->
+
 
 블록은 크게 선언부(Declare Section), 블록 바디(Block Body), 예외 처리부(Exception Handler Section)의 세 부분으로 나뉘어진다.
 
@@ -43105,7 +45577,39 @@ EXCEPTION과 END 사이의 부분으로 저장 프로시저 또는 함수 실행
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04525" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1945" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04525" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04526" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="1947" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-04526" -->
+
 
 #### 기능
 
@@ -43453,6 +45957,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04528" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="2293" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04528" -->
+
+
 *select_list*와 *rest_of_select_statement*는 SELECT 구문의 문법과 동일하므로 *SQL Reference*을 참고한다.
 
 #### 기능
@@ -43759,6 +46279,22 @@ Execute success.
 #### 구문
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04529" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="2600" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04529" -->
+
 
 #### 기능
 
@@ -44102,6 +46638,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04530" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="2942" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04530" -->
+
+
 #### 기능
 
 지역변수, OUT 또는 IN/OUT 형의 인자에 값을 할당하고자 할 때 사용하는 할당문이다.
@@ -44323,6 +46872,14 @@ LABLE문은 저장 프로시저 내부의 특정 위치에 명칭을 지정하�
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04531" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3163" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04531" -->
+
+
 #### 기능
 
 PRINT구문은 저장 프로시저 실행 시에 사용자가 원하는 텍스트를 해당 프로시저를
@@ -44452,6 +47009,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04532" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3292" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04532" -->
+
+
 #### 기능
 
 저장 프로시저의 수행을 도중에 중단 하거나, 저장 함수에서 값을 반환하고 수행을
@@ -44556,6 +47121,17 @@ FUNC_PLUS_10(I1)
 #### 구문
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04533" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3397" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-04533" -->
+
 
 #### 기능
 
@@ -44664,6 +47240,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04534" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3504" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-04534" -->
+
+
 #### 기능
 
 UPDATE 구문의 저장 프로시저 확장 기능이다.
@@ -44742,6 +47326,21 @@ EMP_TEL          DNO         SALARY      SEX  BIRTH   JOIN_DATE    STATUS
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04535" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3582" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04535" -->
+
+
 저장 프로시저에서 사용할 수 있는 흐름 제어문은 다음과 같다.
 
 -   조건 분기문인 IF문과 CASE문
@@ -44768,6 +47367,17 @@ EMP_TEL          DNO         SALARY      SEX  BIRTH   JOIN_DATE    STATUS
 #### 구문
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04536" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3609" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04536" -->
+
 
 #### 기능
 
@@ -44991,6 +47601,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04537" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3831" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04537" -->
+
+
 #### 기능
 
 특정 변수의 값에 따라서 처리 경로를 결정하는 조건 분기문이다.
@@ -45140,6 +47765,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04538" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="3980" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04538" -->
+
+
 #### 기능
 
 LOOP구문은 조건을 따로 지정하지 않고 반복적으로 구문(들)을 수행하고자 하는
@@ -45191,6 +47825,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04539" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4031" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04539" -->
+
+
 #### 기능
 
 조건이 참인 경우만 LOOP을 수행하고자 할 때 사용하는 반복문이다. 만약 처음부터 이
@@ -45241,6 +47885,19 @@ T1.I1       T1.I2       T1.I3
 #### 구문
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04540" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4082" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04540" -->
+
 
 #### 기능
 
@@ -45474,6 +48131,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04541" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4314" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04541" -->
+
+
 #### 기능
 
 EXIT문을 감싸고 있는 가장 가까운 LOOP 문을 빠져나간다. 그러나 *label_name*이
@@ -45620,6 +48285,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04542" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4460" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04542" -->
+
+
 #### 기능
 
 현재 CONTINUE문을 감싸고 있는 LOOP에서 CONTINUE문 이후의 문장들을 전부 무시하고
@@ -45694,6 +48367,14 @@ T8.I1       T8.MATHPOWER
 #### 구문
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04543" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4535" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04543" -->
+
 
 #### 기능
 
@@ -45847,6 +48528,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04544" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4687" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04544" -->
+
+
 #### 기능
 
 NULL문은 흐름에 영향을 미치지 않고 아무것도 수행하지 않고 다음으로 넘어감을
@@ -45961,6 +48650,22 @@ OPEN문이나 CLOSE문을 사용할 필요가 없는 경우에 편리한 구문�
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04545" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4801" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04545" -->
+
+
 #### 기능
 
 커서를 정의한다. CURSOR구문에서는 커서명과 커서가 레코드를 가져오는 데 사용할
@@ -46051,6 +48756,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### 구문
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04546" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="4892" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04546" -->
+
 
 #### 기능
 
@@ -46182,7 +48896,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04547" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5022" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04547" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04548" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5024" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04548" -->
+
 
 #### 기능
 
@@ -46323,6 +49057,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04549" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5163" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04549" -->
+
+
 #### 기능
 
 열려있는 커서를 닫고 해당 커서에 할당된 리소스를 해제한다.
@@ -46352,6 +49094,18 @@ CLOSE c1;
 #### 구문
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04550" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5193" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04550" -->
+
 
 #### 기능
 
@@ -46428,6 +49182,14 @@ Altibase가 관리하고 있는 속성값들을 참조할 수 있다.
 #### 구문
 
 ![cursor_attribute](media/StoredProcedure/cursor_attribute.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04551" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5269" image_path_raw="media/StoredProcedure/cursor_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_attribute ::=
+    cursor_name '%' { FOUND | NOTFOUND | ISOPEN | ROWCOUNT } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04551" -->
+
 
 #### 기능
 
@@ -46768,6 +49530,30 @@ VARRAY 변수의 배열 요소 접근 방법은 Associative Array와 동일하�
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04552" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5608" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+    { associative_array_type_spec
+    | record_type_spec
+    | ref_cursor_type_spec
+    | varray_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type [ { ',' column_name data_type } ] ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+
+varray_type_spec ::=
+    { VARRAY | VARYING ARRAY } '(' size ')' OF data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-04552" -->
+
+
 ##### type_name
 
 사용자 정의 타입의 이름을 명시한다.
@@ -46862,6 +49648,21 @@ BEGIN
 #### 구문
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04553" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5703" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04553" -->
+
 
 #### 기능
 
@@ -47032,6 +49833,24 @@ Execute success.
 #### 구문
 
 ![associative_array](media/StoredProcedure/varray_method.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04554" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="5873" image_path_raw="media/StoredProcedure/varray_method.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+varray_call_method ::=
+    variable_name '.'
+    { COUNT '(' ')'
+    | DELETE '(' ')'
+    | EXISTS '(' index ')'
+    | FIRST '(' ')'
+    | LAST '(' ')'
+    | NEXT '(' index ')'
+    | PRIOR '(' index ')'
+    | LIMIT
+    | EXTEND '(' [ index [ { ',' index } ] ] ')'
+    | TRIM '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04554" -->
+
 
 #### 기능
 
@@ -47971,6 +50790,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04556" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="6811" image_path_raw="media/StoredProcedure/create_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ user_name '.' ] typeset_name
+        { AS | IS }
+        type_declaration { type_declaration }
+        END
+```
+<!-- IMG_RECOVERY_END ref_id="img-04556" -->
+
+
 #### 전제 조건
 
 SYS 사용자 또는 CREATE PROCEDURE, CREATE ANY PROCEDURE 시스템 권한을 가진
@@ -48062,6 +50892,14 @@ Execute success.
 #### 구문
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04557" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="6903" image_path_raw="media/StoredProcedure/drop_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04557" -->
+
 
 #### 전제 조건
 
@@ -48159,9 +50997,39 @@ Plan Cache에 저장되고, 반복 호출 시 Plan Cache에서 실행계획을 �
 
 ![](media/StoredProcedure/execute_imme_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04559" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="6999" image_path_raw="media/StoredProcedure/execute_imme_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_imme_statement ::=
+    EXECUTE IMMEDIATE dynamic_string
+    [ INTO { record_name | variable_name { ',' variable_name } }
+    | bulk_collect_clause ]
+    [ USING [ { IN | OUT | IN OUT } ] variable_name
+             { ',' [ { IN | OUT | IN OUT } ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04559" -->
+
+
 ![](media/StoredProcedure/bulk_collect_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04560" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7001" image_path_raw="media/StoredProcedure/bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+                      { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04560" -->
+
+
 ![](media/StoredProcedure/dynamic_string.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04561" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7003" image_path_raw="media/StoredProcedure/dynamic_string.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dynamic_string ::=
+    variable_name
+  | expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-04561" -->
+
 
 #### 설명
 
@@ -48261,6 +51129,15 @@ EXECUTE IMMEDIATE dynamic_string 구문은 해당 질의문을 Direct-Execute �
 #### 구문
 
 ![](media/StoredProcedure/open_for_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04562" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7102" image_path_raw="media/StoredProcedure/open_for_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_for_statement ::=
+    OPEN cursor_variable_name FOR { select_statement | dynamic_string }
+    [ USING [ IN ] variable_name { ',' [ IN ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04562" -->
+
 
 #### 설명
 
@@ -48397,6 +51274,14 @@ BEGIN
 
 ![exception_declaration](media/StoredProcedure/exception_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04563" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7237" image_path_raw="media/StoredProcedure/exception_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_declaration ::=
+    exception_name EXCEPTION ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04563" -->
+
+
 #### 설명
 
 사용자 정의 예외를 정의한다
@@ -48422,6 +51307,14 @@ DECLARE
 #### 구문
 
 ![raise_statement](media/StoredProcedure/raise_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04564" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7263" image_path_raw="media/StoredProcedure/raise_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+raise_statement ::=
+    RAISE [ exception_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04564" -->
+
 
 #### 설명
 
@@ -48744,6 +51637,15 @@ Execute success.
 
 ![exception_handler](media/StoredProcedure/exception_handler.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04566" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7584" image_path_raw="media/StoredProcedure/exception_handler.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_handler ::=
+    WHEN { exception_name { OR exception_name } | OTHERS }
+    THEN statement { statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04566" -->
+
+
 #### 기능
 
 Exception Handler에는 예외가 발생했을 때의 처리 루틴을 기술한다.
@@ -48926,6 +51828,14 @@ Altibase에서 사용할 수 있는 프라그마는 아래와 같다. 각각의 
 
 ![](media/StoredProcedure/pragma.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04567" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7766" image_path_raw="media/StoredProcedure/pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pragma_declaration ::=
+    PRAGMA { autonomous_transaction_statement | exception_init_statement } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04567" -->
+
+
 
 
 ### 자율 트랜잭션 프라그마(Autonomous_Transaction Pragma)
@@ -48933,6 +51843,14 @@ Altibase에서 사용할 수 있는 프라그마는 아래와 같다. 각각의 
 #### 구문
 
 ![autonomous_pragma](media/StoredProcedure/autonomous_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04568" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7774" image_path_raw="media/StoredProcedure/autonomous_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autonomous_transaction_statement ::=
+    AUTONOMOUS_TRANSACTION
+```
+<!-- IMG_RECOVERY_END ref_id="img-04568" -->
+
 
 #### 기능
 
@@ -49089,6 +52007,14 @@ C1
 #### 구문
 
 ![](media/StoredProcedure/exception_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04570" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="7930" image_path_raw="media/StoredProcedure/exception_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_init_statement ::=
+    EXCEPTION_INIT '(' exception_name ',' error_code ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04570" -->
+
 
 #### 기능
 
@@ -49295,21 +52221,68 @@ at "SYS.PROC2", line 6]
 
 ![create_package](media/StoredProcedure/create_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04572" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8135" image_path_raw="media/StoredProcedure/create_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package ::=
+    CREATE [ OR REPLACE ] PACKAGE [ user_name '.' ] package_name
+    invoker_rights_clause { AS | IS } declare_section END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04572" -->
+
+
 ##### invoker_rights_clause::=
 
 ![](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04573" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8139" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04573" -->
+
 
 ##### declare_section ::=
 
 ![](media/StoredProcedure/package_declare_section.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04574" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8143" image_path_raw="media/StoredProcedure/package_declare_section.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | procedure_declaration
+    | funtion_declaration
+    | cursor_declaration
+    | exception_declaration } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-04574" -->
+
+
 ##### procedure_declaration ::=
 
 ![](media/StoredProcedure/package_proc_declare.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04575" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8147" image_path_raw="media/StoredProcedure/package_proc_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+procedure_declaration ::=
+    PROCEDURE procedure_name [ '(' expression ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04575" -->
+
+
 ##### function_declaration ::=
 
 ![](media/StoredProcedure/package_func_declare.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04576" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8151" image_path_raw="media/StoredProcedure/package_func_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+function_declaration ::=
+    FUNCTION function_name [ '(' { expression } ')' ] RETURN data_type [ DETERMINISTIC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04576" -->
+
 
 #### 기능
 
@@ -49529,13 +52502,46 @@ Execute success.
 
 ![](media/StoredProcedure/bba17be9803aaf99425718e2904dbc23.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04577" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8369" image_path_raw="media/StoredProcedure/bba17be9803aaf99425718e2904dbc23.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package_body ::=
+    CREATE [ OR REPLACE ] PACKAGE BODY [ user_name '.' ] package_name
+    { AS | IS } declare_section [ initialize_section ] END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04577" -->
+
+
 ##### initialize_section::=
 
 ![](media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04578" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8373" image_path_raw="media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+initialize_section ::=
+    BEGIN statement { statement } [ EXCEPTION exception_handler { exception_handler } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04578" -->
+
+
 ##### declare_section ::=
 
 ![](media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04579" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8377" image_path_raw="media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | exception_declaration
+    | cursor_declaration
+    | procedure_declaration
+    | procedure_definition
+    | funtion_declaration
+    | funtion_definition } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-04579" -->
+
 
 #### 기능
 
@@ -49702,6 +52708,15 @@ Create success.
 
 ![alter_package](media/StoredProcedure/alter_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04580" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8542" image_path_raw="media/StoredProcedure/alter_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_package ::=
+    ALTER PACKAGE [ user_name '.' ] package_name COMPILE
+    [ PACKAGE | SPECIFICATION | BODY ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04580" -->
+
+
 #### 기능
 
 패키지 스펙 또는 패키지 바디 또는 패키지를 명시적으로 재컴파일한다. 패키지를
@@ -49734,6 +52749,14 @@ Alter success.
 
 ![drop_package](media/StoredProcedure/drop_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04581" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8574" image_path_raw="media/StoredProcedure/drop_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_package ::=
+    DROP PACKAGE [ BODY ] [ user_name '.' ] package_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04581" -->
+
+
 #### 기능
 
 패키지를 삭제하는 구문이다. 이 구문으로 패키지 바디만 선택적으로 삭제하거나
@@ -49759,9 +52782,27 @@ Drop success.
 
 ![execute_procedure](media/StoredProcedure/execute_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04582" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8599" image_path_raw="media/StoredProcedure/execute_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC [ UTE ] [ user_name '.' ] package_name '.' procedure_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04582" -->
+
+
 ##### execute_function_statement ::=
 
 ![execute_function](media/StoredProcedure/execute_function.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04583" source_md="Manuals/Altibase_7.3/kor/Stored Procedures Manual.md" line_no="8603" image_path_raw="media/StoredProcedure/execute_function.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC [ UTE ] variable ':=' [ user_name '.' ] package_name '.' function_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04583" -->
+
 
 #### 기능
 
@@ -59068,6 +62109,15 @@ This chapter describes SQL statements supported by Altibase for the use of exter
 
 ![](media/ExternalProcedure/create_library.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04844" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="741" image_path_raw="media/ExternalProcedure/create_library.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_library_statement ::=
+    CREATE [ OR REPLACE ] LIBRARY [ IF NOT EXISTS ] [ user_name '.' ]
+    library_name { AS | IS } '''' file_name '''' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04844" -->
+
+
 #### Description
 
 This creates a new external library object or changes the previously existing external library into a new external library.
@@ -59097,6 +62147,14 @@ CREATE OR REPLACE LIBRARY lib1 AS 'shlib.so';
 
 ![](media/ExternalProcedure/image026.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04845" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="770" image_path_raw="media/ExternalProcedure/image026.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_library_statement ::=
+    ALTER LIBRARY [ user_name '.' ] library_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04845" -->
+
+
 #### Description
 
 This compiles the library object.
@@ -59116,6 +62174,14 @@ ALTER LIBRARY lib1 COMPILE;
 **drop_library_statement ::=**
 
 ![](media/ExternalProcedure/drop_library.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04846" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="790" image_path_raw="media/ExternalProcedure/drop_library.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_library_statement ::=
+    DROP LIBRARY [ IF EXISTS ] [ user_name '.' ] library_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04846" -->
+
 
 #### Description
 
@@ -59141,25 +62207,78 @@ DROP LIBRARY lib1;
 
 ![](media/ExternalProcedure/image030.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04847" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="814" image_path_raw="media/ExternalProcedure/image030.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    [ argument_list ]
+    AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04847" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image032.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04848" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="818" image_path_raw="media/ExternalProcedure/image032.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04848" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image034.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04849" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="822" image_path_raw="media/ExternalProcedure/image034.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-04849" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04850" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="826" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04850" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image038.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04851" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="830" image_path_raw="media/ExternalProcedure/image038.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04851" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image040.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04852" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="834" image_path_raw="media/ExternalProcedure/image040.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04852" -->
+
 
 #### Description
 
@@ -59257,6 +62376,14 @@ parameters( a1, a1 LENGTH, a2 )
 
 ![](media/ExternalProcedure/image042.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04853" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="930" image_path_raw="media/ExternalProcedure/image042.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04853" -->
+
+
 #### Description
 
 This drops the external procedure object from the database. 
@@ -59278,25 +62405,78 @@ DROP PROCEDURE proc1;
 
 ![](media/ExternalProcedure/image043.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04854" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="951" image_path_raw="media/ExternalProcedure/image043.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+    [ argument_list ]
+    RETURN return_type AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04854" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image045.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04855" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="955" image_path_raw="media/ExternalProcedure/image045.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04855" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image046.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04856" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="959" image_path_raw="media/ExternalProcedure/image046.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-04856" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04857" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="963" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04857" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image048.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04858" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="967" image_path_raw="media/ExternalProcedure/image048.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04858" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image049.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04859" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="971" image_path_raw="media/ExternalProcedure/image049.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    { parameter_name | RETURN } [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04859" -->
+
 
 #### Description
 
@@ -59346,6 +62526,14 @@ Restriction:
 
 ![](media/ExternalProcedure/image051.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04860" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="1019" image_path_raw="media/ExternalProcedure/image051.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04860" -->
+
+
 #### Description
 
 Drops the external function object from the database. 
@@ -59367,13 +62555,41 @@ DROP FUNCTION func1;
 
 ![](media/ExternalProcedure/image053.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04861" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="1040" image_path_raw="media/ExternalProcedure/image053.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] [ package_name '.' ] procedure_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04861" -->
+
+
 **execute_function_statement::=**
 
 ![](media/ExternalProcedure/image055.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04862" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="1044" image_path_raw="media/ExternalProcedure/image055.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC[UTE] variable ':='
+    [ user_name '.' ] [ package_name '.' ] function_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04862" -->
+
+
 **parameter_notation::=**
 
 ![](media/ExternalProcedure/image057.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04863" source_md="Manuals/Altibase_trunk/eng/External Procedures Manual.md" line_no="1048" image_path_raw="media/ExternalProcedure/image057.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression [ { ',' expression } ]
+    | parameter_name '=>' expression [ { ',' parameter_name '=>' expression } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04863" -->
+
 
 #### Description
 
@@ -60056,13 +63272,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/create_procedure.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05636" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="635" image_path_raw="media/StoredProcedure/create_procedure.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ IF NOT EXISTS ] [ user_name '.' ] procedure_name
+    [ '(' parameter_declaration [ { ',' parameter_declaration } ] ')' ]
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement [ { statement } ]
+        [ EXCEPTION exception_handler [ { exception_handler } ] ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05636" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05637" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="639" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05637" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05638" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="643" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05638" -->
+
 
 
 
@@ -60541,6 +63790,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05639" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1120" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05639" -->
+
+
 #### Purpose
 
 A stored procedure can access various database objects, such as tables, views, and sequences, and can also call other stored procedures and stored functions. After a procedure is created, if any of these objects are altered or changed, the stored procedure can enter what is known as an invalid state.
@@ -60604,6 +63861,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05640" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1183" image_path_raw="media/StoredProcedure/drop_procedure.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure ::=
+    DROP PROCEDURE [ IF EXISTS ] [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05640" -->
+
+
 #### Purpose
 
 This statement removes a stored procedure from the database.
@@ -60632,13 +63897,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05641" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1211" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05641" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05642" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1215" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05642" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05643" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1219" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-05643" -->
+
 
 #### Purpose
 
@@ -60717,15 +64010,50 @@ create_function::=
 
 ![](media/StoredProcedure/create_function.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05644" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1296" image_path_raw="media/StoredProcedure/create_function.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ IF NOT EXISTS ] [ user_name '.' ] function_name
+    [ '(' parameter_declaration [ { ',' parameter_declaration } ] ')' ]
+    RETURN data_type
+    [ DETERMINISTIC ]
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement [ { statement } ]
+        [ EXCEPTION exception_handler [ { exception_handler } ] ]
+    END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05644" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05645" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1300" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05645" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05646" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1306" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05646" -->
+
 
 
 
@@ -61072,6 +64400,14 @@ For functions used in constraints or function-based indexes, it is impossible to
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05647" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1651" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05647" -->
+
+
 #### Purpose
 
 As with a stored procedure, a stored function can enter what is known as an invalid state when one or more of the database objects that it references are changed after the function is created.
@@ -61093,6 +64429,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### Syntax
 
 ![drop_function_statement](media/StoredProcedure/drop_function.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05648" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1673" image_path_raw="media/StoredProcedure/drop_function.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function ::=
+    DROP FUNCTION [ IF EXISTS ] [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05648" -->
+
 
 #### Purpose
 
@@ -61132,9 +64476,58 @@ A stored procedure or function consists of one or more blocks. This chapter desc
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05649" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1711" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05649" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05650" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1713" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05650" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05651" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1715" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05651" -->
+
 
 A block can be broadly divided into a declaration section, a block body and an exception handler section.
 
@@ -61216,7 +64609,39 @@ The exception handler section is delimited by the EXCEPTION and END keywords. It
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05652" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1795" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05652" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05653" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="1797" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-05653" -->
+
 
 #### Purpose
 
@@ -61542,6 +64967,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05655" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="2121" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05655" -->
+
+
 Because the syntax of select_list and rest_of_select_statement is the same as for a SELECT statement, please refer to the SQL Reference for more information on those elements.
 
 #### Purpose
@@ -61836,6 +65277,22 @@ Execute success.
 #### Syntax
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05656" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="2416" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05656" -->
+
 
 #### Function
 
@@ -62169,6 +65626,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05657" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="2748" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05657" -->
+
+
 #### Purpose
 
 These statements are used to assign a value to a local variable or to an OUT or IN/OUT parameter.
@@ -62377,6 +65847,14 @@ END;
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05658" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="2956" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05658" -->
+
+
 #### Purpose
 
 The PRINT statement is used to output desired text to the calling client or routine. PRINT is a system procedure that is provided within Altibase, and is typically used for debugging and testing. PRINTLN differs from PRINT only in that it outputs the appropriate newline sequence ( "\n" in Unix) after the string. The owner of PRINT and PRINTLN is the SYSTEM_user.
@@ -62495,6 +65973,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05659" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3074" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05659" -->
+
+
 #### Purpose
 
 This statement is used to interrupt the execution of a stored procedure. When used with a stored function, it is additionally used to specify the return value.
@@ -62596,6 +66082,17 @@ FUNC_PLUS_10(I1)
 #### Syntax
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05660" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3176" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05660" -->
+
 
 #### Purpose
 
@@ -62704,6 +66201,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05661" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3283" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05661" -->
+
+
 #### Purpose
 
 This is a stored procedure extension of the UPDATE statement.
@@ -62781,6 +66286,21 @@ This chapter describes how to use control flow statements in a stored procedure 
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05662" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3360" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05662" -->
+
+
 Altibase supports the use of the following control flow statements in stored procedures:
 
 -   The IF and CASE conditional statements
@@ -62802,6 +66322,17 @@ Any expressions containing subqueries cannot be used for condition of IF stateme
 #### Syntax
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05663" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3382" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05663" -->
+
 
 #### Purpose
 
@@ -63018,6 +66549,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05664" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3597" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05664" -->
+
+
 #### Purpose
 
 CASE is a conditional construct that determines the flow of execution on the basis of the value of some variable. Its functionality is similar to that of the IF statement, however, it is more easily legible.
@@ -63162,6 +66708,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05665" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3741" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05665" -->
+
+
 #### Purpose
 
 The LOOP construct is used to repeatedly execute a desired statement or series of statements without using a particular condition to control execution.
@@ -63211,6 +66766,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05666" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3790" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05666" -->
+
+
 #### Purpose
 
 The WHILE LOOP construct iterates the statements in the loop body as long as the condition remains true. If this condition is not true the first time it is executed, the statements in the loop will not be executed even once, and control will pass to the statement following the loop.
@@ -63259,6 +66824,19 @@ T1.I1       T1.I2       T1.I3
 #### Syntax
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05667" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="3839" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05667" -->
+
 
 #### Purpose
 
@@ -63476,6 +67054,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05668" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4055" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05668" -->
+
+
 #### Purpose
 
 The EXIT statement is used to terminate the iteration of a loop. If label_name is specified, iteration of the loop specified using label_name is terminated. If label_name is not specified, iteration of the innermost loop is terminated.
@@ -63616,6 +67202,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05669" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4195" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05669" -->
+
+
 #### Purpose
 
 The CONTINUE statement causes subsequent statements in the loop in which it is found to be ignored, and passes control to the beginning of the loop. That is, it terminates the current iteration of the loop. The CONTINUE statement can be used inside any of the following loop statements:
@@ -63687,6 +67281,14 @@ T8.I1       T8.MATHPOWER
 #### Syntax
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05670" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4267" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05670" -->
+
 
 #### Purpose
 
@@ -63835,6 +67437,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05671" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4414" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05671" -->
+
+
 #### Purpose
 
 The NULL statement does nothing. It is used to expressly pass control to the next statement. This is used to improve program readability.
@@ -63932,6 +67542,22 @@ This is the type of loop that executes all of the OPEN, FETCH, and CLOSE stateme
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05672" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4511" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05672" -->
+
+
 #### Purpose
 
 The CURSOR statement is used to declare a cursor. It must specify the name of the cursor and the SELECT statement that the cursor uses to retrieve records.
@@ -64021,6 +67647,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### Syntax
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05673" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4601" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05673" -->
+
 
 #### Purpose
 
@@ -64148,7 +67783,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05674" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4727" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05674" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05675" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4729" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05675" -->
+
 
 #### Purpose
 
@@ -64276,6 +67931,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05676" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4855" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05676" -->
+
+
 #### Purpose
 
 This statement is used to close an open cursor and free all associated resources.
@@ -64301,6 +67964,18 @@ CLOSE c1;
 #### Syntax
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05677" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="4881" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05677" -->
+
 
 #### Purpose
 
@@ -64641,6 +68316,26 @@ The difference between a cursor variable and a regular cursor is that a cursor v
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05679" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="5220" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+        { associative_array_type_spec
+        | record_type_spec
+        | ref_cursor_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type { ',' column_name data_type } ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+```
+<!-- IMG_RECOVERY_END ref_id="img-05679" -->
+
+
 ##### type_name
 
 The name of the user-defined type is specified here.
@@ -64713,6 +68408,21 @@ BEGIN
 #### Syntax
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05680" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="5293" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05680" -->
+
 
 #### Purpose
 
@@ -65488,6 +69198,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05682" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6067" image_path_raw="media/StoredProcedure/create_typeset.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ IF NOT EXISTS ] [ user_name '.' ]
+    typeset_name { AS | IS }
+    type_declaration [ { type_declaration } ]
+    END ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05682" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users having the CREATE PROCEDURE or CREATE ANY PROCEDURE system privilege can execute the CREATE TYPESET statement.
@@ -65581,6 +69302,14 @@ Execute success.
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05683" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6160" image_path_raw="media/StoredProcedure/drop_typeset.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ IF EXISTS ] [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05683" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the typeset to be dropped, and users having the DROP ANY PROCEDURE system privilege can execute the DROP TYPESET statement.
@@ -65652,9 +69381,39 @@ This statement is used to dynamically execute a DDL, DCL or DML statement, inclu
 
 ![](media/StoredProcedure/execute_imme_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05685" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6231" image_path_raw="media/StoredProcedure/execute_imme_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_imme_statement ::=
+    EXECUTE IMMEDIATE dynamic_string
+    [ INTO { record_name | variable_name { ',' variable_name } }
+    | bulk_collect_clause ]
+    [ USING [ { IN | OUT | IN OUT } ] variable_name
+             { ',' [ { IN | OUT | IN OUT } ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05685" -->
+
+
 ![](media/StoredProcedure/bulk_collect_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05686" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6233" image_path_raw="media/StoredProcedure/bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+                      { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05686" -->
+
+
 ![](media/StoredProcedure/dynamic_string.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05687" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6235" image_path_raw="media/StoredProcedure/dynamic_string.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dynamic_string ::=
+    variable_name
+  | expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-05687" -->
+
 
 #### Description
 
@@ -65743,6 +69502,15 @@ This statement is used to initialize a cursor variable (REF CURSOR), execute the
 #### Syntax
 
 ![](media/StoredProcedure/open_for_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05688" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6323" image_path_raw="media/StoredProcedure/open_for_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_for_statement ::=
+    OPEN cursor_variable_name FOR { select_statement | dynamic_string }
+    [ USING [ IN ] variable_name { ',' [ IN ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05688" -->
+
 
 #### Description
 
@@ -65865,6 +69633,14 @@ The tasks to perform in the event of a system-defined or user-defined exception 
 
 ![exception_declaration](media/StoredProcedure/exception_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05689" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6444" image_path_raw="media/StoredProcedure/exception_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_declaration ::=
+    exception_name EXCEPTION ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05689" -->
+
+
 #### Description
 
 To define the user-defined exception.
@@ -65889,6 +69665,14 @@ DECLARE
 #### Syntax
 
 ![raise_statement](media/StoredProcedure/raise_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05690" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6469" image_path_raw="media/StoredProcedure/raise_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+raise_statement ::=
+    RAISE [ exception_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05690" -->
+
 
 #### Description
 
@@ -66182,6 +69966,15 @@ The scope of SQLCODE and SQLERRM in the above example is illustrated in the foll
 
 ![exception_handler](media/StoredProcedure/exception_handler.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05692" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6761" image_path_raw="media/StoredProcedure/exception_handler.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_handler ::=
+    WHEN { exception_name { OR exception_name } | OTHERS }
+    THEN statement { statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05692" -->
+
+
 #### Purpose
 
 Exception handlers are used to specify the actions to take in response to exceptions.
@@ -66352,6 +70145,14 @@ The following pragmas can be used in Altibase. Thorough information on each prag
 
 ![](media/StoredProcedure/pragma.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05693" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6931" image_path_raw="media/StoredProcedure/pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pragma_declaration ::=
+    PRAGMA { autonomous_transaction_statement | exception_init_statement } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05693" -->
+
+
 
 
 ### Autonomous Transaction Pragma
@@ -66359,6 +70160,14 @@ The following pragmas can be used in Altibase. Thorough information on each prag
 #### Syntax
 
 ![autonomous_pragma](media/StoredProcedure/autonomous_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05694" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="6939" image_path_raw="media/StoredProcedure/autonomous_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autonomous_transaction_statement ::=
+    AUTONOMOUS_TRANSACTION
+```
+<!-- IMG_RECOVERY_END ref_id="img-05694" -->
+
 
 #### Function
 
@@ -66504,6 +70313,14 @@ C1
 #### Syntax
 
 ![](media/StoredProcedure/exception_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05696" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7084" image_path_raw="media/StoredProcedure/exception_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_init_statement ::=
+    EXCEPTION_INIT '(' exception_name ',' error_code ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05696" -->
+
 
 #### Function
 
@@ -66676,21 +70493,69 @@ The figure below is a diagram of the structure of the package specification and 
 
 ![create_package](media/StoredProcedure/create_package.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05698" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7255" image_path_raw="media/StoredProcedure/create_package.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package ::=
+    CREATE [ OR REPLACE ] PACKAGE [ IF NOT EXISTS ] [ user_name '.' ]
+    package_name invoker_rights_clause { AS | IS }
+    declare_section END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05698" -->
+
+
 ##### invoker_rights_clause::=
 
 ![](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05699" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7259" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05699" -->
+
 
 ##### declare_section ::=
 
 ![](media/StoredProcedure/package_declare_section.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05700" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7263" image_path_raw="media/StoredProcedure/package_declare_section.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | procedure_declaration
+    | funtion_declaration
+    | cursor_declaration
+    | exception_declaration } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-05700" -->
+
+
 ##### procedure_declaration ::=
 
 ![](media/StoredProcedure/package_proc_declare.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05701" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7267" image_path_raw="media/StoredProcedure/package_proc_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+procedure_declaration ::=
+    PROCEDURE procedure_name [ '(' expression ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05701" -->
+
+
 ##### function_declaration ::=
 
 ![](media/StoredProcedure/package_func_declare.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05702" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7271" image_path_raw="media/StoredProcedure/package_func_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+function_declaration ::=
+    FUNCTION function_name [ '(' { expression } ')' ] RETURN data_type [ DETERMINISTIC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05702" -->
+
 
 #### Purpose
 
@@ -66908,13 +70773,48 @@ Execute success.
 
 ![](media/StoredProcedure/create_package_body.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05703" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7487" image_path_raw="media/StoredProcedure/create_package_body.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package_body ::=
+    CREATE [ OR REPLACE ] PACKAGE BODY [ IF NOT EXISTS ] [ user_name '.' ]
+    package_name { AS | IS }
+    declare_section [ initialize_section ]
+    END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05703" -->
+
+
 ##### initialize_section::=
 
 ![](media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05704" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7491" image_path_raw="media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+initialize_section ::=
+    BEGIN statement { statement } [ EXCEPTION exception_handler { exception_handler } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05704" -->
+
+
 ##### declare_section ::=
 
 ![](media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05705" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7495" image_path_raw="media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | exception_declaration
+    | cursor_declaration
+    | procedure_declaration
+    | procedure_definition
+    | funtion_declaration
+    | funtion_definition } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-05705" -->
+
 
 #### Purpose
 
@@ -67072,6 +70972,15 @@ Create success.
 
 ![alter_package](media/StoredProcedure/alter_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05706" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7651" image_path_raw="media/StoredProcedure/alter_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_package ::=
+    ALTER PACKAGE [ user_name '.' ] package_name COMPILE
+    [ PACKAGE | SPECIFICATION | BODY ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05706" -->
+
+
 #### Purpose
 
 This statement explicitly recompiles the package specification, the package body or the package. When the package is recompiled, variables, cursors, user-defined types and subprograms that compose the package are also recompiled.
@@ -67102,6 +71011,14 @@ Alter success.
 
 ![drop_package](media/StoredProcedure/drop_package.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05707" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7681" image_path_raw="media/StoredProcedure/drop_package.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_package ::=
+    DROP PACKAGE [ BODY ] [ IF EXISTS ] [ user_name '.' ] package_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05707" -->
+
+
 #### Purpose
 
 This statement drops the package. This statement can selectively drop only the package body or the whole package.
@@ -67130,9 +71047,27 @@ Drop success.
 
 ![execute_procedure](media/StoredProcedure/execute_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05708" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7709" image_path_raw="media/StoredProcedure/execute_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC [ UTE ] [ user_name '.' ] package_name '.' procedure_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05708" -->
+
+
 ##### execute_function_statement ::=
 
 ![execute_function](media/StoredProcedure/execute_function.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05709" source_md="Manuals/Altibase_trunk/eng/Stored Procedures Manual.md" line_no="7713" image_path_raw="media/StoredProcedure/execute_function.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC [ UTE ] variable ':=' [ user_name '.' ] package_name '.' function_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05709" -->
+
 
 #### Purpose
 
@@ -75923,13 +79858,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05784" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="504" image_path_raw="media/StoredProcedure/f92b873dfdce56f3ffd9259601f837c3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    '(' parameter_declaration { ',' parameter_declaration } ')'
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement
+    [ EXCEPTION exception_handler ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05784" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05785" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="508" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05785" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05786" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="512" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05786" -->
+
 
 
 
@@ -76404,6 +80372,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05787" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="985" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05787" -->
+
+
 #### Purpose
 
 A stored procedure can access various database objects, such as tables, views, and sequences, and can also call other stored procedures and stored functions. After a procedure is created, if any of these objects are altered or changed, the stored procedure can enter what is known as an invalid state. 
@@ -76467,6 +80443,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05788" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1048" image_path_raw="media/StoredProcedure/drop_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05788" -->
+
+
 #### Purpose
 
 This statement removes a stored procedure from the database. 
@@ -76491,13 +80475,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05789" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1072" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05789" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05790" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1076" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05790" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05791" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1080" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-05791" -->
+
 
 #### Purpose
 
@@ -76576,15 +80588,48 @@ create_function::=
 
 ![](media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05792" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1157" image_path_raw="media/StoredProcedure/2af0f571d5d6a63272084d059964fca0.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+        [ '(' parameter_declaration { ',' parameter_declaration } ')' ]
+        RETURN data_type
+        [ DETERMINISTIC ] [ invoker_rights_clause ]
+        { AS | IS }
+        [ declaration_section ]
+        BEGIN statement { statement }
+        [ EXCEPTION exception_handler { exception_handler } ]
+        END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05792" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05793" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1161" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05793" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05794" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1167" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05794" -->
+
 
 
 
@@ -76927,6 +80972,14 @@ For functions used in constraints or function-based indexes, it is impossible to
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05795" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1508" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05795" -->
+
+
 #### Purpose
 
 As with a stored procedure, a stored function can enter what is known as an invalid state when one or more of the database objects that it references are changed after the function is created. 
@@ -76948,6 +81001,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### Syntax
 
 ![drop_function_statement](media/StoredProcedure/drop_function_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05796" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1530" image_path_raw="media/StoredProcedure/drop_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05796" -->
+
 
 #### Purpose
 
@@ -76983,9 +81044,58 @@ A stored procedure or function consists of one or more blocks. This chapter desc
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05797" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1564" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05797" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05798" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1566" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05798" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05799" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1568" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05799" -->
+
 
 A block can be broadly divided into a declaration section, a block body and an exception handler section.
 
@@ -77037,7 +81147,39 @@ The exception handler section is delimited by the EXCEPTION and END keywords. It
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05800" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1618" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05800" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05801" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1620" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-05801" -->
+
 
 #### Purpose
 
@@ -77363,6 +81505,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05803" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="1944" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05803" -->
+
+
 Because the syntax of select_list and rest_of_select_statement is the same as for a SELECT statement, please refer to the SQL Reference for more information on those elements.
 
 #### Purpose
@@ -77657,6 +81815,22 @@ Execute success.
 #### Syntax
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05804" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2239" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05804" -->
+
 
 #### Function
 
@@ -77990,6 +82164,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05805" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2571" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05805" -->
+
+
 #### Purpose
 
 These statements are used to assign a value to a local variable or to an OUT or IN/OUT parameter. 
@@ -78199,6 +82386,14 @@ User-defined labels are used in the following three situations:
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05806" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2780" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05806" -->
+
+
 #### Purpose
 
 The PRINT statement is used to output desired text to the calling client or routine. PRINT is a system procedure that is provided within Altibase, and is typically used for debugging and testing. PRINTLN differs from PRINT only in that it outputs the appropriate newline sequence ( "\n" in Unix) after the string. The owner of PRINT and PRINTLN is the SYSTEM_user. 
@@ -78317,6 +82512,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05807" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="2898" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05807" -->
+
+
 #### Purpose
 
 This statement is used to interrupt the execution of a stored procedure. When used with a stored function, it is additionally used to specify the return value. 
@@ -78418,6 +82621,17 @@ FUNC_PLUS_10(I1)
 #### Syntax
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05808" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3000" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05808" -->
+
 
 #### Purpose
 
@@ -78526,6 +82740,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05809" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3107" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05809" -->
+
+
 #### Purpose
 
 This is a stored procedure extension of the UPDATE statement.
@@ -78603,6 +82825,21 @@ This chapter describes how to use control flow statements in a stored procedure 
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05810" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3184" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05810" -->
+
+
 Altibase supports the use of the following control flow statements in stored procedures:
 
 -   The IF and CASE conditional statements 
@@ -78624,6 +82861,17 @@ Any expressions containing subqueries cannot be used for condition of IF stateme
 #### Syntax
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05811" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3206" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05811" -->
+
 
 #### Purpose
 
@@ -78840,6 +83088,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05812" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3421" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05812" -->
+
+
 #### Purpose
 
 CASE is a conditional construct that determines the flow of execution on the basis of the value of some variable. Its functionality is similar to that of the IF statement, however, it is more easily legible. 
@@ -78984,6 +83247,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05813" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3565" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05813" -->
+
+
 #### Purpose
 
 The LOOP construct is used to repeatedly execute a desired statement or series of statements without using a particular condition to control execution. 
@@ -79033,6 +83305,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05814" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3614" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05814" -->
+
+
 #### Purpose
 
 The WHILE LOOP construct iterates the statements in the loop body as long as the condition remains true. If this condition is not true the first time it is executed, the statements in the loop will not be executed even once, and control will pass to the statement following the loop.
@@ -79081,6 +83363,19 @@ T1.I1       T1.I2       T1.I3
 #### Syntax
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05815" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3663" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05815" -->
+
 
 #### Purpose
 
@@ -79298,6 +83593,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05816" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="3879" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05816" -->
+
+
 #### Purpose
 
 The EXIT statement is used to terminate the iteration of a loop. If label_name is specified, iteration of the loop specified using label_name is terminated. If label_name is not specified, iteration of the innermost loop is terminated. 
@@ -79438,6 +83741,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05817" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4019" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05817" -->
+
+
 #### Purpose
 
 The CONTINUE statement causes subsequent statements in the loop in which it is found to be ignored, and passes control to the beginning of the loop. That is, it terminates the current iteration of the loop. The CONTINUE statement can be used inside any of the following loop statements:
@@ -79509,6 +83820,14 @@ T8.I1       T8.MATHPOWER
 #### Syntax
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05818" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4091" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05818" -->
+
 
 #### Purpose
 
@@ -79657,6 +83976,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05819" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4238" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05819" -->
+
+
 #### Purpose
 
 The NULL statement does nothing. It is used to expressly pass control to the next statement. This is used to improve program readability.
@@ -79754,6 +84081,22 @@ This is the type of loop that executes all of the OPEN, FETCH, and CLOSE stateme
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05820" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4335" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05820" -->
+
+
 #### Purpose
 
 The CURSOR statement is used to declare a cursor. It must specify the name of the cursor and the SELECT statement that the cursor uses to retrieve records.
@@ -79843,6 +84186,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### Syntax
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05821" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4425" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05821" -->
+
 
 #### Purpose
 
@@ -79970,7 +84322,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05822" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4551" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05822" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05823" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4553" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05823" -->
+
 
 #### Purpose
 
@@ -80098,6 +84470,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05824" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4679" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05824" -->
+
+
 #### Purpose
 
 This statement is used to close an open cursor and free all associated resources.
@@ -80123,6 +84503,18 @@ CLOSE c1;
 #### Syntax
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05825" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="4705" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05825" -->
+
 
 #### Purpose
 
@@ -80463,6 +84855,26 @@ The difference between a cursor variable and a regular cursor is that a cursor v
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05827" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5044" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+        { associative_array_type_spec
+        | record_type_spec
+        | ref_cursor_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type { ',' column_name data_type } ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+```
+<!-- IMG_RECOVERY_END ref_id="img-05827" -->
+
+
 ##### type_name
 
 The name of the user-defined type is specified here.
@@ -80535,6 +84947,21 @@ BEGIN
 #### Syntax
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05828" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5117" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05828" -->
+
 
 #### Purpose
 
@@ -81311,6 +85738,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05830" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5892" image_path_raw="media/StoredProcedure/create_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ user_name '.' ] typeset_name
+        { AS | IS }
+        type_declaration { type_declaration }
+        END
+```
+<!-- IMG_RECOVERY_END ref_id="img-05830" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users having the CREATE PROCEDURE or CREATE ANY PROCEDURE system privilege can execute the CREATE TYPESET statement.
@@ -81399,6 +85837,14 @@ Execute success.
 #### Syntax
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05831" source_md="Manuals/Altibase_trunk/eng/media/StoredProcedure/StoredProcedure1_Eng.md" line_no="5981" image_path_raw="media/StoredProcedure/drop_typeset.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05831" -->
+
 
 #### Prerequisites
 
@@ -82320,6 +86766,15 @@ char* str_uppercase_return(char *str1, long long str1_len, char * str2)
 
 ![](media/ExternalProcedure/create_library.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06029" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="877" image_path_raw="media/ExternalProcedure/create_library.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_library_statement ::=
+    CREATE [ OR REPLACE ] LIBRARY [ IF NOT EXISTS ] [ user_name '.' ]
+    library_name { AS | IS } '''' file_name '''' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06029" -->
+
+
 #### 설명
 
 외부 라이브러리 객체를 새로 생성하거나 이미 생성되어 있는 외부 라이브러리를
@@ -82353,6 +86808,14 @@ CREATE OR REPLACE LIBRARY lib1 AS 'shlib.so';
 
 ![](media/ExternalProcedure/image026.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06030" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="910" image_path_raw="media/ExternalProcedure/image026.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_library_statement ::=
+    ALTER LIBRARY [ user_name '.' ] library_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06030" -->
+
+
 #### 설명
 
 라이브러리 객체를 컴파일한다.
@@ -82374,6 +86837,14 @@ ALTER LIBRARY lib1 COMPILE;
 **drop_library_statement ::=**
 
 ![](media/ExternalProcedure/drop_library.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06031" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="932" image_path_raw="media/ExternalProcedure/drop_library.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_library_statement ::=
+    DROP LIBRARY [ IF EXISTS ] [ user_name '.' ] library_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06031" -->
+
 
 #### 설명
 
@@ -82401,25 +86872,78 @@ DROP LIBRARY lib1;
 
 ![](media/ExternalProcedure/image030.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06032" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="958" image_path_raw="media/ExternalProcedure/image030.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ user_name '.' ] procedure_name
+    [ argument_list ]
+    AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06032" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image032.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06033" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="962" image_path_raw="media/ExternalProcedure/image032.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06033" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image034.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06034" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="966" image_path_raw="media/ExternalProcedure/image034.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-06034" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06035" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="970" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06035" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image038.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06036" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="974" image_path_raw="media/ExternalProcedure/image038.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06036" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image040.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06037" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="978" image_path_raw="media/ExternalProcedure/image040.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06037" -->
+
 
 #### 설명
 
@@ -82531,6 +87055,14 @@ parameters( a1, a1 LENGTH, a2 )
 
 ![](media/ExternalProcedure/image042.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06038" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1088" image_path_raw="media/ExternalProcedure/image042.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure_statement ::=
+    DROP PROCEDURE [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06038" -->
+
+
 #### 설명
 
 데이터베이스에서 외부 프로시저 객체를 삭제한다.
@@ -82552,25 +87084,78 @@ DROP PROCEDURE proc1;
 
 ![](media/ExternalProcedure/image043.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06039" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1109" image_path_raw="media/ExternalProcedure/image043.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ user_name '.' ] function_name
+    [ argument_list ]
+    RETURN return_type AS call_spec ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06039" -->
+
+
 **argument_list ::=**
 
 ![](media/ExternalProcedure/image045.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06040" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1113" image_path_raw="media/ExternalProcedure/image045.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_list ::=
+    '(' argument_declaration [ { ',' argument_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06040" -->
+
 
 **argument_declaration ::=**
 
 ![](media/ExternalProcedure/image046.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06041" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1117" image_path_raw="media/ExternalProcedure/image046.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+argument_declaration ::=
+    argument_name [ IN | OUT | IN OUT ] data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-06041" -->
+
+
 **call_spec ::=**
 
 ![](media/ExternalProcedure/callSpec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06042" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1121" image_path_raw="media/ExternalProcedure/callSpec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+call_spec ::=
+    LANGUAGE { C | EXTERNAL | INTERNAL }
+    NAME func_name
+    LIBRARY lib_name
+    [ PARAMETERS parameter_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06042" -->
+
 
 **parameter_list ::=**
 
 ![](media/ExternalProcedure/image048.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06043" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1125" image_path_raw="media/ExternalProcedure/image048.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_list ::=
+    '(' parameter_declaration [ { ',' parameter_declaration } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06043" -->
+
+
 **parameter_declaration::=**
 
 ![](media/ExternalProcedure/image049.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06044" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1129" image_path_raw="media/ExternalProcedure/image049.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    { parameter_name | RETURN } [ INDICATOR | LENGTH | MAXLEN ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06044" -->
+
 
 #### 설명
 
@@ -82626,6 +87211,14 @@ CREATE PROCEDURE statement 절을 참고하라.
 
 ![](media/ExternalProcedure/image051.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06045" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1183" image_path_raw="media/ExternalProcedure/image051.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function_statement ::=
+    DROP FUNCTION [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06045" -->
+
+
 #### 설명
 
 데이터베이스에서 외부 함수 객체를 삭제한다.
@@ -82647,13 +87240,41 @@ DROP FUNCTION func1;
 
 ![](media/ExternalProcedure/image053.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06046" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1204" image_path_raw="media/ExternalProcedure/image053.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] [ package_name '.' ] procedure_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06046" -->
+
+
 **execute_function_statement::=**
 
 ![](media/ExternalProcedure/image055.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06047" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1208" image_path_raw="media/ExternalProcedure/image055.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC[UTE] variable ':='
+    [ user_name '.' ] [ package_name '.' ] function_name
+    [ '(' [ parameter_notation ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06047" -->
+
+
 **parameter_notation::=**
 
 ![](media/ExternalProcedure/image057.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06048" source_md="Manuals/Altibase_trunk/kor/External Procedures Manual.md" line_no="1212" image_path_raw="media/ExternalProcedure/image057.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression [ { ',' expression } ]
+    | parameter_name '=>' expression [ { ',' parameter_name '=>' expression } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06048" -->
+
 
 #### 설명
 
@@ -83433,13 +88054,46 @@ create_procedure::=
 
 ![](media/StoredProcedure/create_procedure.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06865" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="729" image_path_raw="media/StoredProcedure/create_procedure.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_procedure ::=
+    CREATE [ OR REPLACE ] PROCEDURE [ IF NOT EXISTS ] [ user_name '.' ] procedure_name
+    [ '(' parameter_declaration [ { ',' parameter_declaration } ] ')' ]
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement [ { statement } ]
+        [ EXCEPTION exception_handler [ { exception_handler } ] ]
+    END [ procedure_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06865" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06866" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="733" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06866" -->
+
+
 invoker_rights_clause::=
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06867" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="737" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06867" -->
+
 
 
 
@@ -83937,6 +88591,14 @@ Execute success.
 
 ![](media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06868" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1233" image_path_raw="media/StoredProcedure/4e6dd6f8fe554397f441db293b7435d1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_procedure_statement ::=
+    ALTER PROCEDURE [ user_name '.' ] procedure_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06868" -->
+
+
 #### 기능
 
 사용자가 명시적으로 저장 프로시저를 컴파일 할 때 사용된다.
@@ -84023,6 +88685,14 @@ T1.I1       T1.I2       T1.I3
 
 ![drop_procedure](media/StoredProcedure/drop_procedure.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06869" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1319" image_path_raw="media/StoredProcedure/drop_procedure.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_procedure ::=
+    DROP PROCEDURE [ IF EXISTS ] [ user_name '.' ] procedure_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06869" -->
+
+
 #### 기능
 
 데이터베이스에서 저장 프로시저를 삭제하는 구문이다.
@@ -84052,13 +88722,41 @@ DROP PROCEDURE proc1;
 
 ![execute_procedure_statement](media/StoredProcedure/execute_procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06870" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1348" image_path_raw="media/StoredProcedure/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC(UTE) [ user_name '.' [ package_name '.' ] ] procedure_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06870" -->
+
+
 ##### execute_function_statement::=
 
 ![execute_function_statement](media/StoredProcedure/execute_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06871" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1352" image_path_raw="media/StoredProcedure/execute_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC(UTE) variable ':='
+        [ user_name '.' ] [ package_name '.' ] function_name
+        [ '(' [ parameter_notation { ',' parameter_notation } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06871" -->
+
+
 ##### parameter_notation::=
 
 ![parameter_notation](media/StoredProcedure/parameter_notation.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06872" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1356" image_path_raw="media/StoredProcedure/parameter_notation.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_notation ::=
+    expression
+    | parameter_name '=>' expression
+```
+<!-- IMG_RECOVERY_END ref_id="img-06872" -->
+
 
 #### 기능
 
@@ -84140,15 +88838,50 @@ create_function::=
 
 ![](media/StoredProcedure/create_function.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06873" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1436" image_path_raw="media/StoredProcedure/create_function.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_function ::=
+    CREATE [ OR REPLACE ] FUNCTION [ IF NOT EXISTS ] [ user_name '.' ] function_name
+    [ '(' parameter_declaration [ { ',' parameter_declaration } ] ')' ]
+    RETURN data_type
+    [ DETERMINISTIC ]
+    [ invoker_rights_clause ]
+    { AS | IS }
+    [ declaration_section ]
+    BEGIN
+        statement [ { statement } ]
+        [ EXCEPTION exception_handler [ { exception_handler } ] ]
+    END [ function_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06873" -->
+
+
 parameter_declaration::=
 
 ![](media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06874" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1440" image_path_raw="media/StoredProcedure/d85ad17b58c166b5f770ab081aaa7aeb.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+parameter_declaration ::=
+    parameter_name [ { IN | OUT | IN OUT } ] [ NOCOPY ] data_type
+    [ { DEFAULT | ':=' } expression ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06874" -->
+
 
 invoker_rights_clause::=
 
 
 
 ![invoker_rights_clause](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06875" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1446" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06875" -->
+
 
 
 
@@ -84505,6 +89238,14 @@ USER1.FUNC1
 
 ![alter_function_statement](media/StoredProcedure/alter_function_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06876" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1801" image_path_raw="media/StoredProcedure/alter_function_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_function_statement ::=
+    ALTER FUNCTION [ user_name '.' ] function_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06876" -->
+
+
 #### 기능
 
 저장 프로시저와 마찬가지로, 저장 함수 생성 후에 함수 내에서 참조하는 데이터베이스 객체의 정의가 변경되어 현재 이 저장 함수의 실행 계획으로는 더 이상 실행할 수 없는 경우에 이 저장 함수는 무효한 상태라고 한다.
@@ -84526,6 +89267,14 @@ ALTER FUNCTION get_dept_name COMPILE;
 #### 구문
 
 ![drop_function_statement](media/StoredProcedure/drop_function.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06877" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1823" image_path_raw="media/StoredProcedure/drop_function.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_function ::=
+    DROP FUNCTION [ IF EXISTS ] [ user_name '.' ] function_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06877" -->
+
 
 #### 기능
 
@@ -84571,9 +89320,58 @@ DROP FUNCTION get_dept_name;
 
  ![procedure_block](media/StoredProcedure/procedure_block.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06878" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1867" image_path_raw="media/StoredProcedure/procedure_block.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+block ::=
+    [ '<<' label_name '>>' ] [ DECLARE declaration_section ]
+    BEGIN statement { statement }
+    [ EXCEPTION exception_handler { exception_handler } ]
+    END [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06878" -->
+
+
  ![procedure_statement](media/StoredProcedure/procedure_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06879" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1869" image_path_raw="media/StoredProcedure/procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+statement ::=
+    [ '<<' label_name '>>' ]
+    { print_statement
+    | sql_statement
+    | control_flow_statement
+    | open_cursor_statement
+    | open_for_statement
+    | fetch_statement
+    | close_cursor_statement
+    | assignment_statement
+    | raise_statement
+    | return_statement
+    | block }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06879" -->
+
+
  ![procedure_sql_statement](media/StoredProcedure/procedure_sql_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06880" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1871" image_path_raw="media/StoredProcedure/procedure_sql_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sql_statement ::=
+    { select_into_statement
+    | insert_statement
+    | delete_statement
+    | update_statement
+    | move_statement
+    | merge_statement
+    | commit_statement
+    | rollback_statement
+    | savepoint_statement
+    | execute_imme_statement
+    | enqueue_statement
+    | dequeue_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06880" -->
+
 
 블록은 크게 선언부(Declare Section), 블록 바디(Block Body), 예외 처리부(Exception Handler Section)의 세 부분으로 나뉘어진다.
 
@@ -84664,7 +89462,39 @@ EXCEPTION과 END 사이의 부분으로 저장 프로시저 또는 함수 실행
 
 ![](media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06881" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1960" image_path_raw="media/StoredProcedure/3bec06b409eac2dcc96bc7d24345872d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declaration_section ::=
+    { variable_declaration
+    | constant_declaration
+    | cursor_declaration
+    | pragma_declaration
+    | exception_declaration }
+
+variable_declaration ::=
+    variable_name [ NOCOPY ] data_type [ { DEFAULT | ':=' } expression ]
+
+constant_declaration ::=
+    constant_name CONSTANT [ NOCOPY ] data_type { DEFAULT | ':=' } expression
+
+data_type ::=
+    { sql_data_type | type_attribute | rowtype_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06881" -->
+
+
 ![](media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06882" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="1962" image_path_raw="media/StoredProcedure/6b62a71187972d90ff2acf44dcf02898.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_attribute ::=
+    { table_name [ '.' column_name ] | variable_name } '%' TYPE
+
+rowtype_attribute ::=
+    { cursor_name | table_name } '%' ROWTYPE
+```
+<!-- IMG_RECOVERY_END ref_id="img-06882" -->
+
 
 #### 기능
 
@@ -85012,6 +89842,22 @@ Execute success.
 
 ![](media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06884" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="2308" image_path_raw="media/StoredProcedure/9d7ee16e07192bc007f324a466ab8e70.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_into_statement ::=
+    SELECT [ hints ] [ { ALL | DISTINCT } ] [ TOP '(' expr ')' ]
+        select_list
+        INTO { { record_name | variable_name } { ',' { record_name | variable_name } }
+             | bulk_collect_clause }
+        FROM rest_of_select_statement ';'
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06884" -->
+
+
 *select_list*와 *rest_of_select_statement*는 SELECT 구문의 문법과 동일하므로 *SQL Reference*을 참고한다.
 
 #### 기능
@@ -85318,6 +90164,22 @@ Execute success.
 #### 구문
 
 ![returning_clause](media/StoredProcedure/returning_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06885" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="2615" image_path_raw="media/StoredProcedure/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr { ',' expr }
+        { into_clause | bulk_collect_clause }
+
+into_clause ::=
+    INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06885" -->
+
 
 #### 기능
 
@@ -85661,6 +90523,19 @@ Execute success.
 
 ![assignment_statement](media/StoredProcedure/assignment_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06886" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="2957" image_path_raw="media/StoredProcedure/assignment_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+assignment_statement ::=
+    { variable_name
+    | parameter_name
+    | record_name [ '.' column_name ] } ':=' expression ';'
+    | SET { variable_name
+          | parameter_name
+          | record_name [ '.' column_name ] } '=' expression ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06886" -->
+
+
 #### 기능
 
 지역변수, OUT 또는 IN/OUT 형의 인자에 값을 할당하고자 할 때 사용하는 할당문이다.
@@ -85882,6 +90757,14 @@ LABLE문은 저장 프로시저 내부의 특정 위치에 명칭을 지정하�
 
 ![print_statement](media/StoredProcedure/print_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06887" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3178" image_path_raw="media/StoredProcedure/print_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+print_statement ::=
+    { PRINT | PRINTLN } '(' string ')' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06887" -->
+
+
 #### 기능
 
 PRINT구문은 저장 프로시저 실행 시에 사용자가 원하는 텍스트를 해당 프로시저를
@@ -86011,6 +90894,14 @@ Execute success.
 
 ![return_statement](media/StoredProcedure/return_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06888" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3307" image_path_raw="media/StoredProcedure/return_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+return_statement ::=
+    RETURN [ [ '(' ] expression [ ')' ] ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06888" -->
+
+
 #### 기능
 
 저장 프로시저의 수행을 도중에 중단 하거나, 저장 함수에서 값을 반환하고 수행을
@@ -86115,6 +91006,17 @@ FUNC_PLUS_10(I1)
 #### 구문
 
 ![insert_PSM](media/StoredProcedure/insert_PSM.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06889" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3412" image_path_raw="media/StoredProcedure/insert_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause values_clause [ returning_clause ]
+
+values_clause ::=
+    VALUES record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-06889" -->
+
 
 #### 기능
 
@@ -86223,6 +91125,14 @@ E111100001  500         07-DEC-2011  D
 
 ![update_PSM](media/StoredProcedure/update_PSM.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06890" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3519" image_path_raw="media/StoredProcedure/update_PSM.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET ROW '=' record_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-06890" -->
+
+
 #### 기능
 
 UPDATE 구문의 저장 프로시저 확장 기능이다.
@@ -86301,6 +91211,21 @@ EMP_TEL          DNO         SALARY      SEX  BIRTH   JOIN_DATE    STATUS
 
 ![control_folw_statement](media/StoredProcedure/control_folw_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06891" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3597" image_path_raw="media/StoredProcedure/control_folw_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+control_flow_statement ::=
+    { if_statement
+    | case_statement
+    | simple_loop_statement
+    | while_loop_statement
+    | for_loop_statement
+    | exit_statement
+    | continue_statement
+    | null_statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06891" -->
+
+
 저장 프로시저에서 사용할 수 있는 흐름 제어문은 다음과 같다.
 
 -   조건 분기문인 IF문과 CASE문
@@ -86327,6 +91252,17 @@ EMP_TEL          DNO         SALARY      SEX  BIRTH   JOIN_DATE    STATUS
 #### 구문
 
 ![if_statement](media/StoredProcedure/if_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06892" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3624" image_path_raw="media/StoredProcedure/if_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+if_statement ::=
+    IF condition THEN statement { statement }
+    { ELS(E)IF condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END IF ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06892" -->
+
 
 #### 기능
 
@@ -86550,6 +91486,21 @@ PAYROLL.ENO PAYROLL.BONUS
 
 ![case_statement](media/StoredProcedure/case_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06893" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3846" image_path_raw="media/StoredProcedure/case_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case_statement_1 ::=
+    CASE { WHEN condition THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+
+case_statement_2 ::=
+    CASE case_variable { WHEN when_value THEN statement { statement } }
+    [ ELSE statement { statement } ]
+    END CASE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06893" -->
+
+
 #### 기능
 
 특정 변수의 값에 따라서 처리 경로를 결정하는 조건 분기문이다.
@@ -86699,6 +91650,15 @@ ENO         EMP_JOB          SALARY
 
 ![loop](media/StoredProcedure/loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06894" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="3995" image_path_raw="media/StoredProcedure/loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+loop_statement ::=
+    [ '<<' label_name '>>' ] LOOP statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06894" -->
+
+
 #### 기능
 
 LOOP구문은 조건을 따로 지정하지 않고 반복적으로 구문(들)을 수행하고자 하는
@@ -86750,6 +91710,16 @@ ITEM.ID     ITEM.COUNTER
 
 ![while_loop](media/StoredProcedure/while_loop.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06895" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4046" image_path_raw="media/StoredProcedure/while_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+while_loop_statement ::=
+    [ '<<' label_name '>>' ] WHILE condition LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06895" -->
+
+
 #### 기능
 
 조건이 참인 경우만 LOOP을 수행하고자 할 때 사용하는 반복문이다. 만약 처음부터 이
@@ -86800,6 +91770,19 @@ T1.I1       T1.I2       T1.I3
 #### 구문
 
 ![for_loop](media/StoredProcedure/for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06896" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4097" image_path_raw="media/StoredProcedure/for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        [ REVERSE ] lower_bound '..' upper_bound
+        [ STEP step_size ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06896" -->
+
 
 #### 기능
 
@@ -87033,6 +92016,14 @@ T6.I1       T6.SUM
 
 ![exit](media/StoredProcedure/exit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06897" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4329" image_path_raw="media/StoredProcedure/exit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exit_statement ::=
+    EXIT [ label_name ] [ WHEN condition ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06897" -->
+
+
 #### 기능
 
 EXIT문을 감싸고 있는 가장 가까운 LOOP 문을 빠져나간다. 그러나 *label_name*이
@@ -87179,6 +92170,14 @@ E111100006  900         2338.62
 
 ![continue](media/StoredProcedure/continue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06898" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4475" image_path_raw="media/StoredProcedure/continue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+continue_statement ::=
+    CONTINUE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06898" -->
+
+
 #### 기능
 
 현재 CONTINUE문을 감싸고 있는 LOOP에서 CONTINUE문 이후의 문장들을 전부 무시하고
@@ -87253,6 +92252,14 @@ T8.I1       T8.MATHPOWER
 #### 구문
 
 ![goto](media/StoredProcedure/goto.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06899" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4550" image_path_raw="media/StoredProcedure/goto.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+goto_statement ::=
+    GOTO label_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06899" -->
+
 
 #### 기능
 
@@ -87406,6 +92413,14 @@ Execute success.
 
 ![null](media/StoredProcedure/null.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06900" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4702" image_path_raw="media/StoredProcedure/null.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+null_statement ::=
+    NULL ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06900" -->
+
+
 #### 기능
 
 NULL문은 흐름에 영향을 미치지 않고 아무것도 수행하지 않고 다음으로 넘어감을
@@ -87520,6 +92535,22 @@ OPEN문이나 CLOSE문을 사용할 필요가 없는 경우에 편리한 구문�
 
 ![](media/StoredProcedure/cursor_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06901" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4816" image_path_raw="media/StoredProcedure/cursor_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_declaration ::=
+    CURSOR cursor_name
+        [ '(' cursor_parameter_declaration { ',' cursor_parameter_declaration } ')' ]
+    IS select_statement ';'
+
+cursor_parameter_declaration ::=
+    parameter_name [ IN ] data_type [ { DEFAULT | ':=' } expression ]
+
+data_type ::=
+    { sql_data_type | type_attribute }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06901" -->
+
+
 #### 기능
 
 커서를 정의한다. CURSOR구문에서는 커서명과 커서가 레코드를 가져오는 데 사용할
@@ -87610,6 +92641,15 @@ ENO         E_FIRSTNAME           E_LASTNAME            SALARY
 #### 구문
 
 ![open_cursor](media/StoredProcedure/open_cursor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06902" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="4907" image_path_raw="media/StoredProcedure/open_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_cursor_statement ::=
+    OPEN cursor_name
+        [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06902" -->
+
 
 #### 기능
 
@@ -87741,7 +92781,27 @@ T2.I1      T2.I2      T2.I3
 
 ![](media/StoredProcedure/fetch_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06903" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5037" image_path_raw="media/StoredProcedure/fetch_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_statement ::=
+    FETCH cursor_name
+        { INTO { record_name | variable_name } { ',' { record_name | variable_name } }
+        | bulk_collect_clause } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06903" -->
+
+
 ![](media/StoredProcedure/fetch_bulk_collect_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06904" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5039" image_path_raw="media/StoredProcedure/fetch_bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fetch_bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+        { ',' { array_record_name | array_variable_name } }
+        [ LIMIT row_count ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06904" -->
+
 
 #### 기능
 
@@ -87882,6 +92942,14 @@ Execute success.
 
 ![close_cursor](media/StoredProcedure/close_cursor.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06905" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5178" image_path_raw="media/StoredProcedure/close_cursor.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+close_cursor_statement ::=
+    CLOSE cursor_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06905" -->
+
+
 #### 기능
 
 열려있는 커서를 닫고 해당 커서에 할당된 리소스를 해제한다.
@@ -87911,6 +92979,18 @@ CLOSE c1;
 #### 구문
 
 ![cursor_for_loop](media/StoredProcedure/cursor_for_loop.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06906" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5208" image_path_raw="media/StoredProcedure/cursor_for_loop.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_for_loop_statement ::=
+    [ '<<' label_name '>>' ] FOR counter_name IN
+        cursor_name [ '(' cursor_parameter_name { ',' cursor_parameter_name } ')' ]
+    LOOP
+        statement { statement }
+    END LOOP [ label_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06906" -->
+
 
 #### 기능
 
@@ -87987,6 +93067,14 @@ Altibase가 관리하고 있는 속성값들을 참조할 수 있다.
 #### 구문
 
 ![cursor_attribute](media/StoredProcedure/cursor_attribute.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06907" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5284" image_path_raw="media/StoredProcedure/cursor_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cursor_attribute ::=
+    cursor_name '%' { FOUND | NOTFOUND | ISOPEN | ROWCOUNT } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06907" -->
+
 
 #### 기능
 
@@ -88327,6 +93415,30 @@ VARRAY 변수의 배열 요소 접근 방법은 Associative Array와 동일하�
 
 ![](media/StoredProcedure/type_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06908" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5623" image_path_raw="media/StoredProcedure/type_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+type_definition ::=
+    TYPE type_name IS
+    { associative_array_type_spec
+    | record_type_spec
+    | ref_cursor_type_spec
+    | varray_type_spec }
+
+associative_array_type_spec ::=
+    TABLE OF data_type [ INDEX BY { integer_type | varchar_type } ]
+
+record_type_spec ::=
+    RECORD '(' column_name data_type [ { ',' column_name data_type } ] ')'
+
+ref_cursor_type_spec ::=
+    REF CURSOR
+
+varray_type_spec ::=
+    { VARRAY | VARYING ARRAY } '(' size ')' OF data_type
+```
+<!-- IMG_RECOVERY_END ref_id="img-06908" -->
+
+
 ##### type_name
 
 사용자 정의 타입의 이름을 명시한다.
@@ -88421,6 +93533,21 @@ BEGIN
 #### 구문
 
 ![associative_array](media/StoredProcedure/associative_array.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06909" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5718" image_path_raw="media/StoredProcedure/associative_array.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+associative_array_call_method ::=
+    variable_name '.'
+        { COUNT '(' ')'
+        | DELETE '(' [ index { ',' index } ] ')'
+        | EXISTS '(' index ')'
+        | FIRST '(' ')'
+        | LAST '(' ')'
+        | NEXT '(' index ')'
+        | PRIOR '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06909" -->
+
 
 #### 기능
 
@@ -88591,6 +93718,24 @@ Execute success.
 #### 구문
 
 ![associative_array](media/StoredProcedure/varray_method.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06910" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="5888" image_path_raw="media/StoredProcedure/varray_method.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+varray_call_method ::=
+    variable_name '.'
+    { COUNT '(' ')'
+    | DELETE '(' ')'
+    | EXISTS '(' index ')'
+    | FIRST '(' ')'
+    | LAST '(' ')'
+    | NEXT '(' index ')'
+    | PRIOR '(' index ')'
+    | LIMIT
+    | EXTEND '(' [ index [ { ',' index } ] ] ')'
+    | TRIM '(' index ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06910" -->
+
 
 #### 기능
 
@@ -89530,6 +94675,17 @@ END;
 
 ![create_typeset](media/StoredProcedure/create_typeset.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06912" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="6826" image_path_raw="media/StoredProcedure/create_typeset.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_typeset ::=
+    CREATE [ OR REPLACE ] TYPESET [ IF NOT EXISTS ] [ user_name '.' ]
+    typeset_name { AS | IS }
+    type_declaration [ { type_declaration } ]
+    END ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06912" -->
+
+
 #### 전제 조건
 
 SYS 사용자 또는 CREATE PROCEDURE, CREATE ANY PROCEDURE 시스템 권한을 가진
@@ -89625,6 +94781,14 @@ Execute success.
 #### 구문
 
 ![drop_typeset](media/StoredProcedure/drop_typeset.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06913" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="6922" image_path_raw="media/StoredProcedure/drop_typeset.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_typeset ::=
+    DROP TYPESET [ IF EXISTS ] [ user_name '.' ] typeset_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06913" -->
+
 
 #### 전제 조건
 
@@ -89726,9 +94890,39 @@ Plan Cache에 저장되고, 반복 호출 시 Plan Cache에서 실행계획을 �
 
 ![](media/StoredProcedure/execute_imme_statement.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06915" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7022" image_path_raw="media/StoredProcedure/execute_imme_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_imme_statement ::=
+    EXECUTE IMMEDIATE dynamic_string
+    [ INTO { record_name | variable_name { ',' variable_name } }
+    | bulk_collect_clause ]
+    [ USING [ { IN | OUT | IN OUT } ] variable_name
+             { ',' [ { IN | OUT | IN OUT } ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06915" -->
+
+
 ![](media/StoredProcedure/bulk_collect_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06916" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7024" image_path_raw="media/StoredProcedure/bulk_collect_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+bulk_collect_clause ::=
+    BULK COLLECT INTO { array_record_name | array_variable_name }
+                      { ',' { array_record_name | array_variable_name } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06916" -->
+
+
 ![](media/StoredProcedure/dynamic_string.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06917" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7026" image_path_raw="media/StoredProcedure/dynamic_string.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dynamic_string ::=
+    variable_name
+  | expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-06917" -->
+
 
 #### 설명
 
@@ -89828,6 +95022,15 @@ EXECUTE IMMEDIATE dynamic_string 구문은 해당 질의문을 Direct-Execute �
 #### 구문
 
 ![](media/StoredProcedure/open_for_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06918" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7125" image_path_raw="media/StoredProcedure/open_for_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+open_for_statement ::=
+    OPEN cursor_variable_name FOR { select_statement | dynamic_string }
+    [ USING [ IN ] variable_name { ',' [ IN ] variable_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06918" -->
+
 
 #### 설명
 
@@ -89964,6 +95167,14 @@ BEGIN
 
 ![exception_declaration](media/StoredProcedure/exception_declaration.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06919" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7260" image_path_raw="media/StoredProcedure/exception_declaration.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_declaration ::=
+    exception_name EXCEPTION ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06919" -->
+
+
 #### 설명
 
 사용자 정의 예외를 정의한다
@@ -89989,6 +95200,14 @@ DECLARE
 #### 구문
 
 ![raise_statement](media/StoredProcedure/raise_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06920" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7286" image_path_raw="media/StoredProcedure/raise_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+raise_statement ::=
+    RAISE [ exception_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06920" -->
+
 
 #### 설명
 
@@ -90311,6 +95530,15 @@ Execute success.
 
 ![exception_handler](media/StoredProcedure/exception_handler.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06922" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7607" image_path_raw="media/StoredProcedure/exception_handler.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_handler ::=
+    WHEN { exception_name { OR exception_name } | OTHERS }
+    THEN statement { statement }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06922" -->
+
+
 #### 기능
 
 Exception Handler에는 예외가 발생했을 때의 처리 루틴을 기술한다.
@@ -90493,6 +95721,14 @@ Altibase에서 사용할 수 있는 프라그마는 아래와 같다. 각각의 
 
 ![](media/StoredProcedure/pragma.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06923" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7789" image_path_raw="media/StoredProcedure/pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pragma_declaration ::=
+    PRAGMA { autonomous_transaction_statement | exception_init_statement } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06923" -->
+
+
 
 
 ### 자율 트랜잭션 프라그마(Autonomous_Transaction Pragma)
@@ -90500,6 +95736,14 @@ Altibase에서 사용할 수 있는 프라그마는 아래와 같다. 각각의 
 #### 구문
 
 ![autonomous_pragma](media/StoredProcedure/autonomous_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06924" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7797" image_path_raw="media/StoredProcedure/autonomous_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autonomous_transaction_statement ::=
+    AUTONOMOUS_TRANSACTION
+```
+<!-- IMG_RECOVERY_END ref_id="img-06924" -->
+
 
 #### 기능
 
@@ -90656,6 +95900,14 @@ C1
 #### 구문
 
 ![](media/StoredProcedure/exception_pragma.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06926" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="7953" image_path_raw="media/StoredProcedure/exception_pragma.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exception_init_statement ::=
+    EXCEPTION_INIT '(' exception_name ',' error_code ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06926" -->
+
 
 #### 기능
 
@@ -90862,21 +96114,69 @@ at "SYS.PROC2", line 6]
 
 ![create_package](media/StoredProcedure/create_package.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06928" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8158" image_path_raw="media/StoredProcedure/create_package.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package ::=
+    CREATE [ OR REPLACE ] PACKAGE [ IF NOT EXISTS ] [ user_name '.' ]
+    package_name invoker_rights_clause { AS | IS }
+    declare_section END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06928" -->
+
+
 ##### invoker_rights_clause::=
 
 ![](media/StoredProcedure/invoker_rights_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06929" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8162" image_path_raw="media/StoredProcedure/invoker_rights_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+invoker_rights_clause ::=
+    AUTHID { CURRENT_USER | DEFINER }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06929" -->
+
 
 ##### declare_section ::=
 
 ![](media/StoredProcedure/package_declare_section.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06930" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8166" image_path_raw="media/StoredProcedure/package_declare_section.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | procedure_declaration
+    | funtion_declaration
+    | cursor_declaration
+    | exception_declaration } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-06930" -->
+
+
 ##### procedure_declaration ::=
 
 ![](media/StoredProcedure/package_proc_declare.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06931" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8170" image_path_raw="media/StoredProcedure/package_proc_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+procedure_declaration ::=
+    PROCEDURE procedure_name [ '(' expression ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06931" -->
+
+
 ##### function_declaration ::=
 
 ![](media/StoredProcedure/package_func_declare.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06932" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8174" image_path_raw="media/StoredProcedure/package_func_declare.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+function_declaration ::=
+    FUNCTION function_name [ '(' { expression } ')' ] RETURN data_type [ DETERMINISTIC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06932" -->
+
 
 #### 기능
 
@@ -91100,13 +96400,48 @@ Execute success.
 
 ![](media/StoredProcedure/create_package_body.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06933" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8396" image_path_raw="media/StoredProcedure/create_package_body.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_package_body ::=
+    CREATE [ OR REPLACE ] PACKAGE BODY [ IF NOT EXISTS ] [ user_name '.' ]
+    package_name { AS | IS }
+    declare_section [ initialize_section ]
+    END [ package_name ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06933" -->
+
+
 ##### initialize_section::=
 
 ![](media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06934" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8400" image_path_raw="media/StoredProcedure/e51a2efd35433d8e979a1db1e3991c78.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+initialize_section ::=
+    BEGIN statement { statement } [ EXCEPTION exception_handler { exception_handler } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06934" -->
+
+
 ##### declare_section ::=
 
 ![](media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06935" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8404" image_path_raw="media/StoredProcedure/1f6172b78d389960cfa0aa51ccc6edfa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+declare_section ::=
+    { type_definition
+    | variable_declaration
+    | constant_declaration
+    | exception_declaration
+    | cursor_declaration
+    | procedure_declaration
+    | procedure_definition
+    | funtion_declaration
+    | funtion_definition } ','
+```
+<!-- IMG_RECOVERY_END ref_id="img-06935" -->
+
 
 #### 기능
 
@@ -91277,6 +96612,15 @@ Create success.
 
 ![alter_package](media/StoredProcedure/alter_package.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06936" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8573" image_path_raw="media/StoredProcedure/alter_package.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_package ::=
+    ALTER PACKAGE [ user_name '.' ] package_name COMPILE
+    [ PACKAGE | SPECIFICATION | BODY ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06936" -->
+
+
 #### 기능
 
 패키지 스펙 또는 패키지 바디 또는 패키지를 명시적으로 재컴파일한다. 패키지를
@@ -91309,6 +96653,14 @@ Alter success.
 
 ![drop_package](media/StoredProcedure/drop_package.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06937" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8605" image_path_raw="media/StoredProcedure/drop_package.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_package ::=
+    DROP PACKAGE [ BODY ] [ IF EXISTS ] [ user_name '.' ] package_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06937" -->
+
+
 #### 기능
 
 패키지를 삭제하는 구문이다. 이 구문으로 패키지 바디만 선택적으로 삭제하거나
@@ -91338,9 +96690,27 @@ Drop success.
 
 ![execute_procedure](media/StoredProcedure/execute_procedure.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06938" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8634" image_path_raw="media/StoredProcedure/execute_procedure.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC [ UTE ] [ user_name '.' ] package_name '.' procedure_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06938" -->
+
+
 ##### execute_function_statement ::=
 
 ![execute_function](media/StoredProcedure/execute_function.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06939" source_md="Manuals/Altibase_trunk/kor/Stored Procedures Manual.md" line_no="8638" image_path_raw="media/StoredProcedure/execute_function.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_function_statement ::=
+    EXEC [ UTE ] variable ':=' [ user_name '.' ] package_name '.' function_name
+    [ '(' [ expression { ',' expression } ] ')' ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06939" -->
+
 
 #### 기능
 
@@ -105280,6 +110650,30 @@ Note: If the server character set and the value set in ALTIBASE_NLS_USE are diff
 
 ![](/Users/richardnahm/Desktop/Documents/Manuals/Altibase_7.1/kor/media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01074" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="488" image_path_raw="/Users/richardnahm/Desktop/Documents/Manuals/Altibase_7.1/kor/media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aexport ::=
+    AEXPORT
+        { -h
+        | -s server_name
+        | -u user_name
+        | -p password
+        | -port port_no
+        | -tserver server_name
+        | -tport port_no
+        | -nls national_language_support
+        | -object user_name '.' object_name { ',' user_name '.' object_name }
+        | -prefer_ipv6
+        | -ssl_ca CA_file_path
+        | -ssl_capath CA_dir_path
+        | -ssl_cert certificate_file_path
+        | -ssl_key key_file_path
+        | -ssl_verify
+        | -ssl_cipher cipher_list }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01074" -->
+
+
 #### Parameters
 
 | Parameter                          | Description                                                  |
@@ -107253,6 +112647,14 @@ altiAudit [-s] {audit_log_file_name}
 
 ![](media/Utilities/altiaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01087" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="2461" image_path_raw="media/Utilities/altiaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiaudit ::=
+    altiAudit [ -s ] audit_log_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01087" -->
+
+
 #### Descriptions
 
 This converts and outputs audit logs written by the server in text format.
@@ -107375,6 +112777,14 @@ altibase {-v|n}
 
 ![](media/Utilities/altibase.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01088" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="2583" image_path_raw="media/Utilities/altibase.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altibase ::=
+    altibase { -v | -n }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01088" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -107409,6 +112819,14 @@ altimon.sh {start \| stop}
 #### Syntax
 
 ![](media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01089" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="2618" image_path_raw="media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+altimon ::=
+    altimon.sh { start | stop }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01089" -->
+
 
 #### Parameters
 
@@ -107704,6 +113122,14 @@ altierr {-w keyword pattern | [-n] error number}
 
 ![](media/Utilities/altierr.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01090" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="2912" image_path_raw="media/Utilities/altierr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altierr ::=
+    altierr { -w keyword_pattern | [ -n ] error_number }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01090" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -107764,6 +113190,14 @@ altipasswd
 
 ![](media/Utilities/altipasswd.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01091" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="2972" image_path_raw="media/Utilities/altipasswd.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altipasswd ::=
+    altipasswd
+```
+<!-- IMG_RECOVERY_END ref_id="img-01091" -->
+
+
 #### Description
 
 Changes the password of the SYS user.
@@ -107796,6 +113230,17 @@ altiProfile [-stat query|session] {profile_name [profile_name2 [profile_name3] .
 #### Syntax
 
 ![](media/Utilities/altiprofile.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01092" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3005" image_path_raw="media/Utilities/altiprofile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiprofile ::=
+    altiProfile
+        [ -h
+        | -stat { query | session } ]
+        profile_name { profile_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01092" -->
+
 
 #### Parameters
 
@@ -108016,6 +113461,17 @@ altiwarp {--iname input_file} [--oname output_file]
 
 ![altiwrap](media/Utilities/altiwrap.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01093" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3224" image_path_raw="media/Utilities/altiwrap.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiwrap ::=
+    altiwrap
+        { -h
+        | --h
+        | --iname input_file [ --oname output_file ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01093" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -108100,6 +113556,14 @@ Outputs the response time of the system call used to create the log file. The ou
 
 ![awrite](media/Utilities/awrite.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01094" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3308" image_path_raw="media/Utilities/awrite.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+awrite ::=
+    awrite
+```
+<!-- IMG_RECOVERY_END ref_id="img-01094" -->
+
+
 #### Description
 
 Outputs the response time of write () and fallocate () system calls.
@@ -108133,6 +113597,14 @@ checkServer [-n] {-f server-restart-script-file}
 #### Syntax
 
 ![checkserver](media/Utilities/checkserver.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01095" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3342" image_path_raw="media/Utilities/checkserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkserver ::=
+    checkServer [ -n ] -f server-restrat-script-file
+```
+<!-- IMG_RECOVERY_END ref_id="img-01095" -->
+
 
 #### Parameters
 
@@ -108187,6 +113659,14 @@ dumpbi  <backupinfo_file_name>
 #### Syntax
 
 ![dumpbi](media/Utilities/dumpbi.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01096" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3396" image_path_raw="media/Utilities/dumpbi.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpbi ::=
+    dumpbi backupinfo_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01096" -->
+
 
 #### Description
 
@@ -108247,6 +113727,14 @@ dumpct  <changeTracking_file_name>
 #### Syntax
 
 ![dumpct](media/Utilities/dumpct.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01097" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3456" image_path_raw="media/Utilities/dumpct.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpct ::=
+    dumpct changeTracking_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01097" -->
+
 
 #### Description
 
@@ -108317,6 +113805,20 @@ dumpdb {-j job_number } [-i pingpong_number] [-o] [-f file_name] [-s] [-p] [-d]
 #### Syntax
 
 ![dumpdb](media/Utilities/dumpdb.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01098" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3526" image_path_raw="media/Utilities/dumpdb.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpdb ::=
+    dumpdb -j job_number
+        [ -i pingpong_number ]
+        [ -o ]
+        [ -f file_name ]
+        [ -s ]
+        [ -p ]
+        [ -d ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01098" -->
+
 
 #### Parameters
 
@@ -108463,6 +113965,14 @@ dumpddf {-f datafile_name} {-m | -p pid}
 
 ![dumpddf](media/Utilities/dumpddf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01099" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3671" image_path_raw="media/Utilities/dumpddf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpddf ::=
+    dumpddf -f datafile_name { -m | -p pid }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01099" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -108564,6 +114074,14 @@ dumpla <loganchor_file_name>
 #### Syntax
 
 ![dumpla](media/Utilities/dumpla.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01100" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3773" image_path_raw="media/Utilities/dumpla.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpla ::=
+    dumpla loganchor_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01100" -->
+
 
 #### Description
 
@@ -108781,6 +114299,18 @@ dumplf {-f log_file_name} [-t transaction_id][-s] [-l][-S lsn [-F path] [-g]]
 
 ![](media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01101" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="3989" image_path_raw="media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumplf ::=
+    dumplf -f log_file
+        [ -t transaction_id ]
+        [ -s ]
+        [ -l ]
+        [ -S lsn [ -F path ] [ -g ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01101" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -108925,6 +114455,21 @@ dumptrc [-h |[-p file_path][-c [-s]]
 #### Syntax
 
 ![](media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01102" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="4134" image_path_raw="media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumptrc ::=
+    dumptrc
+        [ -h
+        | -p file_path [ -c [ -s ] ]
+          { -a | -i file_name { -i file_name } | -e file_name { -e file_name } }
+          [ -n line_count ]
+          [ x ]
+        | -f
+        | -v ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01102" -->
+
 
 #### Parameters
 
@@ -109164,6 +114709,14 @@ killCheckServer
 
 ![killcheckserver](media/Utilities/killcheckserver.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01103" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="4372" image_path_raw="media/Utilities/killcheckserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+killcheckserver ::=
+    killCheckServer
+```
+<!-- IMG_RECOVERY_END ref_id="img-01103" -->
+
+
 #### Description
 
 killCheckServer terminates the checkServer utility if it is currently running.
@@ -109211,6 +114764,21 @@ server { start | stop | restart | kill | status | create db_charset national_cha
 #### Syntax
 
 ![server](media/Utilities/server.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01104" source_md="Manuals/Altibase_7.1/eng/Utilities Manual.md" line_no="4420" image_path_raw="media/Utilities/server.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+server ::=
+    'server' { 'start'
+             | 'stop'
+             | 'restart'
+             | 'kill'
+             | 'status'
+             | 'create' db_charset national_charset
+             | 'startRoleManager'
+             | 'stopRoleManager' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01104" -->
+
 
 #### Parameters
 
@@ -109828,6 +115396,30 @@ aexport가 생성하는 파일 권한을 설정하는 환경 변수이다. 값�
 ### 구문
 
 ![](media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02265" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="549" image_path_raw="media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aexport ::=
+    AEXPORT
+        { -h
+        | -s server_name
+        | -u user_name
+        | -p password
+        | -port port_no
+        | -tserver server_name
+        | -tport port_no
+        | -nls national_language_support
+        | -object user_name '.' object_name { ',' user_name '.' object_name }
+        | -prefer_ipv6
+        | -ssl_ca CA_file_path
+        | -ssl_capath CA_dir_path
+        | -ssl_cert certificate_file_path
+        | -ssl_key key_file_path
+        | -ssl_verify
+        | -ssl_cipher cipher_list }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02265" -->
+
 
 ### 파라미터
 
@@ -111814,6 +117406,14 @@ altimon.sh {start | stop}
 
 <div align="left">
     <img src=media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png>
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02278" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="2535" image_path_raw="media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+altimon ::=
+    altimon.sh { start | stop }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02278" -->
+
 </div>
 
 <br/>
@@ -112336,6 +117936,14 @@ altiAudit [-s] {audit_log_file_name}
 
 ![](media/Utilities/altiaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02280" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3056" image_path_raw="media/Utilities/altiaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiaudit ::=
+    altiAudit [ -s ] audit_log_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02280" -->
+
+
 ### 설명
 
 서버가 남긴 감사 로그를 문자 형태로 변환하여 출력한다.
@@ -112458,6 +118066,14 @@ altibase {-v|n}
 
 ![](media/Utilities/altibase.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02281" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3178" image_path_raw="media/Utilities/altibase.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altibase ::=
+    altibase { -v | -n }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02281" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                |
@@ -112502,6 +118118,14 @@ altierr {-w keyword pattern | [-n] error number}
 ### 구문
 
 ![](media/Utilities/altierr.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02282" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3223" image_path_raw="media/Utilities/altierr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altierr ::=
+    altierr { -w keyword_pattern | [ -n ] error_number }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02282" -->
+
 
 ### 파라미터
 
@@ -112563,6 +118187,14 @@ altipasswd
 
 ![](media/Utilities/altipasswd.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02283" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3283" image_path_raw="media/Utilities/altipasswd.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altipasswd ::=
+    altipasswd
+```
+<!-- IMG_RECOVERY_END ref_id="img-02283" -->
+
+
 ### 설명
 
 SYS 사용자의 암호를 변경한다.
@@ -112595,6 +118227,17 @@ altiProfile [-stat query|session] {profile_name [profile_name2 [profile_name3] .
 ### 구문
 
 ![](media/Utilities/altiprofile.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02284" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3316" image_path_raw="media/Utilities/altiprofile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiprofile ::=
+    altiProfile
+        [ -h
+        | -stat { query | session } ]
+        profile_name { profile_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02284" -->
+
 
 ### 파라미터
 
@@ -112819,6 +118462,17 @@ altiwarp {--iname input_file} [--oname output_file]
 
 ![altiwrap](media/Utilities/altiwrap.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02285" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3539" image_path_raw="media/Utilities/altiwrap.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiwrap ::=
+    altiwrap
+        { -h
+        | --h
+        | --iname input_file [ --oname output_file ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02285" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                         |
@@ -112905,6 +118559,14 @@ Execute success.
 
 ![awrite](media/Utilities/awrite.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02286" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3625" image_path_raw="media/Utilities/awrite.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+awrite ::=
+    awrite
+```
+<!-- IMG_RECOVERY_END ref_id="img-02286" -->
+
+
 ### 설명
 
 write()와 fallocate() 시스템 콜의 응답 시간을 출력한다.
@@ -112938,6 +118600,14 @@ checkServer [-n] {-f server-restart-script-file}
 ### 구문
 
 ![checkserver](media/Utilities/checkserver.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02287" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3659" image_path_raw="media/Utilities/checkserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkserver ::=
+    checkServer [ -n ] -f server-restrat-script-file
+```
+<!-- IMG_RECOVERY_END ref_id="img-02287" -->
+
 
 ### 파라미터
 
@@ -112994,6 +118664,14 @@ dumpbi  <backupinfo_file_name>
 ### 구문
 
 ![dumpbi](media/Utilities/dumpbi.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02288" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3715" image_path_raw="media/Utilities/dumpbi.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpbi ::=
+    dumpbi backupinfo_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02288" -->
+
 
 ### 설명
 
@@ -113054,6 +118732,14 @@ dumpct  <changeTracking_file_name>
 ### 구문
 
 ![dumpct](media/Utilities/dumpct.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02289" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3775" image_path_raw="media/Utilities/dumpct.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpct ::=
+    dumpct changeTracking_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02289" -->
+
 
 ### 설명
 
@@ -113126,6 +118812,20 @@ dumpdb {-j job_number } [-i pingpong_number] [-o] [-f file_name] [-s] [-p] [-d]
 ### 구문
 
 ![dumpdb](media/Utilities/dumpdb.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02290" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3847" image_path_raw="media/Utilities/dumpdb.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpdb ::=
+    dumpdb -j job_number
+        [ -i pingpong_number ]
+        [ -o ]
+        [ -f file_name ]
+        [ -s ]
+        [ -p ]
+        [ -d ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02290" -->
+
 
 ### 파라미터
 
@@ -113274,6 +118974,14 @@ dumpddf {-f datafile_name} {-m | -p pid}
 
 ![dumpddf](media/Utilities/dumpddf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02291" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="3994" image_path_raw="media/Utilities/dumpddf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpddf ::=
+    dumpddf -f datafile_name { -m | -p pid }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02291" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                                                                                    |
@@ -113375,6 +119083,14 @@ dumpla <loganchor_file_name>
 ### 구문
 
 ![dumpla](media/Utilities/dumpla.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02292" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="4096" image_path_raw="media/Utilities/dumpla.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpla ::=
+    dumpla loganchor_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02292" -->
+
 
 ### 설명
 
@@ -113592,6 +119308,18 @@ dumplf {-f log_file_name} [-t transaction_id][-s] [-l][-S lsn [-F path] [-g]]
 
 ![](media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02293" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="4312" image_path_raw="media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumplf ::=
+    dumplf -f log_file
+        [ -t transaction_id ]
+        [ -s ]
+        [ -l ]
+        [ -S lsn [ -F path ] [ -g ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02293" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                                                                                                                         |
@@ -113736,6 +119464,21 @@ dumptrc [-h |[-p file_path][-c [-s]]
 ### 구문
 
 ![](media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02294" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="4457" image_path_raw="media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumptrc ::=
+    dumptrc
+        [ -h
+        | -p file_path [ -c [ -s ] ]
+          { -a | -i file_name { -i file_name } | -e file_name { -e file_name } }
+          [ -n line_count ]
+          [ x ]
+        | -f
+        | -v ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02294" -->
+
 
 ### 파라미터
 
@@ -113961,6 +119704,14 @@ killCheckServer
 
 ![killcheckserver](media/Utilities/killcheckserver.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02295" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="4681" image_path_raw="media/Utilities/killcheckserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+killcheckserver ::=
+    killCheckServer
+```
+<!-- IMG_RECOVERY_END ref_id="img-02295" -->
+
+
 ### 설명
 
 killCheckServer는 실행 중인 checkServer를 종료한다.
@@ -114008,6 +119759,21 @@ server { start | stop | restart | kill | status | create db_charset national_cha
 ### 구문
 
 ![server](media/Utilities/server.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02296" source_md="Manuals/Altibase_7.1/kor/Utilities Manual.md" line_no="4729" image_path_raw="media/Utilities/server.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+server ::=
+    'server' { 'start'
+             | 'stop'
+             | 'restart'
+             | 'kill'
+             | 'status'
+             | 'create' db_charset national_charset
+             | 'startRoleManager'
+             | 'stopRoleManager' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02296" -->
+
 
 ### 파라미터
 
@@ -114600,6 +120366,30 @@ Note: If the server character set and the value set in ALTIBASE_NLS_USE are diff
 #### Syntax
 
 ![](media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03390" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="516" image_path_raw="media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aexport ::=
+    AEXPORT
+        { -h
+        | -s server_name
+        | -u user_name
+        | -p password
+        | -port port_no
+        | -tserver server_name
+        | -tport port_no
+        | -nls national_language_support
+        | -object user_name '.' object_name { ',' user_name '.' object_name }
+        | -prefer_ipv6
+        | -ssl_ca CA_file_path
+        | -ssl_capath CA_dir_path
+        | -ssl_cert certificate_file_path
+        | -ssl_key key_file_path
+        | -ssl_verify
+        | -ssl_cipher cipher_list }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03390" -->
+
 
 #### Parameters
 
@@ -116553,6 +122343,14 @@ altiAudit [-s] {audit_log_file_name}
 
 ![](media/Utilities/altiaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03403" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="2468" image_path_raw="media/Utilities/altiaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiaudit ::=
+    altiAudit [ -s ] audit_log_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03403" -->
+
+
 #### Descriptions
 
 This converts and outputs audit logs written by the server in text format.
@@ -116675,6 +122473,14 @@ altibase {-v|n}
 
 ![](media/Utilities/altibase.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03404" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="2590" image_path_raw="media/Utilities/altibase.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altibase ::=
+    altibase { -v | -n }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03404" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -116709,6 +122515,14 @@ altimon.sh {start \| stop}
 #### Syntax
 
 ![](media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03405" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="2625" image_path_raw="media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+altimon ::=
+    altimon.sh { start | stop }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03405" -->
+
 
 #### Parameters
 
@@ -117008,6 +122822,14 @@ altierr {-w keyword pattern | [-n] error number}
 
 ![](media/Utilities/altierr.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03406" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="2923" image_path_raw="media/Utilities/altierr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altierr ::=
+    altierr { -w keyword_pattern | [ -n ] error_number }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03406" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -117068,6 +122890,14 @@ altipasswd
 
 ![](media/Utilities/altipasswd.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03407" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="2983" image_path_raw="media/Utilities/altipasswd.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altipasswd ::=
+    altipasswd
+```
+<!-- IMG_RECOVERY_END ref_id="img-03407" -->
+
+
 #### Description
 
 Changes the password of the SYS user.
@@ -117100,6 +122930,17 @@ altiProfile [-stat query|session] {profile_name [profile_name2 [profile_name3] .
 #### Syntax
 
 ![](media/Utilities/altiprofile.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03408" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3016" image_path_raw="media/Utilities/altiprofile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiprofile ::=
+    altiProfile
+        [ -h
+        | -stat { query | session } ]
+        profile_name { profile_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03408" -->
+
 
 #### Parameters
 
@@ -117320,6 +123161,17 @@ altiwarp {--iname input_file} [--oname output_file]
 
 ![altiwrap](media/Utilities/altiwrap.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03409" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3235" image_path_raw="media/Utilities/altiwrap.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiwrap ::=
+    altiwrap
+        { -h
+        | --h
+        | --iname input_file [ --oname output_file ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03409" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -117404,6 +123256,14 @@ Outputs the response time of the system call used to create the log file. The ou
 
 ![awrite](media/Utilities/awrite.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03410" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3319" image_path_raw="media/Utilities/awrite.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+awrite ::=
+    awrite
+```
+<!-- IMG_RECOVERY_END ref_id="img-03410" -->
+
+
 #### Description
 
 Outputs the response time of write () and fallocate () system calls.
@@ -117437,6 +123297,14 @@ checkServer [-n] {-f server-restart-script-file}
 #### Syntax
 
 ![checkserver](media/Utilities/checkserver.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03411" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3353" image_path_raw="media/Utilities/checkserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkserver ::=
+    checkServer [ -n ] -f server-restrat-script-file
+```
+<!-- IMG_RECOVERY_END ref_id="img-03411" -->
+
 
 #### Parameters
 
@@ -117491,6 +123359,14 @@ dumpbi  <backupinfo_file_name>
 #### Syntax
 
 ![dumpbi](media/Utilities/dumpbi.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03412" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3407" image_path_raw="media/Utilities/dumpbi.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpbi ::=
+    dumpbi backupinfo_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03412" -->
+
 
 #### Description
 
@@ -117551,6 +123427,14 @@ dumpct  <changeTracking_file_name>
 #### Syntax
 
 ![dumpct](media/Utilities/dumpct.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03413" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3467" image_path_raw="media/Utilities/dumpct.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpct ::=
+    dumpct changeTracking_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03413" -->
+
 
 #### Description
 
@@ -117621,6 +123505,20 @@ dumpdb {-j job_number } [-i pingpong_number] [-o] [-f file_name] [-s] [-p] [-d]
 #### Syntax
 
 ![dumpdb](media/Utilities/dumpdb.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03414" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3537" image_path_raw="media/Utilities/dumpdb.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpdb ::=
+    dumpdb -j job_number
+        [ -i pingpong_number ]
+        [ -o ]
+        [ -f file_name ]
+        [ -s ]
+        [ -p ]
+        [ -d ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03414" -->
+
 
 #### Parameters
 
@@ -117767,6 +123665,14 @@ dumpddf {-f datafile_name} {-m | -p pid}
 
 ![dumpddf](media/Utilities/dumpddf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03415" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3682" image_path_raw="media/Utilities/dumpddf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpddf ::=
+    dumpddf -f datafile_name { -m | -p pid }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03415" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -117868,6 +123774,14 @@ dumpla <loganchor_file_name>
 #### Syntax
 
 ![dumpla](media/Utilities/dumpla.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03416" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="3784" image_path_raw="media/Utilities/dumpla.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpla ::=
+    dumpla loganchor_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-03416" -->
+
 
 #### Description
 
@@ -118085,6 +123999,18 @@ dumplf {-f log_file_name} [-t transaction_id][-s] [-l][-S lsn [-F path] [-g]]
 
 ![](media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03417" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="4000" image_path_raw="media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumplf ::=
+    dumplf -f log_file
+        [ -t transaction_id ]
+        [ -s ]
+        [ -l ]
+        [ -S lsn [ -F path ] [ -g ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03417" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -118229,6 +124155,21 @@ dumptrc [-h |[-p file_path][-c [-s]]
 #### Syntax
 
 ![](media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03418" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="4145" image_path_raw="media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumptrc ::=
+    dumptrc
+        [ -h
+        | -p file_path [ -c [ -s ] ]
+          { -a | -i file_name { -i file_name } | -e file_name { -e file_name } }
+          [ -n line_count ]
+          [ x ]
+        | -f
+        | -v ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-03418" -->
+
 
 #### Parameters
 
@@ -118468,6 +124409,14 @@ killCheckServer
 
 ![killcheckserver](media/Utilities/killcheckserver.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03419" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="4383" image_path_raw="media/Utilities/killcheckserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+killcheckserver ::=
+    killCheckServer
+```
+<!-- IMG_RECOVERY_END ref_id="img-03419" -->
+
+
 #### Description
 
 killCheckServer terminates the checkServer utility if it is currently running.
@@ -118515,6 +124464,21 @@ server { start | stop | restart | kill | status | create db_charset national_cha
 #### Syntax
 
 ![server](media/Utilities/server.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03420" source_md="Manuals/Altibase_7.3/eng/Utilities Manual.md" line_no="4431" image_path_raw="media/Utilities/server.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+server ::=
+    'server' { 'start'
+             | 'stop'
+             | 'restart'
+             | 'kill'
+             | 'status'
+             | 'create' db_charset national_charset
+             | 'startRoleManager'
+             | 'stopRoleManager' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03420" -->
+
 
 #### Parameters
 

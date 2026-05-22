@@ -36,6 +36,39 @@ source-pack extraction is Markdown-first. Non-Markdown files that may contain us
 operational evidence, such as Tableau SQL sidecars, keep explicit exclusion notes so a
 later text-sidecar or media pass can select them intentionally.
 
+## Image-Recovery Sidecar
+
+The original manuals reference thousands of diagram images that ship only as
+dead `![](media/...)` links — any information carried only inside a diagram is
+otherwise invisible to the RAG/GPT system. The image-content-recovery effort
+recovers that information **as text**.
+
+- **What is recovered.** Only diagram classes whose image is the *sole* source
+  of the information: class **C** railroad/syntax diagrams (recovered as a
+  `bnf` grammar block), class **D** tabular data rendered as an image
+  (recovered as a Markdown table; none currently exist in `Manuals/`), and
+  class **E** process/decision flowcharts (recovered as a `mermaid`
+  flowchart). Redundant classes A and B are intentionally skipped.
+- **Originals are unmodified.** The `Manuals/` source files stay byte-unchanged.
+  Recovered text is injected only at build time from a conversion sidecar
+  (decision D1) — it is not written back into the manuals.
+- **How it is injected.** `build_source_pack.py` reads the sidecar
+  `GPTs/image_recovery/image_conversions.jsonl` and, at each image reference
+  that has a verified record, keeps the original `![]()` / `<img>` reference and
+  inserts the recovered text immediately after it (decision D2), wrapped in
+  `<!-- IMG_RECOVERY_BEGIN … -->` / `<!-- IMG_RECOVERY_END … -->` marker
+  comments. References with no sidecar record are untouched. The sidecar is
+  optional: with the file absent the build reproduces the byte-exact source
+  pack.
+- **Where it lives.** Sidecar and supporting artifacts (inventory,
+  classification, conversions, comparison audit) are under
+  `GPTs/image_recovery/`; the job specification and reports are under
+  `GPTs/reports/` (`image_content_recovery_spec_20260522.md` and the audit /
+  validation reports).
+
+Stripping the `IMG_RECOVERY` blocks from a rebuilt shard reproduces the
+pre-recovery shard byte-for-byte, so the recovery is additive only.
+
 ## Deterministic Command
 
 Regenerate and validate the manifests from the repository root:

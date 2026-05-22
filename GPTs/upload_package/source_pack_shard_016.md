@@ -603,6 +603,30 @@ aexport가 생성하는 파일 권한을 설정하는 환경 변수이다. 값�
 
 ![](media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04595" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="574" image_path_raw="media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aexport ::=
+    AEXPORT
+        { -h
+        | -s server_name
+        | -u user_name
+        | -p password
+        | -port port_no
+        | -tserver server_name
+        | -tport port_no
+        | -nls national_language_support
+        | -object user_name '.' object_name { ',' user_name '.' object_name }
+        | -prefer_ipv6
+        | -ssl_ca CA_file_path
+        | -ssl_capath CA_dir_path
+        | -ssl_cert certificate_file_path
+        | -ssl_key key_file_path
+        | -ssl_verify
+        | -ssl_cipher cipher_list }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04595" -->
+
+
 ### 파라미터
 
 | 파라미터                           | 설명                                                         |
@@ -2586,6 +2610,14 @@ altimon.sh {start | stop}
 
 <div align="left">
     <img src=media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png>
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04608" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="2558" image_path_raw="media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+altimon ::=
+    altimon.sh { start | stop }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04608" -->
+
 </div>
 <br/>
 
@@ -3104,6 +3136,14 @@ altiAudit [-s] {audit_log_file_name}
 
 ![](media/Utilities/altiaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04610" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3075" image_path_raw="media/Utilities/altiaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiaudit ::=
+    altiAudit [ -s ] audit_log_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-04610" -->
+
+
 ### 설명
 
 서버가 남긴 감사 로그를 문자 형태로 변환하여 출력한다.
@@ -3226,6 +3266,14 @@ altibase {-v|n}
 
 ![](media/Utilities/altibase.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04611" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3197" image_path_raw="media/Utilities/altibase.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altibase ::=
+    altibase { -v | -n }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04611" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                |
@@ -3272,6 +3320,14 @@ altierr {-w keyword pattern | [-n] error number}
 ### 구문
 
 ![](media/Utilities/altierr.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04612" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3244" image_path_raw="media/Utilities/altierr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altierr ::=
+    altierr { -w keyword_pattern | [ -n ] error_number }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04612" -->
+
 
 ### 파라미터
 
@@ -3333,6 +3389,14 @@ altipasswd
 
 ![](media/Utilities/altipasswd.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04613" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3304" image_path_raw="media/Utilities/altipasswd.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altipasswd ::=
+    altipasswd
+```
+<!-- IMG_RECOVERY_END ref_id="img-04613" -->
+
+
 ### 설명
 
 SYS 사용자의 암호를 변경한다.
@@ -3365,6 +3429,17 @@ altiProfile [-stat query|session] {profile_name [profile_name2 [profile_name3] .
 ### 구문
 
 ![](media/Utilities/altiprofile.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04614" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3337" image_path_raw="media/Utilities/altiprofile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiprofile ::=
+    altiProfile
+        [ -h
+        | -stat { query | session } ]
+        profile_name { profile_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04614" -->
+
 
 ### 파라미터
 
@@ -3589,6 +3664,17 @@ altiwarp {--iname input_file} [--oname output_file]
 
 ![altiwrap](media/Utilities/altiwrap.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04615" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3560" image_path_raw="media/Utilities/altiwrap.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiwrap ::=
+    altiwrap
+        { -h
+        | --h
+        | --iname input_file [ --oname output_file ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04615" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                         |
@@ -3675,6 +3761,14 @@ Execute success.
 
 ![awrite](media/Utilities/awrite.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04616" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3646" image_path_raw="media/Utilities/awrite.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+awrite ::=
+    awrite
+```
+<!-- IMG_RECOVERY_END ref_id="img-04616" -->
+
+
 ### 설명
 
 write()와 fallocate() 시스템 콜의 응답 시간을 출력한다.
@@ -3708,6 +3802,14 @@ checkServer [-n] {-f server-restart-script-file}
 ### 구문
 
 ![checkserver](media/Utilities/checkserver.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04617" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3680" image_path_raw="media/Utilities/checkserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkserver ::=
+    checkServer [ -n ] -f server-restrat-script-file
+```
+<!-- IMG_RECOVERY_END ref_id="img-04617" -->
+
 
 ### 파라미터
 
@@ -3764,6 +3866,14 @@ dumpbi  <backupinfo_file_name>
 ### 구문
 
 ![dumpbi](media/Utilities/dumpbi.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04618" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3736" image_path_raw="media/Utilities/dumpbi.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpbi ::=
+    dumpbi backupinfo_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-04618" -->
+
 
 ### 설명
 
@@ -3824,6 +3934,14 @@ dumpct  <changeTracking_file_name>
 ### 구문
 
 ![dumpct](media/Utilities/dumpct.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04619" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3796" image_path_raw="media/Utilities/dumpct.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpct ::=
+    dumpct changeTracking_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-04619" -->
+
 
 ### 설명
 
@@ -3896,6 +4014,20 @@ dumpdb {-j job_number } [-i pingpong_number] [-o] [-f file_name] [-s] [-p] [-d]
 ### 구문
 
 ![dumpdb](media/Utilities/dumpdb.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04620" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="3868" image_path_raw="media/Utilities/dumpdb.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpdb ::=
+    dumpdb -j job_number
+        [ -i pingpong_number ]
+        [ -o ]
+        [ -f file_name ]
+        [ -s ]
+        [ -p ]
+        [ -d ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04620" -->
+
 
 ### 파라미터
 
@@ -4044,6 +4176,14 @@ dumpddf {-f datafile_name} {-m | -p pid}
 
 ![dumpddf](media/Utilities/dumpddf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04621" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="4015" image_path_raw="media/Utilities/dumpddf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpddf ::=
+    dumpddf -f datafile_name { -m | -p pid }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04621" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                                                                                    |
@@ -4145,6 +4285,14 @@ dumpla <loganchor_file_name>
 ### 구문
 
 ![dumpla](media/Utilities/dumpla.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04622" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="4117" image_path_raw="media/Utilities/dumpla.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpla ::=
+    dumpla loganchor_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-04622" -->
+
 
 ### 설명
 
@@ -4363,6 +4511,18 @@ dumplf {-f log_file_name} [-t transaction_id][-s] [-l][-S lsn [-F path] [-g]]
 
 ![](media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04623" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="4334" image_path_raw="media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumplf ::=
+    dumplf -f log_file
+        [ -t transaction_id ]
+        [ -s ]
+        [ -l ]
+        [ -S lsn [ -F path ] [ -g ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04623" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                                                                                                                         |
@@ -4507,6 +4667,21 @@ dumptrc [-h |[-p file_path][-c [-s]]
 ### 구문
 
 ![](media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04624" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="4479" image_path_raw="media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumptrc ::=
+    dumptrc
+        [ -h
+        | -p file_path [ -c [ -s ] ]
+          { -a | -i file_name { -i file_name } | -e file_name { -e file_name } }
+          [ -n line_count ]
+          [ x ]
+        | -f
+        | -v ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-04624" -->
+
 
 ### 파라미터
 
@@ -4734,6 +4909,14 @@ killCheckServer
 
 ![killcheckserver](media/Utilities/killcheckserver.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04625" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="4705" image_path_raw="media/Utilities/killcheckserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+killcheckserver ::=
+    killCheckServer
+```
+<!-- IMG_RECOVERY_END ref_id="img-04625" -->
+
+
 ### 설명
 
 killCheckServer는 실행 중인 checkServer를 종료한다.
@@ -4781,6 +4964,21 @@ server { start | stop | restart | kill | status | create db_charset national_cha
 ### 구문
 
 ![server](media/Utilities/server.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04626" source_md="Manuals/Altibase_7.3/kor/Utilities Manual.md" line_no="4753" image_path_raw="media/Utilities/server.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+server ::=
+    'server' { 'start'
+             | 'stop'
+             | 'restart'
+             | 'kill'
+             | 'status'
+             | 'create' db_charset national_charset
+             | 'startRoleManager'
+             | 'stopRoleManager' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04626" -->
+
 
 ### 파라미터
 
@@ -5368,6 +5566,30 @@ Note: If the server character set and the value set in ALTIBASE_NLS_USE are diff
 #### Syntax
 
 ![](media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05721" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="511" image_path_raw="media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aexport ::=
+    AEXPORT
+        { -h
+        | -s server_name
+        | -u user_name
+        | -p password
+        | -port port_no
+        | -tserver server_name
+        | -tport port_no
+        | -nls national_language_support
+        | -object user_name '.' object_name { ',' user_name '.' object_name }
+        | -prefer_ipv6
+        | -ssl_ca CA_file_path
+        | -ssl_capath CA_dir_path
+        | -ssl_cert certificate_file_path
+        | -ssl_key key_file_path
+        | -ssl_verify
+        | -ssl_cipher cipher_list }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05721" -->
+
 
 #### Parameters
 
@@ -7321,6 +7543,14 @@ altiAudit [-s] {audit_log_file_name}
 
 ![](media/Utilities/altiaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05734" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="2463" image_path_raw="media/Utilities/altiaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiaudit ::=
+    altiAudit [ -s ] audit_log_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05734" -->
+
+
 #### Descriptions
 
 This converts and outputs audit logs written by the server in text format.
@@ -7443,6 +7673,14 @@ altibase {-v|n}
 
 ![](media/Utilities/altibase.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05735" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="2585" image_path_raw="media/Utilities/altibase.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altibase ::=
+    altibase { -v | -n }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05735" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -7477,6 +7715,14 @@ altimon.sh {start \| stop}
 #### Syntax
 
 ![](media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05736" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="2620" image_path_raw="media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+altimon ::=
+    altimon.sh { start | stop }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05736" -->
+
 
 #### Parameters
 
@@ -7775,6 +8021,14 @@ altierr {-w keyword pattern | [-n] error number}
 
 ![](media/Utilities/altierr.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05737" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="2917" image_path_raw="media/Utilities/altierr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altierr ::=
+    altierr { -w keyword_pattern | [ -n ] error_number }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05737" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -7835,6 +8089,14 @@ altipasswd
 
 ![](media/Utilities/altipasswd.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05738" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="2977" image_path_raw="media/Utilities/altipasswd.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altipasswd ::=
+    altipasswd
+```
+<!-- IMG_RECOVERY_END ref_id="img-05738" -->
+
+
 #### Description
 
 Changes the password of the SYS user.
@@ -7867,6 +8129,17 @@ altiProfile [-stat query|session] {profile_name [profile_name2 [profile_name3] .
 #### Syntax
 
 ![](media/Utilities/altiprofile.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05739" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3010" image_path_raw="media/Utilities/altiprofile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiprofile ::=
+    altiProfile
+        [ -h
+        | -stat { query | session } ]
+        profile_name { profile_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05739" -->
+
 
 #### Parameters
 
@@ -8087,6 +8360,17 @@ altiwarp {--iname input_file} [--oname output_file]
 
 ![altiwrap](media/Utilities/altiwrap.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05740" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3229" image_path_raw="media/Utilities/altiwrap.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiwrap ::=
+    altiwrap
+        { -h
+        | --h
+        | --iname input_file [ --oname output_file ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05740" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -8171,6 +8455,14 @@ Outputs the response time of the system call used to create the log file. The ou
 
 ![awrite](media/Utilities/awrite.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05741" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3313" image_path_raw="media/Utilities/awrite.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+awrite ::=
+    awrite
+```
+<!-- IMG_RECOVERY_END ref_id="img-05741" -->
+
+
 #### Description
 
 Outputs the response time of write () and fallocate () system calls.
@@ -8204,6 +8496,14 @@ checkServer [-n] {-f server-restart-script-file}
 #### Syntax
 
 ![checkserver](media/Utilities/checkserver.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05742" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3347" image_path_raw="media/Utilities/checkserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkserver ::=
+    checkServer [ -n ] -f server-restrat-script-file
+```
+<!-- IMG_RECOVERY_END ref_id="img-05742" -->
+
 
 #### Parameters
 
@@ -8258,6 +8558,14 @@ dumpbi  <backupinfo_file_name>
 #### Syntax
 
 ![dumpbi](media/Utilities/dumpbi.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05743" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3401" image_path_raw="media/Utilities/dumpbi.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpbi ::=
+    dumpbi backupinfo_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05743" -->
+
 
 #### Description
 
@@ -8318,6 +8626,14 @@ dumpct  <changeTracking_file_name>
 #### Syntax
 
 ![dumpct](media/Utilities/dumpct.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05744" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3461" image_path_raw="media/Utilities/dumpct.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpct ::=
+    dumpct changeTracking_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05744" -->
+
 
 #### Description
 
@@ -8388,6 +8704,20 @@ dumpdb {-j job_number } [-i pingpong_number] [-o] [-f file_name] [-s] [-p] [-d]
 #### Syntax
 
 ![dumpdb](media/Utilities/dumpdb.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05745" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3531" image_path_raw="media/Utilities/dumpdb.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpdb ::=
+    dumpdb -j job_number
+        [ -i pingpong_number ]
+        [ -o ]
+        [ -f file_name ]
+        [ -s ]
+        [ -p ]
+        [ -d ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05745" -->
+
 
 #### Parameters
 
@@ -8534,6 +8864,14 @@ dumpddf {-f datafile_name} {-m | -p pid}
 
 ![dumpddf](media/Utilities/dumpddf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05746" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3676" image_path_raw="media/Utilities/dumpddf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpddf ::=
+    dumpddf -f datafile_name { -m | -p pid }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05746" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -8635,6 +8973,14 @@ dumpla <loganchor_file_name>
 #### Syntax
 
 ![dumpla](media/Utilities/dumpla.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05747" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3778" image_path_raw="media/Utilities/dumpla.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpla ::=
+    dumpla loganchor_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-05747" -->
+
 
 #### Description
 
@@ -8854,6 +9200,18 @@ dumplf {-f log_file_name} [-t transaction_id][-s] [-l][-S lsn [-F path] [-g]]
 
 ![](media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05748" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="3996" image_path_raw="media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumplf ::=
+    dumplf -f log_file
+        [ -t transaction_id ]
+        [ -s ]
+        [ -l ]
+        [ -S lsn [ -F path ] [ -g ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05748" -->
+
+
 #### Parameters
 
 | Parameter | Description                                                  |
@@ -8998,6 +9356,21 @@ dumptrc [-h |[-p file_path][-c [-s]]
 #### Syntax
 
 ![](media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05749" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="4141" image_path_raw="media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumptrc ::=
+    dumptrc
+        [ -h
+        | -p file_path [ -c [ -s ] ]
+          { -a | -i file_name { -i file_name } | -e file_name { -e file_name } }
+          [ -n line_count ]
+          [ x ]
+        | -f
+        | -v ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-05749" -->
+
 
 #### Parameters
 
@@ -9237,6 +9610,14 @@ killCheckServer
 
 ![killcheckserver](media/Utilities/killcheckserver.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05750" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="4379" image_path_raw="media/Utilities/killcheckserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+killcheckserver ::=
+    killCheckServer
+```
+<!-- IMG_RECOVERY_END ref_id="img-05750" -->
+
+
 #### Description
 
 killCheckServer terminates the checkServer utility if it is currently running.
@@ -9284,6 +9665,21 @@ server { start | stop | restart | kill | status | create db_charset national_cha
 #### Syntax
 
 ![server](media/Utilities/server.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05751" source_md="Manuals/Altibase_trunk/eng/Utilities Manual.md" line_no="4427" image_path_raw="media/Utilities/server.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+server ::=
+    'server' { 'start'
+             | 'stop'
+             | 'restart'
+             | 'kill'
+             | 'status'
+             | 'create' db_charset national_charset
+             | 'startRoleManager'
+             | 'stopRoleManager' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05751" -->
+
 
 #### Parameters
 
@@ -9926,6 +10322,30 @@ aexport가 생성하는 파일 권한을 설정하는 환경 변수이다. 값�
 ### 구문
 
 ![](media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06951" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="574" image_path_raw="media/Utilities/83e5d3722e9a7c575270c6a6bb5206c2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aexport ::=
+    AEXPORT
+        { -h
+        | -s server_name
+        | -u user_name
+        | -p password
+        | -port port_no
+        | -tserver server_name
+        | -tport port_no
+        | -nls national_language_support
+        | -object user_name '.' object_name { ',' user_name '.' object_name }
+        | -prefer_ipv6
+        | -ssl_ca CA_file_path
+        | -ssl_capath CA_dir_path
+        | -ssl_cert certificate_file_path
+        | -ssl_key key_file_path
+        | -ssl_verify
+        | -ssl_cipher cipher_list }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06951" -->
+
 
 ### 파라미터
 
@@ -11912,6 +12332,14 @@ altimon.sh {start | stop}
 
 <div align="left">
     <img src=media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png>
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06964" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="2560" image_path_raw="media/Utilities/9f7b2fa1105d33ea554edb062ca8b96f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+altimon ::=
+    altimon.sh { start | stop }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06964" -->
+
 </div>
 <br/>
 
@@ -12430,6 +12858,14 @@ altiAudit [-s] {audit_log_file_name}
 
 ![](media/Utilities/altiaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06966" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3077" image_path_raw="media/Utilities/altiaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiaudit ::=
+    altiAudit [ -s ] audit_log_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-06966" -->
+
+
 ### 설명
 
 서버가 남긴 감사 로그를 문자 형태로 변환하여 출력한다.
@@ -12552,6 +12988,14 @@ altibase {-v|n}
 
 ![](media/Utilities/altibase.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06967" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3199" image_path_raw="media/Utilities/altibase.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altibase ::=
+    altibase { -v | -n }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06967" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                |
@@ -12598,6 +13042,14 @@ altierr {-w keyword pattern | [-n] error number}
 ### 구문
 
 ![](media/Utilities/altierr.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06968" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3246" image_path_raw="media/Utilities/altierr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altierr ::=
+    altierr { -w keyword_pattern | [ -n ] error_number }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06968" -->
+
 
 ### 파라미터
 
@@ -12659,6 +13111,14 @@ altipasswd
 
 ![](media/Utilities/altipasswd.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06969" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3306" image_path_raw="media/Utilities/altipasswd.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altipasswd ::=
+    altipasswd
+```
+<!-- IMG_RECOVERY_END ref_id="img-06969" -->
+
+
 ### 설명
 
 SYS 사용자의 암호를 변경한다.
@@ -12692,6 +13152,17 @@ altiProfile [-stat query|session] {profile_name [profile_name2 [profile_name3] .
 ### 구문
 
 ![](media/Utilities/altiprofile.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06970" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3340" image_path_raw="media/Utilities/altiprofile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiprofile ::=
+    altiProfile
+        [ -h
+        | -stat { query | session } ]
+        profile_name { profile_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06970" -->
+
 
 ### 파라미터
 
@@ -12916,6 +13387,17 @@ altiwarp {--iname input_file} [--oname output_file]
 
 ![altiwrap](media/Utilities/altiwrap.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06971" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3563" image_path_raw="media/Utilities/altiwrap.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+altiwrap ::=
+    altiwrap
+        { -h
+        | --h
+        | --iname input_file [ --oname output_file ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06971" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                         |
@@ -13002,6 +13484,14 @@ Execute success.
 
 ![awrite](media/Utilities/awrite.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06972" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3649" image_path_raw="media/Utilities/awrite.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+awrite ::=
+    awrite
+```
+<!-- IMG_RECOVERY_END ref_id="img-06972" -->
+
+
 ### 설명
 
 write()와 fallocate() 시스템 콜의 응답 시간을 출력한다.
@@ -13035,6 +13525,14 @@ checkServer [-n] {-f server-restart-script-file}
 ### 구문
 
 ![checkserver](media/Utilities/checkserver.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06973" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3683" image_path_raw="media/Utilities/checkserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkserver ::=
+    checkServer [ -n ] -f server-restrat-script-file
+```
+<!-- IMG_RECOVERY_END ref_id="img-06973" -->
+
 
 ### 파라미터
 
@@ -13091,6 +13589,14 @@ dumpbi  <backupinfo_file_name>
 ### 구문
 
 ![dumpbi](media/Utilities/dumpbi.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06974" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3739" image_path_raw="media/Utilities/dumpbi.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpbi ::=
+    dumpbi backupinfo_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-06974" -->
+
 
 ### 설명
 
@@ -13151,6 +13657,14 @@ dumpct  <changeTracking_file_name>
 ### 구문
 
 ![dumpct](media/Utilities/dumpct.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06975" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3799" image_path_raw="media/Utilities/dumpct.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpct ::=
+    dumpct changeTracking_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-06975" -->
+
 
 ### 설명
 
@@ -13223,6 +13737,20 @@ dumpdb {-j job_number } [-i pingpong_number] [-o] [-f file_name] [-s] [-p] [-d]
 ### 구문
 
 ![dumpdb](media/Utilities/dumpdb.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06976" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="3871" image_path_raw="media/Utilities/dumpdb.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpdb ::=
+    dumpdb -j job_number
+        [ -i pingpong_number ]
+        [ -o ]
+        [ -f file_name ]
+        [ -s ]
+        [ -p ]
+        [ -d ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06976" -->
+
 
 ### 파라미터
 
@@ -13371,6 +13899,14 @@ dumpddf {-f datafile_name} {-m | -p pid}
 
 ![dumpddf](media/Utilities/dumpddf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06977" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="4018" image_path_raw="media/Utilities/dumpddf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpddf ::=
+    dumpddf -f datafile_name { -m | -p pid }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06977" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                                                                                    |
@@ -13472,6 +14008,14 @@ dumpla <loganchor_file_name>
 ### 구문
 
 ![dumpla](media/Utilities/dumpla.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06978" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="4120" image_path_raw="media/Utilities/dumpla.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumpla ::=
+    dumpla loganchor_file_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-06978" -->
+
 
 ### 설명
 
@@ -13691,6 +14235,18 @@ dumplf {-f log_file_name} [-t transaction_id][-s] [-l][-S lsn [-F path] [-g]]
 
 ![](media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06979" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="4338" image_path_raw="media/Utilities/cf929d8b05f4569ae6f63eab0d68f8bc.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumplf ::=
+    dumplf -f log_file
+        [ -t transaction_id ]
+        [ -s ]
+        [ -l ]
+        [ -S lsn [ -F path ] [ -g ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06979" -->
+
+
 ### 파라미터
 
 | 파라미터 | 설명                                                                                                                                                         |
@@ -13835,6 +14391,21 @@ dumptrc [-h |[-p file_path][-c [-s]]
 ### 구문
 
 ![](media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06980" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="4483" image_path_raw="media/Utilities/8d31776c2bc3e1d547efa1715f6899f7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+dumptrc ::=
+    dumptrc
+        [ -h
+        | -p file_path [ -c [ -s ] ]
+          { -a | -i file_name { -i file_name } | -e file_name { -e file_name } }
+          [ -n line_count ]
+          [ x ]
+        | -f
+        | -v ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-06980" -->
+
 
 ### 파라미터
 
@@ -14061,6 +14632,14 @@ killCheckServer
 
 ![killcheckserver](media/Utilities/killcheckserver.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06981" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="4708" image_path_raw="media/Utilities/killcheckserver.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+killcheckserver ::=
+    killCheckServer
+```
+<!-- IMG_RECOVERY_END ref_id="img-06981" -->
+
+
 ### 설명
 
 killCheckServer는 실행 중인 checkServer를 종료한다.
@@ -14108,6 +14687,21 @@ server { start | stop | restart | kill | status | create db_charset national_cha
 ### 구문
 
 ![server](media/Utilities/server.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06982" source_md="Manuals/Altibase_trunk/kor/Utilities Manual.md" line_no="4756" image_path_raw="media/Utilities/server.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+server ::=
+    'server' { 'start'
+             | 'stop'
+             | 'restart'
+             | 'kill'
+             | 'status'
+             | 'create' db_charset national_charset
+             | 'startRoleManager'
+             | 'stopRoleManager' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06982" -->
+
 
 ### 파라미터
 
@@ -14743,6 +15337,20 @@ aHeartbeat also defines aheartbeats on other nodes to be in one of the following
 The following figure shows how status transition occurs and the table lists the situations under which each status transition occurs.
 
 ![heartbeat_transition](media/Heartbeat/heartbeat_transition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-07265" source_md="Manuals/Tools/Altibase_trunk/eng/Altibase Heartbeat User&#x27;s Guide.md" line_no="559" image_path_raw="media/Heartbeat/heartbeat_transition.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart LR
+    Ready([Ready])
+    Run([Run])
+    Error([Error])
+    Ready -->|"(1)"| Run
+    Run -->|"(2)"| Error
+    Error -->|"(3)"| Run
+    Run -->|"(4)"| Ready
+```
+<!-- IMG_RECOVERY_END ref_id="img-07265" -->
+
 
 [Figure 4-1] Status Transition
 
@@ -16755,6 +17363,20 @@ aheartbeat는 자신의 상태와 다른 aheartbeat의 상태를 각각 정의�
 한 상태에서 다른 상태로 전이되는 과정은 아래 그림과 같이 이루어진다. 
 
 ![heartbeat_transition](media/Heartbeat/heartbeat_transition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-07367" source_md="Manuals/Tools/Altibase_trunk/kor/Altibase Heartbeat User&#x27;s Guide.md" line_no="676" image_path_raw="media/Heartbeat/heartbeat_transition.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart LR
+    Ready([Ready])
+    Run([Run])
+    Error([Error])
+    Ready -->|"(1)"| Run
+    Run -->|"(2)"| Error
+    Error -->|"(3)"| Run
+    Run -->|"(4)"| Ready
+```
+<!-- IMG_RECOVERY_END ref_id="img-07367" -->
+
 
 그림 4-1 aheartbeat 상태 전이
 
@@ -19155,6 +19777,20 @@ The following figure shows how status transition occurs and the table lists the 
 
 ![heartbeat_transition](media/Heartbeat/heartbeat_transition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-07061" source_md="Manuals/Tools/Altibase_release/eng/Altibase Heartbeat User&#x27;s Guide.md" line_no="557" image_path_raw="media/Heartbeat/heartbeat_transition.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart LR
+    Ready([Ready])
+    Run([Run])
+    Error([Error])
+    Ready -->|"(1)"| Run
+    Run -->|"(2)"| Error
+    Error -->|"(3)"| Run
+    Run -->|"(4)"| Ready
+```
+<!-- IMG_RECOVERY_END ref_id="img-07061" -->
+
+
 [Figure 4-1] Status Transition
 
 Each status transition occurs in the following table.
@@ -21160,6 +21796,20 @@ aheartbeat는 자신의 상태와 다른 aheartbeat의 상태를 각각 정의�
 한 상태에서 다른 상태로 전이되는 과정은 아래 그림과 같이 이루어진다. 
 
 ![heartbeat_transition](media/Heartbeat/heartbeat_transition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-07163" source_md="Manuals/Tools/Altibase_release/kor/Altibase Heartbeat User&#x27;s Guide.md" line_no="672" image_path_raw="media/Heartbeat/heartbeat_transition.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart LR
+    Ready([Ready])
+    Run([Run])
+    Error([Error])
+    Ready -->|"(1)"| Run
+    Run -->|"(2)"| Error
+    Error -->|"(3)"| Run
+    Run -->|"(4)"| Ready
+```
+<!-- IMG_RECOVERY_END ref_id="img-07163" -->
+
 
 그림 4-1 aheartbeat 상태 전이
 

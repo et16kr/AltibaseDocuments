@@ -7278,6 +7278,32 @@ The following figure displays the basic steps in query processing.
 
 ![BASIC_STEPS_IN_QUERY_PROCESSING](media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00358" source_md="Manuals/Altibase_7.1/eng/Performance Tuning Guide.md" line_no="591" image_path_raw="media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Client
+        C1[Prepare]
+        C2[Bind]
+        C3[Execute]
+        C4[Fetch]
+    end
+    subgraph Server
+        S1[Parsing]
+        S2[Validation]
+        S3[Optimization]
+        S4[Binding]
+        S5[Execution]
+        S6([Database])
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
+    C1 --> S1
+    C2 --> S4
+    C3 --> S5
+    S5 --> C4
+```
+<!-- IMG_RECOVERY_END ref_id="img-00358" -->
+
+
 [Figure 1-1] The Basic Steps in Query Processing
 
 Each step performs the following task:
@@ -7636,6 +7662,24 @@ Prior to optimization, a SQL statement is first parsed and validated, and a pars
 An optimizer that executes this process has the following structure.
 
 ![optimizer_structure](media/TuningGuide/optimizer_structure.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00359" source_md="Manuals/Altibase_7.1/eng/Performance Tuning Guide.md" line_no="950" image_path_raw="media/TuningGuide/optimizer_structure.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    PT([Parse Tree Parsed Query])
+    QR[Query Rewriter]
+    LPG[Logical Plan Generator Cost Estimation]
+    PPG[Physical Plan Generator]
+    EP([Execution Plan])
+    stats([statistics])
+    PT --> QR
+    QR -->|Transformed Query| LPG
+    stats --> LPG
+    LPG -->|Logical Plan| PPG
+    PPG --> EP
+```
+<!-- IMG_RECOVERY_END ref_id="img-00359" -->
+
 
 [Figure 3-1] The Structure of the Optimizer
 
@@ -8922,6 +8966,44 @@ For example, the shortest conversion path will be between the FLOAT and VARCHAR 
 The following figure shows data type conversion paths.
 
 ![data_type_conversion_path_kor](media/TuningGuide/data_type_conversion_path_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00360" source_md="Manuals/Altibase_7.1/eng/Performance Tuning Guide.md" line_no="2236" image_path_raw="media/TuningGuide/data_type_conversion_path_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    SMALLINT -->|"<0+0+0>"| INTEGER
+    INTEGER -->|"<0+E+0>"| SMALLINT
+    REAL -->|"<0+0+0>"| DOUBLE
+    INTERVAL -->|"<G+E+L>"| DOUBLE
+    DOUBLE -->|"<G+0+0>"| INTERVAL
+    INTEGER -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| INTEGER
+    INTEGER -->|"<0+0+0>"| BIGINT
+    BIGINT -->|"<0+E+0>"| INTEGER
+    INTEGER -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| INTEGER
+    BIGINT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+0>"| BIGINT
+    BIGINT -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| BIGINT
+    NUMERIC -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| NUMERIC
+    DOUBLE -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| REAL
+    CHAR -->|"<0+0+0>"| NUMERIC
+    NUMERIC -->|"<G+0+0>"| CHAR
+    CHAR -->|"<0+0+L>"| VARCHAR
+    VARCHAR -->|"<0+0+0>"| CHAR
+    VARCHAR -->|"<G+0+0>"| NUMERIC
+    VARCHAR -->|"<G+E+0>"| DATE
+    DATE -->|"<0+E+L>"| VARCHAR
+    BIGINT -->|"<G+0+0>"| CHAR
+    NULL -->|"<G+0+0>"| ALL
+```
+<!-- IMG_RECOVERY_END ref_id="img-00360" -->
+
 
 [Figure 3-2] Data Type Conversion Paths
 
@@ -13466,6 +13548,32 @@ DBMS에서 SQL문 처리를 담당하는 모듈을 질의 처리기(Query Proces
 
 ![BASIC_STEPS_IN_QUERY_PROCESSING](media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01493" source_md="Manuals/Altibase_7.1/kor/Performance Tuning Guide.md" line_no="636" image_path_raw="media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Client
+        C1[Prepare]
+        C2[Bind]
+        C3[Execute]
+        C4[Fetch]
+    end
+    subgraph Server
+        S1[Parsing]
+        S2[Validation]
+        S3[Optimization]
+        S4[Binding]
+        S5[Execution]
+        S6([Database])
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
+    C1 --> S1
+    C2 --> S4
+    C3 --> S5
+    S5 --> C4
+```
+<!-- IMG_RECOVERY_END ref_id="img-01493" -->
+
+
 [그림 1‑1] Query Processing 순서
 
 각 단계별 수행 작업은 다음과 같다.
@@ -13830,6 +13938,24 @@ CPU 사용률이 높은 쓰레드가 어떤 작업을 하고 있는지 확인하
 이러한 과정을 수행하는 옵티마이저의 구조는 다음과 같다.
 
 ![optimizer_structure](media/TuningGuide/optimizer_structure.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01494" source_md="Manuals/Altibase_7.1/kor/Performance Tuning Guide.md" line_no="1001" image_path_raw="media/TuningGuide/optimizer_structure.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    PT([Parse Tree Parsed Query])
+    QR[Query Rewriter]
+    LPG[Logical Plan Generator Cost Estimation]
+    PPG[Physical Plan Generator]
+    EP([Execution Plan])
+    stats([statistics])
+    PT --> QR
+    QR -->|Transformed Query| LPG
+    stats --> LPG
+    LPG -->|Logical Plan| PPG
+    PPG --> EP
+```
+<!-- IMG_RECOVERY_END ref_id="img-01494" -->
+
 
 [그림 3‑1] 옵티마이저 구조
 
@@ -15129,6 +15255,44 @@ SELECT * FROM T1 WHERE T1.i1 = ?
 다음은 데이터 타입 변환 경로를 도식화한 그림이다.
 
 ![data_type_conversion_path_kor](media/TuningGuide/data_type_conversion_path_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01495" source_md="Manuals/Altibase_7.1/kor/Performance Tuning Guide.md" line_no="2300" image_path_raw="media/TuningGuide/data_type_conversion_path_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    SMALLINT -->|"<0+0+0>"| INTEGER
+    INTEGER -->|"<0+E+0>"| SMALLINT
+    REAL -->|"<0+0+0>"| DOUBLE
+    INTERVAL -->|"<G+E+L>"| DOUBLE
+    DOUBLE -->|"<G+0+0>"| INTERVAL
+    INTEGER -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| INTEGER
+    INTEGER -->|"<0+0+0>"| BIGINT
+    BIGINT -->|"<0+E+0>"| INTEGER
+    INTEGER -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| INTEGER
+    BIGINT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+0>"| BIGINT
+    BIGINT -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| BIGINT
+    NUMERIC -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| NUMERIC
+    DOUBLE -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| REAL
+    CHAR -->|"<0+0+0>"| NUMERIC
+    NUMERIC -->|"<G+0+0>"| CHAR
+    CHAR -->|"<0+0+L>"| VARCHAR
+    VARCHAR -->|"<0+0+0>"| CHAR
+    VARCHAR -->|"<G+0+0>"| NUMERIC
+    VARCHAR -->|"<G+E+0>"| DATE
+    DATE -->|"<0+E+L>"| VARCHAR
+    BIGINT -->|"<G+0+0>"| CHAR
+    NULL -->|"<G+0+0>"| ALL
+```
+<!-- IMG_RECOVERY_END ref_id="img-01495" -->
+
 
 [그림 3‑2] 데이터 변환 타입 경로
 
@@ -19823,6 +19987,32 @@ The following figure displays the basic steps in query processing.
 
 ![BASIC_STEPS_IN_QUERY_PROCESSING](media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02674" source_md="Manuals/Altibase_7.3/eng/Performance Tuning Guide.md" line_no="594" image_path_raw="media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Client
+        C1[Prepare]
+        C2[Bind]
+        C3[Execute]
+        C4[Fetch]
+    end
+    subgraph Server
+        S1[Parsing]
+        S2[Validation]
+        S3[Optimization]
+        S4[Binding]
+        S5[Execution]
+        S6([Database])
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
+    C1 --> S1
+    C2 --> S4
+    C3 --> S5
+    S5 --> C4
+```
+<!-- IMG_RECOVERY_END ref_id="img-02674" -->
+
+
 [Figure 1-1] The Basic Steps in Query Processing
 
 Each step performs the following task:
@@ -20181,6 +20371,24 @@ Prior to optimization, a SQL statement is first parsed and validated, and a pars
 An optimizer that executes this process has the following structure.
 
 ![optimizer_structure](media/TuningGuide/optimizer_structure.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02675" source_md="Manuals/Altibase_7.3/eng/Performance Tuning Guide.md" line_no="953" image_path_raw="media/TuningGuide/optimizer_structure.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    PT([Parse Tree Parsed Query])
+    QR[Query Rewriter]
+    LPG[Logical Plan Generator Cost Estimation]
+    PPG[Physical Plan Generator]
+    EP([Execution Plan])
+    stats([statistics])
+    PT --> QR
+    QR -->|Transformed Query| LPG
+    stats --> LPG
+    LPG -->|Logical Plan| PPG
+    PPG --> EP
+```
+<!-- IMG_RECOVERY_END ref_id="img-02675" -->
+
 
 [Figure 3-1] The Structure of the Optimizer
 
@@ -21467,6 +21675,44 @@ For example, the shortest conversion path will be between the FLOAT and VARCHAR 
 The following figure shows data type conversion paths.
 
 ![data_type_conversion_path_kor](media/TuningGuide/data_type_conversion_path_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02676" source_md="Manuals/Altibase_7.3/eng/Performance Tuning Guide.md" line_no="2239" image_path_raw="media/TuningGuide/data_type_conversion_path_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    SMALLINT -->|"<0+0+0>"| INTEGER
+    INTEGER -->|"<0+E+0>"| SMALLINT
+    REAL -->|"<0+0+0>"| DOUBLE
+    INTERVAL -->|"<G+E+L>"| DOUBLE
+    DOUBLE -->|"<G+0+0>"| INTERVAL
+    INTEGER -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| INTEGER
+    INTEGER -->|"<0+0+0>"| BIGINT
+    BIGINT -->|"<0+E+0>"| INTEGER
+    INTEGER -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| INTEGER
+    BIGINT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+0>"| BIGINT
+    BIGINT -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| BIGINT
+    NUMERIC -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| NUMERIC
+    DOUBLE -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| REAL
+    CHAR -->|"<0+0+0>"| NUMERIC
+    NUMERIC -->|"<G+0+0>"| CHAR
+    CHAR -->|"<0+0+L>"| VARCHAR
+    VARCHAR -->|"<0+0+0>"| CHAR
+    VARCHAR -->|"<G+0+0>"| NUMERIC
+    VARCHAR -->|"<G+E+0>"| DATE
+    DATE -->|"<0+E+L>"| VARCHAR
+    BIGINT -->|"<G+0+0>"| CHAR
+    NULL -->|"<G+0+0>"| ALL
+```
+<!-- IMG_RECOVERY_END ref_id="img-02676" -->
+
 
 [Figure 3-2] Data Type Conversion Paths
 
@@ -26010,6 +26256,32 @@ DBMS에서 SQL문 처리를 담당하는 모듈을 질의 처리기(Query Proces
 
 ![BASIC_STEPS_IN_QUERY_PROCESSING](media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03867" source_md="Manuals/Altibase_7.3/kor/Performance Tuning Guide.md" line_no="638" image_path_raw="media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Client
+        C1[Prepare]
+        C2[Bind]
+        C3[Execute]
+        C4[Fetch]
+    end
+    subgraph Server
+        S1[Parsing]
+        S2[Validation]
+        S3[Optimization]
+        S4[Binding]
+        S5[Execution]
+        S6([Database])
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
+    C1 --> S1
+    C2 --> S4
+    C3 --> S5
+    S5 --> C4
+```
+<!-- IMG_RECOVERY_END ref_id="img-03867" -->
+
+
 [그림 1‑1] Query Processing 순서
 
 각 단계별 수행 작업은 다음과 같다.
@@ -26373,6 +26645,24 @@ CPU 사용률이 높은 쓰레드가 어떤 작업을 하고 있는지 확인하
 이러한 과정을 수행하는 옵티마이저의 구조는 다음과 같다.
 
 ![optimizer_structure](media/TuningGuide/optimizer_structure.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03868" source_md="Manuals/Altibase_7.3/kor/Performance Tuning Guide.md" line_no="1002" image_path_raw="media/TuningGuide/optimizer_structure.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    PT([Parse Tree Parsed Query])
+    QR[Query Rewriter]
+    LPG[Logical Plan Generator Cost Estimation]
+    PPG[Physical Plan Generator]
+    EP([Execution Plan])
+    stats([statistics])
+    PT --> QR
+    QR -->|Transformed Query| LPG
+    stats --> LPG
+    LPG -->|Logical Plan| PPG
+    PPG --> EP
+```
+<!-- IMG_RECOVERY_END ref_id="img-03868" -->
+
 
 [그림 3‑1] 옵티마이저 구조
 
@@ -27672,6 +27962,44 @@ SELECT * FROM T1 WHERE T1.i1 = ?
 다음은 데이터 타입 변환 경로를 도식화한 그림이다.
 
 ![data_type_conversion_path_kor](media/TuningGuide/data_type_conversion_path_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03869" source_md="Manuals/Altibase_7.3/kor/Performance Tuning Guide.md" line_no="2301" image_path_raw="media/TuningGuide/data_type_conversion_path_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    SMALLINT -->|"<0+0+0>"| INTEGER
+    INTEGER -->|"<0+E+0>"| SMALLINT
+    REAL -->|"<0+0+0>"| DOUBLE
+    INTERVAL -->|"<G+E+L>"| DOUBLE
+    DOUBLE -->|"<G+0+0>"| INTERVAL
+    INTEGER -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| INTEGER
+    INTEGER -->|"<0+0+0>"| BIGINT
+    BIGINT -->|"<0+E+0>"| INTEGER
+    INTEGER -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| INTEGER
+    BIGINT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+0>"| BIGINT
+    BIGINT -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| BIGINT
+    NUMERIC -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| NUMERIC
+    DOUBLE -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| REAL
+    CHAR -->|"<0+0+0>"| NUMERIC
+    NUMERIC -->|"<G+0+0>"| CHAR
+    CHAR -->|"<0+0+L>"| VARCHAR
+    VARCHAR -->|"<0+0+0>"| CHAR
+    VARCHAR -->|"<G+0+0>"| NUMERIC
+    VARCHAR -->|"<G+E+0>"| DATE
+    DATE -->|"<0+E+L>"| VARCHAR
+    BIGINT -->|"<G+0+0>"| CHAR
+    NULL -->|"<G+0+0>"| ALL
+```
+<!-- IMG_RECOVERY_END ref_id="img-03869" -->
+
 
 [그림 3‑2] 데이터 변환 타입 경로
 
@@ -32362,6 +32690,32 @@ The following figure displays the basic steps in query processing.
 
 ![BASIC_STEPS_IN_QUERY_PROCESSING](media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05004" source_md="Manuals/Altibase_trunk/eng/Performance Tuning Guide.md" line_no="594" image_path_raw="media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Client
+        C1[Prepare]
+        C2[Bind]
+        C3[Execute]
+        C4[Fetch]
+    end
+    subgraph Server
+        S1[Parsing]
+        S2[Validation]
+        S3[Optimization]
+        S4[Binding]
+        S5[Execution]
+        S6([Database])
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
+    C1 --> S1
+    C2 --> S4
+    C3 --> S5
+    S5 --> C4
+```
+<!-- IMG_RECOVERY_END ref_id="img-05004" -->
+
+
 [Figure 1-1] The Basic Steps in Query Processing
 
 Each step performs the following task:
@@ -32720,6 +33074,24 @@ Prior to optimization, a SQL statement is first parsed and validated, and a pars
 An optimizer that executes this process has the following structure.
 
 ![optimizer_structure](media/TuningGuide/optimizer_structure.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05005" source_md="Manuals/Altibase_trunk/eng/Performance Tuning Guide.md" line_no="953" image_path_raw="media/TuningGuide/optimizer_structure.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    PT([Parse Tree Parsed Query])
+    QR[Query Rewriter]
+    LPG[Logical Plan Generator Cost Estimation]
+    PPG[Physical Plan Generator]
+    EP([Execution Plan])
+    stats([statistics])
+    PT --> QR
+    QR -->|Transformed Query| LPG
+    stats --> LPG
+    LPG -->|Logical Plan| PPG
+    PPG --> EP
+```
+<!-- IMG_RECOVERY_END ref_id="img-05005" -->
+
 
 [Figure 3-1] The Structure of the Optimizer
 
@@ -34006,6 +34378,44 @@ For example, the shortest conversion path will be between the FLOAT and VARCHAR 
 The following figure shows data type conversion paths.
 
 ![data_type_conversion_path_kor](media/TuningGuide/data_type_conversion_path_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05006" source_md="Manuals/Altibase_trunk/eng/Performance Tuning Guide.md" line_no="2239" image_path_raw="media/TuningGuide/data_type_conversion_path_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    SMALLINT -->|"<0+0+0>"| INTEGER
+    INTEGER -->|"<0+E+0>"| SMALLINT
+    REAL -->|"<0+0+0>"| DOUBLE
+    INTERVAL -->|"<G+E+L>"| DOUBLE
+    DOUBLE -->|"<G+0+0>"| INTERVAL
+    INTEGER -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| INTEGER
+    INTEGER -->|"<0+0+0>"| BIGINT
+    BIGINT -->|"<0+E+0>"| INTEGER
+    INTEGER -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| INTEGER
+    BIGINT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+0>"| BIGINT
+    BIGINT -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| BIGINT
+    NUMERIC -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| NUMERIC
+    DOUBLE -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| REAL
+    CHAR -->|"<0+0+0>"| NUMERIC
+    NUMERIC -->|"<G+0+0>"| CHAR
+    CHAR -->|"<0+0+L>"| VARCHAR
+    VARCHAR -->|"<0+0+0>"| CHAR
+    VARCHAR -->|"<G+0+0>"| NUMERIC
+    VARCHAR -->|"<G+E+0>"| DATE
+    DATE -->|"<0+E+L>"| VARCHAR
+    BIGINT -->|"<G+0+0>"| CHAR
+    NULL -->|"<G+0+0>"| ALL
+```
+<!-- IMG_RECOVERY_END ref_id="img-05006" -->
+
 
 [Figure 3-2] Data Type Conversion Paths
 
@@ -38548,6 +38958,32 @@ DBMS에서 SQL문 처리를 담당하는 모듈을 질의 처리기(Query Proces
 
 ![BASIC_STEPS_IN_QUERY_PROCESSING](media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06200" source_md="Manuals/Altibase_trunk/kor/Performance Tuning Guide.md" line_no="636" image_path_raw="media/TuningGuide/BASIC_STEPS_IN_QUERY_PROCESSING.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Client
+        C1[Prepare]
+        C2[Bind]
+        C3[Execute]
+        C4[Fetch]
+    end
+    subgraph Server
+        S1[Parsing]
+        S2[Validation]
+        S3[Optimization]
+        S4[Binding]
+        S5[Execution]
+        S6([Database])
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6
+    end
+    C1 --> S1
+    C2 --> S4
+    C3 --> S5
+    S5 --> C4
+```
+<!-- IMG_RECOVERY_END ref_id="img-06200" -->
+
+
 [그림 1‑1] Query Processing 순서
 
 각 단계별 수행 작업은 다음과 같다.
@@ -38911,6 +39347,24 @@ CPU 사용률이 높은 쓰레드가 어떤 작업을 하고 있는지 확인하
 이러한 과정을 수행하는 옵티마이저의 구조는 다음과 같다.
 
 ![optimizer_structure](media/TuningGuide/optimizer_structure.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06201" source_md="Manuals/Altibase_trunk/kor/Performance Tuning Guide.md" line_no="1000" image_path_raw="media/TuningGuide/optimizer_structure.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    PT([Parse Tree Parsed Query])
+    QR[Query Rewriter]
+    LPG[Logical Plan Generator Cost Estimation]
+    PPG[Physical Plan Generator]
+    EP([Execution Plan])
+    stats([statistics])
+    PT --> QR
+    QR -->|Transformed Query| LPG
+    stats --> LPG
+    LPG -->|Logical Plan| PPG
+    PPG --> EP
+```
+<!-- IMG_RECOVERY_END ref_id="img-06201" -->
+
 
 [그림 3‑1] 옵티마이저 구조
 
@@ -40210,6 +40664,44 @@ SELECT * FROM T1 WHERE T1.i1 = ?
 다음은 데이터 타입 변환 경로를 도식화한 그림이다.
 
 ![data_type_conversion_path_kor](media/TuningGuide/data_type_conversion_path_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06202" source_md="Manuals/Altibase_trunk/kor/Performance Tuning Guide.md" line_no="2299" image_path_raw="media/TuningGuide/data_type_conversion_path_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    SMALLINT -->|"<0+0+0>"| INTEGER
+    INTEGER -->|"<0+E+0>"| SMALLINT
+    REAL -->|"<0+0+0>"| DOUBLE
+    INTERVAL -->|"<G+E+L>"| DOUBLE
+    DOUBLE -->|"<G+0+0>"| INTERVAL
+    INTEGER -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| INTEGER
+    INTEGER -->|"<0+0+0>"| BIGINT
+    BIGINT -->|"<0+E+0>"| INTEGER
+    INTEGER -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| INTEGER
+    BIGINT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+0>"| BIGINT
+    BIGINT -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| BIGINT
+    NUMERIC -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+0+L>"| NUMERIC
+    NUMERIC -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| NUMERIC
+    DOUBLE -->|"<0+0+0>"| FLOAT
+    FLOAT -->|"<0+0+0>"| DOUBLE
+    DOUBLE -->|"<0+E+L>"| REAL
+    CHAR -->|"<0+0+0>"| NUMERIC
+    NUMERIC -->|"<G+0+0>"| CHAR
+    CHAR -->|"<0+0+L>"| VARCHAR
+    VARCHAR -->|"<0+0+0>"| CHAR
+    VARCHAR -->|"<G+0+0>"| NUMERIC
+    VARCHAR -->|"<G+E+0>"| DATE
+    DATE -->|"<0+E+L>"| VARCHAR
+    BIGINT -->|"<G+0+0>"| CHAR
+    NULL -->|"<G+0+0>"| ALL
+```
+<!-- IMG_RECOVERY_END ref_id="img-06202" -->
+
 
 [그림 3‑2] 데이터 변환 타입 경로
 
@@ -60389,6 +60881,40 @@ The Fail-Over registration and handling process is as shown in the following fig
 
 ![](media/Replication/Replication_eng.1.22.1.jpg)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00460" source_md="Manuals/Altibase_7.1/eng/Replication Manual.md" line_no="3803" image_path_raw="media/Replication/Replication_eng.1.22.1.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Normal Connection
+        N1([Normal Connection])
+        N2[Connect to DB A]
+        N3[Register a failover callback in ConnAttr]
+        N4[SELECT]
+        N5[INSERT]
+        N6[DELETE]
+        N7[Disconnect]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7
+    end
+    subgraph Abnormal Connection
+        A1([Abnormal Connection])
+        A2[Connect to DB A]
+        A3[Register a failover callback in ConnAttr]
+        A4[SELECT]
+        A5[INSERT]
+        A6[DELETE]
+        A7[Disconnect]
+        FO[Connect to DB B]
+        CB[Check sync between DBs]
+        A1 --> A2 --> A3 --> A4 --> A5
+        A5 -->|Failure occurs. Use Fail-Over.| FO
+        FO -->|Use callback.| CB
+        CB -->|Retry| A5
+        CB -->|Retry| A6
+        A6 --> A7
+    end
+```
+<!-- IMG_RECOVERY_END ref_id="img-00460" -->
+
+
 [Figure 4-1] Fail-Over Registration and Handling Process
 
 Fail-Over Callback must be registered by the user, and, once registered, during the Fail-Over process the Altibase User Library (for example, the JDBC and CLI libraries) communicates with client applications, as shown in the picture above.
@@ -60396,6 +60922,38 @@ Fail-Over Callback must be registered by the user, and, once registered, during 
 If Fail-Over Callback is not registered, Fail-Over takes place without communication with the client application, and a trace log of the steps shown above is kept. In a replicated Altibase database environment, the use of callback is strongly recommended, so that Fail-Over Validation can be conducted.
 
 ![](media/Replication/Replication_eng.1.22.2.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00461" source_md="Manuals/Altibase_7.1/eng/Replication Manual.md" line_no="3811" image_path_raw="media/Replication/Replication_eng.1.22.2.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Application
+        AP1[Connect to DB A - Register a failover callback]
+        AP2([Connection Failure])
+        AP3([Retry])
+        AP4[Disconnect]
+    end
+    subgraph ALTIBASE User Library
+        LIB1([FO_BEGIN])
+        LIB2([FO_GO])
+        LIB3[Use Close statement - Connect to DB B - Restore session property]
+        LIB4([FO_END])
+        LIB5([FO_GO])
+        LIB6([FO_SUCCESS])
+    end
+    subgraph callback
+        CB1[Case FO_BEGIN:]
+        CB2[Case FO_END: Check sync between DBs]
+    end
+    AP1 --> AP2 --> LIB1
+    LIB1 --> LIB2 --> CB1
+    CB1 --> LIB3
+    LIB3 --> LIB4 --> LIB5 --> CB2
+    CB2 --> AP3
+    AP3 --> LIB6
+    LIB6 --> AP4
+```
+<!-- IMG_RECOVERY_END ref_id="img-00461" -->
+
 
 1. After connecting to the database, the user registers Fail-Over Callback in the connection attributes.
 
@@ -66296,6 +66854,40 @@ Fail-Over 등록 및 처리과정을 그림으로 나타내면 다음과 같다.
 
 ![](media/Replication/4-1.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01597" source_md="Manuals/Altibase_7.1/kor/Replication Manual.md" line_no="4033" image_path_raw="media/Replication/4-1.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph 정상상황
+        N1([정상상황])
+        N2[DB 가 연결]
+        N3[ConnAttr에 콜백 등록]
+        N4[SELECT]
+        N5[INSERT]
+        N6[DELETE]
+        N7[연결 해제]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7
+    end
+    subgraph 장애상황
+        A1([장애상황])
+        A2[DB 가 연결]
+        A3[ConnAttr에 콜백 등록]
+        A4[SELECT]
+        A5[INSERT]
+        A6[DELETE]
+        A7[연결 해제]
+        FO[DB 나 연결]
+        CB[DB 나의 정합성 확인]
+        A1 --> A2 --> A3 --> A4 --> A5
+        A5 -->|장애발생 Fail Over 수행| FO
+        FO -->|callback| CB
+        CB -->|직접재수행| A5
+        CB -->|리턴| A6
+        A6 --> A7
+    end
+```
+<!-- IMG_RECOVERY_END ref_id="img-01597" -->
+
+
 [그림 4‑1] Fail-Over 수행 과정
 
 Fail-Over 콜백은 사용자가 등록하여야 하며, 등록하면 Fail-Over(STF) 과정에서 Altibase User Library(예를 들어, JDBC, CLI 라이브러리) 및 응용프로그램과 아래 그림처럼 통신하게 된다.
@@ -66303,6 +66895,38 @@ Fail-Over 콜백은 사용자가 등록하여야 하며, 등록하면 Fail-Over(
 Fail-Over 콜백을 등록하지 않으면 응용프로그램과 통신 없이 Fail-Over를 수행하고, 진행 상항을 트레이스 로그(Trace log)에 남긴다. Altibase의 데이터베이스 복제 환경에서는 데이터베이스 정합성 확인(Fail-Over Validation)을 할 수 있도록 콜백을 꼭 사용할 것을 권장한다.
 
 ![](media/Replication/4-2.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01598" source_md="Manuals/Altibase_7.1/kor/Replication Manual.md" line_no="4041" image_path_raw="media/Replication/4-2.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph 응용프로그램
+        AP1[connect DB 가 - callback 등록]
+        AP2([장애발생])
+        AP3([재수행])
+        AP4[연결 해제]
+    end
+    subgraph 알티베이스 User Library
+        LIB1([FO_BEGIN])
+        LIB2([FO_GO])
+        LIB3[close statement - connect DB 나 - 세션 프로퍼티 복구]
+        LIB4([FO_END])
+        LIB5([FO_GO])
+        LIB6([FO_SUCCESS])
+    end
+    subgraph callback
+        CB1[case FO_BEGIN:]
+        CB2[case FO_END: 정합성 확인]
+    end
+    AP1 --> AP2 --> LIB1
+    LIB1 --> LIB2 --> CB1
+    CB1 --> LIB3
+    LIB3 --> LIB4 --> LIB5 --> CB2
+    CB2 --> AP3
+    AP3 --> LIB6
+    LIB6 --> AP4
+```
+<!-- IMG_RECOVERY_END ref_id="img-01598" -->
+
 
 사용자가 데이터베이스에 연결(Connection)한 후 Conn Attr에 Fail-Over 콜백을 등록한다.
 
@@ -72042,6 +72666,40 @@ The Fail-Over registration and handling process is as shown in the following fig
 
 ![](media/Replication/Replication_eng.1.22.1.jpg)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02776" source_md="Manuals/Altibase_7.3/eng/Replication Manual.md" line_no="3837" image_path_raw="media/Replication/Replication_eng.1.22.1.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Normal Connection
+        N1([Normal Connection])
+        N2[Connect to DB A]
+        N3[Register a failover callback in ConnAttr]
+        N4[SELECT]
+        N5[INSERT]
+        N6[DELETE]
+        N7[Disconnect]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7
+    end
+    subgraph Abnormal Connection
+        A1([Abnormal Connection])
+        A2[Connect to DB A]
+        A3[Register a failover callback in ConnAttr]
+        A4[SELECT]
+        A5[INSERT]
+        A6[DELETE]
+        A7[Disconnect]
+        FO[Connect to DB B]
+        CB[Check sync between DBs]
+        A1 --> A2 --> A3 --> A4 --> A5
+        A5 -->|Failure occurs. Use Fail-Over.| FO
+        FO -->|Use callback.| CB
+        CB -->|Retry| A5
+        CB -->|Retry| A6
+        A6 --> A7
+    end
+```
+<!-- IMG_RECOVERY_END ref_id="img-02776" -->
+
+
 [Figure 4-1] Fail-Over Registration and Handling Process
 
 Fail-Over Callback must be registered by the user, and, once registered, during the Fail-Over process the Altibase User Library (for example, the JDBC and CLI libraries) communicates with client applications, as shown in the picture above.
@@ -72049,6 +72707,38 @@ Fail-Over Callback must be registered by the user, and, once registered, during 
 If Fail-Over Callback is not registered, Fail-Over takes place without communication with the client application, and a trace log of the steps shown above is kept. In a replicated Altibase database environment, the use of callback is strongly recommended, so that Fail-Over Validation can be conducted.
 
 ![](media/Replication/Replication_eng.1.22.2.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02777" source_md="Manuals/Altibase_7.3/eng/Replication Manual.md" line_no="3845" image_path_raw="media/Replication/Replication_eng.1.22.2.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Application
+        AP1[Connect to DB A - Register a failover callback]
+        AP2([Connection Failure])
+        AP3([Retry])
+        AP4[Disconnect]
+    end
+    subgraph ALTIBASE User Library
+        LIB1([FO_BEGIN])
+        LIB2([FO_GO])
+        LIB3[Use Close statement - Connect to DB B - Restore session property]
+        LIB4([FO_END])
+        LIB5([FO_GO])
+        LIB6([FO_SUCCESS])
+    end
+    subgraph callback
+        CB1[Case FO_BEGIN:]
+        CB2[Case FO_END: Check sync between DBs]
+    end
+    AP1 --> AP2 --> LIB1
+    LIB1 --> LIB2 --> CB1
+    CB1 --> LIB3
+    LIB3 --> LIB4 --> LIB5 --> CB2
+    CB2 --> AP3
+    AP3 --> LIB6
+    LIB6 --> AP4
+```
+<!-- IMG_RECOVERY_END ref_id="img-02777" -->
+
 
 1. After connecting to the database, the user registers Fail-Over Callback in the connection attributes.
 
@@ -78112,6 +78802,40 @@ Fail-Over 등록 및 처리과정을 그림으로 나타내면 다음과 같다.
 
 ![](media/Replication/4-1.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03971" source_md="Manuals/Altibase_7.3/kor/Replication Manual.md" line_no="4157" image_path_raw="media/Replication/4-1.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph 정상상황
+        N1([정상상황])
+        N2[DB 가 연결]
+        N3[ConnAttr에 콜백 등록]
+        N4[SELECT]
+        N5[INSERT]
+        N6[DELETE]
+        N7[연결 해제]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7
+    end
+    subgraph 장애상황
+        A1([장애상황])
+        A2[DB 가 연결]
+        A3[ConnAttr에 콜백 등록]
+        A4[SELECT]
+        A5[INSERT]
+        A6[DELETE]
+        A7[연결 해제]
+        FO[DB 나 연결]
+        CB[DB 나의 정합성 확인]
+        A1 --> A2 --> A3 --> A4 --> A5
+        A5 -->|장애발생 Fail Over 수행| FO
+        FO -->|callback| CB
+        CB -->|직접재수행| A5
+        CB -->|리턴| A6
+        A6 --> A7
+    end
+```
+<!-- IMG_RECOVERY_END ref_id="img-03971" -->
+
+
 [그림 4‑1] Fail-Over 수행 과정
 
 Fail-Over 콜백은 사용자가 등록하여야 하며, 등록하면 Fail-Over(STF) 과정에서 Altibase User Library(예를 들어, JDBC, CLI 라이브러리) 및 응용프로그램과 아래 그림처럼 통신하게 된다.
@@ -78119,6 +78843,38 @@ Fail-Over 콜백은 사용자가 등록하여야 하며, 등록하면 Fail-Over(
 Fail-Over 콜백을 등록하지 않으면 응용프로그램과 통신 없이 Fail-Over를 수행하고, 진행 상항을 트레이스 로그(Trace log)에 남긴다. Altibase의 데이터베이스 복제 환경에서는 데이터베이스 정합성 확인(Fail-Over Validation)을 할 수 있도록 콜백을 꼭 사용할 것을 권장한다.
 
 ![](media/Replication/4-2.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03972" source_md="Manuals/Altibase_7.3/kor/Replication Manual.md" line_no="4165" image_path_raw="media/Replication/4-2.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph 응용프로그램
+        AP1[connect DB 가 - callback 등록]
+        AP2([장애발생])
+        AP3([재수행])
+        AP4[연결 해제]
+    end
+    subgraph 알티베이스 User Library
+        LIB1([FO_BEGIN])
+        LIB2([FO_GO])
+        LIB3[close statement - connect DB 나 - 세션 프로퍼티 복구]
+        LIB4([FO_END])
+        LIB5([FO_GO])
+        LIB6([FO_SUCCESS])
+    end
+    subgraph callback
+        CB1[case FO_BEGIN:]
+        CB2[case FO_END: 정합성 확인]
+    end
+    AP1 --> AP2 --> LIB1
+    LIB1 --> LIB2 --> CB1
+    CB1 --> LIB3
+    LIB3 --> LIB4 --> LIB5 --> CB2
+    CB2 --> AP3
+    AP3 --> LIB6
+    LIB6 --> AP4
+```
+<!-- IMG_RECOVERY_END ref_id="img-03972" -->
+
 
 사용자가 데이터베이스에 연결(Connection)한 후 Conn Attr에 Fail-Over 콜백을 등록한다.
 
@@ -83856,6 +84612,40 @@ The Fail-Over registration and handling process is as shown in the following fig
 
 ![](media/Replication/Replication_eng.1.22.1.jpg)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05106" source_md="Manuals/Altibase_trunk/eng/Replication Manual.md" line_no="3829" image_path_raw="media/Replication/Replication_eng.1.22.1.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Normal Connection
+        N1([Normal Connection])
+        N2[Connect to DB A]
+        N3[Register a failover callback in ConnAttr]
+        N4[SELECT]
+        N5[INSERT]
+        N6[DELETE]
+        N7[Disconnect]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7
+    end
+    subgraph Abnormal Connection
+        A1([Abnormal Connection])
+        A2[Connect to DB A]
+        A3[Register a failover callback in ConnAttr]
+        A4[SELECT]
+        A5[INSERT]
+        A6[DELETE]
+        A7[Disconnect]
+        FO[Connect to DB B]
+        CB[Check sync between DBs]
+        A1 --> A2 --> A3 --> A4 --> A5
+        A5 -->|Failure occurs. Use Fail-Over.| FO
+        FO -->|Use callback.| CB
+        CB -->|Retry| A5
+        CB -->|Retry| A6
+        A6 --> A7
+    end
+```
+<!-- IMG_RECOVERY_END ref_id="img-05106" -->
+
+
 [Figure 4-1] Fail-Over Registration and Handling Process
 
 Fail-Over Callback must be registered by the user, and, once registered, during the Fail-Over process the Altibase User Library (for example, the JDBC and CLI libraries) communicates with client applications, as shown in the picture above.
@@ -83863,6 +84653,38 @@ Fail-Over Callback must be registered by the user, and, once registered, during 
 If Fail-Over Callback is not registered, Fail-Over takes place without communication with the client application, and a trace log of the steps shown above is kept. In a replicated Altibase database environment, the use of callback is strongly recommended, so that Fail-Over Validation can be conducted.
 
 ![](media/Replication/Replication_eng.1.22.2.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05107" source_md="Manuals/Altibase_trunk/eng/Replication Manual.md" line_no="3837" image_path_raw="media/Replication/Replication_eng.1.22.2.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph Application
+        AP1[Connect to DB A - Register a failover callback]
+        AP2([Connection Failure])
+        AP3([Retry])
+        AP4[Disconnect]
+    end
+    subgraph ALTIBASE User Library
+        LIB1([FO_BEGIN])
+        LIB2([FO_GO])
+        LIB3[Use Close statement - Connect to DB B - Restore session property]
+        LIB4([FO_END])
+        LIB5([FO_GO])
+        LIB6([FO_SUCCESS])
+    end
+    subgraph callback
+        CB1[Case FO_BEGIN:]
+        CB2[Case FO_END: Check sync between DBs]
+    end
+    AP1 --> AP2 --> LIB1
+    LIB1 --> LIB2 --> CB1
+    CB1 --> LIB3
+    LIB3 --> LIB4 --> LIB5 --> CB2
+    CB2 --> AP3
+    AP3 --> LIB6
+    LIB6 --> AP4
+```
+<!-- IMG_RECOVERY_END ref_id="img-05107" -->
+
 
 1. After connecting to the database, the user registers Fail-Over Callback in the connection attributes.
 
@@ -89946,6 +90768,40 @@ Fail-Over 등록 및 처리과정을 그림으로 나타내면 다음과 같다.
 
 ![](media/Replication/4-1.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06304" source_md="Manuals/Altibase_trunk/kor/Replication Manual.md" line_no="4180" image_path_raw="media/Replication/4-1.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph 정상상황
+        N1([정상상황])
+        N2[DB 가 연결]
+        N3[ConnAttr에 콜백 등록]
+        N4[SELECT]
+        N5[INSERT]
+        N6[DELETE]
+        N7[연결 해제]
+        N1 --> N2 --> N3 --> N4 --> N5 --> N6 --> N7
+    end
+    subgraph 장애상황
+        A1([장애상황])
+        A2[DB 가 연결]
+        A3[ConnAttr에 콜백 등록]
+        A4[SELECT]
+        A5[INSERT]
+        A6[DELETE]
+        A7[연결 해제]
+        FO[DB 나 연결]
+        CB[DB 나의 정합성 확인]
+        A1 --> A2 --> A3 --> A4 --> A5
+        A5 -->|장애발생 Fail Over 수행| FO
+        FO -->|callback| CB
+        CB -->|직접재수행| A5
+        CB -->|리턴| A6
+        A6 --> A7
+    end
+```
+<!-- IMG_RECOVERY_END ref_id="img-06304" -->
+
+
 [그림 4‑1] Fail-Over 수행 과정
 
 Fail-Over 콜백은 사용자가 등록하여야 하며, 등록하면 Fail-Over(STF) 과정에서 Altibase User Library(예를 들어, JDBC, CLI 라이브러리) 및 응용프로그램과 아래 그림처럼 통신하게 된다.
@@ -89953,6 +90809,38 @@ Fail-Over 콜백은 사용자가 등록하여야 하며, 등록하면 Fail-Over(
 Fail-Over 콜백을 등록하지 않으면 응용프로그램과 통신 없이 Fail-Over를 수행하고, 진행 상항을 트레이스 로그(Trace log)에 남긴다. Altibase의 데이터베이스 복제 환경에서는 데이터베이스 정합성 확인(Fail-Over Validation)을 할 수 있도록 콜백을 꼭 사용할 것을 권장한다.
 
 ![](media/Replication/4-2.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06305" source_md="Manuals/Altibase_trunk/kor/Replication Manual.md" line_no="4188" image_path_raw="media/Replication/4-2.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    subgraph 응용프로그램
+        AP1[connect DB 가 - callback 등록]
+        AP2([장애발생])
+        AP3([재수행])
+        AP4[연결 해제]
+    end
+    subgraph 알티베이스 User Library
+        LIB1([FO_BEGIN])
+        LIB2([FO_GO])
+        LIB3[close statement - connect DB 나 - 세션 프로퍼티 복구]
+        LIB4([FO_END])
+        LIB5([FO_GO])
+        LIB6([FO_SUCCESS])
+    end
+    subgraph callback
+        CB1[case FO_BEGIN:]
+        CB2[case FO_END: 정합성 확인]
+    end
+    AP1 --> AP2 --> LIB1
+    LIB1 --> LIB2 --> CB1
+    CB1 --> LIB3
+    LIB3 --> LIB4 --> LIB5 --> CB2
+    CB2 --> AP3
+    AP3 --> LIB6
+    LIB6 --> AP4
+```
+<!-- IMG_RECOVERY_END ref_id="img-06305" -->
+
 
 사용자가 데이터베이스에 연결(Connection)한 후 Conn Attr에 Fail-Over 콜백을 등록한다.
 
@@ -101141,9 +102029,29 @@ Altibase Sharding은 사용자의 요구사항을 처리하기 위해 샤드 메
 
 ![](media/Sharding/79bcb8f6b5cb10cc7a7b816363aa709f.jpg)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02081" source_md="Manuals/Altibase_7.1/kor/Sharding(deprecated).md" line_no="2753" image_path_raw="media/Sharding/79bcb8f6b5cb10cc7a7b816363aa709f.jpg" image_class="C" format="bnf" verified="True" -->
+```bnf
+shard_keyword_clause ::=
+    [ shard_keyword_clause ]
+    { select_clause | insert_clause | update_clause | delete_clause }
+    | FROM { table_reference | shard_keyword_clause | '(' select_clause ')' }
+      [ { ',' { table_reference | shard_keyword_clause | '(' select_clause ')' } } ]
+      ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02081" -->
+
+
 **shard_keyword_clause::=**
 
 ![](media/Sharding/d15e35752ab4fd66496232e1d1e055a1.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02082" source_md="Manuals/Altibase_7.1/kor/Sharding(deprecated).md" line_no="2757" image_path_raw="media/Sharding/d15e35752ab4fd66496232e1d1e055a1.jpg" image_class="C" format="bnf" verified="True" -->
+```bnf
+shard_keyword_clause ::=
+    { SHARD | NODE '[' { META | DATA | '(' node_name [ { ',' node_name } ] ')' } ']' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02082" -->
+
 
 #### SHARD
 

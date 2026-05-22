@@ -21441,6 +21441,40 @@ The following diagram illustrates the steps involved when using the Log Analysis
 
 ![basic_use_kor](media/LogAnalyzer/basic_use_eng.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00332" source_md="Manuals/Altibase_7.1/eng/Log Analyzer User&#x27;s Manual.md" line_no="665" image_path_raw="media/LogAnalyzer/basic_use_eng.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    S1["STEP 1. Create Environment in which the Log Analysis API can be invoked and Start Logging
+    ALA_InitializeAPI
+    ALA_EnableLogging"]
+    S2["STEP 2. Create and Set Xlog Collector
+    ALA_CreateXLogCollector
+    ALA_AddAuthInfo
+    ALA_RemoveAuthInfo
+    ALA_SetHandshakeTimeout
+    ALA_SetReceiveXLogTimeout"]
+    S3a["STEP 3a. Wait for a Connection to Xlog Sender and Handshaking
+    ALA_Handshake"]
+    S3b["STEP 3b. Obtain Xlog
+    ALA_ReceiveXLog
+    ALA_GetXLog"]
+    S3c["STEP 3c. Analyze and Convert Xlog
+    Please refer to XLog Analysis and Conversion API"]
+    S3d["STEP 3d. Remove Xlog and Send ACK
+    ALA_FreeXLog
+    ALA_SendACK"]
+    S4["STEP 4. Remove XLog Collector
+    ALA_DestroyXLogCollector"]
+    S5["STEP 5. Finish Logging and Remove Environment which was created to invoke the Log Analysis API
+    ALA_DisableLogging
+    ALA_DestroyAPI"]
+    S1 --> S2 --> S3a --> S3b --> S3c --> S3d
+    S3d -->|Repeat until Xlog Sender ends.| S3b
+    S3d --> S4 --> S5
+```
+<!-- IMG_RECOVERY_END ref_id="img-00332" -->
+
+
 The following must be kept in mind when using the Log Analysis API:
 
 -   The XLog Collector can be monitored from Step 3a to Step 3d.
@@ -27289,6 +27323,40 @@ Log Manager에 대한 상세한 사용법은 ALA_EnableLogging()와 ALA_DisableL
 아래의 다이어그램은 Log Analysis API를 사용할 때의 순서를 도식화한 것이다.
 
 ![basic_use_kor](media/LogAnalyzer/basic_use_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01476" source_md="Manuals/Altibase_7.1/kor/Log Analyzer User&#x27;s Manual.md" line_no="749" image_path_raw="media/LogAnalyzer/basic_use_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    S1["STEP 1. Log Analysis API 호출 환경 생성 및 Logging 시작
+    ALA_InitializeAPI
+    ALA_EnableLogging"]
+    S2["STEP 2. Xlog Collector 생성 및 설정
+    ALA_CreateXLogCollector
+    ALA_AddAuthInfo
+    ALA_RemoveAuthInfo
+    ALA_SetHandshakeTimeout
+    ALA_SetReceiveXLogTimeout"]
+    S3a["STEP 3a. Xlog Sender의 접속 대기 및 Handshaking
+    ALA_Handshake"]
+    S3b["STEP 3b. Xlog 얻기
+    ALA_ReceiveXLog
+    ALA_GetXLog"]
+    S3c["STEP 3c. Xlog 분석 및 변환
+    Please refer to XLog Analysis and Conversion API"]
+    S3d["STEP 3d. Xlog 제거 및 ACK 전송
+    ALA_FreeXLog
+    ALA_SendACK"]
+    S4["STEP 4. Xlog Collector 제거
+    ALA_DestroyXLogCollector"]
+    S5["STEP 5. Logging 종료 및 Log Analysis API 호출 환경 제거
+    ALA_DisableLogging
+    ALA_DestroyAPI"]
+    S1 --> S2 --> S3a --> S3b --> S3c --> S3d
+    S3d -->|Repeat until Xlog Sender ends.| S3b
+    S3d --> S4 --> S5
+```
+<!-- IMG_RECOVERY_END ref_id="img-01476" -->
+
 
 Log Analysis API를 사용 시, 아래의 사항을 주의해야 한다.
 
@@ -33236,6 +33304,40 @@ The following diagram illustrates the steps involved when using the Log Analysis
 
 ![basic_use_kor](media/LogAnalyzer/basic_use_eng.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02649" source_md="Manuals/Altibase_7.3/eng/Log Analyzer User&#x27;s Manual.md" line_no="666" image_path_raw="media/LogAnalyzer/basic_use_eng.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    S1["STEP 1. Create Environment in which the Log Analysis API can be invoked and Start Logging
+    ALA_InitializeAPI
+    ALA_EnableLogging"]
+    S2["STEP 2. Create and Set Xlog Collector
+    ALA_CreateXLogCollector
+    ALA_AddAuthInfo
+    ALA_RemoveAuthInfo
+    ALA_SetHandshakeTimeout
+    ALA_SetReceiveXLogTimeout"]
+    S3a["STEP 3a. Wait for a Connection to Xlog Sender and Handshaking
+    ALA_Handshake"]
+    S3b["STEP 3b. Obtain Xlog
+    ALA_ReceiveXLog
+    ALA_GetXLog"]
+    S3c["STEP 3c. Analyze and Convert Xlog
+    Please refer to XLog Analysis and Conversion API"]
+    S3d["STEP 3d. Remove Xlog and Send ACK
+    ALA_FreeXLog
+    ALA_SendACK"]
+    S4["STEP 4. Remove XLog Collector
+    ALA_DestroyXLogCollector"]
+    S5["STEP 5. Finish Logging and Remove Environment which was created to invoke the Log Analysis API
+    ALA_DisableLogging
+    ALA_DestroyAPI"]
+    S1 --> S2 --> S3a --> S3b --> S3c --> S3d
+    S3d -->|Repeat until Xlog Sender ends.| S3b
+    S3d --> S4 --> S5
+```
+<!-- IMG_RECOVERY_END ref_id="img-02649" -->
+
+
 The following must be kept in mind when using the Log Analysis API:
 
 -   The XLog Collector can be monitored from Step 3a to Step 3d.
@@ -39085,6 +39187,40 @@ Log Manager에 대한 상세한 사용법은 ALA_EnableLogging()와 ALA_DisableL
 아래의 다이어그램은 Log Analysis API를 사용할 때의 순서를 도식화한 것이다.
 
 ![basic_use_kor](media/LogAnalyzer/basic_use_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03851" source_md="Manuals/Altibase_7.3/kor/Log Analyzer User&#x27;s Manual.md" line_no="751" image_path_raw="media/LogAnalyzer/basic_use_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    S1["STEP 1. Log Analysis API 호출 환경 생성 및 Logging 시작
+    ALA_InitializeAPI
+    ALA_EnableLogging"]
+    S2["STEP 2. Xlog Collector 생성 및 설정
+    ALA_CreateXLogCollector
+    ALA_AddAuthInfo
+    ALA_RemoveAuthInfo
+    ALA_SetHandshakeTimeout
+    ALA_SetReceiveXLogTimeout"]
+    S3a["STEP 3a. Xlog Sender의 접속 대기 및 Handshaking
+    ALA_Handshake"]
+    S3b["STEP 3b. Xlog 얻기
+    ALA_ReceiveXLog
+    ALA_GetXLog"]
+    S3c["STEP 3c. Xlog 분석 및 변환
+    Please refer to XLog Analysis and Conversion API"]
+    S3d["STEP 3d. Xlog 제거 및 ACK 전송
+    ALA_FreeXLog
+    ALA_SendACK"]
+    S4["STEP 4. Xlog Collector 제거
+    ALA_DestroyXLogCollector"]
+    S5["STEP 5. Logging 종료 및 Log Analysis API 호출 환경 제거
+    ALA_DisableLogging
+    ALA_DestroyAPI"]
+    S1 --> S2 --> S3a --> S3b --> S3c --> S3d
+    S3d -->|Repeat until Xlog Sender ends.| S3b
+    S3d --> S4 --> S5
+```
+<!-- IMG_RECOVERY_END ref_id="img-03851" -->
+
 
 Log Analysis API를 사용 시, 아래의 사항을 주의해야 한다.
 
@@ -45032,6 +45168,40 @@ The following diagram illustrates the steps involved when using the Log Analysis
 
 ![basic_use_kor](media/LogAnalyzer/basic_use_eng.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04979" source_md="Manuals/Altibase_trunk/eng/Log Analyzer User&#x27;s Manual.md" line_no="665" image_path_raw="media/LogAnalyzer/basic_use_eng.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    S1["STEP 1. Create Environment in which the Log Analysis API can be invoked and Start Logging
+    ALA_InitializeAPI
+    ALA_EnableLogging"]
+    S2["STEP 2. Create and Set Xlog Collector
+    ALA_CreateXLogCollector
+    ALA_AddAuthInfo
+    ALA_RemoveAuthInfo
+    ALA_SetHandshakeTimeout
+    ALA_SetReceiveXLogTimeout"]
+    S3a["STEP 3a. Wait for a Connection to Xlog Sender and Handshaking
+    ALA_Handshake"]
+    S3b["STEP 3b. Obtain Xlog
+    ALA_ReceiveXLog
+    ALA_GetXLog"]
+    S3c["STEP 3c. Analyze and Convert Xlog
+    Please refer to XLog Analysis and Conversion API"]
+    S3d["STEP 3d. Remove Xlog and Send ACK
+    ALA_FreeXLog
+    ALA_SendACK"]
+    S4["STEP 4. Remove XLog Collector
+    ALA_DestroyXLogCollector"]
+    S5["STEP 5. Finish Logging and Remove Environment which was created to invoke the Log Analysis API
+    ALA_DisableLogging
+    ALA_DestroyAPI"]
+    S1 --> S2 --> S3a --> S3b --> S3c --> S3d
+    S3d -->|Repeat until Xlog Sender ends.| S3b
+    S3d --> S4 --> S5
+```
+<!-- IMG_RECOVERY_END ref_id="img-04979" -->
+
+
 The following must be kept in mind when using the Log Analysis API:
 
 -   The XLog Collector can be monitored from Step 3a to Step 3d.
@@ -50879,6 +51049,40 @@ Log Manager에 대한 상세한 사용법은 ALA_EnableLogging()와 ALA_DisableL
 아래의 다이어그램은 Log Analysis API를 사용할 때의 순서를 도식화한 것이다.
 
 ![basic_use_kor](media/LogAnalyzer/basic_use_kor.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06184" source_md="Manuals/Altibase_trunk/kor/Log Analyzer User&#x27;s Manual.md" line_no="749" image_path_raw="media/LogAnalyzer/basic_use_kor.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    S1["STEP 1. Log Analysis API 호출 환경 생성 및 Logging 시작
+    ALA_InitializeAPI
+    ALA_EnableLogging"]
+    S2["STEP 2. Xlog Collector 생성 및 설정
+    ALA_CreateXLogCollector
+    ALA_AddAuthInfo
+    ALA_RemoveAuthInfo
+    ALA_SetHandshakeTimeout
+    ALA_SetReceiveXLogTimeout"]
+    S3a["STEP 3a. Xlog Sender의 접속 대기 및 Handshaking
+    ALA_Handshake"]
+    S3b["STEP 3b. Xlog 얻기
+    ALA_ReceiveXLog
+    ALA_GetXLog"]
+    S3c["STEP 3c. Xlog 분석 및 변환
+    Please refer to XLog Analysis and Conversion API"]
+    S3d["STEP 3d. Xlog 제거 및 ACK 전송
+    ALA_FreeXLog
+    ALA_SendACK"]
+    S4["STEP 4. Xlog Collector 제거
+    ALA_DestroyXLogCollector"]
+    S5["STEP 5. Logging 종료 및 Log Analysis API 호출 환경 제거
+    ALA_DisableLogging
+    ALA_DestroyAPI"]
+    S1 --> S2 --> S3a --> S3b --> S3c --> S3d
+    S3d -->|Repeat until Xlog Sender ends.| S3b
+    S3d --> S4 --> S5
+```
+<!-- IMG_RECOVERY_END ref_id="img-06184" -->
+
 
 Log Analysis API를 사용 시, 아래의 사항을 주의해야 한다.
 

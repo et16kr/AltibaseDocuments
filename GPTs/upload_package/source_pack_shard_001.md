@@ -5856,6 +5856,22 @@ Figure 7-8 Example of a global non-partitioned index
 
 ![](media/Admin/cdba9650f1626e7cc409038702eb8b1d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00088" source_md="Manuals/Altibase_7.1/eng/Administrator&#x27;s Manual.md" line_no="5827" image_path_raw="media/Admin/cdba9650f1626e7cc409038702eb8b1d.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Index Partitioning Status}
+    A -->|YES| B{index_part_key == table_part_key}
+    A -->|No| C([Non-partitioned Global Index])
+    B -->|YES| D{index_part_key == index_key}
+    B -->|No| E{index_part_key == index_key}
+    D -->|YES| F([Partitioned Local Prefixed Index])
+    D -->|No| G([Partitioned Local Non-prefixed Index])
+    E -->|YES| H([partitioned Global Prefixed Index])
+    E -->|No| I([partitioned Global Non-prefixed Index])
+```
+<!-- IMG_RECOVERY_END ref_id="img-00088" -->
+
+
 [Figure 7-9] Types of Indexes
 
 Altibase currently supports only local and global non-partitioned indexes. Global partitioned indexes are not supported. Please refer to the following table and figure: 
@@ -10254,6 +10270,18 @@ The problems that are typically experienced can generally be thought of as falli
 The general troubleshooting procedure is as follows:
 
 ![](media/Admin/Admin_eng.1.83.1.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00124" source_md="Manuals/Altibase_7.1/eng/Administrator&#x27;s Manual.md" line_no="10226" image_path_raw="media/Admin/Admin_eng.1.83.1.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A[Check Altibase Administrator Log Altibase_XXX.log]
+    B[Judge Problem Type]
+    C[Collect corresponding information]
+    D[Analyze the cause]
+    A --> B --> C --> D
+```
+<!-- IMG_RECOVERY_END ref_id="img-00124" -->
+
 
 [Figure 16-1] General Troubleshooting Procedure
 
@@ -16355,6 +16383,22 @@ INSERT INTO TBL_SALES VALUES(9, 1월);
 
 ![](media/Admin/cdba9650f1626e7cc409038702eb8b1d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01213" source_md="Manuals/Altibase_7.1/kor/Administrator&#x27;s Manual.md" line_no="5805" image_path_raw="media/Admin/cdba9650f1626e7cc409038702eb8b1d.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Index Partitioning Status}
+    A -->|YES| B{index_part_key == table_part_key}
+    A -->|No| C([Non-partitioned Global Index])
+    B -->|YES| D{index_part_key == index_key}
+    B -->|No| E{index_part_key == index_key}
+    D -->|YES| F([Partitioned Local Prefixed Index])
+    D -->|No| G([Partitioned Local Non-prefixed Index])
+    E -->|YES| H([partitioned Global Prefixed Index])
+    E -->|No| I([partitioned Global Non-prefixed Index])
+```
+<!-- IMG_RECOVERY_END ref_id="img-01213" -->
+
+
 [그림 7‑9] 인덱스의 종류
 
 현재 Altibase는 로컬 인덱스와 글로벌 논파티션드 인덱스만 지원한다. 글로벌 파티션드 인덱스는 지원하지 않는다. 이것을 디스크 테이블과 연관지어 정리하면 다음과 같다.
@@ -20711,6 +20755,18 @@ Altibase 서버가 운영하면서 사용하는 메모리 영역 정보를 성�
 일반적인 문제상황 분석(PBT, Problem Tracking) 절차는 다음과 같다.
 
 ![](media/Admin/16-1.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01250" source_md="Manuals/Altibase_7.1/kor/Administrator&#x27;s Manual.md" line_no="10162" image_path_raw="media/Admin/16-1.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A["Altibase 관리자 로그 altibase_XXX.log 확인"]
+    B["문제 유형 판단"]
+    C["관련정보 수집\nAltibase 모니터링 도구/시스템 모니터링 커맨드 사용"]
+    D["원인 분석 및 문제해결"]
+    A --> B --> C --> D
+```
+<!-- IMG_RECOVERY_END ref_id="img-01250" -->
+
 
 [그림 16‑1] 일반적인 문제 분석 절차
 
@@ -26826,6 +26882,22 @@ Figure 7-8 Example of a global non-partitioned index
 
 ![](media/Admin/cdba9650f1626e7cc409038702eb8b1d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02405" source_md="Manuals/Altibase_7.3/eng/Administrator’s Manual.md" line_no="5832" image_path_raw="media/Admin/cdba9650f1626e7cc409038702eb8b1d.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Index Partitioning Status}
+    A -->|YES| B{index_part_key == table_part_key}
+    A -->|No| C([Non-partitioned Global Index])
+    B -->|YES| D{index_part_key == index_key}
+    B -->|No| E{index_part_key == index_key}
+    D -->|YES| F([Partitioned Local Prefixed Index])
+    D -->|No| G([Partitioned Local Non-prefixed Index])
+    E -->|YES| H([partitioned Global Prefixed Index])
+    E -->|No| I([partitioned Global Non-prefixed Index])
+```
+<!-- IMG_RECOVERY_END ref_id="img-02405" -->
+
+
 [Figure 7-9] Types of Indexes
 
 Altibase currently supports only local and global non-partitioned indexes. Global partitioned indexes are not supported. Please refer to the following table and figure: 
@@ -31224,6 +31296,18 @@ The problems that are typically experienced can generally be thought of as falli
 The general troubleshooting procedure is as follows:
 
 ![](media/Admin/Admin_eng.1.83.1.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02441" source_md="Manuals/Altibase_7.3/eng/Administrator’s Manual.md" line_no="10231" image_path_raw="media/Admin/Admin_eng.1.83.1.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A[Check Altibase Administrator Log Altibase_XXX.log]
+    B[Judge Problem Type]
+    C[Collect corresponding information]
+    D[Analyze the cause]
+    A --> B --> C --> D
+```
+<!-- IMG_RECOVERY_END ref_id="img-02441" -->
+
 
 [Figure 16-1] General Troubleshooting Procedure
 
@@ -37320,6 +37404,22 @@ INSERT INTO TBL_SALES VALUES(9, 1월);
 
 ![](media/Admin/cdba9650f1626e7cc409038702eb8b1d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03588" source_md="Manuals/Altibase_7.3/kor/Administrator&#x27;s Manual.md" line_no="5800" image_path_raw="media/Admin/cdba9650f1626e7cc409038702eb8b1d.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Index Partitioning Status}
+    A -->|YES| B{index_part_key == table_part_key}
+    A -->|No| C([Non-partitioned Global Index])
+    B -->|YES| D{index_part_key == index_key}
+    B -->|No| E{index_part_key == index_key}
+    D -->|YES| F([Partitioned Local Prefixed Index])
+    D -->|No| G([Partitioned Local Non-prefixed Index])
+    E -->|YES| H([partitioned Global Prefixed Index])
+    E -->|No| I([partitioned Global Non-prefixed Index])
+```
+<!-- IMG_RECOVERY_END ref_id="img-03588" -->
+
+
 [그림 7‑9] 인덱스의 종류
 
 현재 Altibase는 로컬 인덱스와 글로벌 논파티션드 인덱스만 지원한다. 글로벌 파티션드 인덱스는 지원하지 않는다. 이것을 디스크 테이블과 연관지어 정리하면 다음과 같다.
@@ -41676,6 +41776,18 @@ Altibase 서버가 운영하면서 사용하는 메모리 영역 정보를 성�
 일반적인 문제상황 분석(PBT, Problem Tracking) 절차는 다음과 같다.
 
 ![](media/Admin/16-1.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03625" source_md="Manuals/Altibase_7.3/kor/Administrator&#x27;s Manual.md" line_no="10157" image_path_raw="media/Admin/16-1.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A["Altibase 관리자 로그 altibase_XXX.log 확인"]
+    B["문제 유형 판단"]
+    C["관련정보 수집\nAltibase 모니터링 도구/시스템 모니터링 커맨드 사용"]
+    D["원인 분석 및 문제해결"]
+    A --> B --> C --> D
+```
+<!-- IMG_RECOVERY_END ref_id="img-03625" -->
+
 
 [그림 16‑1] 일반적인 문제 분석 절차
 
@@ -47791,6 +47903,22 @@ Figure 7-8 Example of a global non-partitioned index
 
 ![](media/Admin/cdba9650f1626e7cc409038702eb8b1d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04735" source_md="Manuals/Altibase_trunk/eng/Administrator’s Manual.md" line_no="5837" image_path_raw="media/Admin/cdba9650f1626e7cc409038702eb8b1d.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Index Partitioning Status}
+    A -->|YES| B{index_part_key == table_part_key}
+    A -->|No| C([Non-partitioned Global Index])
+    B -->|YES| D{index_part_key == index_key}
+    B -->|No| E{index_part_key == index_key}
+    D -->|YES| F([Partitioned Local Prefixed Index])
+    D -->|No| G([Partitioned Local Non-prefixed Index])
+    E -->|YES| H([partitioned Global Prefixed Index])
+    E -->|No| I([partitioned Global Non-prefixed Index])
+```
+<!-- IMG_RECOVERY_END ref_id="img-04735" -->
+
+
 [Figure 7-9] Types of Indexes
 
 Altibase currently supports only local and global non-partitioned indexes. Global partitioned indexes are not supported. Please refer to the following table and figure: 
@@ -52299,6 +52427,18 @@ The problems that are typically experienced can generally be thought of as falli
 The general troubleshooting procedure is as follows:
 
 ![](media/Admin/Admin_eng.1.83.1.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04771" source_md="Manuals/Altibase_trunk/eng/Administrator’s Manual.md" line_no="10346" image_path_raw="media/Admin/Admin_eng.1.83.1.jpg" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A[Check Altibase Administrator Log Altibase_XXX.log]
+    B[Judge Problem Type]
+    C[Collect corresponding information]
+    D[Analyze the cause]
+    A --> B --> C --> D
+```
+<!-- IMG_RECOVERY_END ref_id="img-04771" -->
+
 
 [Figure 16-1] General Troubleshooting Procedure
 
@@ -58405,6 +58545,22 @@ INSERT INTO TBL_SALES VALUES(9, 1월);
 
 ![](media/Admin/cdba9650f1626e7cc409038702eb8b1d.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05919" source_md="Manuals/Altibase_trunk/kor/Administrator&#x27;s Manual.md" line_no="5810" image_path_raw="media/Admin/cdba9650f1626e7cc409038702eb8b1d.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Index Partitioning Status}
+    A -->|YES| B{index_part_key == table_part_key}
+    A -->|No| C([Non-partitioned Global Index])
+    B -->|YES| D{index_part_key == index_key}
+    B -->|No| E{index_part_key == index_key}
+    D -->|YES| F([Partitioned Local Prefixed Index])
+    D -->|No| G([Partitioned Local Non-prefixed Index])
+    E -->|YES| H([partitioned Global Prefixed Index])
+    E -->|No| I([partitioned Global Non-prefixed Index])
+```
+<!-- IMG_RECOVERY_END ref_id="img-05919" -->
+
+
 [그림 7‑9] 인덱스의 종류
 
 현재 Altibase는 로컬 인덱스와 글로벌 논파티션드 인덱스만 지원한다. 글로벌 파티션드 인덱스는 지원하지 않는다. 이것을 디스크 테이블과 연관지어 정리하면 다음과 같다.
@@ -62854,6 +63010,18 @@ Altibase 서버가 운영하면서 사용하는 메모리 영역 정보를 성�
 일반적인 문제상황 분석(PBT, Problem Tracking) 절차는 다음과 같다.
 
 ![](media/Admin/16-1.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05956" source_md="Manuals/Altibase_trunk/kor/Administrator&#x27;s Manual.md" line_no="10260" image_path_raw="media/Admin/16-1.png" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A["Altibase 관리자 로그 altibase_XXX.log 확인"]
+    B["문제 유형 판단"]
+    C["관련정보 수집\nAltibase 모니터링 도구/시스템 모니터링 커맨드 사용"]
+    D["원인 분석 및 문제해결"]
+    A --> B --> C --> D
+```
+<!-- IMG_RECOVERY_END ref_id="img-05956" -->
+
 
 [그림 16‑1] 일반적인 문제 분석 절차
 

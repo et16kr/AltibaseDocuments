@@ -3143,9 +3143,33 @@ The criteria that are used to distinguish the 7 subtypes of the GEOMETRY data ty
 
 ![](media/SpatialSQL/image11.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00925" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="499" image_path_raw="media/SpatialSQL/image11.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_clause ::=
+    X Y
+```
+<!-- IMG_RECOVERY_END ref_id="img-00925" -->
+
+
 ![](media/SpatialSQL/image12.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00926" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="501" image_path_raw="media/SpatialSQL/image12.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_text_clause ::=
+    '(' Point_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00926" -->
+
+
 ![](media/SpatialSQL/image13.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00927" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="503" image_path_raw="media/SpatialSQL/image13.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_tagged_text_clause ::=
+    POINT Point_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00927" -->
+
 
 ​                                                       POINT( x y )
 
@@ -3178,6 +3202,14 @@ INSERT INTO building VALUES (6, POINTFROMTEXT('POINT EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image14.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00928" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="535" image_path_raw="media/SpatialSQL/image14.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipoint_tagged_text_clause ::=
+    MULTIPOINT { '(' Point_text_clause ')' { ',' '(' Point_text_clause ')' } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00928" -->
+
 
 ​                                                                         MULTIPOINT(x1 y1 [, xn yn ])
 
@@ -3217,7 +3249,23 @@ The following is a text string representation of a linestring object.
 
 ![](media/SpatialSQL/image15.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00929" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="573" image_path_raw="media/SpatialSQL/image15.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Lintstring_text_clause ::=
+    '(' Point_clause { ',' Point_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00929" -->
+
+
 ![](media/SpatialSQL/image16.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00930" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="575" image_path_raw="media/SpatialSQL/image16.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Linestring_tagged_text_clause ::=
+    LINESTRING Linestring_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00930" -->
+
 
 ​                                                           LINESTRING( x1 y1 , x2 y2 [, xn yn ])
 
@@ -3269,6 +3317,14 @@ INSERT INTO road VALUES (6, LINEFROMTEXT('LINESTRING EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image21.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00935" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="626" image_path_raw="media/SpatialSQL/image21.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multilinestring_tagged_text_clause ::=
+    MULTILINESTRING { Linestring_text_clause { ',' Linestring_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00935" -->
+
 
 ​                                           MULTILINESTRING( (x1 y1, x2 y2 [, xn yn ] ) [, (x1 y1, x2 y2 [, xn yn ] ) ] )
 
@@ -3323,7 +3379,23 @@ INSERT INTO road VALUES (6, MLINEFROMTEXT('MULTILINESTRING EMPTY'));
 
 ![](media/SpatialSQL/image26.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00940" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="679" image_path_raw="media/SpatialSQL/image26.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_text_clause ::=
+    '(' Linestring_text_clause { ',' Linestring_text_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00940" -->
+
+
 ![](media/SpatialSQL/image27.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00941" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="681" image_path_raw="media/SpatialSQL/image27.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_tagged_text_clause ::=
+    POLYGON Polygon_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00941" -->
+
 
 ​                                                            POLYGON( (x1 y1, x2 y2, x3 y3 [, xn yn ])[, (x1 y1, x2 y2, x3 y3 [, xn yn ] ) ]  )
 
@@ -3405,6 +3477,14 @@ INSERT INTO lake VALUES (6, POLYFROMTEXT('POLYGON EMPTY'));
 
 ![](media/SpatialSQL/image33.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00947" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="761" image_path_raw="media/SpatialSQL/image33.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipolygon_tagged_text_clause ::=
+    MULTIPOLYGON { Polygon_text_clause { ',' Polygon_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00947" -->
+
+
 ​                                        MULTIPOLYGON( ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn
 ​                                         yn ] ) ] ) [ ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn yn
 ​                                         ] ) ] ) ] ) )
@@ -3482,6 +3562,14 @@ INSERT INTO lake VALUES (6, MPOLYFROMTEXT('MULTIPOLYGON EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image39.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00953" source_md="Manuals/Altibase_7.1/eng/Spatial SQL Reference.md" line_no="839" image_path_raw="media/SpatialSQL/image39.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Geometrycollection_tagged_text_clause ::=
+    GEOMETRYCOLLECTION { Geometry_tagged_text_clause { ',' Geometry_tagged_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00953" -->
+
 
 ​                                         GEOMETRYCOLLECTION( Point \| LineString \| Polygon \| MultiPoint \|
 ​                                         MultiLineString \| MultiPolygon, [Point \| LineString \| Polygon \| MultiPoint
@@ -10477,9 +10565,33 @@ GEOMETRY 타입을 반환하는 연산자의 경우 결과가 없을 때 EMPTY �
 
 ![](media/SpatialSQL/image11.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02116" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="686" image_path_raw="media/SpatialSQL/image11.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_clause ::=
+    X Y
+```
+<!-- IMG_RECOVERY_END ref_id="img-02116" -->
+
+
 ![](media/SpatialSQL/image12.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02117" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="688" image_path_raw="media/SpatialSQL/image12.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_text_clause ::=
+    '(' Point_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02117" -->
+
+
 ![](media/SpatialSQL/image13.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02118" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="690" image_path_raw="media/SpatialSQL/image13.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_tagged_text_clause ::=
+    POINT Point_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-02118" -->
+
 
 ​                                                       POINT( x y )
 
@@ -10514,6 +10626,14 @@ INSERT INTO building VALUES (6, POINTFROMTEXT('POINT EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image14.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02119" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="724" image_path_raw="media/SpatialSQL/image14.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipoint_tagged_text_clause ::=
+    MULTIPOINT { '(' Point_text_clause ')' { ',' '(' Point_text_clause ')' } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02119" -->
+
 
 ​                                                                         MULTIPOINT(x1 y1 [, xn yn ])
 
@@ -10554,7 +10674,23 @@ INSERT INTO building VALUES (6, MPOINTFROMTEXT('MULTIPOINT EMPTY'));
 
 ![](media/SpatialSQL/image15.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02120" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="763" image_path_raw="media/SpatialSQL/image15.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Lintstring_text_clause ::=
+    '(' Point_clause { ',' Point_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02120" -->
+
+
 ![](media/SpatialSQL/image16.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02121" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="765" image_path_raw="media/SpatialSQL/image16.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Linestring_tagged_text_clause ::=
+    LINESTRING Linestring_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-02121" -->
+
 
 ​                                                           LINESTRING( x1 y1 , x2 y2 [, xn yn ])
 
@@ -10611,6 +10747,14 @@ INSERT INTO road VALUES (6, LINEFROMTEXT('LINESTRING EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image21.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02126" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="821" image_path_raw="media/SpatialSQL/image21.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multilinestring_tagged_text_clause ::=
+    MULTILINESTRING { Linestring_text_clause { ',' Linestring_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02126" -->
+
 
 ​                                           MULTILINESTRING( (x1 y1, x2 y2 [, xn yn ] ) [, (x1 y1, x2 y2 [, xn yn ] ) ] )
 
@@ -10671,7 +10815,23 @@ INSERT INTO road VALUES (6, MLINEFROMTEXT('MULTILINESTRING EMPTY'));
 
 ![](media/SpatialSQL/image26.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02131" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="880" image_path_raw="media/SpatialSQL/image26.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_text_clause ::=
+    '(' Linestring_text_clause { ',' Linestring_text_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02131" -->
+
+
 ![](media/SpatialSQL/image27.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02132" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="882" image_path_raw="media/SpatialSQL/image27.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_tagged_text_clause ::=
+    POLYGON Polygon_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-02132" -->
+
 
 ​                                                            POLYGON( (x1 y1, x2 y2, x3 y3 [, xn yn ])[, (x1 y1, x2 y2, x3 y3 [, xn yn ] ) ]  )
 
@@ -10763,6 +10923,14 @@ INSERT INTO lake VALUES (6, POLYFROMTEXT('POLYGON EMPTY'));
 
 ![](media/SpatialSQL/image33.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02138" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="972" image_path_raw="media/SpatialSQL/image33.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipolygon_tagged_text_clause ::=
+    MULTIPOLYGON { Polygon_text_clause { ',' Polygon_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02138" -->
+
+
 ​                                        MULTIPOLYGON( ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn
 ​                                         yn ] ) ] ) [ ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn yn
 ​                                         ] ) ] ) ] ) )
@@ -10850,6 +11018,14 @@ INSERT INTO lake VALUES (6, MPOLYFROMTEXT('MULTIPOLYGON EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image39.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02144" source_md="Manuals/Altibase_7.1/kor/Spatial SQL Reference.md" line_no="1060" image_path_raw="media/SpatialSQL/image39.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Geometrycollection_tagged_text_clause ::=
+    GEOMETRYCOLLECTION { Geometry_tagged_text_clause { ',' Geometry_tagged_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02144" -->
+
 
 ​                                         GEOMETRYCOLLECTION( Point \| LineString \| Polygon \| MultiPoint \|
 ​                                         MultiLineString \| MultiPolygon, [Point \| LineString \| Polygon \| MultiPoint
@@ -17954,9 +18130,33 @@ The criteria that are used to distinguish the 7 subtypes of the GEOMETRY data ty
 
 ![](media/SpatialSQL/image11.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03241" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="476" image_path_raw="media/SpatialSQL/image11.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_clause ::=
+    X Y
+```
+<!-- IMG_RECOVERY_END ref_id="img-03241" -->
+
+
 ![](media/SpatialSQL/image12.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03242" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="478" image_path_raw="media/SpatialSQL/image12.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_text_clause ::=
+    '(' Point_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03242" -->
+
+
 ![](media/SpatialSQL/image13.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03243" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="480" image_path_raw="media/SpatialSQL/image13.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_tagged_text_clause ::=
+    POINT Point_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-03243" -->
+
 
 ​                                                       POINT( x y )
 
@@ -17989,6 +18189,14 @@ INSERT INTO building VALUES (6, POINTFROMTEXT('POINT EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image14.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03244" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="512" image_path_raw="media/SpatialSQL/image14.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipoint_tagged_text_clause ::=
+    MULTIPOINT { '(' Point_text_clause ')' { ',' '(' Point_text_clause ')' } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03244" -->
+
 
 ​                                                                         MULTIPOINT(x1 y1 [, xn yn ])
 
@@ -18028,7 +18236,23 @@ The following is a text string representation of a linestring object.
 
 ![](media/SpatialSQL/image15.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03245" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="550" image_path_raw="media/SpatialSQL/image15.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Lintstring_text_clause ::=
+    '(' Point_clause { ',' Point_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03245" -->
+
+
 ![](media/SpatialSQL/image16.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03246" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="552" image_path_raw="media/SpatialSQL/image16.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Linestring_tagged_text_clause ::=
+    LINESTRING Linestring_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-03246" -->
+
 
 ​                                                           LINESTRING( x1 y1 , x2 y2 [, xn yn ])
 
@@ -18080,6 +18304,14 @@ INSERT INTO road VALUES (6, LINEFROMTEXT('LINESTRING EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image21.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03251" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="603" image_path_raw="media/SpatialSQL/image21.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multilinestring_tagged_text_clause ::=
+    MULTILINESTRING { Linestring_text_clause { ',' Linestring_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03251" -->
+
 
 ​                                           MULTILINESTRING( (x1 y1, x2 y2 [, xn yn ] ) [, (x1 y1, x2 y2 [, xn yn ] ) ] )
 
@@ -18134,7 +18366,23 @@ INSERT INTO road VALUES (6, MLINEFROMTEXT('MULTILINESTRING EMPTY'));
 
 ![](media/SpatialSQL/image26.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03256" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="656" image_path_raw="media/SpatialSQL/image26.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_text_clause ::=
+    '(' Linestring_text_clause { ',' Linestring_text_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-03256" -->
+
+
 ![](media/SpatialSQL/image27.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03257" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="658" image_path_raw="media/SpatialSQL/image27.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_tagged_text_clause ::=
+    POLYGON Polygon_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-03257" -->
+
 
 ​                                                            POLYGON( (x1 y1, x2 y2, x3 y3 [, xn yn ])[, (x1 y1, x2 y2, x3 y3 [, xn yn ] ) ]  )
 
@@ -18216,6 +18464,14 @@ INSERT INTO lake VALUES (6, POLYFROMTEXT('POLYGON EMPTY'));
 
 ![](media/SpatialSQL/image33.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03263" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="738" image_path_raw="media/SpatialSQL/image33.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipolygon_tagged_text_clause ::=
+    MULTIPOLYGON { Polygon_text_clause { ',' Polygon_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03263" -->
+
+
 ​                                        MULTIPOLYGON( ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn
 ​                                         yn ] ) ] ) [ ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn yn
 ​                                         ] ) ] ) ] ) )
@@ -18293,6 +18549,14 @@ INSERT INTO lake VALUES (6, MPOLYFROMTEXT('MULTIPOLYGON EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image39.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-03269" source_md="Manuals/Altibase_7.3/eng/Spatial SQL Reference.md" line_no="816" image_path_raw="media/SpatialSQL/image39.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Geometrycollection_tagged_text_clause ::=
+    GEOMETRYCOLLECTION { Geometry_tagged_text_clause { ',' Geometry_tagged_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-03269" -->
+
 
 ​                                         GEOMETRYCOLLECTION( Point \| LineString \| Polygon \| MultiPoint \|
 ​                                         MultiLineString \| MultiPolygon, [Point \| LineString \| Polygon \| MultiPoint
@@ -25318,9 +25582,33 @@ GEOMETRY 타입을 반환하는 연산자의 경우 결과가 없을 때 EMPTY �
 
 ![](media/SpatialSQL/image11.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04445" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="688" image_path_raw="media/SpatialSQL/image11.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_clause ::=
+    X Y
+```
+<!-- IMG_RECOVERY_END ref_id="img-04445" -->
+
+
 ![](media/SpatialSQL/image12.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04446" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="690" image_path_raw="media/SpatialSQL/image12.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_text_clause ::=
+    '(' Point_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04446" -->
+
+
 ![](media/SpatialSQL/image13.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04447" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="692" image_path_raw="media/SpatialSQL/image13.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_tagged_text_clause ::=
+    POINT Point_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-04447" -->
+
 
 ​                                                       POINT( x y )
 
@@ -25355,6 +25643,14 @@ INSERT INTO building VALUES (6, POINTFROMTEXT('POINT EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image14.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04448" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="726" image_path_raw="media/SpatialSQL/image14.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipoint_tagged_text_clause ::=
+    MULTIPOINT { '(' Point_text_clause ')' { ',' '(' Point_text_clause ')' } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04448" -->
+
 
 ​                                                                         MULTIPOINT(x1 y1 [, xn yn ])
 
@@ -25395,7 +25691,23 @@ INSERT INTO building VALUES (6, MPOINTFROMTEXT('MULTIPOINT EMPTY'));
 
 ![](media/SpatialSQL/image15.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04449" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="765" image_path_raw="media/SpatialSQL/image15.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Lintstring_text_clause ::=
+    '(' Point_clause { ',' Point_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04449" -->
+
+
 ![](media/SpatialSQL/image16.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04450" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="767" image_path_raw="media/SpatialSQL/image16.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Linestring_tagged_text_clause ::=
+    LINESTRING Linestring_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-04450" -->
+
 
 ​                                                           LINESTRING( x1 y1 , x2 y2 [, xn yn ])
 
@@ -25452,6 +25764,14 @@ INSERT INTO road VALUES (6, LINEFROMTEXT('LINESTRING EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image21.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04455" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="823" image_path_raw="media/SpatialSQL/image21.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multilinestring_tagged_text_clause ::=
+    MULTILINESTRING { Linestring_text_clause { ',' Linestring_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04455" -->
+
 
 ​                                           MULTILINESTRING( (x1 y1, x2 y2 [, xn yn ] ) [, (x1 y1, x2 y2 [, xn yn ] ) ] )
 
@@ -25512,7 +25832,23 @@ INSERT INTO road VALUES (6, MLINEFROMTEXT('MULTILINESTRING EMPTY'));
 
 ![](media/SpatialSQL/image26.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04460" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="882" image_path_raw="media/SpatialSQL/image26.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_text_clause ::=
+    '(' Linestring_text_clause { ',' Linestring_text_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-04460" -->
+
+
 ![](media/SpatialSQL/image27.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04461" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="884" image_path_raw="media/SpatialSQL/image27.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_tagged_text_clause ::=
+    POLYGON Polygon_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-04461" -->
+
 
 ​                                                            POLYGON( (x1 y1, x2 y2, x3 y3 [, xn yn ])[, (x1 y1, x2 y2, x3 y3 [, xn yn ] ) ]  )
 
@@ -25604,6 +25940,14 @@ INSERT INTO lake VALUES (6, POLYFROMTEXT('POLYGON EMPTY'));
 
 ![](media/SpatialSQL/image33.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04467" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="974" image_path_raw="media/SpatialSQL/image33.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipolygon_tagged_text_clause ::=
+    MULTIPOLYGON { Polygon_text_clause { ',' Polygon_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04467" -->
+
+
 ​                                        MULTIPOLYGON( ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn
 ​                                         yn ] ) ] ) [ ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn yn
 ​                                         ] ) ] ) ] ) )
@@ -25691,6 +26035,14 @@ INSERT INTO lake VALUES (6, MPOLYFROMTEXT('MULTIPOLYGON EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image39.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-04473" source_md="Manuals/Altibase_7.3/kor/Spatial SQL Reference.md" line_no="1062" image_path_raw="media/SpatialSQL/image39.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Geometrycollection_tagged_text_clause ::=
+    GEOMETRYCOLLECTION { Geometry_tagged_text_clause { ',' Geometry_tagged_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-04473" -->
+
 
 ​                                         GEOMETRYCOLLECTION( Point \| LineString \| Polygon \| MultiPoint \|
 ​                                         MultiLineString \| MultiPolygon, [Point \| LineString \| Polygon \| MultiPoint
@@ -32820,9 +33172,33 @@ The criteria that are used to distinguish the 7 subtypes of the GEOMETRY data ty
 
 ![](media/SpatialSQL/image11.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05572" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="476" image_path_raw="media/SpatialSQL/image11.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_clause ::=
+    X Y
+```
+<!-- IMG_RECOVERY_END ref_id="img-05572" -->
+
+
 ![](media/SpatialSQL/image12.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05573" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="478" image_path_raw="media/SpatialSQL/image12.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_text_clause ::=
+    '(' Point_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05573" -->
+
+
 ![](media/SpatialSQL/image13.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05574" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="480" image_path_raw="media/SpatialSQL/image13.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_tagged_text_clause ::=
+    POINT Point_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-05574" -->
+
 
 ​                                                       POINT( x y )
 
@@ -32855,6 +33231,14 @@ INSERT INTO building VALUES (6, POINTFROMTEXT('POINT EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image14.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05575" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="512" image_path_raw="media/SpatialSQL/image14.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipoint_tagged_text_clause ::=
+    MULTIPOINT { '(' Point_text_clause ')' { ',' '(' Point_text_clause ')' } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05575" -->
+
 
 ​                                                                         MULTIPOINT(x1 y1 [, xn yn ])
 
@@ -32894,7 +33278,23 @@ The following is a text string representation of a linestring object.
 
 ![](media/SpatialSQL/image15.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05576" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="550" image_path_raw="media/SpatialSQL/image15.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Lintstring_text_clause ::=
+    '(' Point_clause { ',' Point_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05576" -->
+
+
 ![](media/SpatialSQL/image16.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05577" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="552" image_path_raw="media/SpatialSQL/image16.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Linestring_tagged_text_clause ::=
+    LINESTRING Linestring_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-05577" -->
+
 
 ​                                                           LINESTRING( x1 y1 , x2 y2 [, xn yn ])
 
@@ -32946,6 +33346,14 @@ INSERT INTO road VALUES (6, LINEFROMTEXT('LINESTRING EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image21.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05582" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="603" image_path_raw="media/SpatialSQL/image21.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multilinestring_tagged_text_clause ::=
+    MULTILINESTRING { Linestring_text_clause { ',' Linestring_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05582" -->
+
 
 ​                                           MULTILINESTRING( (x1 y1, x2 y2 [, xn yn ] ) [, (x1 y1, x2 y2 [, xn yn ] ) ] )
 
@@ -33000,7 +33408,23 @@ INSERT INTO road VALUES (6, MLINEFROMTEXT('MULTILINESTRING EMPTY'));
 
 ![](media/SpatialSQL/image26.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05587" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="656" image_path_raw="media/SpatialSQL/image26.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_text_clause ::=
+    '(' Linestring_text_clause { ',' Linestring_text_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-05587" -->
+
+
 ![](media/SpatialSQL/image27.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05588" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="658" image_path_raw="media/SpatialSQL/image27.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_tagged_text_clause ::=
+    POLYGON Polygon_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-05588" -->
+
 
 ​                                                            POLYGON( (x1 y1, x2 y2, x3 y3 [, xn yn ])[, (x1 y1, x2 y2, x3 y3 [, xn yn ] ) ]  )
 
@@ -33082,6 +33506,14 @@ INSERT INTO lake VALUES (6, POLYFROMTEXT('POLYGON EMPTY'));
 
 ![](media/SpatialSQL/image33.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05594" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="738" image_path_raw="media/SpatialSQL/image33.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipolygon_tagged_text_clause ::=
+    MULTIPOLYGON { Polygon_text_clause { ',' Polygon_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05594" -->
+
+
 ​                                        MULTIPOLYGON( ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn
 ​                                         yn ] ) ] ) [ ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn yn
 ​                                         ] ) ] ) ] ) )
@@ -33159,6 +33591,14 @@ INSERT INTO lake VALUES (6, MPOLYFROMTEXT('MULTIPOLYGON EMPTY'));
 ##### Syntax
 
 ![](media/SpatialSQL/image39.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-05600" source_md="Manuals/Altibase_trunk/eng/Spatial SQL Reference.md" line_no="816" image_path_raw="media/SpatialSQL/image39.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Geometrycollection_tagged_text_clause ::=
+    GEOMETRYCOLLECTION { Geometry_tagged_text_clause { ',' Geometry_tagged_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-05600" -->
+
 
 ​                                         GEOMETRYCOLLECTION( Point \| LineString \| Polygon \| MultiPoint \|
 ​                                         MultiLineString \| MultiPolygon, [Point \| LineString \| Polygon \| MultiPoint
@@ -40183,9 +40623,33 @@ GEOMETRY 타입을 반환하는 연산자의 경우 결과가 없을 때 EMPTY �
 
 ![](media/SpatialSQL/image11.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06801" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="687" image_path_raw="media/SpatialSQL/image11.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_clause ::=
+    X Y
+```
+<!-- IMG_RECOVERY_END ref_id="img-06801" -->
+
+
 ![](media/SpatialSQL/image12.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06802" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="689" image_path_raw="media/SpatialSQL/image12.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_text_clause ::=
+    '(' Point_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06802" -->
+
+
 ![](media/SpatialSQL/image13.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06803" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="691" image_path_raw="media/SpatialSQL/image13.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Point_tagged_text_clause ::=
+    POINT Point_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-06803" -->
+
 
 ​                                                       POINT( x y )
 
@@ -40220,6 +40684,14 @@ INSERT INTO building VALUES (6, POINTFROMTEXT('POINT EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image14.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06804" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="725" image_path_raw="media/SpatialSQL/image14.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipoint_tagged_text_clause ::=
+    MULTIPOINT { '(' Point_text_clause ')' { ',' '(' Point_text_clause ')' } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06804" -->
+
 
 ​                                                                         MULTIPOINT(x1 y1 [, xn yn ])
 
@@ -40260,7 +40732,23 @@ INSERT INTO building VALUES (6, MPOINTFROMTEXT('MULTIPOINT EMPTY'));
 
 ![](media/SpatialSQL/image15.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06805" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="764" image_path_raw="media/SpatialSQL/image15.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Lintstring_text_clause ::=
+    '(' Point_clause { ',' Point_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06805" -->
+
+
 ![](media/SpatialSQL/image16.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06806" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="766" image_path_raw="media/SpatialSQL/image16.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Linestring_tagged_text_clause ::=
+    LINESTRING Linestring_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-06806" -->
+
 
 ​                                                           LINESTRING( x1 y1 , x2 y2 [, xn yn ])
 
@@ -40317,6 +40805,14 @@ INSERT INTO road VALUES (6, LINEFROMTEXT('LINESTRING EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image21.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06811" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="822" image_path_raw="media/SpatialSQL/image21.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multilinestring_tagged_text_clause ::=
+    MULTILINESTRING { Linestring_text_clause { ',' Linestring_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06811" -->
+
 
 ​                                           MULTILINESTRING( (x1 y1, x2 y2 [, xn yn ] ) [, (x1 y1, x2 y2 [, xn yn ] ) ] )
 
@@ -40377,7 +40873,23 @@ INSERT INTO road VALUES (6, MLINEFROMTEXT('MULTILINESTRING EMPTY'));
 
 ![](media/SpatialSQL/image26.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06816" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="881" image_path_raw="media/SpatialSQL/image26.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_text_clause ::=
+    '(' Linestring_text_clause { ',' Linestring_text_clause } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-06816" -->
+
+
 ![](media/SpatialSQL/image27.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06817" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="883" image_path_raw="media/SpatialSQL/image27.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Polygon_tagged_text_clause ::=
+    POLYGON Polygon_text_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-06817" -->
+
 
 ​                                                            POLYGON( (x1 y1, x2 y2, x3 y3 [, xn yn ])[, (x1 y1, x2 y2, x3 y3 [, xn yn ] ) ]  )
 
@@ -40469,6 +40981,14 @@ INSERT INTO lake VALUES (6, POLYFROMTEXT('POLYGON EMPTY'));
 
 ![](media/SpatialSQL/image33.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06823" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="973" image_path_raw="media/SpatialSQL/image33.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Multipolygon_tagged_text_clause ::=
+    MULTIPOLYGON { Polygon_text_clause { ',' Polygon_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06823" -->
+
+
 ​                                        MULTIPOLYGON( ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn
 ​                                         yn ] ) ] ) [ ( (x1 y1, x2 y2, x3 y3 [, xn yn ]) [, (x1 y1, x2 y2, x3 y3 [, xn yn
 ​                                         ] ) ] ) ] ) )
@@ -40556,6 +41076,14 @@ INSERT INTO lake VALUES (6, MPOLYFROMTEXT('MULTIPOLYGON EMPTY'));
 ##### 구문
 
 ![](media/SpatialSQL/image39.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-06829" source_md="Manuals/Altibase_trunk/kor/Spatial SQL Reference.md" line_no="1061" image_path_raw="media/SpatialSQL/image39.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+Geometrycollection_tagged_text_clause ::=
+    GEOMETRYCOLLECTION { Geometry_tagged_text_clause { ',' Geometry_tagged_text_clause } }
+```
+<!-- IMG_RECOVERY_END ref_id="img-06829" -->
+
 
 ​                                         GEOMETRYCOLLECTION( Point \| LineString \| Polygon \| MultiPoint \|
 ​                                         MultiLineString \| MultiPolygon, [Point \| LineString \| Polygon \| MultiPoint
@@ -53092,6 +53620,14 @@ hints ::=
 
 ![hint](media/SQL/hint.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00489" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1473" image_path_raw="media/SQL/hint.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hints ::=
+    '/*+' hint [ { hint } ] '*/'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00489" -->
+
+
 #### Prerequisites
 
 The hint can be specified in the following:
@@ -53393,11 +53929,27 @@ This hint specifies a direct-path INSERT operation and can only be used in INSER
 
 ![append](media/SQL/append.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00490" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1774" image_path_raw="media/SQL/append.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+append ::=
+    APPEND
+```
+<!-- IMG_RECOVERY_END ref_id="img-00490" -->
+
+
 #### CNF
 
 This hint specifies that predicates in the WHERE clause are to be normalized in the conjunctive normal form. 
 
 ![cnf](media/SQL/cnf.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00491" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1780" image_path_raw="media/SQL/cnf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cnf ::=
+    CNF
+```
+<!-- IMG_RECOVERY_END ref_id="img-00491" -->
+
 
 #### COST
 
@@ -53405,11 +53957,27 @@ If this hint is specified, the optimizer creates an execution plan with the lowe
 
 ![cost](media/SQL/cost.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00492" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1786" image_path_raw="media/SQL/cost.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cost ::=
+    COST
+```
+<!-- IMG_RECOVERY_END ref_id="img-00492" -->
+
+
 #### DELAY 
 
 These hints activate a function which delays execution of hierarchy, sorting, windowing, grouping, set, and distinction based upon execution plan graphs regardless of properties in queries so that the execution can be carried out in fetch.
 
 ![](media/SQL/8aeb39dd922ed0ce238bc037fcc1b2f2.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00493" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1792" image_path_raw="media/SQL/8aeb39dd922ed0ce238bc037fcc1b2f2.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+delay ::=
+    DELAY
+```
+<!-- IMG_RECOVERY_END ref_id="img-00493" -->
+
 
 #### DISTINCT_HASH
 
@@ -53417,17 +53985,41 @@ This hint speicifies HASH for DISTINT.
 
 ![distinct_hash](media/SQL/distinct_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00494" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1798" image_path_raw="media/SQL/distinct_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+distinct_hash ::=
+    DISTINCT_HASH
+```
+<!-- IMG_RECOVERY_END ref_id="img-00494" -->
+
+
 #### DISTINCT_SORT
 
 This hint specifies SORT for DISTINCT.
 
 ![distinct_sort](media/SQL/distinct_sort.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00495" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1804" image_path_raw="media/SQL/distinct_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+distinct_sort ::=
+    DISTINCT_SORT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00495" -->
+
+
 #### DNF
 
 This hint specifies that predicates in the WHERE clause are to be normalized in the disjunctive normal form. 
 
 ![dnf](media/SQL/dnf.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00496" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1810" image_path_raw="media/SQL/dnf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dnf ::=
+    DNF
+```
+<!-- IMG_RECOVERY_END ref_id="img-00496" -->
+
 
 #### EXEC_FAST 
 
@@ -53436,11 +54028,27 @@ QUERY. If SIMPLE QUERY is applied, it will be output on the execution plan.
 
 ![](media/SQL/b4dbcc345d928a319bb06d8f68f29338.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00497" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1817" image_path_raw="media/SQL/b4dbcc345d928a319bb06d8f68f29338.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+exec_fast ::=
+    EXEC_FAST
+```
+<!-- IMG_RECOVERY_END ref_id="img-00497" -->
+
+
 #### FIRST_ROWS
 
 If this hint is specified, the optimizer creates an execution plan that most efficiently returns the first n rows of a table. 
 
 ![first_rows](media/SQL/first_rows.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00498" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1823" image_path_raw="media/SQL/first_rows.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+first_rows ::=
+    FIRST_ROWS '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00498" -->
+
 
 #### FULL SCAN
 
@@ -53448,11 +54056,27 @@ This hint specifies that the full table scan will be performed for the specified
 
 ![full scan](media/SQL/full scan.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00499" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1829" image_path_raw="media/SQL/full scan.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+full_scan ::=
+    FULL SCAN '(' tbl_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00499" -->
+
+
 #### GROUP BUCKET COUNT
 
 This hint specifies the number of hash buckets for the GROUP-AGGREGATION and AGGREGATION execution nodes. 
 
 ![group bucket count](media/SQL/group bucket count.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00500" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1835" image_path_raw="media/SQL/group bucket count.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_bucket_count ::=
+    GROUP BUCKET COUNT '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00500" -->
+
 
 #### GROUP_HASH
 
@@ -53460,11 +54084,27 @@ This hint specifies HASH for GROUP BY.
 
 ![group_hash](media/SQL/group_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00501" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1841" image_path_raw="media/SQL/group_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_hash ::=
+    GROUP_HASH
+```
+<!-- IMG_RECOVERY_END ref_id="img-00501" -->
+
+
 #### GROUP_SORT
 
 This hint specifies SORT for GROUP BY.
 
 ![group_sort](media/SQL/group_sort.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00502" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1847" image_path_raw="media/SQL/group_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_sort ::=
+    GROUP_SORT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00502" -->
+
 
 #### HASH_AJ
 
@@ -53472,17 +54112,41 @@ If this hint is specified, a nested subquery uses a hash join to perform an anti
 
 ![hash_aj](media/SQL/hash_aj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00503" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1853" image_path_raw="media/SQL/hash_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_aj ::=
+    HASH_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00503" -->
+
+
 #### HASH BUCKET COUNT
 
 This hint specifies the number of hash buckets for the HASH and DISTINCT execution nodes. 
 
 ![hash bucket count](media/SQL/hash bucket count.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00504" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1859" image_path_raw="media/SQL/hash bucket count.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_bucket_count ::=
+    HASH BUCKET COUNT '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00504" -->
+
+
 #### HASH_SJ
 
 If this hint is specified, a nested subquery uses a hash join to perform a semi-join. You need to specify this hint within the subquery. If the subquery cannot be unnested with a semi-join, this hint becomes invalid.
 
 ![hash_sj](media/SQL/hash_sj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00505" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1865" image_path_raw="media/SQL/hash_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_sj ::=
+    HASH_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00505" -->
+
 
 #### HIGH_PRECISION
 
@@ -53492,11 +54156,27 @@ When this hint is used, the float type is used as the data type. When operating 
 
 ![](media/SQL/8b81157ae9e013610fec42063de0648f.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00506" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1873" image_path_raw="media/SQL/8b81157ae9e013610fec42063de0648f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+high_precision ::=
+    HIGH_PRECISION
+```
+<!-- IMG_RECOVERY_END ref_id="img-00506" -->
+
+
 #### INDEX
 
 This hint specifies an index scan. 
 
 ![index](media/SQL/index.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00507" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1879" image_path_raw="media/SQL/index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index ::=
+    INDEX '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00507" -->
+
 
 #### INDEX ASC
 
@@ -53504,11 +54184,27 @@ This hint specifies an index scan in ascending order.
 
 ![index_asc](media/SQL/index_asc.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00508" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1885" image_path_raw="media/SQL/index_asc.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_asc ::=
+    INDEX [ ASC ] '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00508" -->
+
+
 #### INDEX_ASC
 
 This hint performs the same action equivalent to the INDEX ASC hint.
 
 ![](media/SQL/5a6888421179f4bed0963085e3a3f32a.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00509" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1891" image_path_raw="media/SQL/5a6888421179f4bed0963085e3a3f32a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_asc_alias ::=
+    INDEX_ASC '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00509" -->
+
 
 #### INDEX DESC
 
@@ -53516,11 +54212,27 @@ This hint specifies an index scan in descending order.
 
 ![index desc](media/SQL/index desc.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00510" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1897" image_path_raw="media/SQL/index desc.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_desc ::=
+    INDEX [ DESC ] '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00510" -->
+
+
 #### INDEX_DESC
 
 This hint performs the same action equivalent to the INDEX DESC hint.
 
 ![](media/SQL/00429e82e80ed494c3a9750b7cf71ed6.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00511" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1903" image_path_raw="media/SQL/00429e82e80ed494c3a9750b7cf71ed6.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_desc_alias ::=
+    INDEX_DESC '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00511" -->
+
 
 #### INVERSE_JOIN
 
@@ -53532,11 +54244,27 @@ This hint can be used with other hints that force semi-joins or anti-joins. For 
 
 ![inverse_join](media/SQL/inverse_join.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00512" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1913" image_path_raw="media/SQL/inverse_join.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+inverse_join ::=
+    INVERSE_JOIN
+```
+<!-- IMG_RECOVERY_END ref_id="img-00512" -->
+
+
 #### KEEP_PLAN
 
 If this hint is specified, the optimizer uses an exisiting execution plan (instead of recreating it) whenever the statistics for a table that is referenced by the plan changes. This hint can be used to prepare/execute and direct/execute a query. 
 
 ![keep_plan](media/SQL/keep_plan.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00513" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1919" image_path_raw="media/SQL/keep_plan.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+keep_plan ::=
+    KEEP_PLAN
+```
+<!-- IMG_RECOVERY_END ref_id="img-00513" -->
+
 
 #### LEADING
 
@@ -53544,11 +54272,27 @@ This hint firstly joins the tables that are used in a hint. If more than one LEA
 
 ![](media/SQL/d7925f2e0025071a87646b15d2fee986.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00514" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1925" image_path_raw="media/SQL/d7925f2e0025071a87646b15d2fee986.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+leading ::=
+    LEADING
+```
+<!-- IMG_RECOVERY_END ref_id="img-00514" -->
+
+
 #### MERGE_AJ
 
 If this hint is specified, a nested subquery uses a merge join to perform an anti-join. You need to specify this hint within the subquery. If the subquery cannot be unnested with an anti-join, this hint becomes invalid.
 
 ![merge_aj](media/SQL/merge_aj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00515" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1931" image_path_raw="media/SQL/merge_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_aj ::=
+    MERGE_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00515" -->
+
 
 #### MERGE_SJ
 
@@ -53556,11 +54300,27 @@ If this hint is specified, a nested subquery uses a merge join to perform a semi
 
 ![merge_sj](media/SQL/merge_sj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00516" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1937" image_path_raw="media/SQL/merge_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_sj ::=
+    MERGE_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00516" -->
+
+
 #### NL_AJ
 
 If this hint is specified, a nested subquery uses a nested loop join to perform an anti-join. Users need to specify this hint within the subquery. If the subquery cannot be unnested with an anti-join, this hint becomes invalid. 
 
 ![nl_aj](media/SQL/nl_aj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00517" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1943" image_path_raw="media/SQL/nl_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+nl_aj ::=
+    NL_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00517" -->
+
 
 #### NL_SJ
 
@@ -53568,11 +54328,27 @@ If this hint is specified, a nested subquery uses a nested loop join to perform 
 
 ![nl_sj](media/SQL/nl_sj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00518" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1949" image_path_raw="media/SQL/nl_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+nl_sj ::=
+    NL_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00518" -->
+
+
 #### NO DELAY 
 
 This hint deactivates aforementioned delaying function . Delaying execution of hierarchy, sorting, windowing, grouping, set, and distinction based upon execution plan graphs is not activated
 
 ![](media/SQL/32142706d7230ccce49718f7ff7c6ea7.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00519" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1955" image_path_raw="media/SQL/32142706d7230ccce49718f7ff7c6ea7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_delay ::=
+    NO DELAY
+```
+<!-- IMG_RECOVERY_END ref_id="img-00519" -->
+
 
 #### NO_EXEC_FAST 
 
@@ -53580,11 +54356,27 @@ Even though SELECT, INSERT, UPDATE, DELETE statements are simple statements, the
 
 ![](media/SQL/c4e80442b87071d82f3fd86145afc3f5.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00520" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1961" image_path_raw="media/SQL/c4e80442b87071d82f3fd86145afc3f5.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_exec_fast ::=
+    NO_EXEC_FAST
+```
+<!-- IMG_RECOVERY_END ref_id="img-00520" -->
+
+
 #### NO_EXPAND
 
 This hint performs the same action equivalent to the CNF hint.
 
 ![](media/SQL/aeeecf55495aecd36a8e7a2cf387657d.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00521" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1967" image_path_raw="media/SQL/aeeecf55495aecd36a8e7a2cf387657d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_expand ::=
+    NO_EXPAND
+```
+<!-- IMG_RECOVERY_END ref_id="img-00521" -->
+
 
 #### NO INDEX
 
@@ -53592,11 +54384,27 @@ This hint specifies not to perform an index scan.
 
 ![no index](media/SQL/no index.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00522" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1973" image_path_raw="media/SQL/no index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_index ::=
+    NO INDEX '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00522" -->
+
+
 #### NO_INDEX
 
 This hint performs the same action equivalent to the NO INDEX hint.
 
 ![](media/SQL/2ea4fa9a326a1b1a705f9cf1e5f0b0db.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00523" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1979" image_path_raw="media/SQL/2ea4fa9a326a1b1a705f9cf1e5f0b0db.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_index_alias ::=
+    NO_INDEX
+```
+<!-- IMG_RECOVERY_END ref_id="img-00523" -->
+
 
 #### NO_INVERSE_JOIN
 
@@ -53606,11 +54414,27 @@ This hint can be used with other hints that force semi-joins or anti-joins. For 
 
 ![no_inverse_join](media/SQL/no_inverse_join.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00524" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1987" image_path_raw="media/SQL/no_inverse_join.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_inverse_join ::=
+    NO_INVERSE_JOIN
+```
+<!-- IMG_RECOVERY_END ref_id="img-00524" -->
+
+
 #### NO_MERGE
 
 This hint instructs not to merge the main query and inline view query into one query.
 
 ![no_merge](media/SQL/no_merge.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00525" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1993" image_path_raw="media/SQL/no_merge.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_merge ::=
+    NO_MERGE '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00525" -->
+
 
 #### NO_PARALLEL
 
@@ -53618,11 +54442,27 @@ This hint performs the same action equivalent to the NOPARALLEL hint.
 
 ![](media/SQL/37ef48e6ff8bf73f864afdbb842349b3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00526" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="1999" image_path_raw="media/SQL/37ef48e6ff8bf73f864afdbb842349b3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_parallel ::=
+    NO_PARALLEL
+```
+<!-- IMG_RECOVERY_END ref_id="img-00526" -->
+
+
 #### NO_PLAN_CACHE
 
 This hint specifies that the plan cache is not to store plans. 
 
 ![no_plan_cache](media/SQL/no_plan_cache.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00527" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2005" image_path_raw="media/SQL/no_plan_cache.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_plan_cache ::=
+    NO_PLAN_CACHE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00527" -->
+
 
 #### NO_PUSH_SELECT_VIEW
 
@@ -53630,11 +54470,27 @@ This hint specifies that a WHERE predicate outside a view is not to be pushed in
 
 ![no_push_select_view](media/SQL/no_push_select_view.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00528" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2011" image_path_raw="media/SQL/no_push_select_view.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_push_select_view ::=
+    NO_PUSH_SELECT_VIEW '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00528" -->
+
+
 #### NO_SERIAL_FILTER
 
 If a hint is specified while the SERIAL_EXECUTE_MODE property is enabled, it will not operate in Serial Execute Mode.
 
 ![no_serial_filter](media/SQL/no_serial_filter.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00529" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2017" image_path_raw="media/SQL/no_serial_filter.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_serial_filter ::=
+    NO_SERIAL_FILTER
+```
+<!-- IMG_RECOVERY_END ref_id="img-00529" -->
+
 
 #### NO_TRANSITIVE_PRED
 
@@ -53642,11 +54498,27 @@ This hint specifies that predicate transitivity is not to be allowed. For more d
 
 ![no_transitive_pred](media/SQL/no_transitive_pred.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00530" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2023" image_path_raw="media/SQL/no_transitive_pred.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_transitive_pred ::=
+    NO_TRANSITIVE_PRED
+```
+<!-- IMG_RECOVERY_END ref_id="img-00530" -->
+
+
 #### NO_UNNEST
 
 This hint specifies not to unnest a subquery. 
 
 ![no_unnest](media/SQL/no_unnest.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00531" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2029" image_path_raw="media/SQL/no_unnest.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_unnest ::=
+    NO_UNNEST
+```
+<!-- IMG_RECOVERY_END ref_id="img-00531" -->
+
 
 #### NO_USE_HASH
 
@@ -53654,11 +54526,27 @@ This hint selects a join method from among the hints excluding the HASH hint.
 
 ![](media/SQL/9ce19c26f7f3c89791bdb69f36fdf23a.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00532" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2035" image_path_raw="media/SQL/9ce19c26f7f3c89791bdb69f36fdf23a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_HASH ::=
+    NO_USE_HASH
+```
+<!-- IMG_RECOVERY_END ref_id="img-00532" -->
+
+
 #### NO_USE_MERGE
 
 This hint selects a join method from among the hints excluding the MERGE hint.
 
 ![](media/SQL/d1a88ccc169fe979d8d0e64d2bda84ef.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00533" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2041" image_path_raw="media/SQL/d1a88ccc169fe979d8d0e64d2bda84ef.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_MERGE ::=
+    NO_USE_MERGE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00533" -->
+
 
 #### NO_USE_NL
 
@@ -53666,11 +54554,27 @@ This hint selects a join method from among the hints excluding the NL hint.
 
 ![](media/SQL/126b72674766403367127957a95a5465.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00534" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2047" image_path_raw="media/SQL/126b72674766403367127957a95a5465.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_NL ::=
+    NO_USE_NL
+```
+<!-- IMG_RECOVERY_END ref_id="img-00534" -->
+
+
 #### NO_USE_SORT
 
 This hint selects a join method from among the hints excluding the SORT hint.
 
 ![](media/SQL/9e4e1b3bcd93ee858fbb63d4fbe29678.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00535" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2053" image_path_raw="media/SQL/9e4e1b3bcd93ee858fbb63d4fbe29678.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_SORT ::=
+    NO_USE_SORT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00535" -->
+
 
 #### PARALLEL
 
@@ -53681,11 +54585,28 @@ This hint specifies to execute queries in parallel when scanning partitioned tab
 
 ![parallel](media/SQL/parallel.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00536" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2062" image_path_raw="media/SQL/parallel.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel ::=
+    PARALLEL '(' table_name ',' parallel_degree ')'
+  | NOPARALLE '(' table_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00536" -->
+
+
 #### PLAN_CACHE_KEEP
 
 This is used to instruct the plan to exclude it from the victim selection process and keep it in the plan cache. This hint is applied during the hardprepare process. So when users switch the plan to unkeep, the soft prepare will not go back tothe keep state.
 
 ![plan_cache_keep](media/SQL/plan_cache_keep.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00537" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2068" image_path_raw="media/SQL/plan_cache_keep.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+PLAN_CACHE_KEEP ::=
+    PLAN_CACHE_KEEP
+```
+<!-- IMG_RECOVERY_END ref_id="img-00537" -->
+
 
 #### ORDERED
 
@@ -53693,11 +54614,27 @@ This hint specifies to follow the join order in the FROM clause.
 
 ![order](media/SQL/order.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00538" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2074" image_path_raw="media/SQL/order.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ORDERED ::=
+    ORDERED
+```
+<!-- IMG_RECOVERY_END ref_id="img-00538" -->
+
+
 #### PUSH_PRED
 
 This hint specifies that a WHERE predicate outside a view is to be pushed inside the view.
 
 ![push_pred](media/SQL/push_pred.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00539" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2080" image_path_raw="media/SQL/push_pred.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+push_pred ::=
+    PUSH_PRED '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00539" -->
+
 
 #### PUSH_SELECT_VIEW
 
@@ -53705,11 +54642,27 @@ This hint specifies that a WHERE predicate outside a view is to be pushed inside
 
 ![push_select_view](media/SQL/push_select_view.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00540" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2086" image_path_raw="media/SQL/push_select_view.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+push_select_view ::=
+    PUSH_SELECT_VIEW '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00540" -->
+
+
 #### RESULT_CACHE
 
 If this hint is specified, the intermediate results of the firstly query can be stored so that the results can be re-usable when the same query is executed. 
 
 ![](media/SQL/dd5dfb24046bac05689b3631995d6048.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00541" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2092" image_path_raw="media/SQL/dd5dfb24046bac05689b3631995d6048.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+RESULT_CACHE ::=
+    RESULT_CACHE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00541" -->
+
 
 #### RULE
 
@@ -53717,11 +54670,27 @@ If this hint is specified, the optimizer creates a rule-based execution plan.
 
 ![rule](media/SQL/rule.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00542" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2098" image_path_raw="media/SQL/rule.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+RULE ::=
+    RULE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00542" -->
+
+
 #### SET BUCKET COUNT
 
 It is a hint to specify the number of hash buckets for SET-INTERSECT and SET-DIFFERENCE execution nodes.
 
 ![set_bucket_count](media/SQL/set_bucket_count.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00543" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2104" image_path_raw="media/SQL/set_bucket_count.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_bucket_count ::=
+    SET BUCKET COUNT '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00543" -->
+
 
 #### SERIAL_FILTER
 
@@ -53729,11 +54698,27 @@ If the hint is specified while the SERIAL_EXCUTE_MODE property is disabled, it o
 
 ![serial_filter](media/SQL/serial_filter.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00544" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2110" image_path_raw="media/SQL/serial_filter.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+SERIAL_FILTER ::=
+    SERIAL_FILTER
+```
+<!-- IMG_RECOVERY_END ref_id="img-00544" -->
+
+
 #### SORT_AJ
 
 If this hint is specified, a nested subquery uses a sort join to perform an anti-join. You need to specify this hint within the subquery. If the subquery cannot be unnested with an anti-join, this hint becomes invalid. 
 
 ![sort_aj](media/SQL/sort_aj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00545" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2116" image_path_raw="media/SQL/sort_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+SORT_AJ ::=
+    SORT_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00545" -->
+
 
 #### SORT_SJ
 
@@ -53741,11 +54726,27 @@ If this hint is specified, a nested subquery uses a sort join to perform a semi-
 
 ![sort_sj](media/SQL/sort_sj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00546" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2122" image_path_raw="media/SQL/sort_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+SORT_SJ ::=
+    SORT_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-00546" -->
+
+
 #### TEMP_TBS_DISK
 
 This hint specifies that all intermediate query results are to be stored on disk temporary space.
 
 ![temp_tbs_disk](media/SQL/temp_tbs_disk.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00547" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2128" image_path_raw="media/SQL/temp_tbs_disk.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+TEMP_TBS_DISK ::=
+    TEMP_TBS_DISK
+```
+<!-- IMG_RECOVERY_END ref_id="img-00547" -->
+
 
 #### TEMP_TBS_MEMORY
 
@@ -53753,11 +54754,27 @@ This hint specifies that all intermediate query results are to be stored in memo
 
 ![temp_tbs_memory](media/SQL/temp_tbs_memory.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00548" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2134" image_path_raw="media/SQL/temp_tbs_memory.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+TEMP_TBS_MEMORY ::=
+    TEMP_TBS_MEMORY
+```
+<!-- IMG_RECOVERY_END ref_id="img-00548" -->
+
+
 #### TOP_RESULT_CACHE
 
 This hints specifies the top result cache that the final results is cached. 
 
 ![](media/SQL/cc3e6ebd802d5456078639575728ec31.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00549" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2140" image_path_raw="media/SQL/cc3e6ebd802d5456078639575728ec31.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+TOP_RESULT_CACHE ::=
+    TOP_RESULT_CACHE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00549" -->
+
 
 #### UNNEST
 
@@ -53765,11 +54782,27 @@ This hint specifies that a subquery is to be unnested.
 
 ![unnest](media/SQL/unnest.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00550" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2146" image_path_raw="media/SQL/unnest.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+UNNEST ::=
+    UNNEST
+```
+<!-- IMG_RECOVERY_END ref_id="img-00550" -->
+
+
 #### USE_ANTI
 
 This hint specifies that a left outer join and an anti outer join are to be performed on the table in the FULL OUTER JOIN query and to concatenate the results. This hint is only available if both of the joined columns have indexes. For more detailed information, please refer to the ANTI-OUTER-JOIN node. 
 
 ![use_anti](media/SQL/use_anti.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00551" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2152" image_path_raw="media/SQL/use_anti.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_anti ::=
+    USE_ANTI '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00551" -->
+
 
 #### USE_CONCAT
 
@@ -53777,11 +54810,27 @@ This hint performs the same action equivalent to the DNF hint.
 
 ![](media/SQL/458f3642b3e45785696cf101d1d40c46.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00552" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2158" image_path_raw="media/SQL/458f3642b3e45785696cf101d1d40c46.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+USE_CONCAT ::=
+    USE_CONCAT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00552" -->
+
+
 #### USE_FULL_NL
 
 This hint specifies that a full nested loop join is to be used. 
 
 ![use_full_nl](media/SQL/use_full_nl.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00553" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2164" image_path_raw="media/SQL/use_full_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_full_nl ::=
+    USE_FULL_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00553" -->
+
 
 #### USE_FULL_STORE_NL
 
@@ -53789,11 +54838,27 @@ This hint specifies that a full store nested loop join is to be used.
 
 ![use_full_store_nl](media/SQL/use_full_store_nl.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00554" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2170" image_path_raw="media/SQL/use_full_store_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_full_store_nl ::=
+    USE_FULL_STORE_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00554" -->
+
+
 #### USE_HASH
 
 This hint specifies that a hash join is to be used. If there is no join predicate, a nested loop join is used. 
 
 ![use_hash](media/SQL/use_hash.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00555" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2176" image_path_raw="media/SQL/use_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_hash ::=
+    USE_HASH '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00555" -->
+
 
 #### USE_INDEX_NL
 
@@ -53801,11 +54866,27 @@ This hint specifies that an index nested loop join is to be used.
 
 ![use_index_nl](media/SQL/use_index_nl.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00556" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2182" image_path_raw="media/SQL/use_index_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_index_nl ::=
+    USE_INDEX_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00556" -->
+
+
 #### USE_INVERSE_HASH
 
 This hint specifies that an inverse hash join is to be used. 
 
 ![use_inverse_hash](media/SQL/use_inverse_hash.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00557" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2188" image_path_raw="media/SQL/use_inverse_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_inverse_hash ::=
+    USE_INVERSE_HASH '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00557" -->
+
 
 #### USE_MERGE
 
@@ -53813,11 +54894,27 @@ This hint specifies that a sort merge join is to be used. If there is no sort pr
 
 ![use_merge](media/SQL/use_merge.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00558" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2194" image_path_raw="media/SQL/use_merge.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_merge ::=
+    USE_MERGE '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00558" -->
+
+
 #### USE_NL
 
 This hint specifies that a nested loop join is to be used. 
 
 ![use_nl](media/SQL/use_nl.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00559" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2200" image_path_raw="media/SQL/use_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_nl ::=
+    USE_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00559" -->
+
 
 #### USE_ONE_PASS_HASH
 
@@ -53825,11 +54922,27 @@ This hint specifies that a one-pass hash join is to be used.
 
 ![use_one_pass_hash](media/SQL/use_one_pass_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00560" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2206" image_path_raw="media/SQL/use_one_pass_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_one_pass_hash ::=
+    USE_ONE_PASS_HASH '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00560" -->
+
+
 #### USE_ONE_PASS_SORT
 
 This hint specifies that a one-pass sort join is to be used. 
 
 ![use_two_pass_sort](media/SQL/use_two_pass_sort.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00561" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2212" image_path_raw="media/SQL/use_two_pass_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_two_pass_sort ::=
+    USE_TWO_PASS_SORT '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00561" -->
+
 
 #### USE_SORT
 
@@ -53837,17 +54950,41 @@ This hint specifies that a sort join is to be used. If there is no sort predicat
 
 ![use_sort](media/SQL/use_sort.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00562" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2218" image_path_raw="media/SQL/use_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_sort ::=
+    USE_SORT '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00562" -->
+
+
 #### USE_TWO_PASS_HASH
 
 This hint specifies that a two-pass hash join is to be used. 
 
 ![use_two_pass_hash](media/SQL/use_two_pass_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00563" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2224" image_path_raw="media/SQL/use_two_pass_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_two_pass_hash ::=
+    USE_TWO_PASS_HASH '(' tbl_name { ',' tbl_name } [ ',' temp_count { ',' temp_count } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00563" -->
+
+
 #### USE_TWO_PASS_SORT
 
 This hint specifies that a two-pass sort join is to be used. 
 
 ![use_two_pass_sort](media/SQL/use_two_pass_sort.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00564" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2230" image_path_raw="media/SQL/use_two_pass_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_two_pass_sort ::=
+    USE_TWO_PASS_SORT '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00564" -->
+
 
 # 3. Data Definition Language
 
@@ -53861,91 +54998,301 @@ This chapter describes Data Definition Language (DDL), which are SQL statements 
 
 ![](media/SQL/97f0082b35f7c7b2023c79e718472981.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00565" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2242" image_path_raw="media/SQL/97f0082b35f7c7b2023c79e718472981.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database ::=
+    ALTER DATABASE
+    { database_name startup_clause
+    | rename_datafile_clause
+    | create_datafile_clause
+    | create_checkpoint_image_clause
+    | database_name session_clause
+    | archivelog_option
+    | backup_clause
+    | incremental_backup_clause
+    | recover_clause
+    | restore_clause
+    | change_backup_directory_clause
+    | move_backup_clause
+    | delete_backup_clause
+    | change_tracking_clause
+    | snapshot_clause
+    } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00565" -->
+
+
 
 
 **startup_clause ::=**
 
 ![startup_clause](media/SQL/startup_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00566" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2248" image_path_raw="media/SQL/startup_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+startup_clause ::=
+    CONTROL
+  | SERVICE
+  | META [ UPGRADE | RESETLOGS | RESETUNDO ]
+  | SHUTDOWN [ NORMAL | IMMEDIATE | EXIT ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00566" -->
+
+
 **rename_datafile_clause ::=**
 
 ![rename_datafile_image32](media/SQL/rename_datafile_image32.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00567" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2252" image_path_raw="media/SQL/rename_datafile_image32.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_datafile_clause ::=
+    RENAME DATAFILE '(' file_name ')' TO '(' file_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00567" -->
+
 
 **create_datafile_clause ::=**
 
 ![create_datafile](media/SQL/create_datafile.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00568" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2256" image_path_raw="media/SQL/create_datafile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_datafile_clause ::=
+    CREATE DATAFILE '(' datafile_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00568" -->
+
+
 **create_checkpoint_image_clause ::=**
 
 ![create_checkpoint_image](media/SQL/create_checkpoint_image.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00569" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2260" image_path_raw="media/SQL/create_checkpoint_image.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_checkpoint_image_clause ::=
+    CREATE CHECKPOINT IMAGE '(' file_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00569" -->
+
 
 **session_clause ::=**
 
 ![](media/SQL/738af5c6c05936008a47fc1d093fa05c.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00570" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2264" image_path_raw="media/SQL/738af5c6c05936008a47fc1d093fa05c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+session_clause ::=
+    SESSION CLOSE
+    { number
+    | USER user_name
+    | ALL
+    }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00570" -->
+
+
 **archivelog_option ::=**
 
 ![archivelog_option_image35](media/SQL/archivelog_option_image35.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00571" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2268" image_path_raw="media/SQL/archivelog_option_image35.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+archivelog_option ::=
+    ARCHIVELOG
+  | NOARCHIVELOG
+```
+<!-- IMG_RECOVERY_END ref_id="img-00571" -->
+
 
 **backup_clause ::=**
 
 ![backup_clause_image36](media/SQL/backup_clause_image36.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00572" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2272" image_path_raw="media/SQL/backup_clause_image36.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+backup_clause ::=
+    BACKUP
+    { LOGANCHOR
+    | TABLESPACE tablespace_name
+    | DATABASE
+    } TO '(' backup_dir ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00572" -->
+
+
 **incremental_backup_clause ::=**
 
 ![incremental_backup](media/SQL/incremental_backup.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00573" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2276" image_path_raw="media/SQL/incremental_backup.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+incremental_backup_clause ::=
+    BACKUP [ incremental_level_clause ]
+    { DATABASE | TABLESPACE tablespace_name [ { ',' tablespace_name } ] }
+    [ with_tag_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00573" -->
+
 
 **incremental_level_clause ::=**
 
 ![incremental_level](media/SQL/incremental_level.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00574" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2280" image_path_raw="media/SQL/incremental_level.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+incremental_level_clause ::=
+    INCREMENTAL LEVEL { 0 | 1 | CUMULATIVE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00574" -->
+
+
 **with_tag_clause ::=**
 
 ![with_tag](media/SQL/with_tag.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00575" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2284" image_path_raw="media/SQL/with_tag.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+with_tag_clause ::=
+    WITH TAG '(' tag_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00575" -->
+
 
 **recover_clause ::=**
 
 ![recover_clause_image37](media/SQL/recover_clause_image37.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00576" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2288" image_path_raw="media/SQL/recover_clause_image37.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+recover_clause ::=
+    RECOVER DATABASE
+    [ from_tag_clause | until_option ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00576" -->
+
+
 **from_tag_clause ::=**
 
 ![from_tag](media/SQL/from_tag.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00577" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2292" image_path_raw="media/SQL/from_tag.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+from_tag_clause ::=
+    FROM TAG '(' tag_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00577" -->
+
 
 **until_option ::=**
 
 ![until_option_image38](media/SQL/until_option_image38.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00578" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2296" image_path_raw="media/SQL/until_option_image38.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+until_option ::=
+    UNTIL { CANCEL | TIME '(' YYYY-MM-DD:HH:MM:SS ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00578" -->
+
+
 **restore_clause ::=**
 
 ![restore_clause](media/SQL/restore_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00579" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2300" image_path_raw="media/SQL/restore_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restore_clause ::=
+    RESTORE { restore_database_clause | restore_tablespace_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00579" -->
+
 
 **restore_database_clause ::=**
 
 ![restore_database](media/SQL/restore_database.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00580" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2304" image_path_raw="media/SQL/restore_database.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restore_database_clause ::=
+    DATABASE
+    [ from_tag_clause
+    | UNTIL TIME '(' YYYY-MM-DD:HH:MM:SS ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00580" -->
+
+
 **restore_tablespace_clause ::=**
 
 ![restore_tablespace](media/SQL/restore_tablespace.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00581" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2308" image_path_raw="media/SQL/restore_tablespace.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restore_tablespace_clause ::=
+    TABLESPACE tablespace_name [ { ',' tablespace_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00581" -->
+
 
 **change_backup_directory_clause ::=**
 
 ![change_backup_directory](media/SQL/change_backup_directory.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00582" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2312" image_path_raw="media/SQL/change_backup_directory.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+change_backup_directory_clause ::=
+    CHANGE BACKUP DIRECTORY '(' directory ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00582" -->
+
+
 **move_backup_clause ::=**
 
 ![move_backup](media/SQL/move_backup.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00583" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2316" image_path_raw="media/SQL/move_backup.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+move_backup_clause ::=
+    MOVE BACKUP FILE TO '(' directory ')'
+    [ WITH CONTENTS ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00583" -->
+
 
 **delete_backup_clause ::=**
 
 ![delete_backup](media/SQL/delete_backup.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00584" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2320" image_path_raw="media/SQL/delete_backup.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delete_backup_clause ::=
+    DELETE OBSOLETE BACKUP FILES
+```
+<!-- IMG_RECOVERY_END ref_id="img-00584" -->
+
+
 **change_tracking_clause ::=**
 
 ![change_tracking](media/SQL/change_tracking.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00585" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2324" image_path_raw="media/SQL/change_tracking.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+change_tracking_clause ::=
+    { ENABLE | DISABLE } INCREMENTAL CHUNK CHANGE TRACKING
+```
+<!-- IMG_RECOVERY_END ref_id="img-00585" -->
+
+
 **snapshot_clause ::=**
 
 ![](media/SQL/8df50a0b0a940bcf36d59c734118d74c.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00586" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2328" image_path_raw="media/SQL/8df50a0b0a940bcf36d59c734118d74c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+snapshot_clause ::=
+    { BEGIN | END } SNAPSHOT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00586" -->
+
 
 #### Prerequisites
 
@@ -54182,35 +55529,113 @@ For information on Database Link, please refer to the *Database Link User's Manu
 
 ![](media/SQL/01f546cab50943e8bcf3f443282d41fa.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00587" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2563" image_path_raw="media/SQL/01f546cab50943e8bcf3f443282d41fa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_index ::=
+    ALTER INDEX [ user_name '.' ] index_name
+    { directkey_mod_clause
+    | rebuild_clause
+    | RENAME TO new_name
+    | alter_index_properties
+    | AGING
+    | REORGANIZATION }
+    [ ';' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00587" -->
+
+
 
 
 **directkey_mod_clause ::=**
 
 ![directkey_mod_clause](media/SQL/directkey_mod_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00588" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2569" image_path_raw="media/SQL/directkey_mod_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+directkey_mod_clause ::=
+    DIRECTKEY [ { MAXSIZE integer | OFF } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00588" -->
+
+
 **rebuild_clause ::=**
 
 ![rebuid_caluseimage42](media/SQL/rebuid_caluseimage42.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00589" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2573" image_path_raw="media/SQL/rebuid_caluseimage42.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rebuild_clause ::=
+    REBUILD
+    [ PARTITION index_partition_name [ index_attribute ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00589" -->
+
 
 **index_attribute ::=**
 
 ![image43_index_attribute](media/SQL/image43_index_attribute.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00590" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2577" image_path_raw="media/SQL/image43_index_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_attribute ::=
+    TABLESPACE tablespace_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00590" -->
+
+
 **alter_index_properties::=**
 
 ![image44_alter_index](media/SQL/image44_alter_index.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00591" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2581" image_path_raw="media/SQL/image44_alter_index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_index_properties ::=
+    { alter_index_segment_attribute_clause | allocate_extent_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00591" -->
+
 
 **alter_index_segment_attribute_clause::=**
 
 ![image45_alter_index_segment](media/SQL/image45_alter_index_segment.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00592" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2585" image_path_raw="media/SQL/image45_alter_index_segment.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_index_segment_attribute_clause ::=
+    { INITRANS integer | MAXTRANS integer } [ storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00592" -->
+
+
 **storage_clause::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00593" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2589" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00593" -->
+
+
 **allocate_extent_clause::=**
 
 ![image47_allocate_extent_clause](media/SQL/image47_allocate_extent_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00594" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2593" image_path_raw="media/SQL/image47_allocate_extent_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+allocate_extent_clause ::=
+    ALLOCATE EXTENT
+    [ '(' SIZE integer { K | M | G } ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00594" -->
+
 
 #### Prerequisites
 
@@ -54357,9 +55782,35 @@ iSQL> ALTER INDEX idx1 REORGANIZATION;
 
 ![](media/SQL/324c973656a57966cf2121f7e86e46f5.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00595" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2738" image_path_raw="media/SQL/324c973656a57966cf2121f7e86e46f5.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_job ::=
+    ALTER JOB job_name SET
+    { execute_procedure_statement
+    | START expr1
+    | END expr1
+    | INTERVAL number { YEAR | MONTH | DAY | HOUR | MINUTE }
+    | ENABLE
+    | DISABLE
+    | COMMENT text }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00595" -->
+
+
 **execute_procedure_statement ::=**
 
 ![execute_procedure_statement](media/SQL/execute_procedure_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00596" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2742" image_path_raw="media/SQL/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] procedure_name
+    '(' [ expr2 [ { ',' expr2 } ] ] ')'
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00596" -->
+
 
 #### Prerequisites
 
@@ -54462,6 +55913,16 @@ Alter success.
 
 ![](media/SQL/alter_queue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00597" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2843" image_path_raw="media/SQL/alter_queue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_queue ::=
+    ALTER QUEUE [ user_name '.' ] queue_name
+    { COMPACT | MSGID RESET }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00597" -->
+
+
 #### Description
 
 ALTER QUEUE alters the definition of a queue.
@@ -54482,19 +55943,67 @@ This resets the queue's MSGID
 
 ![image49_alter_replication](media/SQL/image49_alter_replication.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00598" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2863" image_path_raw="media/SQL/image49_alter_replication.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_replication ::=
+    ALTER REPLICATION replication_name
+    { SYNC [ ONLY ] [ PARALLEL parallel_factor ] [ TABLE replication_item [ { ',' replication_item } ] ]
+    | START [ RETRY ]
+    | QUICKSTART [ RETRY ]
+    | RESET
+    | ADD TABLE FROM replication_item TO replication_item
+    | DROP { TABLE FROM replication_item TO replication_item
+           | HOST remote_host_ip '.' remote_port_no [ USING conn_type [ lb_latency ] ] }
+    | alter_replication_set_clause
+    | offline_clause }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00598" -->
+
+
 
 
 **replication_item ::=**
 
 ![replication_item](media/SQL/replication_item.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00599" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2869" image_path_raw="media/SQL/replication_item.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+replication_item ::=
+    user_name '.' tbl_name
+    [ PARTITION partition_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00599" -->
+
+
 **alter_replication_set_clause ::=**
 
 ![alter_replication_set_clause](media/SQL/alter_replication_set_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00600" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2873" image_path_raw="media/SQL/alter_replication_set_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_replication_set_clause ::=
+    SET { HOST remote_host_ip '.' remote_port_no
+        | RECOVERY { ENABLE | DISABLE }
+        | GAPLESS { ENABLE | DISABLE }
+        | GROUPING { ENABLE | DISABLE }
+        | PARALLEL receiver_applier_count }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00600" -->
+
+
 **offline_clause ::=**
 
 ![offline_clause](media/SQL/offline_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00601" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="2877" image_path_raw="media/SQL/offline_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+offline_clause ::=
+    { SET OFFLINE { ENABLE WITH log_dir [ { ',' log_dir } ] | DISABLE }
+    | START WITH OFFLINE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00601" -->
+
 
 #### Prerequisites
 
@@ -54662,13 +56171,46 @@ Alter success.
 
 ![](media/SQL/47068a33f6105def77759ac8433a2974.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00602" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3043" image_path_raw="media/SQL/47068a33f6105def77759ac8433a2974.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_sequence ::=
+    ALTER SEQUENCE [ user_name '.' ] seq_name
+    { sequence_options | sync_table_clause }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00602" -->
+
+
 **sequence_options ::=**
 
 ![](media/SQL/f2a803f06b6aa2c6b5ffb8b2412cb04c.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00603" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3047" image_path_raw="media/SQL/f2a803f06b6aa2c6b5ffb8b2412cb04c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+sequence_options ::=
+    { INCREMENT BY integer
+    | MAXVALUE integer
+    | NOMAXVALUE
+    | MINVALUE integer
+    | NOMINVALUE
+    | CYCLE
+    | CACHE integer
+    | FLUSH CACHE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00603" -->
+
+
 **sync_table_clause ::=**
 
 ![sync_table_clause](media/SQL/sync_table_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00604" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3051" image_path_raw="media/SQL/sync_table_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sync_table_clause ::=
+    { ENABLE | DISABLE } SYNC TABLE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00604" -->
+
 
 #### Prerequisites 
 
@@ -54770,127 +56312,428 @@ iSQL> ALTER SEQUENCE seq1 ENABLE SYNC TABLE;
 
 ![](media/SQL/17ce67a416098226c32df31b2e42cbe3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00605" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3151" image_path_raw="media/SQL/17ce67a416098226c32df31b2e42cbe3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table ::=
+    ALTER TABLE [ user_name '.' ] table_name
+    { log_compression_clause
+    | alter_table_properties
+    | alter_table_segment_properties
+    | alter_table_partitioning
+    | alter_table_tablespace
+    | column_clauses
+    | constraints_clauses
+    | RENAME TO new_tbl_name
+    | MAXROWS integer
+    | ALL INDEX { ENABLE | DISABLE }
+    | aging_clause
+    | compact_clause
+    | allocate_extent_clause
+    | ACCESS access_mode_clause
+    | TOUCH }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00605" -->
+
+
 
 
 **log_compression_clause ::=**
 
 ![log_compression_clause](media/SQL/log_compression_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00606" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3157" image_path_raw="media/SQL/log_compression_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+log_compression_clause ::=
+    { COMPRESSED LOGGING | UNCOMPRESSED LOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00606" -->
+
+
 **alter_table_properties::=**
 
 ![image52_alter_table_properties](media/SQL/image52_alter_table_properties.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00607" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3161" image_path_raw="media/SQL/image52_alter_table_properties.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_properties ::=
+    { logging_clause | parallel_clause | row_movement_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00607" -->
+
 
 **alter_table_tablespace::=**
 
 ![alter_table_tablespace](media/SQL/alter_table_tablespace.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00608" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3165" image_path_raw="media/SQL/alter_table_tablespace.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_tablespace ::=
+    ALTER TABLESPACE tablespace_name
+    [ table_move_index_clause ] [ table_lob_column_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00608" -->
+
+
 **table_move_index_clause::=**
 
 ![table_move_index_clause](media/SQL/table_move_index_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00609" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3169" image_path_raw="media/SQL/table_move_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_move_index_clause ::=
+    INDEX '(' index_name TABLESPACE tablespace_name
+    [ { ',' index_name TABLESPACE tablespace_name } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00609" -->
+
 
 **table_lob_column_clause::=**
 
 ![table_lob_column_clause](media/SQL/table_lob_column_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00610" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3173" image_path_raw="media/SQL/table_lob_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_lob_column_clause ::=
+    LOB '(' column_name TABLESPACE tablespace_name
+    [ { ',' column_name TABLESPACE tablespace_name } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00610" -->
+
+
 **logging_clause::=**
 
 ![logging_clause](media/SQL/logging_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00611" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3177" image_path_raw="media/SQL/logging_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+logging_clause ::=
+    { LOGGING | NOLOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00611" -->
+
 
 **parallel_clause::=**
 
 ![PARALLEL_CLAUSE](media/SQL/PARALLEL_CLAUSE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00612" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3181" image_path_raw="media/SQL/PARALLEL_CLAUSE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel_clause ::=
+    { NOPARALLEL | PARALLEL integer }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00612" -->
+
+
 **row_movement_clause::=**
 
 ![row_movement_clause](media/SQL/row_movement_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00613" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3185" image_path_raw="media/SQL/row_movement_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+row_movement_clause ::=
+    { ENABLE | DISABLE } ROW MOVEMENT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00613" -->
+
 
 **alter_table_segment_properties::=**
 
 ![image53_alter_table_segment_properties](media/SQL/image53_alter_table_segment_properties.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00614" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3189" image_path_raw="media/SQL/image53_alter_table_segment_properties.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_segment_properties ::=
+    alter_table_segment_attribute_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00614" -->
+
+
 **alter_table_segment_attribute_clause::=**
 
 ![image54_alter_table_segment_attribute_clause](media/SQL/image54_alter_table_segment_attribute_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00615" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3193" image_path_raw="media/SQL/image54_alter_table_segment_attribute_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_segment_attribute_clause ::=
+    [ { PCTFREE integer | PCTUSED integer } ]
+    [ { INITRANS integer | MAXTRANS integer } ]
+    [ storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00615" -->
+
 
 **storage_clause::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00616" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3197" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00616" -->
+
+
 **alter_table_partitioning::=**
 
 ![ALTER_TABLE_PARTITIONING](media/SQL/ALTER_TABLE_PARTITIONING.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00617" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3201" image_path_raw="media/SQL/ALTER_TABLE_PARTITIONING.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_partitioning ::=
+    add_table_partition
+    | alter_partition
+    | coalesce_table_partition
+    | drop_table_partition
+    | merge_table_partition
+    | rename_table_partition
+    | split_table_partition
+    | truncate_table_partition
+    | partition_access_mode
+```
+<!-- IMG_RECOVERY_END ref_id="img-00617" -->
+
 
 **add_table_partition ::=**
 
 ![image56_add_table_partition](media/SQL/image56_add_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00618" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3205" image_path_raw="media/SQL/image56_add_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+add_table_partition ::=
+    ADD partition_spec
+```
+<!-- IMG_RECOVERY_END ref_id="img-00618" -->
+
+
 **alter_partition ::=**
 
 ![alter_partition](media/SQL/alter_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00619" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3209" image_path_raw="media/SQL/alter_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_partition ::=
+    ALTER PARTITION partition_name TABLESPACE tablespace_name
+    [ partition_index_clause ] [ partition_lob_column_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00619" -->
+
 
 **partition_index_clause ::=**
 
 ![partition_index_clause](media/SQL/partition_index_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00620" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3213" image_path_raw="media/SQL/partition_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_index_clause ::=
+    INDEX '(' index_name TABLESPACE tablespace_name
+              [ { ',' index_name TABLESPACE tablespace_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00620" -->
+
+
 **partition_lob_column_clause ::=**
 
 ![partition_lob_column_clause](media/SQL/partition_lob_column_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00621" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3217" image_path_raw="media/SQL/partition_lob_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_lob_column_clause ::=
+    LOB '(' column_name TABLESPACE tablespace_name
+              [ { ',' column_name TABLESPACE tablespace_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00621" -->
+
 
 **coalesce_table_partition ::=**
 
 ![image60_coalesce_table_partition](media/SQL/image60_coalesce_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00622" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3221" image_path_raw="media/SQL/image60_coalesce_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+coalesce_table_partition ::=
+    COALESCE PARTITION
+```
+<!-- IMG_RECOVERY_END ref_id="img-00622" -->
+
+
 **drop_table_partition ::=**
 
 ![image61_drop_table_partition](media/SQL/image61_drop_table_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00623" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3225" image_path_raw="media/SQL/image61_drop_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_table_partition ::=
+    DROP PARTITION partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00623" -->
+
 
 **merge_table_partition ::=**
 
 ![image62_merge_table_partition](media/SQL/image62_merge_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00624" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3229" image_path_raw="media/SQL/image62_merge_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_table_partition ::=
+    MERGE PARTITIONS partition_1 ',' partition_2 INTO partition_spec
+```
+<!-- IMG_RECOVERY_END ref_id="img-00624" -->
+
+
 **rename_table_partition ::=**
 
 ![image63_rename_table_partition](media/SQL/image63_rename_table_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00625" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3233" image_path_raw="media/SQL/image63_rename_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_table_partition ::=
+    RENAME PARTITION old_partition_name TO new_partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00625" -->
+
 
 **split_table_partition ::=**
 
 ![image64_split_table_partition](media/SQL/image64_split_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00626" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3237" image_path_raw="media/SQL/image64_split_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+split_table_partition ::=
+    SPLIT PARTITION current_partition
+        { AT | VALUES } '(' value [ { ',' value } ] ')'
+        INTO '(' partition_spec ',' partition_spec ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00626" -->
+
+
 **truncate_table_partition ::=**
 
 ![image65_truncate_table_partition](media/SQL/image65_truncate_table_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00627" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3241" image_path_raw="media/SQL/image65_truncate_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+truncate_table_partition ::=
+    TRUNCATE PARTITION partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00627" -->
+
 
 **partition_spec ::=**
 
 ![image57_partition_spec](media/SQL/image57_partition_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00628" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3245" image_path_raw="media/SQL/image57_partition_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_spec ::=
+    PARTITION partition_name table_partition_description
+    [ index_partition_spec ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00628" -->
+
+
 **table_partition_description ::=**
 
 ![table_partition_description](media/SQL/table_partition_description.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00629" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3249" image_path_raw="media/SQL/table_partition_description.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_partition_description ::=
+    [ TABLESPACE tablespace_name ]
+    [ lob_column_properties ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00629" -->
+
 
 **index_partition_spec ::=**
 
 ![index_partition_spec](media/SQL/index_partition_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00630" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3253" image_path_raw="media/SQL/index_partition_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partition_spec ::=
+    INDEX '(' partitioned_index_name index_partition_description
+              [ { ',' partitioned_index_name index_partition_description } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00630" -->
+
+
 **index_partition_description ::=**
 
 ![index_partition_description](media/SQL/index_partition_description.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00631" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3257" image_path_raw="media/SQL/index_partition_description.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partition_description ::=
+    PARTITION index_partition_name
+    [ TABLESPACE tablespace_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00631" -->
+
 
 **partition_access_mode ::=**
 
 ![PARTITION_ACCESS_MODE](media/SQL/PARTITION_ACCESS_MODE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00632" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3261" image_path_raw="media/SQL/PARTITION_ACCESS_MODE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_access_mode ::=
+    ACCESS PARTITION partition_name access_mode_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00632" -->
+
+
 **access_mode_clause ::=**
 
 ![ACCESS_MODE_CLAUSE_](media/SQL/ACCESS_MODE_CLAUSE_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00633" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3265" image_path_raw="media/SQL/ACCESS_MODE_CLAUSE_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+access_mode_clause ::=
+    READ { ONLY | WRITE | APPEND }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00633" -->
+
 
 **column_clauses::=**
 
 ![image66_column_clauses](media/SQL/image66_column_clauses.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00634" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3269" image_path_raw="media/SQL/image66_column_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_clauses ::=
+    add_column_clause
+    | alter_column_clause
+    | modify_column_clause
+    | drop_column_clause
+    | rename_column_clause
+    | reorganize_column_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00634" -->
+
+
 **add_column_clauses::=**
 
 ![image67_add_column_clauses](media/SQL/image67_add_column_clauses.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00635" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3273" image_path_raw="media/SQL/image67_add_column_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+add_column_clauses ::=
+    ADD [ COLUMN ] '(' column_definition [ { ',' column_definition } ] ')'
+    [ lob_column_properties ]
+    [ partition_lob_storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00635" -->
+
 
 <a name="column_definition"><a/>
 
@@ -54898,73 +56741,255 @@ iSQL> ALTER SEQUENCE seq1 ENABLE SYNC TABLE;
 
 ![column_definition](media/SQL/column_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00636" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3279" image_path_raw="media/SQL/column_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_definition ::=
+    column_name
+    { data_type [ encrypt_clause ] [ variable_clause ] [ in_row_clause ] [ default_clause ]
+    | TIMESTAMP }
+    [ { ',' column_constraint } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00636" -->
+
+
 **partition_lob_storage_clause ::=**
 
 ![image68_partition_lob_storage_clause](media/SQL/image68_partition_lob_storage_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00637" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3283" image_path_raw="media/SQL/image68_partition_lob_storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_lob_storage_clause ::=
+    '(' PARTITION partition_name LOB_storage_clause
+        [ { ',' PARTITION partition_name LOB_storage_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00637" -->
+
 
 **alter_column_clause ::=**
 
 ![image69_alter_column_clause](media/SQL/image69_alter_column_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00638" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3287" image_path_raw="media/SQL/image69_alter_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_column_clause ::=
+    ALTER [ COLUMN ] '(' column_name
+        { SET DEFAULT expr | DROP DEFAULT | NULL | NOT NULL } ')'
+    | LOB_storage_clause
+    | partition_lob_storage_clause
+
+LOB_storage_clause ::=
+    LOB '(' LOB_item [ { ',' LOB_item } ] ')' STORE AS '(' lob_attributes ')'
+
+partition_lob_storage_clause ::=
+    '(' PARTITION partition_name LOB_storage_clause
+        [ { ',' PARTITION partition_name LOB_storage_clause } ] ')'
+
+lob_attributes ::=
+    { LOGGING | NOLOGGING | BUFFER | NOBUFFER }
+    [ { LOGGING | NOLOGGING | BUFFER | NOBUFFER } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00638" -->
+
+
 **modify_column_clause::=**
 
 ![image70_modify_column_clause](media/SQL/image70_modify_column_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00639" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3291" image_path_raw="media/SQL/image70_modify_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_column_clause ::=
+    MODIFY [ COLUMN ]
+        { modify_column_spec
+        | '(' modify_column_spec [ { ',' modify_column_spec } ] ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00639" -->
+
 
 **modify_column_spec::=**
 
 ![image71_modify_column_spec](media/SQL/modify_column_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00640" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3295" image_path_raw="media/SQL/modify_column_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_column_spec ::=
+    column_name
+    [ data_type [ { FIXED | VARIABLE } ] [ TOLERATE DATA LOSS ] ]
+    [ DEFAULT expr ]
+    [ { NOT } NULL ]
+    [ SRID integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00640" -->
+
+
 **drop_column_clause::=**
 
 ![image72_drop_column_clause](media/SQL/image72_drop_column_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00641" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3299" image_path_raw="media/SQL/image72_drop_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_column_clause ::=
+    DROP [ COLUMN ]
+        { column_name
+        | '(' column_name [ { ',' column_name } ] ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00641" -->
+
 
 **rename_column_clause::=**
 
 ![rename_column_clause](media/SQL/rename_column_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00642" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3303" image_path_raw="media/SQL/rename_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_column_clause ::=
+    RENAME COLUMN column_name TO new_column_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00642" -->
+
+
 **reorganize_column_clause::=**
 
 ![reorganize_column](media/SQL/reorganize_column.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00643" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3307" image_path_raw="media/SQL/reorganize_column.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+reorganize_column_clause ::=
+    REORGANIZE [ COLUMN ] '(' column_name [ { ',' column_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00643" -->
+
 
 **constraints_clauses::=**
 
 ![constraints_clauses](media/SQL/constraints_clauses.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00644" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3311" image_path_raw="media/SQL/constraints_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+constraints_clauses ::=
+    add_table_constraint_clause
+    | modify_constraint_clause
+    | rename_constraint_clause
+    | drop_constraint_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00644" -->
+
+
 **add_table_constraint_clauses ::=**
 
 ![add_table_constraint_clauses](media/SQL/add_table_constraint_clauses.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00645" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3315" image_path_raw="media/SQL/add_table_constraint_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+add_table_constraint_clauses ::=
+    ADD table_constraint_for_alter
+```
+<!-- IMG_RECOVERY_END ref_id="img-00645" -->
+
 
 **table_constraint_for_alter::=**
 
 ![table_constraint_for_alter](media/SQL/table_constraint_for_alter.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00646" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3319" image_path_raw="media/SQL/table_constraint_for_alter.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_constraint_for_alter ::=
+    [ CONSTRAINT constraint_name ]
+    { { PRIMARY KEY | UNIQUE | LOCALUNIQUE }
+          '(' column_name [ { ',' column_name } ] ')' [ using_index_clause ]
+          [ constraint_state ]
+    | referential_constraint [ constraint_state ]
+    | check_clause [ constraint_state ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00646" -->
+
+
 **constraint_state::=**
 
 ![constraint_state](media/SQL/constraint_state.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00647" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3323" image_path_raw="media/SQL/constraint_state.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+constraint_state ::=
+    ENABLE { VALIDATE | NOVALIDATE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00647" -->
+
 
 **modify_constraint_clause::=**
 
 ![modify_constraint_clause](media/SQL/modify_constraint_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00648" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3327" image_path_raw="media/SQL/modify_constraint_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_constraint_clause ::=
+    MODIFY CONSTRAINT constraint_name constraint_state
+```
+<!-- IMG_RECOVERY_END ref_id="img-00648" -->
+
+
 **rename_constraint_clauses ::=**
 
 ![rename_constraint_clauses](media/SQL/rename_constraint_clauses.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00649" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3331" image_path_raw="media/SQL/rename_constraint_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_constraint_clauses ::=
+    RENAME CONSTRAINT constraint_name TO new_constraint_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00649" -->
+
 
 **drop_constraint_clause::=**
 
 ![drop_constraint_clause](media/SQL/drop_constraint_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00650" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3335" image_path_raw="media/SQL/drop_constraint_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_constraint_clause ::=
+    DROP
+        { CONSTRAINT constraint_name
+        | PRIMARY KEY
+        | { UNIQUE | LOCALUNIQUE } '(' column_constraint [ { ',' column_constraint } ] ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00650" -->
+
+
 **aging_clause::=**
 
 ![aging_clause](media/SQL/aging_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00651" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3339" image_path_raw="media/SQL/aging_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aging_clause ::=
+    AGING [ PARTITION partition_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00651" -->
+
 
 **compact_clause::=**
 
 ![compact_clause](media/SQL/compact_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00652" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3343" image_path_raw="media/SQL/compact_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+compact_clause ::=
+    COMPACT [ PARTITION partition_name ] [ MAXPAGES integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00652" -->
+
+
 **allocate_extent_clause::=**
 
 ![allocate_extent_clause](media/SQL/allocate_extent_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00653" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="3347" image_path_raw="media/SQL/allocate_extent_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+allocate_extent_clause ::=
+    ALLOCATE EXTENT
+    [ '(' SIZE integer { K | M | G } ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00653" -->
+
 
 #### Prerequisites 
 
@@ -56187,41 +58212,138 @@ Alter success.
 
 ![alter_tablespace](media/SQL/alter_tablespace.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00654" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4568" image_path_raw="media/SQL/alter_tablespace.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_tablespace ::=
+    ALTER TABLESPACE tablespace_name
+    { datafile_tempfile_clause
+    | modify_checkpoint_path_clause
+    | status_clause
+    | backup_clause
+    } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00654" -->
+
+
 **datafile_tempfile_clause ::=**
 
 ![datafile_tempfile_clause](media/SQL/datafile_tempfile_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00655" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4572" image_path_raw="media/SQL/datafile_tempfile_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_tempfile_clause ::=
+      ADD { DATAFILE | TEMPFILE } datafile_spec [ { ',' datafile_spec } ]
+    | RENAME { DATAFILE | TEMPFILE } '''' file_name '''' [ { ',' '''' file_name '''' } ] TO '''' file_name '''' [ { ',' '''' file_name '''' } ]
+    | ALTER { modify_datafile_clause | modify_autoextend_clause }
+    | DROP { DATAFILE | TEMPFILE } '''' file_name '''' [ { ',' '''' file_name '''' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00655" -->
+
 
 **datafile_spec ::=**
 
 ![datafile_spec](media/SQL/datafile_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00656" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4576" image_path_raw="media/SQL/datafile_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_spec ::=
+    '''' file_name ''''
+    [ SIZE integer [ K | M | G ] ]
+    [ REUSE ]
+    [ autoextend_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00656" -->
+
+
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00657" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4580" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00657" -->
+
 
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00658" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4584" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00658" -->
+
+
 **modify_datafile_clause ::=**
 
 ![modify_datafile_clause](media/SQL/modify_datafile_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00659" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4588" image_path_raw="media/SQL/modify_datafile_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_datafile_clause ::=
+    { DATAFILE | TEMPFILE } '''' file_name ''''
+    { autoextend_clause
+    | SIZE integer [ K | M | G ]
+    }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00659" -->
+
 
 **modify_autoextend_clause ::=**
 
 ![modify_autoextend_clause](media/SQL/modify_autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00660" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4592" image_path_raw="media/SQL/modify_autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_autoextend_clause ::=
+    autoextend_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00660" -->
+
+
 **modify_checkpoint_path_clause ::=**
 
 ![modify_checkpoint_path_clause](media/SQL/modify_checkpoint_path_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00661" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4596" image_path_raw="media/SQL/modify_checkpoint_path_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_checkpoint_path_clause ::=
+      ADD CHECKPOINT PATH '''' chkpoint_path ''''
+    | RENAME CHECKPOINT PATH '''' chkpoint_path '''' TO '''' chkpoint_path ''''
+    | DROP CHECKPOINT PATH '''' chkpoint_path ''''
+```
+<!-- IMG_RECOVERY_END ref_id="img-00661" -->
+
 
 **status_clause ::=**
 
 ![status_clause](media/SQL/status_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00662" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4600" image_path_raw="media/SQL/status_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+status_clause ::=
+    { ONLINE | OFFLINE | DISCARD }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00662" -->
+
+
 **backup_clause ::=**
 
 ![backup_clause](media/SQL/backup_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00663" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4604" image_path_raw="media/SQL/backup_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+backup_clause ::=
+    { BEGIN | END } BACKUP
+```
+<!-- IMG_RECOVERY_END ref_id="img-00663" -->
+
 
 #### Prerequisites
 
@@ -56375,6 +58497,15 @@ Alter success.
 
 ![alter_trigger](media/SQL/alter_trigger.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00664" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4756" image_path_raw="media/SQL/alter_trigger.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_trigger ::=
+    ALTER TRIGGER [ user_name '.' ] trigger_name
+    { ENABLE | DISABLE | COMPILE } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00664" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the schema containing the trigger, and users having the ALTER ANY TRIGGER system privilege can execute the ALTER TRIGGER statement.
@@ -56421,6 +58552,22 @@ Alter success.
 **alter_user ::=**
 
 ![alter_user_image89](media/SQL/alter_user_image89.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00665" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4803" image_path_raw="media/SQL/alter_user_image89.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_user ::=
+    ALTER USER user_name
+    { IDENTIFIED BY password
+    | TEMPORARY TABLESPACE tblspace_name
+    | DEFAULT TABLESPACE tblspace_name
+    | ACCESS tblspace_name { ON | OFF }
+    | LIMIT '(' password_parameters [ { ',' password_parameters } ] ')'
+    | ACCOUNT { LOCK | UNLOCK }
+    | { ENABLE | DISABLE } TCP
+    } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00665" -->
+
 
 [password_parameters ::=](#password_parameters)
 
@@ -56507,6 +58654,14 @@ iSQL> CONNECT rose2/rose2;
 
 ![alter_view_image90](media/SQL/alter_view_image90.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00666" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4888" image_path_raw="media/SQL/alter_view_image90.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_view ::=
+    ALTER VIEW [ user_name '.' ] view_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00666" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the schema containing the view, and users having the ALTER ANY TABLE system privilege can execute the ALTER VIEW statement.
@@ -56554,6 +58709,18 @@ DNO   EMP_AVG_SAL
 
 ![alter_mview](media/SQL/alter_mview.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00667" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4935" image_path_raw="media/SQL/alter_mview.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_materialized_view ::=
+    ALTER MATERIALIZED VIEW [ user_name '.' ] mview_name
+    REFRESH
+    [ { COMPLETE | FAST | FORCE } ]
+    [ { ON DEMAND | ON COMMIT } ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00667" -->
+
+
 #### Prerequisites
 
 Only the following users can alter the properties of the materialized view with this statement.
@@ -56583,6 +58750,18 @@ ALTER MATERIALIZED VIEW mv1 REFRESH COMPLETE ON DEMAND;
 **comment_on ::=**
 
 ![comment_on_image91](media/SQL/comment_on_image91.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00668" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="4965" image_path_raw="media/SQL/comment_on_image91.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+comment_on ::=
+    COMMENT ON
+    { TABLE [ user_name '.' ] { table_name | view_name }
+    | COLUMN [ user_name '.' ] { table_name | view_name } '.' column_name
+    }
+    IS '''' comment '''' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00668" -->
+
 
 #### Prerequisites
 
@@ -56656,6 +58835,20 @@ Comment created.
 
 ![](media/SQL/9fb57281787aa263aa7d56eb48f4b3da.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00669" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5037" image_path_raw="media/SQL/9fb57281787aa263aa7d56eb48f4b3da.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+conjoin_table ::=
+    CONJOIN TABLE tbl_name PARTITION BY
+    { conjoin_range_clause | conjoin_list_clause }
+    [ row_movement_clause ]
+    [ tablespace_clause ]
+    [ physical_attributes_clause ]
+    [ logging_clause ]
+    [ lob_column_properties ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00669" -->
+
+
 [row_movement_clause ::=](#row_movement_clause),
 [tablespace_clause ::=](#tablespace_clause), [physical_attributes_clause
 ::=](#physical_attributes_clause), [logging_clause ::=](#logging_clause),
@@ -56665,17 +58858,51 @@ Comment created.
 
 ![](media/SQL/40634d2070f1d40b16a33aac52ab102c.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00670" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5046" image_path_raw="media/SQL/40634d2070f1d40b16a33aac52ab102c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+conjoin_range_clause ::=
+    RANGE '(' column_name [ { ',' column_name } ] ')' '(' range_table_to_partition_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00670" -->
+
+
 **range_table_to_partition_clause ::=**
 
 ![](media/SQL/0b00718934d68775a5494aa3352eec73.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00671" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5050" image_path_raw="media/SQL/0b00718934d68775a5494aa3352eec73.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+range_table_to_partition_clause ::=
+    TABLE tbl_name TO PARTITION partition_name VALUES LESS THAN '(' { value | DEFAULT } [ { ',' value } ] ')'
+    [ { ',' TABLE tbl_name TO PARTITION partition_name VALUES LESS THAN '(' { value | DEFAULT } [ { ',' value } ] ')' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00671" -->
+
 
 **conjoin_list_clause ::=**
 
 ![](media/SQL/6a1a5051d6c3a88b14ff462d68b00706.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00672" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5054" image_path_raw="media/SQL/6a1a5051d6c3a88b14ff462d68b00706.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+conjoin_list_clause ::=
+    LIST '(' column_name ')' '(' list_table_to_partition_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00672" -->
+
+
 **list_table_to_partition_clause ::=**
 
 ![](media/SQL/5296c172826c160f152057b8171285d5.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00673" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5058" image_path_raw="media/SQL/5296c172826c160f152057b8171285d5.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+list_table_to_partition_clause ::=
+    TABLE tbl_name TO PARTITION partition_name VALUES '(' { value | DEFAULT } [ { ',' value } ] ')'
+    [ { ',' TABLE tbl_name TO PARTITION partition_name VALUES '(' { value | DEFAULT } [ { ',' value } ] ')' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00673" -->
+
 
 #### Prerequisites
 
@@ -56746,6 +58973,18 @@ Conjoin success.
 **create_database ::=**
 
 ![create_database_image92](media/SQL/create_database_image92.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00674" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5128" image_path_raw="media/SQL/create_database_image92.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database ::=
+    CREATE DATABASE database_name INITSIZE '=' integer [ M | G ]
+    { ARCHIVELOG | NOARCHIVELOG }
+    [ CHARACTER SET charaset ]
+    [ NATIONAL CHARACTER SET charaset ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00674" -->
+
 
 #### Prerequisites
 
@@ -56834,6 +59073,15 @@ For information on Database Link, please refer to the *Database Link User’s Ma
 
 ![create_directory](media/SQL/create_directory.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00675" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5215" image_path_raw="media/SQL/create_directory.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_directory ::=
+    CREATE [ OR REPLACE ] DIRECTORY directory_name
+    AS '''' path_name '''' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00675" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users having the CREATE ANY DIRECTORY system privilege can execute this statement.
@@ -56888,57 +59136,186 @@ Create success.
 
 ![create_index_image98](media/SQL/create_index_image98.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00676" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5269" image_path_raw="media/SQL/create_index_image98.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_index ::=
+    CREATE [ LOCALUNIQUE | UNIQUE ] INDEX [ user_name '.' ] index_name
+    ON table_index_clause
+    { memory_index_clause | disk_index_clause }
+    [ storage_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00676" -->
+
+
 **table_index_clause ::=**
 
 ![table_index_clause](media/SQL/table_index_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00677" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5273" image_path_raw="media/SQL/table_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_index_clause ::=
+    [ user_name '.' ] tbl_name '(' index_expr [ ASC | DESC ] [ { ',' index_expr [ ASC | DESC ] } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00677" -->
+
 
 **memory_index_clause ::=**
 
 ![memory_index_clause_image98_1](media/SQL/memory_index_clause_image98_1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00678" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5277" image_path_raw="media/SQL/memory_index_clause_image98_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+memory_index_clause ::=
+    [ index_partitioning_clause ]
+    [ domain_index_clause ]
+    [ directkey_clause ]
+    [ memory_index_attributes ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00678" -->
+
+
 **disk_index_clause::=**
 
 ![disk_index_clause_image98_2](media/SQL/disk_index_clause_image98_2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00679" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5281" image_path_raw="media/SQL/disk_index_clause_image98_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+disk_index_clause ::=
+    [ index_partitioning_clause ]
+    [ domain_index_clause ]
+    [ disk_index_attributes ]
+    [ physical_attributes_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00679" -->
+
 
 **domain_index_clause ::=**
 
 ![domain_index_clause](media/SQL/domain_index_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00680" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5285" image_path_raw="media/SQL/domain_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+domain_index_clause ::=
+    INDEXTYPE IS { BTREE | RTREE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00680" -->
+
+
 **directkey_clause ::=**
 
 ![directkey_clause](media/SQL/directkey_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00681" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5289" image_path_raw="media/SQL/directkey_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+directkey_clause ::=
+    DIRECTKEY [ MAXSIZE integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00681" -->
+
 
 **memory_index_attributes ::=**
 
 ![memory_index_attributes_image98_3](media/SQL/memory_index_attributes_image98_3.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00682" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5293" image_path_raw="media/SQL/memory_index_attributes_image98_3.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+memory_index_attributes ::=
+    { TABLESPACE tablespace_name | parallel_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00682" -->
+
+
 **storage_clause ::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00683" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5297" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00683" -->
+
 
 **index_partitioning_clause ::=**
 
 ![index_partitioning_clause](media/SQL/index_partitioning_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00684" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5301" image_path_raw="media/SQL/index_partitioning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partitioning_clause ::=
+    LOCAL '(' index_partition_definition [ TABLESPACE tablespace_name ]
+    [ { ',' index_partition_definition [ TABLESPACE tablespace_name ] } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00684" -->
+
+
 **index_partition_definition ::=**
 
 ![index_partition_def](media/SQL/index_partition_def.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00685" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5305" image_path_raw="media/SQL/index_partition_def.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partition_definition ::=
+    PARTITION index_partition_name ON table_partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00685" -->
+
 
 **disk_index_attributes::=**
 
 ![disk_index_attributes_image98_4](media/SQL/disk_index_attributes_image98_4.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00686" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5309" image_path_raw="media/SQL/disk_index_attributes_image98_4.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+disk_index_attributes ::=
+    { TABLESPACE tablespace_name | parallel_clause | logging_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00686" -->
+
+
 **parallel_clause ::=**
 
 ![parallel_clause_create_index](media/SQL/parallel_clause_create_index.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00687" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5313" image_path_raw="media/SQL/parallel_clause_create_index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel_clause ::=
+    { NOPARALLEL | PARALLEL parallel_factor }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00687" -->
+
 
 **logging_clause ::=**
 
 ![logging_clause_create_index](media/SQL/logging_clause_create_index.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00688" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5317" image_path_raw="media/SQL/logging_clause_create_index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+logging_clause ::=
+    { LOGGING | NOLOGGING [ FORCE | NOFORCE ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00688" -->
+
+
 **physical_attributes_clause ::=**
 
 ![physical_attributes_clause_image98_5](media/SQL/physical_attributes_clause_image98_5.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00689" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5321" image_path_raw="media/SQL/physical_attributes_clause_image98_5.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+physical_attributes_clause ::=
+    { INITRANS integer | MAXTRANS integer } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-00689" -->
+
 
 #### Prerequisites
 
@@ -57502,17 +59879,55 @@ Create success.
 
 ![](media/SQL/4962e4da941760b43081cc8c9c55fa28.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00691" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5883" image_path_raw="media/SQL/4962e4da941760b43081cc8c9c55fa28.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_job ::=
+    CREATE JOB job_name exec_procedure_statement start_end_clause
+    [ interval_clause ]
+    [ { ENABLE | DISABLE } ]
+    [ COMMENT text ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00691" -->
+
+
 **execute_procedure_statement ::=**
 
 ![execute_procedure_statement](media/SQL/execute_procedure_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00692" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5887" image_path_raw="media/SQL/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] procedure_name
+    '(' [ expr2 [ { ',' expr2 } ] ] ')'
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00692" -->
+
 
 **start_end_clause ::=**
 
 ![start_end_clause](media/SQL/start_end_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00693" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5891" image_path_raw="media/SQL/start_end_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+start_end_clause ::=
+    START expr1 [ END expr1 ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00693" -->
+
+
 **interval_clause ::=**
 
 ![interval_clause](media/SQL/interval_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00694" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5895" image_path_raw="media/SQL/interval_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+interval_clause ::=
+    INTERVAL number { YEAR | MONTH | DAY | HOUR | MINUTE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00694" -->
+
 
 #### Prerequisites
 
@@ -57582,6 +59997,17 @@ Create success.
 **create_queue ::=**
 
 ![create_queue_image108](media/SQL/create_queue_image108.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00695" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="5964" image_path_raw="media/SQL/create_queue_image108.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_queue ::=
+    CREATE QUEUE queue_name
+    '(' { size [ FIXED | variable_clause ] | column_definition [ { ',' column_definition } ] } ')'
+    [ MAXROWS count ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00695" -->
+
 
 [column_definition ::=](#column_definition)
 
@@ -57664,13 +60090,52 @@ abc         1           99.999
 
 ![create_replication](media/SQL/create_replication.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00696" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6045" image_path_raw="media/SQL/create_replication.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_replication ::=
+    CREATE [ LAZY | EAGER ] REPLICATION replication_name
+    [ FOR ANALYSIS | FOR PROPAGABLE LOGGING | FOR PROPAGATION | FOR ANALYSIS PROPAGATION ]
+    [ AS MASTER | AS SLAVE ]
+    [ option_clause ]
+    WITH
+    '(' replication_host_ip ',' replication_host_port_no ')'
+    [ { ',' '(' replication_host_ip ',' replication_host_port_no ')' } ]
+    [ USING conn_type [ ib_latency ] ]
+    FROM replication_item TO replication_item
+    [ { ',' FROM replication_item TO replication_item } ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00696" -->
+
+
 **option_clause ::=**
 
 ![](media/SQL/27820f15feeda94f02d08fdd79b41b36.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00697" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6049" image_path_raw="media/SQL/27820f15feeda94f02d08fdd79b41b36.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+option_clause ::=
+    OPTIONS { RECOVERY
+            | OFFLINE [ log_dir [ ',' log_dir ] ]
+            | GROUPING
+            | PARALLEL receiver_applier_count
+            | GAPLESS }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00697" -->
+
+
 **replication_item ::=**
 
 ![replication_item](media/SQL/replication_item.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00698" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6053" image_path_raw="media/SQL/replication_item.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+replication_item ::=
+    user_name '.' tbl_name
+    [ PARTITION partition_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00698" -->
+
 
 #### Prerequisites
 
@@ -57795,6 +60260,14 @@ REP2                                      3
 
 ![CREATE_ROLE](media/SQL/CREATE_ROLE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00699" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6176" image_path_raw="media/SQL/CREATE_ROLE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_role ::=
+    CREATE ROLE role_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00699" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users with the CREATE ROLE system privilege can create a role.
@@ -57832,13 +60305,45 @@ Create success.
 
 ![create_sequence_image110](media/SQL/create_sequence_image110.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00700" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6213" image_path_raw="media/SQL/create_sequence_image110.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_sequence ::=
+    CREATE SEQUENCE [ user_name '.' ] seq_name
+        [ sequence_options ] [ sync_table_clause ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00700" -->
+
+
 **sequence_options ::=**
 
 ![sequence_options_create](media/SQL/sequence_options_create.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00701" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6217" image_path_raw="media/SQL/sequence_options_create.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sequence_options ::=
+    { START WITH integer
+    | INCREMENT BY integer
+    | MAXVALUE integer
+    | NOMAXVALUE
+    | MINVALUE integer
+    | NOMINVALUE
+    | CYCLE
+    | CACHE integer } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-00701" -->
+
+
 **sync_table_clause ::=**
 
 ![sync_table_clause](media/SQL/sync_table_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00702" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6221" image_path_raw="media/SQL/sync_table_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sync_table_clause ::=
+    { ENABLE | DISABLE } SYNC TABLE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00702" -->
+
 
 #### Prerequisites
 
@@ -58184,6 +60689,15 @@ CREATE SEQUENCE seq1 CACHE 100 ENABLE SYNC TABLE;
 
 ![create_synonym_image111](media/SQL/create_synonym_image111.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00703" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6565" image_path_raw="media/SQL/create_synonym_image111.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_synonym ::=
+    CREATE [ OR REPLACE ] [ PUBLIC ] SYNONYM [ user_name '.' ] synonym_name
+    FOR [ user_name '.' ] object_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00703" -->
+
+
 #### Prerequisites
 
 At least one of the following conditions must be met: 
@@ -58319,6 +60833,28 @@ MY_DEPT.MEMBER
 
 ![CREATE_TABLE_2](media/SQL/CREATE_TABLE_2.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00704" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6700" image_path_raw="media/SQL/CREATE_TABLE_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_table ::=
+    CREATE [ GLOBAL ] [ TEMPORARY ] TABLE [ user_name '.' ] tbl_name
+        '(' { column_definition | table_constraint } [ ',' { column_definition | table_constraint } ] ')'
+        [ temporary_attributes_clause ]
+        [ MAXROWS integer ]
+        [ table_partitioning_clause ]
+        [ access_mode_clause ]
+        [ tablespace_clause ]
+        [ physical_attributes_clause ]
+        [ log_compression_clause ]
+        [ logging_clause ]
+        [ parallel_clause ]
+        [ table_compression_clause ]
+        [ lob_column_properties ]
+        [ AS subquery ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00704" -->
+
+
 [table_constraint::=](#table_constraint)
 
 [temporary_attributes_clause::=](#temporary_attributes_clause)
@@ -58341,49 +60877,153 @@ MY_DEPT.MEMBER
 
 ![column_definition_image113](media/SQL/column_definition_image113.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00705" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6722" image_path_raw="media/SQL/column_definition_image113.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_definition ::=
+    column_name
+    { data_type [ encrypt_clause ] [ variable_clause ] [ in_row_clause ] [ default_clause ]
+    | TIMESTAMP }
+    [ { ',' column_constraint } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00705" -->
+
+
 **encrypt_clause::=**
 
 ![encrypt_clause](media/SQL/encrypt_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00706" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6726" image_path_raw="media/SQL/encrypt_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+encrypt_clause ::=
+    ENCRYPT USING policy_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00706" -->
+
 
 **variable_clause::=**
 
 ![variable_clause](media/SQL/variable_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00707" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6730" image_path_raw="media/SQL/variable_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+variable_clause ::=
+    FIXED | VARIABLE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00707" -->
+
+
 **in_row_clause::=**
 
 ![in_row_clause](media/SQL/in_row_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00708" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6734" image_path_raw="media/SQL/in_row_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+in_row_clause ::=
+    IN ROW integer
+```
+<!-- IMG_RECOVERY_END ref_id="img-00708" -->
+
 
 **default_clause::=**
 
 ![default_clause](media/SQL/default_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00709" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6738" image_path_raw="media/SQL/default_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+default_clause ::=
+    DEFAULT expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-00709" -->
+
+
 **column_constraint ::=**
 
 ![column_constraint_image114](media/SQL/column_constraint_image114.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00710" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6742" image_path_raw="media/SQL/column_constraint_image114.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_constraint ::=
+    [ CONSTRAINT constraint_name ]
+    { NOT NULL
+    | NULL
+    | unique_clause
+    | references_clause
+    | check_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00710" -->
+
 
 **unique_clause ::=**
 
 ![unique_clause](media/SQL/unique_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00711" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6746" image_path_raw="media/SQL/unique_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unique_clause ::=
+    unique_specification [ sort_order_clause ] [ directkey_clause ] [ using_index_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00711" -->
+
+
 **unique_specification ::=**
 
 ![unique_specification](media/SQL/unique_specification.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00712" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6750" image_path_raw="media/SQL/unique_specification.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unique_specification ::=
+    PRIMARY KEY | UNIQUE | LOCALUNIQUE
+```
+<!-- IMG_RECOVERY_END ref_id="img-00712" -->
+
 
 **sort_order_clause ::=**
 
 ![sort_order_clause](media/SQL/sort_order_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00713" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6754" image_path_raw="media/SQL/sort_order_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sort_order_clause ::=
+    ASC | DESC
+```
+<!-- IMG_RECOVERY_END ref_id="img-00713" -->
+
+
 **directkey_clause ::=**
 
 ![directkey_clause](media/SQL/directkey_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00714" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6758" image_path_raw="media/SQL/directkey_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+directkey_clause ::=
+    DIRECTKEY [ MAXSIZE integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00714" -->
+
 
 **using_index_clause ::=**
 
 ![using_index_clause_image117](media/SQL/using_index_clause_image117.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00715" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6762" image_path_raw="media/SQL/using_index_clause_image117.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+using_index_clause ::=
+    USING INDEX [ index_partitioning_clause ] [ index_attribute_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00715" -->
+
+
 **index_attribute_clause ::=**
 
 ![index_attribute_clause_image118](media/SQL/index_attribute_clause_image118.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00716" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6766" image_path_raw="media/SQL/index_attribute_clause_image118.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_attribute_clause ::=
+    memory_index_attributes | disk_index_attributes
+```
+<!-- IMG_RECOVERY_END ref_id="img-00716" -->
+
 
 [memory_index_attributes ::=](#memory_index_attributes)
 
@@ -58393,21 +61033,69 @@ MY_DEPT.MEMBER
 
 ![references_clause](media/SQL/references_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00717" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6774" image_path_raw="media/SQL/references_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+references_clause ::=
+    REFERENCES [ user_name '.' ] tbl_name [ '(' column_name ')' ]
+    [ ON { INSERT NO ACTION
+         | UPDATE NO ACTION
+         | DELETE { NO ACTION | CASCADE | SET NULL } } ] ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-00717" -->
+
+
 **check_clause ::=**
 
 ![check_clause](media/SQL/check_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00718" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6778" image_path_raw="media/SQL/check_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+check_clause ::=
+    CHECK '(' condition ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00718" -->
+
 
 **table_constraint ::=**
 
 ![table_constraint](media/SQL/table_constraint.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00719" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6782" image_path_raw="media/SQL/table_constraint.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_constraint ::=
+    [ CONSTRAINT constraint_name ]
+    { table_unique_clause
+    | referential_constraint
+    | check_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00719" -->
+
+
 **table_unique_clause ::=**
 
 ![table_unique_clause](media/SQL/table_unique_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00720" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6786" image_path_raw="media/SQL/table_unique_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_unique_clause ::=
+    unique_specification '(' column_name [ sort_order_clause ] [ ',' column_name [ sort_order_clause ] ] ')'
+    [ directkey_clause ]
+    [ using_index_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00720" -->
+
+
 **referential_constraint ::=**
 
 ![referential_constraint](media/SQL/referential_constraint.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00721" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6790" image_path_raw="media/SQL/referential_constraint.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+referential_constraint ::=
+    FOREIGN KEY '(' column_name [ ',' column_name ] ')' references_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-00721" -->
+
 
 [references_clause ::=](#references_clause)
 
@@ -58415,21 +61103,69 @@ MY_DEPT.MEMBER
 
 ![temporary_attributes_clause](media/SQL/temporary_attributes_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00722" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6796" image_path_raw="media/SQL/temporary_attributes_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+temporary_attributes_clause ::=
+    ON COMMIT { DELETE | PRESERVE } ROWS
+```
+<!-- IMG_RECOVERY_END ref_id="img-00722" -->
+
+
 **table_partitioning_clause ::=**
 
 ![table_partitioning_clause_image123](media/SQL/table_partitioning_clause_image123.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00723" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6800" image_path_raw="media/SQL/table_partitioning_clause_image123.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_partitioning_clause ::=
+    { range_partitioning
+    | hash_partitioning
+    | list_partitioning
+    | range_partitioning_using_hash }
+    [ row_movement_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00723" -->
+
 
 **range_partitioning ::=**
 
 ![range_partitioning_image124](media/SQL/range_partitioning_image124.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00724" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6804" image_path_raw="media/SQL/range_partitioning_image124.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+range_partitioning ::=
+    PARTITION BY RANGE '(' column [ ',' column ] ')'
+    '(' partition_default_clause [ ',' partition_range_clause ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00724" -->
+
+
 **partition_default_clause ::=**
 
 ![partition_default](media/SQL/partition_default.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00725" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6808" image_path_raw="media/SQL/partition_default.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_default_clause ::=
+    PARTITION partition_name VALUES DEFAULT
+    table_partition_description
+```
+<!-- IMG_RECOVERY_END ref_id="img-00725" -->
+
+
 **table_partition_description ::=**
 
 ![TABLE_PARTITION_DESCRIPTION_2](media/SQL/TABLE_PARTITION_DESCRIPTION_2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00726" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6812" image_path_raw="media/SQL/TABLE_PARTITION_DESCRIPTION_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_partition_description ::=
+    [ TABLESPACE tablespace_name ]
+    [ lob_column_properties ]
+    [ access_mode_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00726" -->
+
 
 [lob_column_properties ::=](#lob_column_properties)
 
@@ -58439,11 +61175,31 @@ MY_DEPT.MEMBER
 
 ![partition_range_clause_image126](media/SQL/partition_range_clause_image126.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00727" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6820" image_path_raw="media/SQL/partition_range_clause_image126.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_range_clause ::=
+    PARTITION partition_name
+    VALUES LESS THAN '(' value [ ',' value ] ')'
+    table_partition_description
+```
+<!-- IMG_RECOVERY_END ref_id="img-00727" -->
+
+
 [table_partition_description ::=](#table_partition_description)
 
 **hash_partitioning ::=**
 
 ![hash_paritioning_image126_1](media/SQL/hash_paritioning_image126_1.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00728" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6826" image_path_raw="media/SQL/hash_paritioning_image126_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_partitioning ::=
+    PARTITION BY HASH '(' column [ ',' column ] ')'
+    '(' PARTITION partition_name table_partition_description
+        [ ',' PARTITION partition_name table_partition_description ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00728" -->
+
 
 [table_partition_description ::=](#table_partition_description)
 
@@ -58451,63 +61207,201 @@ MY_DEPT.MEMBER
 
 ![list_partitioning_image127](media/SQL/list_partitioning_image127.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00729" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6832" image_path_raw="media/SQL/list_partitioning_image127.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+list_partitioning ::=
+    PARTITION BY LIST '(' column [ ',' column ] ')'
+    '(' partition_default_clause [ ',' partition_list_clause ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00729" -->
+
+
 [partition_default_clause ::=](#partition_default_clause)
 
 **partition_list_clause ::=**
 
 ![table_list_clause_image128](media/SQL/table_list_clause_image128.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00730" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6838" image_path_raw="media/SQL/table_list_clause_image128.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_list_clause ::=
+    PARTITION partition_name
+    VALUES '(' value [ ',' value ] ')'
+    table_partition_description
+```
+<!-- IMG_RECOVERY_END ref_id="img-00730" -->
+
+
 **range_partitioning_using_hash ::=**
 
 ![range_using_hash_partitioning](media/SQL/range_using_hash_partitioning_image.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00731" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6842" image_path_raw="media/SQL/range_using_hash_partitioning_image.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+range_partitioning_using_hash ::=
+    PARTITION BY RANGE_USING_HASH '(' column ')'
+    '(' { partition_default_clause | partition_range_clause }
+        [ ',' { partition_default_clause | partition_range_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00731" -->
+
 
 **row_movement_clause ::=**
 
 ![row_movement_clause](media/SQL/row_movement_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00732" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6846" image_path_raw="media/SQL/row_movement_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+row_movement_clause ::=
+    { ENABLE | DISABLE } ROW MOVEMENT
+```
+<!-- IMG_RECOVERY_END ref_id="img-00732" -->
+
+
 **access_mode_clause ::=**
 
 ![ACCESS_MODE_CLAUSE_](media/SQL/ACCESS_MODE_CLAUSE_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00733" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6850" image_path_raw="media/SQL/ACCESS_MODE_CLAUSE_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+access_mode_clause ::=
+    READ { ONLY | WRITE | APPEND }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00733" -->
+
 
 **tablespace_clause ::=**
 
 ![tablespace_clause](media/SQL/tablespace_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00734" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6854" image_path_raw="media/SQL/tablespace_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+tablespace_clause ::=
+    TABLESPACE tablespace_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00734" -->
+
+
 **physical_attributes_clause ::=**
 
 ![physical_attributes_clause_image130_1](media/SQL/physical_attributes_clause_image130_1.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00735" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6858" image_path_raw="media/SQL/physical_attributes_clause_image130_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+physical_attributes_clause ::=
+    { PCTFREE integer
+    | PCTUSED integer
+    | INITRANS integer
+    | MAXTRANS integer
+    | storage_clause } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-00735" -->
+
 
 **storage_clause ::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00736" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6862" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00736" -->
+
+
 **log_compression_clause ::=**
 
 ![log_compression_clause_image130_2](media/SQL/log_compression_clause_image130_2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00737" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6866" image_path_raw="media/SQL/log_compression_clause_image130_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+log_compression_clause ::=
+    { COMPRESSED LOGGING | UNCOMPRESSED LOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00737" -->
+
 
 **logging_clause ::=**
 
 ![logging_clause](media/SQL/logging_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00738" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6870" image_path_raw="media/SQL/logging_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+logging_clause ::=
+    { LOGGING | NOLOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00738" -->
+
+
 **parallel_clause::=**
 
 ![PARALLEL_CLAUSE](media/SQL/PARALLEL_CLAUSE.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00739" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6874" image_path_raw="media/SQL/PARALLEL_CLAUSE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel_clause ::=
+    { NOPARALLEL | PARALLEL integer }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00739" -->
+
 
 **table_compression_clause ::=**
 
 ![table_compression](media/SQL/table_compression.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00740" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6878" image_path_raw="media/SQL/table_compression.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_compression_clause ::=
+    COMPRESS '(' column_name [ { ',' column_name | MAXROWS integer } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00740" -->
+
+
 **lob_column_properties ::=**
 
 ![lob_column_properties_image133](media/SQL/lob_column_properties_image133.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00741" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6882" image_path_raw="media/SQL/lob_column_properties_image133.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+lob_column_properties ::=
+    LOB_storage_clause [ LOB_storage_clause ] ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-00741" -->
+
 
 **LOB_storage_clause ::=**
 
 ![lob_storage_clause_image134](media/SQL/lob_storage_clause_image134.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00742" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6886" image_path_raw="media/SQL/lob_storage_clause_image134.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+LOB_storage_clause ::=
+    LOB '(' LOB_item [ ',' LOB_item ] ')' STORE AS '(' lob_attributes ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00742" -->
+
+
 **lob_attributes ::=**
 
 ![lob_attribute](media/SQL/lob_attribute.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00743" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="6890" image_path_raw="media/SQL/lob_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+lob_attributes ::=
+    { TABLESPACE tablespace_name
+    | LOGGING
+    | NOLOGGING
+    | BUFFER
+    | NOBUFFER } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-00743" -->
+
 
 #### Prerequisites 
 
@@ -58727,6 +61621,20 @@ Partition p1 will be stored in the tbs_01 tablespace because this was expressly 
 This is illustrated in the following diagram:
 
 ![create_table_lob](media/SQL/create_table_lob.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00744" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7109" image_path_raw="media/SQL/create_table_lob.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{Tablespace for LOB columns is specified}
+    A -->|YES| B([Specified tablespace])
+    A -->|NO| C{Tablespace for partitions is specified}
+    C -->|YES| D([Specified tablespace])
+    C -->|NO| E{Tablespace for partitions is specified}
+    E -->|YES| F([Specified tablespace])
+    E -->|NO| G[Tablespace for partitions is specified]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00744" -->
+
 
 *partition_range_clause*
 
@@ -59298,17 +62206,57 @@ iSQL> CREATE TABLE inventory(
 
 ![create_disk_tablespace_image137](media/SQL/create_disk_tablespace_image137.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00745" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7679" image_path_raw="media/SQL/create_disk_tablespace_image137.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_disk_tablespace ::=
+    CREATE { DISK | DATA } TABLESPACE tablespace_name DATAFILE
+        datafile_spec [ ',' datafile_spec ]
+        [ EXTENTSIZE integer { K | M | G } ]
+        [ SEGMENT MANAGEMENT { MANUAL | AUTO } ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00745" -->
+
+
 **datafile_spec ::=**
 
 ![datafile_spec](media/SQL/datafile_spec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00746" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7683" image_path_raw="media/SQL/datafile_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_spec ::=
+    '''' file_name ''''
+    [ SIZE integer [ K | M | G ] ]
+    [ REUSE ]
+    [ autoextend_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00746" -->
+
 
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00747" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7687" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00747" -->
+
+
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00748" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7691" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00748" -->
+
 
 #### Prerequisites
 
@@ -59442,25 +62390,79 @@ Create success.
 
 ![create_memory_tablespace_image140](media/SQL/create_memory_tablespace_image140.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00749" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7823" image_path_raw="media/SQL/create_memory_tablespace_image140.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_memory_tablespace ::=
+    CREATE { MEMORY | DATA } TABLESPACE tablespace_name initsize_clause
+        [ autoextend_clause ]
+        [ checkpoint_path_clause ]
+        [ splitsize_clause ]
+        [ ONLINE | OFFLINE ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00749" -->
+
+
 **initsize_clause ::=**
 
 ![initsize_clause_image141](media/SQL/initsize_clause_image141.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00750" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7827" image_path_raw="media/SQL/initsize_clause_image141.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+initsize_clause ::=
+    SIZE integer [ K | M | G ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00750" -->
+
 
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00751" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7831" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00751" -->
+
+
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00752" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7835" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00752" -->
+
 
 **checkpoint_path_clause ::=**
 
 ![checkpoint_path_clause_image143](media/SQL/checkpoint_path_clause_image143.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00753" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7839" image_path_raw="media/SQL/checkpoint_path_clause_image143.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkpoint_path_clause ::=
+    CHECKPOINT PATH '(' checkpoint_path [ { ',' checkpoint_path } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00753" -->
+
+
 **splitsize_clause ::=**
 
 ![splitsize_clause_image144](media/SQL/splitsize_clause_image144.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00754" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7843" image_path_raw="media/SQL/splitsize_clause_image144.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+splitsize_clause ::=
+    SPLIT EACH integer [ K | M | G ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00754" -->
+
 
 #### Prerequisites
 
@@ -59590,17 +62592,53 @@ Create success.
 
 ![create_tablespace_image145](media/SQL/create_tablespace_image145.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00755" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7971" image_path_raw="media/SQL/create_tablespace_image145.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_volatile_tablespace ::=
+    CREATE [ VOLATILE ] [ DATA ] TABLESPACE tablespace_name
+    initsize_clause
+    [ autoextend_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00755" -->
+
+
 **initsize_clause ::=**
 
 ![initsize_clause_image141](media/SQL/initsize_clause_image141.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00756" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7975" image_path_raw="media/SQL/initsize_clause_image141.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+initsize_clause ::=
+    SIZE integer [ K | M | G ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00756" -->
+
 
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00757" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7979" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00757" -->
+
+
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00758" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="7983" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00758" -->
+
 
 #### Prerequisites
 
@@ -59695,13 +62733,44 @@ Create success.
 
 ![create_temporary_tablespace](media/SQL/create_temporary_tablespace.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00759" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8076" image_path_raw="media/SQL/create_temporary_tablespace.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_temporary_tablespace ::=
+    CREATE TEMPORARY TABLESPACE tablespace_name
+    TEMPFILE datafile_spec [ { ',' datafile_spec } ]
+    [ EXTENTSIZE integer [ K | M | G ] ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00759" -->
+
+
 **datafile_spec ::=**
 
 ![datafile_spec](media/SQL/datafile_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00760" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8080" image_path_raw="media/SQL/datafile_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_spec ::=
+    '''' file_name ''''
+    [ SIZE integer [ K | M | G ] ]
+    [ REUSE ]
+    [ autoextend_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00760" -->
+
+
 **autoexetend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00761" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8084" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00761" -->
+
 
 #### Prerequisites
 
@@ -59742,29 +62811,101 @@ Create success.
 
 ![create_trigger](media/SQL/create_trigger.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00762" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8123" image_path_raw="media/SQL/create_trigger.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_trigger ::=
+    CREATE [ OR REPLACE ] TRIGGER [ user_name '.' ] trigger_name
+    { simple_dml_trigger | instead_of_dml_trigger }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00762" -->
+
+
 **simple_dml_trigger ::=**
 
 ![simple_dml_trigger_image151](media/SQL/simple_dml_trigger_image151.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00763" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8127" image_path_raw="media/SQL/simple_dml_trigger_image151.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+simple_dml_trigger ::=
+    { AFTER | BEFORE } trigger_event ON [ user_name '.' ] tbl_name
+    [ referencing_clause ]
+    [ trigger_action ]
+    psm_body
+```
+<!-- IMG_RECOVERY_END ref_id="img-00763" -->
+
 
 **trigger_event ::=**
 
 ![trigger_event_image152](media/SQL/trigger_event_image152.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00764" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8131" image_path_raw="media/SQL/trigger_event_image152.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+trigger_event ::=
+    { INSERT | DELETE | UPDATE [ OF column_name [ { ',' column_name } ] ] }
+    [ OR { INSERT | DELETE | UPDATE [ OF column_name [ { ',' column_name } ] ] } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00764" -->
+
+
 **referencing_clause ::=**
 
 ![referencing_clause_image152_1](media/SQL/referencing_clause_image152_1.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00765" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8135" image_path_raw="media/SQL/referencing_clause_image152_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+referencing_clause ::=
+    REFERENCING { OLD | NEW } [ ROW ] [ AS ] alias_name
+    [ { ',' { OLD | NEW } [ ROW ] [ AS ] alias_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00765" -->
+
 
 **trigger_action::=**
 
 ![](media/SQL/9c08ef3d3a9a235c54020897664f1e76.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00766" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8139" image_path_raw="media/SQL/9c08ef3d3a9a235c54020897664f1e76.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+trigger_action ::=
+    FOR EACH { ROW [ { ENABLE | DISABLE } ] [ WHEN '(' search_condition ')' ]
+             | STATEMENT [ { ENABLE | DISABLE } ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00766" -->
+
+
 **psm_body::=**
 
 ![](media/SQL/9bdcf9256b030ef2f125cae49db1e626.jpg)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00767" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8143" image_path_raw="media/SQL/9bdcf9256b030ef2f125cae49db1e626.jpg" image_class="C" format="bnf" verified="True" -->
+```bnf
+psm_body ::=
+    [ { AS | IS | DECLARE } [ declare_section ] ]
+    BEGIN
+    [ statement ]
+    [ EXCEPTION exception_handler ]
+    END [ trigger_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00767" -->
+
+
 **instead_of_dml_trigger::=**
 
 ![](media/SQL/15bb3089ca8a5848774adf787ad4e5ed.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00768" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8147" image_path_raw="media/SQL/15bb3089ca8a5848774adf787ad4e5ed.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+instead_of_dml_trigger ::=
+    INSTEAD OF { INSERT | DELETE | UPDATE } ON [ user_name '.' ] view_name
+    [ referencing_clause ]
+    [ FOR EACH ROW ]
+    [ { ENABLE | DISABLE } ]
+    psm_body
+```
+<!-- IMG_RECOVERY_END ref_id="img-00768" -->
+
 
 #### Prerequisites
 
@@ -60025,11 +63166,40 @@ ID SCORE
 
 ![create_user_image155](media/SQL/create_user_image155.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00769" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8406" image_path_raw="media/SQL/create_user_image155.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_user ::=
+    CREATE USER user_name IDENTIFIED BY password
+    [ TEMPORARY TABLESPACE tblspace_name ]
+    [ DEFAULT TABLESPACE tblspace_name ]
+    [ ACCESS tblspace_name { ON | OFF } ]
+    [ LIMIT '(' password_parameters [ { ',' password_parameters } ] ')' ]
+    [ { ENABLE | DISABLE } TCP ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00769" -->
+
+
 **<a name="password_parameters"><a/>**
 
 **password_parameters ::=**
 
 ![password_parameters](media/SQL/password_parameters.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00770" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8412" image_path_raw="media/SQL/password_parameters.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+password_parameters ::=
+    { FAILED_LOGIN_ATTEMPTS
+    | PASSWORD_LIFE_TIME
+    | PASSWORD_REUSE_TIME
+    | PASSWORD_REUSE_MAX
+    | PASSWORD_LOCK_TIME
+    | PASSWORD_GRACE_TIME }
+    { value | UNLIMITED | DEFAULT }
+    | PASSWORD_VERIFY_FUNCTION { function | NULL | DEFAULT }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00770" -->
+
 
 #### Prerequisites
 
@@ -60185,9 +63355,29 @@ iSQL> CREATE USER rose4 IDENTIFIED BY rose4
 
 ![create_view_image156](media/SQL/create_view_image156.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00771" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8566" image_path_raw="media/SQL/create_view_image156.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_view ::=
+    CREATE [ OR REPLACE ] [ [ NO ] FORCE ]
+    VIEW [ user_name '.' ] view_name [ '(' alias_name [ { ',' alias_name } ] ')' ]
+    AS subquery
+    [ query_restriction_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00771" -->
+
+
 **query_restriction_clause ::=**
 
 ![query_restriction_clause_image157](media/SQL/query_restriction_clause_image157.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00772" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8570" image_path_raw="media/SQL/query_restriction_clause_image157.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+query_restriction_clause ::=
+    WITH READ ONLY
+```
+<!-- IMG_RECOVERY_END ref_id="img-00772" -->
+
 
 #### Prerequisites
 
@@ -60301,6 +63491,25 @@ Sandra                Hammond               Saeed                 Pahlavi
 
 ![create_mview](media/SQL/create_mview.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00773" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8682" image_path_raw="media/SQL/create_mview.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_materialized_view ::=
+    CREATE MATERIALIZED VIEW [ user_name '.' ] mview_name
+    [ '(' c_alias [ { ',' c_alias } ] ')' ]
+    [ MAXROWS integer ]
+    [ table_partitioning_clause ]
+    [ tablespace_clause ]
+    [ physical_attributes_clause ]
+    [ logging_clause ]
+    [ lob_column_properties ]
+    [ build_clause ]
+    [ refresh_clause ]
+    AS subquery
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00773" -->
+
+
 [table_partitioning_clause ::=](#table_partitioning_clause)
 
 [tablespace_clause::=](#tablespace_clause)
@@ -60312,15 +63521,42 @@ Sandra                Hammond               Saeed                 Pahlavi
 
 ![physical_attributes_clause](media/SQL/physical_attributes_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00774" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8693" image_path_raw="media/SQL/physical_attributes_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+physical_attributes_clause ::=
+    { INITRANS integer | MAXTRANS integer }
+    [ { INITRANS integer | MAXTRANS integer } ]
+    [ storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00774" -->
+
+
 [storage_clause ::=](#storage_clause)
 
 **build_clause ::=**
 
 ![build_clause](media/SQL/build_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00775" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8699" image_path_raw="media/SQL/build_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+build_clause ::=
+    BUILD { IMMEDIATE | DEFERRED }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00775" -->
+
+
 **refresh_clause ::=**
 
 ![refresh_clause](media/SQL/refresh_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00776" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8703" image_path_raw="media/SQL/refresh_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+refresh_clause ::=
+    REFRESH [ { COMPLETE | FAST | FORCE } ] [ { ON DEMAND | ON COMMIT } ]
+    | NEVER REFRESH
+```
+<!-- IMG_RECOVERY_END ref_id="img-00776" -->
+
 
 #### Prerequisites
 
@@ -60414,11 +63650,27 @@ SELECT * FROM employees;
 
 ![](media/SQL/112a655747996d5a7aa626adb1927e8a.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00777" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8795" image_path_raw="media/SQL/112a655747996d5a7aa626adb1927e8a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+disjoin_table ::=
+    DISJOIN TABLE tbl_name '(' partition_to_table_clause [ { ',' partition_to_table_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00777" -->
+
+
 
 
 **partition_to_table_clause ::=**
 
 ![](media/SQL/cf5d8b45fc1e7f0af96650019286c30e.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00778" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8801" image_path_raw="media/SQL/cf5d8b45fc1e7f0af96650019286c30e.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_to_table_clause ::=
+    PARTITION partition_name TO TABLE tbl_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00778" -->
+
 
 #### Prerequisites
 
@@ -60476,6 +63728,14 @@ Disjoin success.
 
 ![drop_database_image158](media/SQL/drop_database_image158.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00779" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8857" image_path_raw="media/SQL/drop_database_image158.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database ::=
+    DROP DATABASE database_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00779" -->
+
+
 #### Prerequisites
 
 This SQL statement can only be executed by the SYS user in -sysdba administrator mode, and can only be executed during the PROCESS phase.
@@ -60520,6 +63780,14 @@ For information on Database Link, please refer to the *Database Link User’s Ma
 
 ![drop_directory_image160](media/SQL/drop_directory_image160.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00780" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8901" image_path_raw="media/SQL/drop_directory_image160.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_directory ::=
+    DROP DIRECTORY directory_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00780" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users to whom the DROP ANY DIRECTORY system privilege has been granted can execute this statement.
@@ -60548,6 +63816,14 @@ Drop success.
 **drop_index ::=**
 
 ![drop_index_image161](media/SQL/drop_index_image161.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00781" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8930" image_path_raw="media/SQL/drop_index_image161.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_index ::=
+    DROP INDEX [ user_name '.' ] index_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00781" -->
+
 
 #### Prerequisites
 
@@ -60584,6 +63860,14 @@ Drop success.
 
 ![drop_job](media/SQL/drop_job.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00782" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8965" image_path_raw="media/SQL/drop_job.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_job ::=
+    DROP JOB job_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00782" -->
+
+
 #### Prerequisites
 
 Only the SYS user can use this statement.
@@ -60615,6 +63899,14 @@ Drop success.
 
 ![drop_queue_image162](media/SQL/drop_queue_image162.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00783" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="8996" image_path_raw="media/SQL/drop_queue_image162.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_queue ::=
+    DROP QUEUE queue_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00783" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the schema containing the queue, and users having the DROP ANY TABLE system privilege can execute the DROP QUEUE statement.
@@ -60640,6 +63932,14 @@ iSQL> DROP QUEUE Q1;
 **drop_replication ::=**
 
 ![drop_replication_image163](media/SQL/drop_replication_image163.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00784" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9022" image_path_raw="media/SQL/drop_replication_image163.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_replication ::=
+    DROP REPLICATION replication_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00784" -->
+
 
 #### Prerequisites
 
@@ -60675,6 +63975,14 @@ iSQL> DROP REPLICATION rep1;
 
 ![drop_role](media/SQL/drop_role.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00785" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9056" image_path_raw="media/SQL/drop_role.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_role ::=
+    DROP ROLE role_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00785" -->
+
+
 #### Prerequisites
 
 Only the SYS user and users with the DROP ANY ROLE system privilege can drop a role.
@@ -60705,6 +64013,14 @@ Drop success.
 **drop_sequence ::=**
 
 ![drop_sequence_image164](media/SQL/drop_sequence_image164.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00786" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9087" image_path_raw="media/SQL/drop_sequence_image164.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_sequence ::=
+    DROP SEQUENCE [ user_name '.' ] seq_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00786" -->
+
 
 #### Prerequisites
 
@@ -60740,6 +64056,14 @@ Drop success.
 **drop_synonym ::=**
 
 ![drop_synonym](media/SQL/drop_synonym.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00787" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9122" image_path_raw="media/SQL/drop_synonym.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_synonym ::=
+    DROP [ PUBLIC ] SYNONYM [ user_name '.' ] synonym_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00787" -->
+
 
 #### Prerequisites
 
@@ -60791,6 +64115,16 @@ Drop success.
 
 ![](media/SQL/3b6b6558264ad2e958e72fe192ae417a.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00788" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9172" image_path_raw="media/SQL/3b6b6558264ad2e958e72fe192ae417a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_table ::=
+    DROP TABLE [ user_name '.' ] table_name
+    [ CASCADE [ CONSTRAINTS ] ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00788" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the schema containing the table, and users with the DROP ANY TABLE system privilege can execute the DROP TABLE statement.
@@ -60831,6 +64165,16 @@ Drop success.
 **drop_tablespace ::=**
 
 ![drop_tablespace](media/SQL/drop_tablespace.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00789" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9213" image_path_raw="media/SQL/drop_tablespace.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_tablespace ::=
+    DROP TABLESPACE tablespace_name
+    [ INCLUDING CONTENTS [ AND DATAFILES ] [ CASCADE CONSTRAINTS ] ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00789" -->
+
 
 #### Prerequisites
 
@@ -60916,6 +64260,14 @@ Drop success.
 
 ![drop_trigger_image168](media/SQL/drop_trigger_image168.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00790" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9297" image_path_raw="media/SQL/drop_trigger_image168.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_trigger ::=
+    DROP TRIGGER [ user_name '.' ] trigger_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00790" -->
+
+
 #### Prerequisites 
 
 Only the SYS user, the owner of the schema containing the trigger, and users with the DROP ANY TRIGGER system privilege can execute the DROP TRIGGER statement.
@@ -60950,6 +64302,14 @@ Drop success.
 **drop_user ::=**
 
 ![drop_user_image169](media/SQL/drop_user_image169.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00791" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9332" image_path_raw="media/SQL/drop_user_image169.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_user ::=
+    DROP USER user_name [ CASCADE ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00791" -->
+
 
 #### Prerequisites
 
@@ -60995,6 +64355,14 @@ Drop success.
 
 ![drop_view_image170](media/SQL/drop_view_image170.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00792" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9376" image_path_raw="media/SQL/drop_view_image170.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_view ::=
+    DROP VIEW [ user_name '.' ] view_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00792" -->
+
+
 #### Prerequisites
 
 Only the SYS user, the owner of the schema containing the view, and users with the DROP ANY VIEW system privilege can execute the DROP VIEW statement.
@@ -61029,6 +64397,14 @@ Drop success.
 **drop_mview ::=**
 
 ![drop_mview](media/SQL/drop_mview.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00793" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9411" image_path_raw="media/SQL/drop_mview.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_mview ::=
+    DROP MATERIALIZED VIEW [ user_name '.' ] mview_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00793" -->
+
 
 #### Prerequisites
 
@@ -61070,6 +64446,16 @@ DROP MATERIALIZED VIEW mv1;
 
 ![](media/SQL/af48066754b43e83d3e54d7fe20abdae.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00794" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9451" image_path_raw="media/SQL/af48066754b43e83d3e54d7fe20abdae.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+flashback_table ::=
+    FLASHBACK [ user_name '.' ] TABLE table_name TO BEFORE DROP
+    { DROP | RENAME TO table_name }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00794" -->
+
+
 #### Prerequisites
 
 At least one or more of the following conditions must be met: 
@@ -61100,13 +64486,45 @@ The user can specify a new name for the table when it is recovered; if the same 
 
 ![grant_image171](media/SQL/grant_image171.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00795" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9481" image_path_raw="media/SQL/grant_image171.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grant ::=
+    GRANT { grant_system_privilege | grant_object_privilege } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00795" -->
+
+
 **grant_system_privilege ::=**
 
 ![grant_system_privilege](media/SQL/grant_system_privilege.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00796" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9485" image_path_raw="media/SQL/grant_system_privilege.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grant_system_privilege ::=
+    { system_privilege | role | ALL PRIVILEGES }
+    [ { ',' { system_privilege | role | ALL PRIVILEGES } } ]
+    TO { user | role | PUBLIC }
+    [ { ',' { user | role | PUBLIC } } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00796" -->
+
+
 **grant_object_privilege ::=**
 
 ![grant_object_privilege](media/SQL/grant_object_privilege.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00797" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="9489" image_path_raw="media/SQL/grant_object_privilege.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grant_object_privilege ::=
+    { object_privilege | ALL [ PRIVILEGES ] }
+    [ { ',' { object_privilege | ALL [ PRIVILEGES ] } } ]
+    ON { object | DIRECTORY directory_name }
+    TO { user | PUBLIC | role }
+    [ { ',' { user | PUBLIC | role } } ]
+    [ WITH GRANT OPTION ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00797" -->
+
 
 #### Prerequisites 
 
@@ -61821,6 +65239,14 @@ T1.I1
 
 ![](media/SQL/bdce75dd2f142620aa1120b6035f7c67.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00798" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10202" image_path_raw="media/SQL/bdce75dd2f142620aa1120b6035f7c67.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+purge_table_statement ::=
+    PURGE TABLE [ user_name '.' ] table_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00798" -->
+
+
 #### Prerequisites
 
 The SYS user, table's owner, and the user with the DROP ANY TABLE system privilege can execute PURGE TABLE.
@@ -61861,6 +65287,14 @@ Purge success.
 **rename ::=**
 
 ![rename](media/SQL/rename.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00799" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10243" image_path_raw="media/SQL/rename.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename ::=
+    RENAME [ user_name '.' ] tbl_name TO new_tbl_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00799" -->
+
 
 #### Prerequisites
 
@@ -61913,13 +65347,48 @@ Alter success.
 
 ![revoke_image175](media/SQL/revoke_image175.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00800" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10294" image_path_raw="media/SQL/revoke_image175.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+revoke ::=
+    REVOKE { revoke_system_privilege | revoke_object_privilege }
+           [ ',' { revoke_system_privilege | revoke_object_privilege } ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00800" -->
+
+
 **revoke_system_privilege ::=**
 
 ![REVOKE_SYSTEM_PRIVILEGE](media/SQL/REVOKE_SYSTEM_PRIVILEGE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00801" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10298" image_path_raw="media/SQL/REVOKE_SYSTEM_PRIVILEGE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+revoke_system_privilege ::=
+    { system_privilege | role | ALL PRIVILEGES }
+    [ ',' { system_privilege | role | ALL PRIVILEGES } ]
+    FROM
+    { user | role | PUBLIC }
+    [ ',' { user | role | PUBLIC } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00801" -->
+
+
 **revoke_object_privilege ::=**
 
 ![REVOKE_OBJECT_PRIVILEGE](media/SQL/REVOKE_OBJECT_PRIVILEGE.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00802" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10302" image_path_raw="media/SQL/REVOKE_OBJECT_PRIVILEGE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+revoke_object_privilege ::=
+    { object_privilege | role | ALL PRIVILEGES }
+    [ ',' { object_privilege | role | ALL PRIVILEGES } ]
+    ON { object | DIRECTORY directory_name }
+    FROM
+    { user | role | PUBLIC }
+    [ ',' { user | role | PUBLIC } ]
+    [ CASCADE CONSTRAINT ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00802" -->
+
 
 #### Prerequisites
 
@@ -62135,6 +65604,14 @@ iSQL> delete from user01.t1 where i1=3;
 
 ![truncate_image178](media/SQL/truncate_image178.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00803" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10516" image_path_raw="media/SQL/truncate_image178.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+truncate ::=
+    TRUNCATE TABLE [ user_name '.' ] tbl_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00803" -->
+
+
 #### Prerequisites
 
 The SYS user, the owner of the schema containing the table, and users having the ALTER ANY TABLE system privilege can execute the TRUNCATE TABLE statement.
@@ -62186,13 +65663,43 @@ This chapter explains each of the Data Manipulation Language (DML) statements th
 
 ![delete_image179](media/SQL/delete_image179.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00804" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10567" image_path_raw="media/SQL/delete_image179.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delete ::=
+    DELETE [ hints ] from_clause
+        [ PARTITION '(' partition_name ')' ]
+        [ where_clause ]
+        [ returning_clause ]
+        [ limit_clause ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00804" -->
+
+
 **from_clause ::=**
 
 ![from_clause_image180](media/SQL/from_clause_image180.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00805" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10571" image_path_raw="media/SQL/from_clause_image180.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+from_clause ::=
+    FROM { [ user_name '.' ] { tbl_name | view_name }
+         | '(' subquery ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00805" -->
+
+
 **where_clause ::=**
 
 ![where_clause_image181](media/SQL/where_clause_image181.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00806" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10575" image_path_raw="media/SQL/where_clause_image181.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+where_clause ::=
+    WHERE condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-00806" -->
+
 
 <a name="returning_clause"><a/>
 
@@ -62200,13 +65707,39 @@ This chapter explains each of the Data Manipulation Language (DML) statements th
 
 ![returning_clause](media/SQL/returning_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00807" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10581" image_path_raw="media/SQL/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr [ ',' expr ]
+    INTO variable_name [ ',' variable_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00807" -->
+
+
 **limit_clause ::=**
 
 ![limit_clause_](media/SQL/limit_clause_.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00808" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10585" image_path_raw="media/SQL/limit_clause_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+limit_clause ::=
+    LIMIT [ row_offset ',' ] row_count
+```
+<!-- IMG_RECOVERY_END ref_id="img-00808" -->
+
+
 **multiple_delete ::=**
 
 ![multipledelete_clause](media/SQL_multiple_delete.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00809" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10589" image_path_raw="media/SQL_multiple_delete.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+multiple_delete ::=
+    DELETE [ hints ] tbl_name [ ',' tbl_name ] FROM tbl_ref [ where_clause ]
+  | DELETE [ hints ] FROM tbl_name [ ',' tbl_name ] USING tbl_ref [ where_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00809" -->
+
 
 tbl_ref ::=
 
@@ -62399,11 +65932,33 @@ V2                   VARCHAR(30)          nikita
 
 ![](media/SQL/a45155edc3025bff4fdd2260e889e4ab.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00810" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10780" image_path_raw="media/SQL/a45155edc3025bff4fdd2260e889e4ab.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+insert ::=
+    INSERT [ insert_hints ]
+        { single_table_insert | multi_table_insert }
+        [ wait_clause ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00810" -->
+
+
 
 
 **single_table_insert ::=**
 
 ![single_table_insert](media/SQL/single_table_insert.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00811" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10786" image_path_raw="media/SQL/single_table_insert.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause
+    [ '(' column_name [ ',' column_name ] ')' ]
+    { values_clause [ returning_clause ]
+    | subquery [ returning_clause ]
+    | DEFAULT VALUES }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00811" -->
+
 
 [returning_clause ::=](#returning_clause),
 [subquery ::=](#subquery)
@@ -62412,11 +65967,30 @@ V2                   VARCHAR(30)          nikita
 
 ![table_clause](media/SQL/table_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00812" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10793" image_path_raw="media/SQL/table_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_clause ::=
+    { [ user_name '.' ] { tbl_name | view_name }
+    | '(' subquery ')' }
+    [ PARTITION '(' partition_name ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00812" -->
+
+
 [subquery ::=](#subquery)
 
 **multi_table_insert ::=**
 
 ![multi_table_insert](media/SQL/multi_table_insert.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00813" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10799" image_path_raw="media/SQL/multi_table_insert.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+multi_table_insert ::=
+    ALL { INTO table_clause [ '(' column_name [ { ',' column_name } ] ')' ] values_clause } ...
+    subquery
+```
+<!-- IMG_RECOVERY_END ref_id="img-00813" -->
+
 
 [subquery ::=](#subquery)
 
@@ -62424,9 +65998,26 @@ V2                   VARCHAR(30)          nikita
 
 ![](media/SQL/5234b9cafb6bc0a5d51f4c4824c484dd.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00814" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10805" image_path_raw="media/SQL/5234b9cafb6bc0a5d51f4c4824c484dd.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+values_clause ::=
+    VALUES '(' { expr | DEFAULT } [ ',' { expr | DEFAULT } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00814" -->
+
+
 **wait_clause ::=**
 
 ![](media/SQL/140182321afa39fb9ded6e62d0300e32.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00815" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="10809" image_path_raw="media/SQL/140182321afa39fb9ded6e62d0300e32.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+wait_clause ::=
+    nowait
+  | wait integer [ SEC | MSEC | USEC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00815" -->
+
 
 #### Prerequisites
 
@@ -62680,6 +66271,17 @@ ENO         E_LASTNAME            E_FIRSTNAME           DNO
 **lock_table ::=**
 
 ![](media/SQL/lock_table_partition.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00816" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11062" image_path_raw="media/SQL/lock_table_partition.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+lock_table ::=
+    LOCK TABLE [ user_name '.' ] tbl_name
+        [ PARTITION '(' partition_name ')' ]
+        IN lock_mode MODE
+        { WAIT integer | NOWAIT } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00816" -->
+
 
 #### Prerequisites
 
@@ -63051,6 +66653,14 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![select](media/SQL/select.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00817" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11432" image_path_raw="media/SQL/select.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+select ::=
+    [ with_clause ] subquery [ for_update_clause ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00817" -->
+
+
 [for_update_clause
 ::=](#for_update_clause)
 
@@ -63058,17 +66668,53 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![with_clause](media/SQL/with_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00818" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11439" image_path_raw="media/SQL/with_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+with_clause ::=
+    WITH query_name
+        [ '(' alias_name [ ',' alias_name ] ')' ]
+        AS '(' subquery ')'
+    [ ',' query_name
+        [ '(' alias_name [ ',' alias_name ] ')' ]
+        AS '(' subquery ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00818" -->
+
+
 <a name="subquery"><a/>
 
 **subquery ::=**
 
 ![subquery](media/SQL/subquery.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00819" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11445" image_path_raw="media/SQL/subquery.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+subquery ::=
+    select_clause [ order_by_clause ] [ limit_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00819" -->
+
+
 [limit_clause ::=](#limit_clause)
 
 **select_clause ::=**
 
 ![](media/SQL/77d1a3feb68a0257346ff3590901be12.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00820" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11451" image_path_raw="media/SQL/77d1a3feb68a0257346ff3590901be12.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_clause ::=
+    SELECT [ hints ] [ ALL | DISTINCT ] [ TOP '(' expr ')' ]
+        select_list
+    FROM tbl_reference [ ',' tbl_reference ]
+    [ where_clause ]
+    [ hierarchical_query_clause ]
+    [ group_by_clause ]
+    [ HAVING condition ]
+    [ { UNION [ ALL ] | INTERSECT | MINUS } '(' select_clause ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00820" -->
+
 
 [hierarchical_query_clause ::=](#hierarchical_query_clause), [group_by_clause
 ::=](#group_by_clause)
@@ -63077,11 +66723,35 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![select_list](media/SQL/select_list.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00821" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11458" image_path_raw="media/SQL/select_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_list ::=
+    '*'
+  | { [ user_name '.' ] tbl_name '.' '*'
+    | expr [ [ AS ] alias_name ]
+    | '*' }
+    [ ',' { [ user_name '.' ] tbl_name '.' '*'
+           | expr [ [ AS ] alias_name ]
+           | '*' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00821" -->
+
+
 <a name="tbl_reference"><a/>
 
 **tbl_reference ::=**
 
 ![](media/SQL/e71b7bc2eebb6dec22a57132da33f80c.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00822" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11464" image_path_raw="media/SQL/e71b7bc2eebb6dec22a57132da33f80c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+tbl_reference ::=
+    single_table
+  | joined_table
+  | TABLE '(' function_name [ '(' [ expr [ ',' expr ] ] ')' ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00822" -->
+
 
 [joined_table ::=](#joined_table)
 
@@ -63091,9 +66761,31 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![single_table_150611](media/SQL/single_table_150611.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00823" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11472" image_path_raw="media/SQL/single_table_150611.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table ::=
+    LATERAL '(' subquery ')'
+  | [ user_name '.' ] tbl_name
+        [ PARTITION '(' partition_name ')' ]
+        [ pivot_clause | unpivot_clause ]
+  [ [ AS ] alias_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00823" -->
+
+
 **pivot_clause ::=**
 
 ![pivot_clause](media/SQL/pivot_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00824" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11476" image_path_raw="media/SQL/pivot_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pivot_clause ::=
+    PIVOT '(' aggregate_function '(' expr ')'
+              [ [ AS ] alias ] [ ',' aggregate_function '(' expr ')' [ [ AS ] alias ] ]
+              pivot_for_clause pivot_in_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00824" -->
+
 
 <a name="pivot_for_clause"><a/>
 
@@ -63101,13 +66793,41 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![pivot_for_clause](media/SQL/pivot_for_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00825" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11482" image_path_raw="media/SQL/pivot_for_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pivot_for_clause ::=
+    FOR column_name
+  | FOR '(' column_name [ ',' column_name ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00825" -->
+
+
 **pivot_in_clause ::=**
 
 ![pivot_in_clause](media/SQL/pivot_in_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00826" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11486" image_path_raw="media/SQL/pivot_in_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pivot_in_clause ::=
+    IN '(' { expr | '(' expr [ ',' expr ] ')' } [ [ AS ] alias ]
+           [ ',' { expr | '(' expr [ ',' expr ] ')' } [ [ AS ] alias ] ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00826" -->
+
+
 **unpivot_clause ::=**
 
 ![unpivot_clause](media/SQL/unpivot_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00827" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11490" image_path_raw="media/SQL/unpivot_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unpivot_clause ::=
+    UNPIVOT [ { INCLUDE | EXCLUDE } NULLS ]
+        '(' { column_name | '(' column_name [ ',' column_name ] ')' }
+            pivot_for_clause unpivot_in_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00827" -->
+
 
 [pivot_for_clause ::=](#pivot_for_clause)
 
@@ -63115,11 +66835,31 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![unpivot_in_clause](media/SQL/unpivot_in_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00828" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11496" image_path_raw="media/SQL/unpivot_in_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unpivot_in_clause ::=
+    IN '(' { column_name | '(' column_name [ ',' column_name ] ')' }
+           [ AS { alias_name | '(' alias_name [ ',' alias_name ] ')' } ]
+           [ ',' { column_name | '(' column_name [ ',' column_name ] ')' }
+                 [ AS { alias_name | '(' alias_name [ ',' alias_name ] ')' } ] ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00828" -->
+
+
 <a name="joined_table"><a/>
 
 **joined_table ::=**
 
 ![joined_table](media/SQL/joined_table.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00829" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11502" image_path_raw="media/SQL/joined_table.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+joined_table ::=
+    tbl_reference [ join_type ] JOIN tbl_reference ON condition
+  | tbl_reference [ apply_type ] APPLY single_table
+```
+<!-- IMG_RECOVERY_END ref_id="img-00829" -->
+
 
 [tbl_reference ::=](#tbl_reference), [single_table ::=](#single_table),
 
@@ -63127,9 +66867,29 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![join_type_image199](media/SQL/join_type_image199.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00830" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11508" image_path_raw="media/SQL/join_type_image199.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+join_type ::=
+    INNER
+  | LEFT [ OUTER ]
+  | RIGHT [ OUTER ]
+  | FULL [ OUTER ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00830" -->
+
+
 **apply_type ::=**
 
 ![apply_type](media/SQL/apply_type.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00831" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11512" image_path_raw="media/SQL/apply_type.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+apply_type ::=
+    CROSS
+  | OUTER
+```
+<!-- IMG_RECOVERY_END ref_id="img-00831" -->
+
 
 <a name="where_clause"><a/>
 
@@ -63137,11 +66897,28 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![where_clause](media/SQL/where_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00832" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11518" image_path_raw="media/SQL/where_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+where_clause ::=
+    WHERE condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-00832" -->
+
+
 <a name="hierarchical_query_clause"><a/>
 
 **hierarchical_query_clause ::=**
 
 ![hierarchical_query_clause](media/SQL/hierarchical_query_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00833" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11524" image_path_raw="media/SQL/hierarchical_query_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hierarchical_query_clause ::=
+    CONNECT BY [ NOCYCLE ] condition [ IGNORE LOOP ] [ START WITH condition ]
+  | START WITH condition CONNECT BY [ NOCYCLE ] condition [ IGNORE LOOP ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00833" -->
+
 
 <a name="group_by_clause"><a/>
 
@@ -63149,25 +66926,83 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![group_by_clause](media/SQL/group_by_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00834" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11530" image_path_raw="media/SQL/group_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_by_clause ::=
+    GROUP BY { expr | rollup_cube_clause | grouping_sets_clause }
+             [ ',' { expr | rollup_cube_clause | grouping_sets_clause } ]
+    [ HAVING condition ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00834" -->
+
+
 **rollup_cube_clause ::=**
 
 ![rollup_cube_list](media/SQL/rollup_cube_list.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00835" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11534" image_path_raw="media/SQL/rollup_cube_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rollup_cube_clause ::=
+    { ROLLUP | CUBE } grouping_expression_list
+```
+<!-- IMG_RECOVERY_END ref_id="img-00835" -->
+
 
 **grouping_sets_clause ::=**
 
 ![grouping_sets_clause](media/SQL/grouping_sets_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00836" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11538" image_path_raw="media/SQL/grouping_sets_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grouping_sets_clause ::=
+    GROUPING SETS '(' { grouping_expression_list | rollup_cube_clause }
+                      [ ',' { grouping_expression_list | rollup_cube_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00836" -->
+
+
 **grouping_expression_list ::=**
 
 ![grouping_expr_list](media/SQL/grouping_expr_list.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00837" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11542" image_path_raw="media/SQL/grouping_expr_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grouping_expression_list ::=
+    expression_list [ ',' expression_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00837" -->
+
 
 **expression_list ::=**
 
 ![expr_list](media/SQL/expr_list.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00838" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11546" image_path_raw="media/SQL/expr_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+expression_list ::=
+    expr
+  | '(' expr { ',' expr } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00838" -->
+
+
 **order_by_clause ::=**
 
 ![order_by_clause](media/SQL/order_by_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00839" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11550" image_path_raw="media/SQL/order_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+order_by_clause ::=
+    ORDER [ SIBLINGS ] BY
+        { expr | location | c_alias }
+        [ ASC | DESC ]
+        [ NULLS FIRST | NULLS LAST ]
+        { ',' { expr | location | c_alias }
+               [ ASC | DESC ]
+               [ NULLS FIRST | NULLS LAST ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00839" -->
+
 
 <a name="imit_clause"><a/>
 
@@ -63175,11 +67010,30 @@ The following example shows how Altibase manages data concurrency, integrity, an
 
 ![limit_clause_](media/SQL/limit_clause_.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00840" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11556" image_path_raw="media/SQL/limit_clause_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+limit_clause ::=
+    LIMIT [ row_offset ',' ] row_count
+```
+<!-- IMG_RECOVERY_END ref_id="img-00840" -->
+
+
 <a name="for_update_clause"><a/>
 
 **for_update_clause ::=**
 
 ![](media/SQL/f241bd3f3359d8cb294e30715f7b2724.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00841" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="11562" image_path_raw="media/SQL/f241bd3f3359d8cb294e30715f7b2724.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_update_clause ::=
+    FOR UPDATE
+        [ NOWAIT
+        | WAIT integer [ SEC | MSEC | USEC ]
+        ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00841" -->
+
 
 #### Prerequisites
 
@@ -65043,11 +68897,50 @@ C1          C2
 
 ![update_image229](media/SQL/update_image229.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00843" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13424" image_path_raw="media/SQL/update_image229.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+update ::=
+    UPDATE [ hints ]
+        { [ user_name '.' ] { tbl_name | view_name }
+        | '(' subquery ')'
+        }
+        [ PARTITION '(' partition_name ')' ]
+        [ t_alias | AS t_alias ]
+        set_clause_list
+        [ where_clause ]
+        [ returning_clause ]
+        [ limit_clause ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00843" -->
+
+
 [returning_clause ::=](#returning_clause)
 
 **set_clause_list ::=**
 
 ![set_clause_list_image230](media/SQL/set_clause_list_image230.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00844" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13430" image_path_raw="media/SQL/set_clause_list_image230.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET
+        { column_name '=' { expr | '(' subquery ')' }
+        | '(' column_name { ',' column_name } ')' '='
+            { '(' expr { ',' expr } ')'
+            | '(' subquery ')'
+            }
+        }
+        { ',' { column_name '=' { expr | '(' subquery ')' }
+              | '(' column_name { ',' column_name } ')' '='
+                  { '(' expr { ',' expr } ')'
+                  | '(' subquery ')'
+                  }
+              }
+        }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00844" -->
+
 
 
 
@@ -65055,9 +68948,25 @@ C1          C2
 
 ![where_clause_image181](media/SQL/where_clause_image181.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00845" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13436" image_path_raw="media/SQL/where_clause_image181.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+where_clause ::=
+    WHERE condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-00845" -->
+
+
 **limit_clause ::=**
 
 ![limit_clause_](media/SQL/limit_clause_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00846" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13440" image_path_raw="media/SQL/limit_clause_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+limit_clause ::=
+    LIMIT [ row_offset ',' ] row_count
+```
+<!-- IMG_RECOVERY_END ref_id="img-00846" -->
+
 
 #### Prerequisites
 
@@ -65339,6 +69248,23 @@ iSQL> UPDATE simple_emp SET salary=3000 WHERE dname='RESEARCH DEVELOPMENT DEPT 1
 
 ![move_image238](media/SQL/move_image238.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00847" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13720" image_path_raw="media/SQL/move_image238.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+move ::=
+    MOVE [ hints ] INTO
+        [ user_name '.' ] target_tbl_name
+        [ PARTITION '(' partition_name ')' ]
+        [ column_commalist ]
+    FROM
+        [ user_name '.' ] source_tbl_name
+        [ expression_commalist ]
+    [ where_clause ]
+    [ limit_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00847" -->
+
+
 [where_clause ::=](#where_clause), [limit_clause
 ::=](#limit_clause)
 
@@ -65346,9 +69272,25 @@ iSQL> UPDATE simple_emp SET salary=3000 WHERE dname='RESEARCH DEVELOPMENT DEPT 1
 
 ![column_commalist_image239](media/SQL/column_commalist_image239.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00848" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13727" image_path_raw="media/SQL/column_commalist_image239.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_commalist ::=
+    '(' column_name { ',' column_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00848" -->
+
+
 **expression_commalist ::=**
 
 ![expression_commalist_image240](media/SQL/expression_commalist_image240.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00849" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13731" image_path_raw="media/SQL/expression_commalist_image240.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+expression_commalist ::=
+    '(' expr { ',' expr } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00849" -->
+
 
 #### Prerequisites
 
@@ -65416,21 +69358,79 @@ iSQL> MOVE INTO T1 FROM T2(I1, I2, I3);
 
 ![merge](media/SQL/merge.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00850" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13797" image_path_raw="media/SQL/merge.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge ::=
+    MERGE [ hints ] INTO
+        [ user_name '.' ] tbl_name
+        [ t_alias ]
+    USING
+        [ user_name '.' ] { tbl_name | view_name }
+        [ t_alias ]
+    ON '(' search_condition ')'
+    merge_operation_spec
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00850" -->
+
+
 **merge_operation_spec ::=**
 
 ![merge_operation_spec](media/SQL/merge_operation_spec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00851" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13801" image_path_raw="media/SQL/merge_operation_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_operation_spec ::=
+    { matched_update_clause
+    | not_matched_insert_clause
+    | no_rows_insert_clause
+    }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00851" -->
+
 
 **matched_update_clause ::=**
 
 ![merge_matched_update_clause](media/SQL/merge_matched_update_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00852" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13805" image_path_raw="media/SQL/merge_matched_update_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+matched_update_clause ::=
+    WHEN MATCHED THEN
+    UPDATE SET set_clause_list
+    [ limit_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00852" -->
+
+
 **not_matched_insert_clause::=**
 
 ![merge_not_matched_insert_clause](media/SQL/merge_not_matched_insert_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00853" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13809" image_path_raw="media/SQL/merge_not_matched_insert_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+not_matched_insert_clause ::=
+    WHEN NOT MATCHED THEN INSERT
+    [ '(' insert_column_list ')' ]
+    VALUES '(' values_clause ')'
+    [ where_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00853" -->
+
+
 **no_rows_insert_clause ::=**
 
 ![merge_no_rows_insert_clause](media/SQL/merge_no_rows_insert_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00854" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="13813" image_path_raw="media/SQL/merge_no_rows_insert_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_rows_insert_clause ::=
+    WHEN NO ROWS THEN INSERT
+    [ '(' insert_column_list ')' ]
+    VALUES '(' values_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00854" -->
+
 
 #### Prerequisites
 
@@ -65634,9 +69634,25 @@ EMPNO       LASTNAME
 
 ![enqueue_image242](media/SQL/enqueue_image242.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00855" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14015" image_path_raw="media/SQL/enqueue_image242.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+enqueue ::=
+    ENQUEUE INTO queue_name '(' column_name { ',' column_name } ')' values_clause ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00855" -->
+
+
 **values_clause ::=**
 
 ![values_clause_image243](media/SQL/values_clause_image243.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00856" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14019" image_path_raw="media/SQL/values_clause_image243.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+values_clause ::=
+    VALUES '(' { expr | DEFAULT } { ',' { expr | DEFAULT } } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00856" -->
+
 
 #### Description
 
@@ -65668,9 +69684,33 @@ ENQUEUE INTO Q1(message,corrid) VALUES ('This is a message', 237);
 
 ![dequeue_image244](media/SQL/dequeue_image244.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00857" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14049" image_path_raw="media/SQL/dequeue_image244.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dequeue ::=
+    DEQUEUE queue_column_list FROM queue_name
+    [ where_clause ]
+    fifo_option
+    [ WAIT integer ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00857" -->
+
+
 **fifo_option ::=**
 
 ![fifo_image244](media/SQL/fifo_image244.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00858" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14053" image_path_raw="media/SQL/fifo_image244.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dequeue ::=
+    DEQUEUE queue_column_list FROM queue_name
+    [ where_clause ]
+    fifo_option
+    [ WAIT integer ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00858" -->
+
 
 #### Description
 
@@ -65714,6 +69754,17 @@ This chapter explains each of the Data Control Language (DCL) statements that ar
 
 ![alter_replication_dcl](media/SQL/alter_replication_dcl.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00859" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14095" image_path_raw="media/SQL/alter_replication_dcl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_replication_dcl ::=
+    { ALTER | STOP | FLUSH } REPLICATION replication_name
+    [ ALL ]
+    [ WAIT wait_time ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00859" -->
+
+
 #### Description
 
 ALTER REPLICATION controls the operation of a replication object that has been created with the CREATE REPLICATION statement. For more information about replication, please refer to the *Replication Manual.* 
@@ -65752,19 +69803,57 @@ If this is used together with the ALL option, the current session is instructed 
 
 ![alter_session_image246](media/SQL/alter_session_image246.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00860" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14133" image_path_raw="media/SQL/alter_session_image246.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_session ::=
+    ALTER SESSION
+        { alter_session_set_clause
+        | replication_mode_set_clause
+        | dblink_session_close_clause
+        | set_transaction_clause
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00860" -->
+
+
 [set_transaction_clause::=](#set_transaction)
 
 **alter_session_set_clause::=**
 
 ![alter_session_set_clause_image247](media/SQL/alter_session_set_clause_image247.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00861" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14139" image_path_raw="media/SQL/alter_session_set_clause_image247.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_session_set_clause ::=
+    SET property_name '=' property_value
+```
+<!-- IMG_RECOVERY_END ref_id="img-00861" -->
+
+
 **replication_mode_set_clause::=**
 
 ![replication_mode_set_clause_image248](media/SQL/replication_mode_set_clause_image248.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00862" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14143" image_path_raw="media/SQL/replication_mode_set_clause_image248.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+replication_mode_set_clause ::=
+    SET REPLICATION '=' { DEFAULT | NONE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00862" -->
+
+
 **dblink_session_close_clause::=**
 
 ![dblink_session_close_clause_image249](media/SQL/dblink_session_close_clause_image249.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00863" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14147" image_path_raw="media/SQL/dblink_session_close_clause_image249.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dblink_session_close_clause ::=
+    CLOSE DATABASE LINK { ALL | dblink_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00863" -->
+
 
 #### Description
 
@@ -65810,9 +69899,37 @@ iSQL> ALTER SESSION CLOSE DATABASE LINK ALL;
 
 ![alter_system](media/SQL/alter_system.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00864" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14191" image_path_raw="media/SQL/alter_system.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_system ::=
+    ALTER SYSTEM
+        { CHECKPOINT
+        | MEMORY COMPACT
+        | { START | STOP } FLUSHER integer
+        | ARCHIVE LOG { START | STOP }
+        | SWITCH LOGFILE
+        | SET alter_system_set_clause
+        | FLUSH BUFFER_POOL
+        | { COMPACT | RESET } SQL_PLAN_CACHE
+        | { START | STOP | RELOAD } AUDIT
+        | RELOAD ACCESS LIST
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00864" -->
+
+
 **alter_system_set_clause ::=**
 
 ![alter_session_set_clause_image247](media/SQL/alter_session_set_clause_image247.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00865" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14195" image_path_raw="media/SQL/alter_session_set_clause_image247.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_session_set_clause ::=
+    SET property_name '=' property_value
+```
+<!-- IMG_RECOVERY_END ref_id="img-00865" -->
+
 
 #### Description
 
@@ -65892,21 +70009,71 @@ iSQL> ALTER SYSTEM ARCHIVE LOG START;
 
 ![audit](media/SQL/audit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00866" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14273" image_path_raw="media/SQL/audit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit ::=
+    AUDIT
+        { audit_operation_clause
+        | audit_object_clause
+        | ddl_clause
+        }
+    [ WHENEVER [ NOT ] SUCCESSFUL ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00866" -->
+
+
 **audit_operation_clause ::=**
 
 ![audit_operation_clause](media/SQL/audit_operation_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00867" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14277" image_path_raw="media/SQL/audit_operation_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_operation_clause ::=
+    { ALL | sql_statement_type { ',' sql_statement_type } }
+    [ by_clause ]
+    [ BY { ACCESS | SESSION } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00867" -->
+
 
 **by_clause ::=**
 
 ![audit_by_clause](media/SQL/audit_by_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00868" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14281" image_path_raw="media/SQL/audit_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+by_clause ::=
+    BY user_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00868" -->
+
+
 **audit_object_clause ::=**
 
 ![audit_object_clause](media/SQL/audit_object_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00869" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14285" image_path_raw="media/SQL/audit_object_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_object_clause ::=
+    { ALL | sql_operation { ',' sql_operation } }
+    ON [ user_name '.' ] object_name
+    [ BY { ACCESS | SESSION } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00869" -->
+
+
 **ddl_clause ::=**
 
 ![audit_ddl_clause](media/SQL/audit_ddl_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00870" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14289" image_path_raw="media/SQL/audit_ddl_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ddl_clause ::=
+    DDL by_clause { by_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00870" -->
+
 
 #### Prerequisites
 
@@ -66053,6 +70220,14 @@ Audit success.
 
 ![commit_image252](media/SQL/commit_image252.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00871" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14434" image_path_raw="media/SQL/commit_image252.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+commit ::=
+    COMMIT [ WORK ] [ FORCE global_tx_id ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00871" -->
+
+
 #### Description
 
 The COMMIT statement explicitly commits the current transaction to the database. This statement is useful when AUTOCOMMIT mode has been set to FALSE.
@@ -66090,13 +70265,42 @@ Commit success.
 
 ![delaudit](media/SQL/delaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00872" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14471" image_path_raw="media/SQL/delaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delaudit ::=
+    DELAUDIT
+        { by_clause
+        | ALL
+        | delaudit_object_clause
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00872" -->
+
+
 **delaudit_user_clause ::=**
 
 ![delaudit_user_clause](media/SQL/delaudit_user_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00873" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14475" image_path_raw="media/SQL/delaudit_user_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+by_clause ::=
+    BY user_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00873" -->
+
+
 **delaudit_object_clause ::=**
 
 ![delaudit_object_clause](media/SQL/delaudit_object_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00874" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14479" image_path_raw="media/SQL/delaudit_object_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delaudit_object_clause ::=
+    ON [ user_name '.' ] object_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00874" -->
+
 
 #### Prerequisites
 
@@ -66158,21 +70362,69 @@ Audit success.
 
 ![noaudit](media/SQL/noaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00875" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14539" image_path_raw="media/SQL/noaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+noaudit ::=
+    NOAUDIT
+        { audit_operation_clause
+        | audit_object_clause
+        | ddl_clause
+        }
+    [ WHENEVER [ NOT ] SUCCESSFUL ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00875" -->
+
+
 **audit_operation_clause ::=**
 
 ![noaudit_operation_clause](media/SQL/noaudit_operation_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00876" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14543" image_path_raw="media/SQL/noaudit_operation_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_operation_clause ::=
+    { ALL | sql_statement_type { ',' sql_statement_type } }
+    [ by_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00876" -->
+
 
 **by_clause ::=**
 
 ![noaudit_by_clause](media/SQL/noaudit_by_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00877" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14547" image_path_raw="media/SQL/noaudit_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+by_clause ::=
+    BY [ user_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00877" -->
+
+
 **audit_object_clause ::=**
 
 ![noaudit_object_clause](media/SQL/noaudit_object_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00878" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14551" image_path_raw="media/SQL/noaudit_object_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_object_clause ::=
+    { ALL | sql_operation { ',' sql_operation } }
+    ON [ user_name '.' ] object_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-00878" -->
+
+
 **ddl_clause ::=**
 
 ![audit_ddl_clause](media/SQL/audit_ddl_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00879" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14555" image_path_raw="media/SQL/audit_ddl_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ddl_clause ::=
+    DDL by_clause { by_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00879" -->
+
 
 #### Prerequisites
 
@@ -66255,6 +70507,14 @@ Audit success.
 
 ![savepoint_image253](media/SQL/savepoint_image253.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00880" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14636" image_path_raw="media/SQL/savepoint_image253.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+savepoint ::=
+    SAVEPOINT savepoint_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00880" -->
+
+
 #### Description
 
 This statement is used to create a savepoint, which means to temporarily save the result of transaction processing up to the current point in time. In other words, SAVEPOINT is used to explicitly define a point within a transaction to which the transaction can be rolled back. This statement is useful in non-autocommit mode, that is, when AUTOCOMMIT mode has been set to FALSE.
@@ -66307,6 +70567,14 @@ Commit success.
 **rollback ::=**
 
 ![rollback_image253](media/SQL/rollback_image253.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00881" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14689" image_path_raw="media/SQL/rollback_image253.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+savepoint ::=
+    SAVEPOINT savepoint_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00881" -->
+
 
 #### Description
 
@@ -66427,6 +70695,23 @@ Commit success.
 **set_transaction ::=**
 
 ![set_transaction_image255](media/SQL/set_transaction_image255.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00882" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="14809" image_path_raw="media/SQL/set_transaction_image255.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_transaction ::=
+    SET TRANSACTION
+        { READ ONLY
+        | READ WRITE
+        | ISOLATION LEVEL
+            { READ COMMITTED
+            | REPEATABLE READ
+            | SERIALIZABLE
+            }
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00882" -->
+
 
 #### Description
 
@@ -66871,6 +71156,14 @@ COVAR_POP(ENO,SALARY)
 
 ![cume_dist_with_group](media/SQL/cume_dist_with_group.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00883" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15252" image_path_raw="media/SQL/cume_dist_with_group.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cume_dist_with_group ::=
+    CUME_DIST '(' expr { ',' expr } ')' WITHIN GROUP '(' window_order_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00883" -->
+
+
 [window_order_clause::=](#window_order_clause)
 
 ##### Description
@@ -66921,6 +71214,19 @@ CUME_DIST(1500) within group (order by SAL
 ##### Syntax
 
 ![first_clause](media/SQL/first_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00884" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15303" image_path_raw="media/SQL/first_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+first_clause ::=
+    aggregate_function KEEP
+    '(' DENSE_RANK FIRST ORDER BY
+        expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ]
+        { ',' expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ] }
+    ')'
+    [ OVER '(' [ query_partition_clause ] ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00884" -->
+
 
 ##### Description
 
@@ -67004,6 +71310,19 @@ Davenport
 ##### Syntax
 
 ![last_clause](media/SQL/last_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00885" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15386" image_path_raw="media/SQL/last_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+last_clause ::=
+    aggregate_function KEEP
+    '(' DENSE_RANK LAST ORDER BY
+        expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ]
+        { ',' expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ] }
+    ')'
+    [ OVER '(' [ query_partition_clause ] ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00885" -->
+
 
 ##### Description
 
@@ -67095,6 +71414,14 @@ MIN(PRICE)
 
 ![percent_rank_with_group](media/SQL/percent_rank_with_group.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00886" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15476" image_path_raw="media/SQL/percent_rank_with_group.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+percent_rank_with_group ::=
+    PERCENT_RANK '(' expr { ',' expr } ')' WITHIN GROUP '(' window_order_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00886" -->
+
+
 [window_order_clause::=](#window_order_clause)
 
 ##### Description
@@ -67146,6 +71473,23 @@ RNK
 ##### Syntax 
 
 ![stats_one_way_anova](media/SQL/stats_one_way_anova.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00887" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15528" image_path_raw="media/SQL/stats_one_way_anova.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+stats_one_way_anova ::=
+    STATS_ONE_WAY_ANOVA '(' expr1 ',' expr2
+        [ ',' { SIG
+               | F_RATIO
+               | MEAN_SQUARES_WITHIN
+               | MEAN_SQUARES_BETWEEN
+               | DF_WITHIN
+               | DF_BETWEEN
+               | SUM_SQUARES_WITHIN
+               | SUM_SQUARES_BETWEEN } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00887" -->
+
 
 ##### Description
 
@@ -67504,13 +71848,38 @@ Descriptions on other functions other than aggregate functions are provided in t
 
 ![window_funtion](media/SQL/window_funtion.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00888" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15885" image_path_raw="media/SQL/window_funtion.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_function ::=
+    window_function '(' [ arg_expr ] ')' [ IGNORE NULLS ]
+    OVER '(' window_specification ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00888" -->
+
+
 **window_specification ::=**
 
 ![window_specification](media/SQL/window_specification.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00889" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15889" image_path_raw="media/SQL/window_specification.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_specification ::=
+    [ window_partition_clause ] [ window_order_clause ] [ window_frame_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00889" -->
+
+
 **window_partition_clause ::=**
 
 ![](media/SQL/c757b5e78596fe30326cd3b8207e582e.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00890" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15893" image_path_raw="media/SQL/c757b5e78596fe30326cd3b8207e582e.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_partition_clause ::=
+    PARTITION BY expr { ',' expr }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00890" -->
+
 
 <a name="window_order_clause"><a/>
 
@@ -67518,9 +71887,35 @@ Descriptions on other functions other than aggregate functions are provided in t
 
 ![window_order_clause](media/SQL/window_order_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00891" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15899" image_path_raw="media/SQL/window_order_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_order_clause ::=
+    ORDER BY expr [ ASC | DESC ] [ NULLS FIRST | NULLS LAST ]
+             { ',' expr [ ASC | DESC ] [ NULLS FIRST | NULLS LAST ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00891" -->
+
+
 **window_frame_clause ::=**
 
 ![window_frame_clause](media/SQL/window_frame_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00892" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="15903" image_path_raw="media/SQL/window_frame_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_frame_clause ::=
+    { ROWS | RANGE }
+    { BETWEEN { UNBOUNDED PRECEDING
+               | CURRENT ROW
+               | value { PRECEDING | FOLLOWING } }
+      AND     { UNBOUNDED FOLLOWING
+               | CURRENT ROW
+               | value { PRECEDING | FOLLOWING } }
+    | UNBOUNDED PRECEDING
+    | CURRENT ROW
+    | value PRECEDING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00892" -->
+
 
 #### Description
 
@@ -67773,6 +72168,16 @@ Same as the LEAD function
 
 ![listagg](media/SQL/listagg.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00893" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="16154" image_path_raw="media/SQL/listagg.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+listagg ::=
+    LISTAGG '(' expr [ ',' arg ] ')' WITHIN GROUP
+    '(' order_by_clause ')'
+    [ OVER '(' PARTITION BY expr { ',' expr } ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00893" -->
+
+
 ##### Description
 
 LISTAGG converts column values that correspond to *exp* as a column, in the order specified for *order_by_clause. arg* separates the returned string; on omission, the string is not separated. 
@@ -67910,6 +72315,14 @@ Same as the NTH_VALUE function.
 
 ![](media/SQL/6f2150471eaa21981888a7750e6f7ff1.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00894" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="16291" image_path_raw="media/SQL/6f2150471eaa21981888a7750e6f7ff1.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+ntile ::=
+    NTILE '(' expr ')' OVER '(' [ window_partition_clause ] order_by_caluse ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00894" -->
+
+
 [window_partition_clause::=](#window_partition_clause)
 
 ##### Description
@@ -67954,6 +72367,15 @@ William                           3
 ##### Syntax 
 
 ![percentile_cont](media/SQL/percentile_cont.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00895" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="16336" image_path_raw="media/SQL/percentile_cont.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+percentile_cont ::=
+    PERCENTILE_CONT '(' expr1 ')' WITHIN GROUP '(' ORDER BY expr2 [ ASC | DESC ] ')'
+    [ OVER '(' PARTITION BY expr ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00895" -->
+
 
 ##### Description 
 
@@ -68027,6 +72449,15 @@ EMPNO median asc cont median desc cont
 
 ![percentile_disc](media/SQL/percentile_disc.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00896" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="16408" image_path_raw="media/SQL/percentile_disc.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+percentile_disc ::=
+    PERCENTILE_DISC '(' expr1 ')' WITHIN GROUP '(' ORDER BY expr2 [ ASC | DESC ] ')'
+    [ OVER '(' PARTITION BY expr ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00896" -->
+
+
 ##### Description
 
 PERCENTILE_DISC is an inverse distribution function based on a discrete distribution model, which sorts values and returns a value corresponding to the specified percentile value. This function returns a FLOAT data type and ignores nulls. 
@@ -68099,6 +72530,14 @@ EMPNO median asc cont median desc cont
 
 ![rank_with_group](media/SQL/rank_with_group.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00897" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="16480" image_path_raw="media/SQL/rank_with_group.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rank_with_group ::=
+    RANK '(' expr { ',' expr } ')' WITHIN GROUP '(' window_order_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00897" -->
+
+
 [window_order_clause::=](#window_order_clause)
 
 ##### Description
@@ -68150,6 +72589,14 @@ RNK
 ##### Syntax
 
 ![ratio_to_report](media/SQL/ratio_to_report.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00898" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="16532" image_path_raw="media/SQL/ratio_to_report.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ratio_to_report ::=
+    RATIO_TO_REPORT '(' expr ')' OVER '(' [ window_partition_clause ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00898" -->
+
 
 [window_partition_clause::=](#window_partition_clause)
 
@@ -72651,17 +77098,49 @@ Wang                  Xiong                 manager          NULL
 
 ![case](media/SQL/case.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00899" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="21032" image_path_raw="media/SQL/case.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case ::=
+    CASE { simple_case_expr | searched_case_expr } [ else_clause ] END
+```
+<!-- IMG_RECOVERY_END ref_id="img-00899" -->
+
+
 **simple_case_expr**
 
 ![simple_case_expr](media/SQL/simple_case_expr.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00900" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="21036" image_path_raw="media/SQL/simple_case_expr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+simple_case_expr ::=
+    expr { WHEN comparison_expr THEN return_expr }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00900" -->
+
 
 **searched_case_expr**
 
 ![searched_case_expr](media/SQL/searched_case_expr.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00901" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="21040" image_path_raw="media/SQL/searched_case_expr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+searched_case_expr ::=
+    { WHEN condition THEN return_expr }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00901" -->
+
+
 **else_clause**
 
 ![else_clause](media/SQL/else_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00902" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="21044" image_path_raw="media/SQL/else_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+else_clause ::=
+    ELSE else_expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-00902" -->
+
 
 ##### Description
 
@@ -73843,6 +78322,14 @@ ID          Path
 
 ![](media/SQL/091919f332dcfd2bb254326b412e7d35.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00903" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="22224" image_path_raw="media/SQL/091919f332dcfd2bb254326b412e7d35.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+sys_context ::=
+    SYS_CONTEXT '(' namespace ',' parameter ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00903" -->
+
+
 ##### Description
 
 The SYS_CONTEXT function returns the value of parameters related to the namespace with the environment context of currently accessed session.
@@ -74457,6 +78944,22 @@ Comparison conditions can be broadly classified into simple comparison condition
 
 ![simple_comparison_condition_image260](media/SQL/simple_comparison_condition_image260.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00904" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="22838" image_path_raw="media/SQL/simple_comparison_condition_image260.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+simple_comparison_condition ::=
+    { expr | '(' subquery ')' }
+    { '=' | '!=' | '<>' | '>' | '<' | '>=' | '<=' }
+    { expr | '(' subquery ')' }
+  | '(' expr { ',' expr } ')'
+    { '=' | '<>' | '!=' }
+    '(' expr { ',' expr } ')'
+  | '(' expr { ',' expr } ')'
+    { '=' | '<>' | '!=' }
+    '(' subquery ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00904" -->
+
+
 ##### Description
 
 Simple comparison conditions compare the expressions on the left and right on the basis of the specified operator and return TRUE, FALSE or UNKNOWN. 
@@ -74497,6 +79000,22 @@ TM-U950    8000     96200      769600000
 **group_comparison_condition ::=**
 
 ![group_comparison_condition_image267](media/SQL/group_comparison_condition_image267.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00905" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="22879" image_path_raw="media/SQL/group_comparison_condition_image267.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_comparison_condition ::=
+    expr
+    { '=' | '!=' | '<>' | '>' | '<' | '>=' | '<=' }
+    { ANY | SOME | ALL }
+    { '(' expr { ',' expr } ')' | '(' subquery ')' }
+  | '(' expr { ',' expr } ')'
+    { '=' | '!=' | '<>' }
+    { ANY | SOME | ALL }
+    '(' { '(' expr { ',' expr } ')' { ',' '(' expr { ',' expr } ')' }
+        | subquery ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00905" -->
+
 
 ##### Description
 
@@ -74548,6 +79067,14 @@ ONO                  ORDER_DATE   PROCESSING
 
 ![between_image261](media/SQL/between_image261.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00906" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="22929" image_path_raw="media/SQL/between_image261.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+between_condition ::=
+    expr [ NOT ] BETWEEN expr AND expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-00906" -->
+
+
 ##### Description
 
 BETWEEN comparisons are used to check whether a value falls within a given range.
@@ -74581,6 +79108,14 @@ M-T500     5000       1000.54   5002700
 **exists_condition ::=**
 
 ![exists_image265](media/SQL/exists_image265.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00907" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="22963" image_path_raw="media/SQL/exists_image265.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exists_condition ::=
+    EXISTS '(' subquery ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00907" -->
+
 
 ##### Description
 
@@ -74640,6 +79175,17 @@ No rows selected.
 
 ![in_image262](media/SQL/in_image262.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00908" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="23021" image_path_raw="media/SQL/in_image262.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+in_condition ::=
+    expr [ NOT ] IN { '(' expr { ',' expr } ')' | '(' subquery ')' }
+  | '(' expr { ',' expr } ')' [ NOT ] IN
+    '(' { '(' expr { ',' expr } ')' { ',' '(' expr { ',' expr } ')' }
+        | subquery ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-00908" -->
+
+
 ##### Description
 
 The IN condition is the same as a group comparison using the '=ANY' condition. This kind of condition returns TRUE if the expression on the left matches any of the expressions on the right. 
@@ -74695,6 +79241,14 @@ Sanchez               Estevan
 
 ![inlist_operator](media/SQL/inlist_operator.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00909" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="23076" image_path_raw="media/SQL/inlist_operator.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+inlist_condition ::=
+    [ NOT ] INLIST '(' expr ',' comma_separated_values ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00909" -->
+
+
 ##### Description
 
 The INLIST condition returns TRUE if any of the individual values in *comma_separated_values* match expr.
@@ -74733,6 +79287,14 @@ DNO         E_FIRSTNAME           E_LASTNAME
 
 ![isnull_image264](media/SQL/isnull_image264.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00910" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="23114" image_path_raw="media/SQL/isnull_image264.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+isnull_condition ::=
+    expr IS [ NOT ] NULL
+```
+<!-- IMG_RECOVERY_END ref_id="img-00910" -->
+
+
 ##### Description
 
 The IS NULL condition is used to check whether or not the expression is NULL.
@@ -74762,6 +79324,14 @@ ENO         E_FIRSTNAME           E_LASTNAME            EMP_JOB
 **like_condition ::=**
 
 ![like_image263](media/SQL/like_image263.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00911" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="23144" image_path_raw="media/SQL/like_image263.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+like_condition ::=
+    expr [ NOT ] LIKE expr [ ESCAPE char_literal indexdesc_hint char_literal ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-00911" -->
+
 
 ##### Description
 
@@ -74829,6 +79399,14 @@ John
 
 ![regexp_like_condition](media/SQL/regexp_like_condition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00912" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="23210" image_path_raw="media/SQL/regexp_like_condition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+regexp_like_condition ::=
+    [ NOT ] REGEXP_LIKE '(' source_expr ',' pattern_expr ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00912" -->
+
+
 ##### Description
 
 REGEXP_LIKE is similar to the LIKE condition. While LIKE performs simple pattern matching, REGEXP_LIKE performs regular expression matching. Altibase supports POSIX Basic Regular Expression (BRE). For more detailed information on regular expressions, please refer to Appendix A. Regular Expressions.
@@ -74875,6 +79453,14 @@ ENO         E_LASTNAME            EMP_JOB
 **unique_condition ::=**
 
 ![unique_image266](media/SQL/unique_image266.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-00913" source_md="Manuals/Altibase_7.1/eng/SQL Reference.md" line_no="23257" image_path_raw="media/SQL/unique_image266.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unique_condition ::=
+    UNIQUE '(' subquery ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-00913" -->
+
 
 ##### Description
 
@@ -76799,6 +81385,14 @@ hints ::=
 
 ![hint](media/SQL/hint.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01626" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1582" image_path_raw="media/SQL/hint.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hints ::=
+    '/*+' hint [ { hint } ] '*/'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01626" -->
+
+
 #### 전제 조건
 
 힌트는 아래의 구문에 명시할 수 있다
@@ -77126,6 +81720,14 @@ INSERT와 관련된 통계 정보는 V\$DIRECT_PATH_INSERT 성능 뷰를 조회�
 
 ![append](media/SQL/append.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01627" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1909" image_path_raw="media/SQL/append.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+append ::=
+    APPEND
+```
+<!-- IMG_RECOVERY_END ref_id="img-01627" -->
+
+
 #### CNF
 
 WHERE절의 조건문들을 Conjunctive Normal Form으로 정규화할 것을 지시하는
@@ -77133,11 +81735,27 @@ WHERE절의 조건문들을 Conjunctive Normal Form으로 정규화할 것을 �
 
 ![cnf](media/SQL/cnf.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01628" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1916" image_path_raw="media/SQL/cnf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cnf ::=
+    CNF
+```
+<!-- IMG_RECOVERY_END ref_id="img-01628" -->
+
+
 #### COST
 
 비용 기반으로 최적화된 실행 계획을 생성하도록 지시하는 힌트이다.
 
 ![cost](media/SQL/cost.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01629" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1922" image_path_raw="media/SQL/cost.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cost ::=
+    COST
+```
+<!-- IMG_RECOVERY_END ref_id="img-01629" -->
+
 
 #### DELAY 
 
@@ -77147,11 +81765,27 @@ windowing, grouping, set, distinction의 실행(execute)이 패치(fetch)에서
 
 ![](media/SQL/8aeb39dd922ed0ce238bc037fcc1b2f2.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01630" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1930" image_path_raw="media/SQL/8aeb39dd922ed0ce238bc037fcc1b2f2.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+delay ::=
+    DELAY
+```
+<!-- IMG_RECOVERY_END ref_id="img-01630" -->
+
+
 #### DISTINCT_HASH
 
 해싱 방식으로 DISTINCT를 처리할 것을 지시하는 힌트이다.
 
 ![distinct_hash](media/SQL/distinct_hash.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01631" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1936" image_path_raw="media/SQL/distinct_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+distinct_hash ::=
+    DISTINCT_HASH
+```
+<!-- IMG_RECOVERY_END ref_id="img-01631" -->
+
 
 #### DISTINCT_SORT
 
@@ -77159,12 +81793,28 @@ windowing, grouping, set, distinction의 실행(execute)이 패치(fetch)에서
 
 ![distinct_sort](media/SQL/distinct_sort.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01632" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1942" image_path_raw="media/SQL/distinct_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+distinct_sort ::=
+    DISTINCT_SORT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01632" -->
+
+
 #### DNF
 
 WHERE절의 조건문들을 Disjunctive Normal Form으로 정규화할 것을 지시하는
 힌트이다.
 
 ![dnf](media/SQL/dnf.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01633" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1949" image_path_raw="media/SQL/dnf.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dnf ::=
+    DNF
+```
+<!-- IMG_RECOVERY_END ref_id="img-01633" -->
+
 
 #### EXEC_FAST 
 
@@ -77174,6 +81824,14 @@ QUERY가 적용된 경우 실행 계획에 출력된다.
 
 ![](media/SQL/b4dbcc345d928a319bb06d8f68f29338.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01634" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1957" image_path_raw="media/SQL/b4dbcc345d928a319bb06d8f68f29338.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+exec_fast ::=
+    EXEC_FAST
+```
+<!-- IMG_RECOVERY_END ref_id="img-01634" -->
+
+
 #### FIRST_ROWS
 
 처음 *n*개의 행을 가장 효율적으로 반환할 수 있는 실행 계획을 생성하도록 지시하는
@@ -77181,11 +81839,27 @@ QUERY가 적용된 경우 실행 계획에 출력된다.
 
 ![first_rows](media/SQL/first_rows.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01635" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1964" image_path_raw="media/SQL/first_rows.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+first_rows ::=
+    FIRST_ROWS '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01635" -->
+
+
 #### FULL SCAN
 
 명시한 테이블에 대해 테이블 전체 스캔을 수행할 것을 지시하는 힌트이다.
 
 ![full scan](media/SQL/full%20scan.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01636" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1970" image_path_raw="media/SQL/full%20scan.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+full_scan ::=
+    FULL SCAN '(' tbl_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01636" -->
+
 
 #### GROUP BUCKET COUNT
 
@@ -77193,17 +81867,41 @@ GROUP-AGGREGATION과 AGGREGATION 실행 노드의 해시 버킷 수를 지정하
 
 ![group bucket count](media/SQL/group%20bucket%20count.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01637" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1976" image_path_raw="media/SQL/group%20bucket%20count.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_bucket_count ::=
+    GROUP BUCKET COUNT '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01637" -->
+
+
 #### GROUP_HASH
 
 해싱 방식으로 GROUP BY절을 처리할 것을 지시하는 힌트이다.
 
 ![group_hash](media/SQL/group_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01638" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1982" image_path_raw="media/SQL/group_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_hash ::=
+    GROUP_HASH
+```
+<!-- IMG_RECOVERY_END ref_id="img-01638" -->
+
+
 #### GROUP_SORT
 
 정렬 방식으로 GROUP BY절을 처리할 것을 지시하는 힌트이다.
 
 ![group_sort](media/SQL/group_sort.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01639" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1988" image_path_raw="media/SQL/group_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_sort ::=
+    GROUP_SORT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01639" -->
+
 
 #### HASH_AJ
 
@@ -77213,11 +81911,27 @@ GROUP-AGGREGATION과 AGGREGATION 실행 노드의 해시 버킷 수를 지정하
 
 ![hash_aj](media/SQL/hash_aj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01640" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="1996" image_path_raw="media/SQL/hash_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_aj ::=
+    HASH_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01640" -->
+
+
 #### HASH BUCKET COUNT
 
 HASH와 DISTINCT 실행 노드의 해시 버킷 수를 지정하는 힌트이다.
 
 ![hash bucket count](media/SQL/hash%20bucket%20count.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01641" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2002" image_path_raw="media/SQL/hash%20bucket%20count.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_bucket_count ::=
+    HASH BUCKET COUNT '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01641" -->
+
 
 #### HASH_SJ
 
@@ -77226,6 +81940,14 @@ HASH와 DISTINCT 실행 노드의 해시 버킷 수를 지정하는 힌트이다
 풀리지 않는 경우에는 효과가 없다.
 
 ![hash_sj](media/SQL/hash_sj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01642" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2010" image_path_raw="media/SQL/hash_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_sj ::=
+    HASH_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01642" -->
+
 
 #### HIGH_PRECISION
 
@@ -77237,12 +81959,28 @@ HASH와 DISTINCT 실행 노드의 해시 버킷 수를 지정하는 힌트이다
 
 ![](media/SQL/8b81157ae9e013610fec42063de0648f.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01643" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2020" image_path_raw="media/SQL/8b81157ae9e013610fec42063de0648f.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+high_precision ::=
+    HIGH_PRECISION
+```
+<!-- IMG_RECOVERY_END ref_id="img-01643" -->
+
+
 #### INDEX
 
 명시된 인덱스를 사용하여 해당 테이블에 대해서 인덱스 스캔을 수행하도록 지시하는
 힌트이다.
 
 ![index](media/SQL/index.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01644" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2027" image_path_raw="media/SQL/index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index ::=
+    INDEX '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01644" -->
+
 
 #### INDEX ASC
 
@@ -77251,11 +81989,27 @@ HASH와 DISTINCT 실행 노드의 해시 버킷 수를 지정하는 힌트이다
 
 ![index_asc](media/SQL/index_asc.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01645" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2034" image_path_raw="media/SQL/index_asc.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_asc ::=
+    INDEX [ ASC ] '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01645" -->
+
+
 #### INDEX_ASC
 
 INDEX ASC힌트와 같은 동작을 한다.
 
 ![](media/SQL/5a6888421179f4bed0963085e3a3f32a.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01646" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2040" image_path_raw="media/SQL/5a6888421179f4bed0963085e3a3f32a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_asc_alias ::=
+    INDEX_ASC '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01646" -->
+
 
 #### INDEX DESC
 
@@ -77264,11 +82018,27 @@ INDEX ASC힌트와 같은 동작을 한다.
 
 ![index desc](media/SQL/index%20desc.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01647" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2047" image_path_raw="media/SQL/index%20desc.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_desc ::=
+    INDEX [ DESC ] '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01647" -->
+
+
 #### INDEX_DESC
 
 INDEX DESC와 같은 동작을 한다
 
 ![](media/SQL/00429e82e80ed494c3a9750b7cf71ed6.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01648" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2053" image_path_raw="media/SQL/00429e82e80ed494c3a9750b7cf71ed6.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_desc_alias ::=
+    INDEX_DESC '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01648" -->
+
 
 #### INVERSE_JOIN
 
@@ -77283,6 +82053,14 @@ Inverse Hash 조인을 사용하도록 지시한다.
 
 ![inverse_join](media/SQL/inverse_join.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01649" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2066" image_path_raw="media/SQL/inverse_join.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+inverse_join ::=
+    INVERSE_JOIN
+```
+<!-- IMG_RECOVERY_END ref_id="img-01649" -->
+
+
 #### KEEP_PLAN
 
 KEEP_PLAN는 한 번 생성된 플랜이 참조하는 테이블의 통계 정보가 변경되더라도
@@ -77291,6 +82069,14 @@ KEEP_PLAN는 한 번 생성된 플랜이 참조하는 테이블의 통계 정보
 가능하다.
 
 ![keep_plan](media/SQL/keep_plan.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01650" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2075" image_path_raw="media/SQL/keep_plan.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+keep_plan ::=
+    KEEP_PLAN
+```
+<!-- IMG_RECOVERY_END ref_id="img-01650" -->
+
 
 #### LEADING
 
@@ -77301,6 +82087,14 @@ ORDERED 힌트가 무시된다. 힌트에 사용된 테이블에 Lateral View를
 
 ![](media/SQL/leading.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01651" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2084" image_path_raw="media/SQL/leading.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+leading ::=
+    LEADING '(' tbl_name [ { ',' tbl_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01651" -->
+
+
 #### MERGE_AJ
 
 중첩된 부질의가 Merge Join을 사용하여 Anti Join 하도록 지시하는 힌트이다. 해당
@@ -77308,6 +82102,14 @@ ORDERED 힌트가 무시된다. 힌트에 사용된 테이블에 Lateral View를
 풀리거나, 풀 수 없는 경우에는 효과가 없다.
 
 ![merge_aj](media/SQL/merge_aj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01652" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2092" image_path_raw="media/SQL/merge_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_aj ::=
+    MERGE_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01652" -->
+
 
 #### MERGE_SJ
 
@@ -77317,6 +82119,14 @@ ORDERED 힌트가 무시된다. 힌트에 사용된 테이블에 Lateral View를
 
 ![merge_sj](media/SQL/merge_sj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01653" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2100" image_path_raw="media/SQL/merge_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_sj ::=
+    MERGE_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01653" -->
+
+
 #### NL_AJ
 
 중첩된 부질의가 Nested Loop Join을 사용하여 Anti Join 하도록 지시하는 힌트이다.
@@ -77324,6 +82134,14 @@ ORDERED 힌트가 무시된다. 힌트에 사용된 테이블에 Lateral View를
 풀리거나, 풀 수 없는 경우에는 효과가 없다.
 
 ![nl_aj](media/SQL/nl_aj.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01654" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2108" image_path_raw="media/SQL/nl_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+nl_aj ::=
+    NL_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01654" -->
+
 
 #### NL_SJ
 
@@ -77333,6 +82151,14 @@ ORDERED 힌트가 무시된다. 힌트에 사용된 테이블에 Lateral View를
 
 ![nl_sj](media/SQL/nl_sj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01655" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2116" image_path_raw="media/SQL/nl_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+nl_sj ::=
+    NL_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01655" -->
+
+
 #### NO_DELAY 
 
 쿼리의 프로퍼티와 상관없이 실행 계획의 그래프를 기준으로 hierarchy, sorting,
@@ -77341,6 +82167,14 @@ windowing, grouping, set, distinction의 실행(execute)이 패치(fetch)에서
 
 ![](media/SQL/32142706d7230ccce49718f7ff7c6ea7.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01656" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2124" image_path_raw="media/SQL/32142706d7230ccce49718f7ff7c6ea7.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_delay ::=
+    NO DELAY
+```
+<!-- IMG_RECOVERY_END ref_id="img-01656" -->
+
+
 #### NO_EXEC_FAST 
 
 EXECUTOR_FAST_SIMPLE_QUERY 프로퍼티가 활성화된 상태에서 힌트가 명시되면, 단순한
@@ -77348,11 +82182,27 @@ SELECT, INSERT, UPDATE, DELETE 구문이더라도 SIMPLE QUERY로 동작되지 �
 
 ![](media/SQL/c4e80442b87071d82f3fd86145afc3f5.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01657" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2131" image_path_raw="media/SQL/c4e80442b87071d82f3fd86145afc3f5.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_exec_fast ::=
+    NO_EXEC_FAST
+```
+<!-- IMG_RECOVERY_END ref_id="img-01657" -->
+
+
 #### NO_EXPAND
 
 CNF힌트와 같은 동작을 한다.
 
 ![](media/SQL/aeeecf55495aecd36a8e7a2cf387657d.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01658" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2137" image_path_raw="media/SQL/aeeecf55495aecd36a8e7a2cf387657d.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_expand ::=
+    NO_EXPAND
+```
+<!-- IMG_RECOVERY_END ref_id="img-01658" -->
+
 
 #### NO INDEX
 
@@ -77361,11 +82211,27 @@ CNF힌트와 같은 동작을 한다.
 
 ![no index](media/SQL/no%20index.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01659" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2144" image_path_raw="media/SQL/no%20index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_index ::=
+    NO INDEX '(' tbl_name index_name [ { ',' index_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01659" -->
+
+
 #### NO_INDEX
 
 NO INDEX힌트와 같은 동작을 한다.
 
 ![](media/SQL/2ea4fa9a326a1b1a705f9cf1e5f0b0db.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01660" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2150" image_path_raw="media/SQL/2ea4fa9a326a1b1a705f9cf1e5f0b0db.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_index_alias ::=
+    NO_INDEX
+```
+<!-- IMG_RECOVERY_END ref_id="img-01660" -->
+
 
 #### NO_INVERSE_JOIN
 
@@ -77379,11 +82245,27 @@ Join과 Two-Pass Hash Join 중 하나를 사용하도록 지시한다.
 
 ![no_inverse_join](media/SQL/no_inverse_join.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01661" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2162" image_path_raw="media/SQL/no_inverse_join.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_inverse_join ::=
+    NO_INVERSE_JOIN
+```
+<!-- IMG_RECOVERY_END ref_id="img-01661" -->
+
+
 #### NO_MERGE
 
 메인 쿼리와 인라인 뷰 쿼리를 하나의 쿼리로 병합하지 않도록 지시하는 힌트이다.
 
 ![no_merge](media/SQL/no_merge.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01662" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2168" image_path_raw="media/SQL/no_merge.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_merge ::=
+    NO_MERGE '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01662" -->
+
 
 #### NO_PARALLEL
 
@@ -77391,17 +82273,41 @@ NOPARALLEL 힌트와 같은 동작을 한다.
 
 ![](media/SQL/37ef48e6ff8bf73f864afdbb842349b3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01663" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2174" image_path_raw="media/SQL/37ef48e6ff8bf73f864afdbb842349b3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_parallel ::=
+    NO_PARALLEL
+```
+<!-- IMG_RECOVERY_END ref_id="img-01663" -->
+
+
 #### NO_PLAN_CACHE
 
 NO_PLAN_CACHE는 생성된 플랜을 플랜 캐시에 저장하지 않도록 지시하는 힌트이다.
 
 ![no_plan_cache](media/SQL/no_plan_cache.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01664" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2180" image_path_raw="media/SQL/no_plan_cache.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_plan_cache ::=
+    NO_PLAN_CACHE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01664" -->
+
+
 #### NO_PUSH_SELECT_VIEW
 
 뷰 외부의 WHERE절의 조건을 뷰 내부로 이동하여 처리하지 않도록 지시하는 힌트이다.
 
 ![no_push_select_view](media/SQL/no_push_select_view.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01665" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2186" image_path_raw="media/SQL/no_push_select_view.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_push_select_view ::=
+    NO_PUSH_SELECT_VIEW '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01665" -->
+
 
 #### NO_SERIAL_FILTER
 
@@ -77410,6 +82316,14 @@ Serial Execute Mode 로 동작되지 않는다.
 
 ![no_serial_filter](media/SQL/no_serial_filter.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01666" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2193" image_path_raw="media/SQL/no_serial_filter.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_serial_filter ::=
+    NO_SERIAL_FILTER
+```
+<!-- IMG_RECOVERY_END ref_id="img-01666" -->
+
+
 #### NO_TRANSITIVE_PRED
 
 조건절 이행을 배제하는 힌트이다. 조건절 이행에 대해서는 "Performance Tuning
@@ -77417,11 +82331,27 @@ Guide \> 3장 쿼리 옵티마이저 \> 쿼리 변환 > 조건절 이행"을 참
 
 ![no_transitive_pred](media/SQL/no_transitive_pred.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01667" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2200" image_path_raw="media/SQL/no_transitive_pred.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_transitive_pred ::=
+    NO_TRANSITIVE_PRED
+```
+<!-- IMG_RECOVERY_END ref_id="img-01667" -->
+
+
 #### NO_UNNEST
 
 Subquery Unnesting을 하지 말 것을 지시하는 힌트이다.
 
 ![no_unnest](media/SQL/no_unnest.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01668" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2206" image_path_raw="media/SQL/no_unnest.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_unnest ::=
+    NO_UNNEST
+```
+<!-- IMG_RECOVERY_END ref_id="img-01668" -->
+
 
 #### NO_USE_HASH
 
@@ -77429,11 +82359,27 @@ HASH를 제외한 힌트 중에 조인방법이 선택된다.
 
 ![](media/SQL/9ce19c26f7f3c89791bdb69f36fdf23a.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01669" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2212" image_path_raw="media/SQL/9ce19c26f7f3c89791bdb69f36fdf23a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_HASH ::=
+    NO_USE_HASH
+```
+<!-- IMG_RECOVERY_END ref_id="img-01669" -->
+
+
 #### NO_USE_MERGE
 
 MERGE를 제외한 힌트 중에 조인방법이 선택된다.
 
 ![](media/SQL/d1a88ccc169fe979d8d0e64d2bda84ef.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01670" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2218" image_path_raw="media/SQL/d1a88ccc169fe979d8d0e64d2bda84ef.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_MERGE ::=
+    NO_USE_MERGE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01670" -->
+
 
 #### NO_USE_NL
 
@@ -77441,11 +82387,27 @@ NL를 제외한 힌트 중에 조인방법이 선택된다.
 
 ![](media/SQL/126b72674766403367127957a95a5465.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01671" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2224" image_path_raw="media/SQL/126b72674766403367127957a95a5465.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_NL ::=
+    NO_USE_NL
+```
+<!-- IMG_RECOVERY_END ref_id="img-01671" -->
+
+
 #### NO_USE_SORT
 
 SORT를 제외한 힌트 중에 조인방법이 선택된다
 
 ![](media/SQL/9e4e1b3bcd93ee858fbb63d4fbe29678.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01672" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2230" image_path_raw="media/SQL/9e4e1b3bcd93ee858fbb63d4fbe29678.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+NO_USE_SORT ::=
+    NO_USE_SORT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01672" -->
+
 
 #### PARALLEL
 
@@ -77456,6 +82418,15 @@ SORT를 제외한 힌트 중에 조인방법이 선택된다
 
 ![parallel](media/SQL/parallel.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01673" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2239" image_path_raw="media/SQL/parallel.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel ::=
+    PARALLEL '(' table_name ',' parallel_degree ')'
+  | NOPARALLE '(' table_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01673" -->
+
+
 #### PLAN_CACHE_KEEP
 
 Plan을 victim 선정 과정에서 제외시켜 Plan Cache내에 유지하도록 지시하는 힌트이다.
@@ -77464,11 +82435,27 @@ softprepare가 발생해도 다시 keep 상태로 전환되지 않는다.
 
 ![plan_cache_keep](media/SQL/plan_cache_keep.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01674" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2247" image_path_raw="media/SQL/plan_cache_keep.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+PLAN_CACHE_KEEP ::=
+    PLAN_CACHE_KEEP
+```
+<!-- IMG_RECOVERY_END ref_id="img-01674" -->
+
+
 #### ORDERED
 
 FROM절에 나열된 순서대로 조인하도록 지시하는 힌트이다.
 
 ![order](media/SQL/order.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01675" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2253" image_path_raw="media/SQL/order.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ORDERED ::=
+    ORDERED
+```
+<!-- IMG_RECOVERY_END ref_id="img-01675" -->
+
 
 #### PUSH_PRED
 
@@ -77477,11 +82464,27 @@ FROM절에 나열된 순서대로 조인하도록 지시하는 힌트이다.
 
 ![push_pred](media/SQL/push_pred.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01676" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2260" image_path_raw="media/SQL/push_pred.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+push_pred ::=
+    PUSH_PRED '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01676" -->
+
+
 #### PUSH_SELECT_VIEW
 
 뷰 외부의 WHERE절의 조건을 뷰 내부로 이동하여 처리하도록 지시하는 힌트이다.
 
 ![push_select_view](media/SQL/push_select_view.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01677" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2266" image_path_raw="media/SQL/push_select_view.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+push_select_view ::=
+    PUSH_SELECT_VIEW '(' view_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01677" -->
+
 
 #### RESULT_CACHE
 
@@ -77489,11 +82492,27 @@ FROM절에 나열된 순서대로 조인하도록 지시하는 힌트이다.
 
 ![](media/SQL/dd5dfb24046bac05689b3631995d6048.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01678" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2272" image_path_raw="media/SQL/dd5dfb24046bac05689b3631995d6048.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+RESULT_CACHE ::=
+    RESULT_CACHE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01678" -->
+
+
 #### RULE
 
 비용을 배제하고 규칙 기반으로 최적화된 실행 계획을 생성하도록 지시하는 힌트이다.
 
 ![rule](media/SQL/rule.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01679" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2278" image_path_raw="media/SQL/rule.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+RULE ::=
+    RULE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01679" -->
+
 
 #### SET BUCKET COUNT
 
@@ -77501,12 +82520,28 @@ SET-INTERSECT와 SET-DIFFERENCE 실행 노드의 해시 버킷 수를 지정하�
 
 ![set_bucket_count](media/SQL/set_bucket_count.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01680" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2284" image_path_raw="media/SQL/set_bucket_count.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_bucket_count ::=
+    SET BUCKET COUNT '(' integer ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01680" -->
+
+
 #### SERIAL_FILTER
 
 SERIAL_EXECUTE_MODE 프로퍼티가 비활성화된 상태에서 힌트가 명시되면,
 Serial Execute Mode 로 동작한다.
 
 ![serial_filter](media/SQL/serial_filter.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01681" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2291" image_path_raw="media/SQL/serial_filter.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+SERIAL_FILTER ::=
+    SERIAL_FILTER
+```
+<!-- IMG_RECOVERY_END ref_id="img-01681" -->
+
 
 #### SORT_AJ
 
@@ -77516,6 +82551,14 @@ Serial Execute Mode 로 동작한다.
 
 ![sort_aj](media/SQL/sort_aj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01682" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2299" image_path_raw="media/SQL/sort_aj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+SORT_AJ ::=
+    SORT_AJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01682" -->
+
+
 #### SORT_SJ
 
 중첩된 부질의가 Sort Join을 사용하여 Semi Join 하도록 지시하는 힌트이다. 해당
@@ -77524,12 +82567,28 @@ Serial Execute Mode 로 동작한다.
 
 ![sort_sj](media/SQL/sort_sj.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01683" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2307" image_path_raw="media/SQL/sort_sj.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+SORT_SJ ::=
+    SORT_SJ
+```
+<!-- IMG_RECOVERY_END ref_id="img-01683" -->
+
+
 #### TEMP_TBS_DISK
 
 질의 처리 중에 생성되는 모든 중간 결과를 디스크 임시 공간에 저장하도록 지시하는
 힌트이다.
 
 ![temp_tbs_disk](media/SQL/temp_tbs_disk.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01684" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2314" image_path_raw="media/SQL/temp_tbs_disk.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+TEMP_TBS_DISK ::=
+    TEMP_TBS_DISK
+```
+<!-- IMG_RECOVERY_END ref_id="img-01684" -->
+
 
 #### TEMP_TBS_MEMORY
 
@@ -77538,17 +82597,41 @@ Serial Execute Mode 로 동작한다.
 
 ![temp_tbs_memory](media/SQL/temp_tbs_memory.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01685" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2321" image_path_raw="media/SQL/temp_tbs_memory.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+TEMP_TBS_MEMORY ::=
+    TEMP_TBS_MEMORY
+```
+<!-- IMG_RECOVERY_END ref_id="img-01685" -->
+
+
 #### TOP_RESULT_CACHE
 
 최종 결과를 캐시하는 Top Result Cache를 사용하는 힌트이다.
 
 ![](media/SQL/cc3e6ebd802d5456078639575728ec31.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01686" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2327" image_path_raw="media/SQL/cc3e6ebd802d5456078639575728ec31.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+TOP_RESULT_CACHE ::=
+    TOP_RESULT_CACHE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01686" -->
+
+
 #### UNNEST
 
 Subquery Unnesting을 하도록 지시하는 힌트이다.
 
 ![unnest](media/SQL/unnest.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01687" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2333" image_path_raw="media/SQL/unnest.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+UNNEST ::=
+    UNNEST
+```
+<!-- IMG_RECOVERY_END ref_id="img-01687" -->
+
 
 #### USE_ANTI
 
@@ -77559,17 +82642,41 @@ ANTI-OUTER-JOIN 노드를 참고한다.
 
 ![use_anti](media/SQL/use_anti.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01688" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2342" image_path_raw="media/SQL/use_anti.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_anti ::=
+    USE_ANTI '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01688" -->
+
+
 #### USE_CONCAT
 
 DNF 힌트와 같은 동작을 한다.
 
 ![](media/SQL/458f3642b3e45785696cf101d1d40c46.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01689" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2348" image_path_raw="media/SQL/458f3642b3e45785696cf101d1d40c46.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+USE_CONCAT ::=
+    USE_CONCAT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01689" -->
+
+
 #### USE_FULL_NL
 
 Full nested loop 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다.
 
 ![use_full_nl](media/SQL/use_full_nl.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01690" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2354" image_path_raw="media/SQL/use_full_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_full_nl ::=
+    USE_FULL_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01690" -->
+
 
 #### USE_FULL_STORE_NL
 
@@ -77578,6 +82685,14 @@ Full store nested loop 조인을 사용해서 명시된 테이블을 조인하�
 
 ![use_full_store_nl](media/SQL/use_full_store_nl.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01691" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2361" image_path_raw="media/SQL/use_full_store_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_full_store_nl ::=
+    USE_FULL_STORE_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01691" -->
+
+
 #### USE_HASH
 
 Hash 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다. 단 hasing
@@ -77585,17 +82700,41 @@ Hash 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 
 
 ![use_hash](media/SQL/use_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01692" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2368" image_path_raw="media/SQL/use_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_hash ::=
+    USE_HASH '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01692" -->
+
+
 #### USE_INDEX_NL
 
 Index nested loop 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다.
 
 ![use_index_nl](media/SQL/use_index_nl.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01693" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2374" image_path_raw="media/SQL/use_index_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_index_nl ::=
+    USE_INDEX_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01693" -->
+
+
 #### USE_INVERSE_HASH
 
 inverse hash 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다.
 
 ![use_inverse_hash](media/SQL/use_inverse_hash.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01694" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2380" image_path_raw="media/SQL/use_inverse_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_inverse_hash ::=
+    USE_INVERSE_HASH '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01694" -->
+
 
 #### USE_MERGE
 
@@ -77604,11 +82743,27 @@ sorting 술어가 하나도 없을 경우 Nested loop 조인이 사용된다.
 
 ![use_merge](media/SQL/use_merge.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01695" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2387" image_path_raw="media/SQL/use_merge.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_merge ::=
+    USE_MERGE '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01695" -->
+
+
 #### USE_NL
 
 Nested loop 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다.
 
 ![use_nl](media/SQL/use_nl.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01696" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2393" image_path_raw="media/SQL/use_nl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_nl ::=
+    USE_NL '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01696" -->
+
 
 #### USE_ONE_PASS_HASH
 
@@ -77616,11 +82771,27 @@ One-pass hash 조인을 사용해서 명시된 테이블을 조인하도록 지�
 
 ![use_one_pass_hash](media/SQL/use_one_pass_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01697" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2399" image_path_raw="media/SQL/use_one_pass_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_one_pass_hash ::=
+    USE_ONE_PASS_HASH '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01697" -->
+
+
 #### USE_ONE_PASS_SORT
 
 One-pass sort 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다.
 
 ![use_two_pass_sort](media/SQL/use_two_pass_sort.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01698" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2405" image_path_raw="media/SQL/use_two_pass_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_two_pass_sort ::=
+    USE_TWO_PASS_SORT '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01698" -->
+
 
 #### USE_SORT
 
@@ -77629,17 +82800,41 @@ Sort 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 
 
 ![use_sort](media/SQL/use_sort.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01699" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2412" image_path_raw="media/SQL/use_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_sort ::=
+    USE_SORT '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01699" -->
+
+
 #### USE_TWO_PASS_HASH
 
 Two-pass hash 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다.
 
 ![use_two_pass_hash](media/SQL/use_two_pass_hash.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01700" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2418" image_path_raw="media/SQL/use_two_pass_hash.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_two_pass_hash ::=
+    USE_TWO_PASS_HASH '(' tbl_name { ',' tbl_name } [ ',' temp_count { ',' temp_count } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01700" -->
+
+
 #### USE_TWO_PASS_SORT
 
 Two-pass sort 조인을 사용해서 명시된 테이블을 조인하도록 지시하는 힌트이다. 
 
 ![use_two_pass_sort](media/SQL/use_two_pass_sort.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01701" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2424" image_path_raw="media/SQL/use_two_pass_sort.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+use_two_pass_sort ::=
+    USE_TWO_PASS_SORT '(' tbl_name { ',' tbl_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01701" -->
+
 
 # 3.데이터 정의어
 
@@ -77654,91 +82849,301 @@ Two-pass sort 조인을 사용해서 명시된 테이블을 조인하도록 지�
 
 ![](media/SQL/97f0082b35f7c7b2023c79e718472981.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01702" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2437" image_path_raw="media/SQL/97f0082b35f7c7b2023c79e718472981.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_database ::=
+    ALTER DATABASE
+    { database_name startup_clause
+    | rename_datafile_clause
+    | create_datafile_clause
+    | create_checkpoint_image_clause
+    | database_name session_clause
+    | archivelog_option
+    | backup_clause
+    | incremental_backup_clause
+    | recover_clause
+    | restore_clause
+    | change_backup_directory_clause
+    | move_backup_clause
+    | delete_backup_clause
+    | change_tracking_clause
+    | snapshot_clause
+    } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01702" -->
+
+
 
 
 **startup_clause ::=**
 
 ![startup_clause](media/SQL/startup_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01703" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2443" image_path_raw="media/SQL/startup_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+startup_clause ::=
+    CONTROL
+  | SERVICE
+  | META [ UPGRADE | RESETLOGS | RESETUNDO ]
+  | SHUTDOWN [ NORMAL | IMMEDIATE | EXIT ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01703" -->
+
+
 **rename_datafile_clause ::=**
 
 ![rename_datafile_image32](media/SQL/rename_datafile_image32.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01704" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2447" image_path_raw="media/SQL/rename_datafile_image32.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_datafile_clause ::=
+    RENAME DATAFILE '(' file_name ')' TO '(' file_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01704" -->
+
 
 **create_datafile_clause ::=**
 
 ![create_datafile](media/SQL/create_datafile.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01705" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2451" image_path_raw="media/SQL/create_datafile.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_datafile_clause ::=
+    CREATE DATAFILE '(' datafile_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01705" -->
+
+
 **create_checkpoint_image_clause ::=**
 
 ![create_checkpoint_image](media/SQL/create_checkpoint_image.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01706" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2455" image_path_raw="media/SQL/create_checkpoint_image.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_checkpoint_image_clause ::=
+    CREATE CHECKPOINT IMAGE '(' file_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01706" -->
+
 
 **session_clause ::=**
 
 ![](media/SQL/738af5c6c05936008a47fc1d093fa05c.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01707" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2459" image_path_raw="media/SQL/738af5c6c05936008a47fc1d093fa05c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+session_clause ::=
+    SESSION CLOSE
+    { number
+    | USER user_name
+    | ALL
+    }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01707" -->
+
+
 **archivelog_option ::=**
 
 ![archivelog_option_image35](media/SQL/archivelog_option_image35.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01708" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2463" image_path_raw="media/SQL/archivelog_option_image35.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+archivelog_option ::=
+    ARCHIVELOG
+  | NOARCHIVELOG
+```
+<!-- IMG_RECOVERY_END ref_id="img-01708" -->
+
 
 **backup_clause ::=**
 
 ![backup_clause_image36](media/SQL/backup_clause_image36.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01709" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2467" image_path_raw="media/SQL/backup_clause_image36.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+backup_clause ::=
+    BACKUP
+    { LOGANCHOR
+    | TABLESPACE tablespace_name
+    | DATABASE
+    } TO '(' backup_dir ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01709" -->
+
+
 **incremental_backup_clause ::=**
 
 ![incremental_backup](media/SQL/incremental_backup.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01710" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2471" image_path_raw="media/SQL/incremental_backup.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+incremental_backup_clause ::=
+    BACKUP [ incremental_level_clause ]
+    { DATABASE | TABLESPACE tablespace_name [ { ',' tablespace_name } ] }
+    [ with_tag_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01710" -->
+
 
 **incremental_level_clause ::=**
 
 ![incremental_level](media/SQL/incremental_level.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01711" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2475" image_path_raw="media/SQL/incremental_level.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+incremental_level_clause ::=
+    INCREMENTAL LEVEL { 0 | 1 | CUMULATIVE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01711" -->
+
+
 **with_tag_clause ::=**
 
 ![with_tag](media/SQL/with_tag.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01712" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2479" image_path_raw="media/SQL/with_tag.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+with_tag_clause ::=
+    WITH TAG '(' tag_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01712" -->
+
 
 **recover_clause ::=**
 
 ![recover_clause_image37](media/SQL/recover_clause_image37.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01713" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2483" image_path_raw="media/SQL/recover_clause_image37.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+recover_clause ::=
+    RECOVER DATABASE
+    [ from_tag_clause | until_option ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01713" -->
+
+
 **from_tag_clause ::=**
 
 ![from_tag](media/SQL/from_tag.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01714" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2487" image_path_raw="media/SQL/from_tag.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+from_tag_clause ::=
+    FROM TAG '(' tag_name ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01714" -->
+
 
 **until_option ::=**
 
 ![until_option_image38](media/SQL/until_option_image38.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01715" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2491" image_path_raw="media/SQL/until_option_image38.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+until_option ::=
+    UNTIL { CANCEL | TIME '(' YYYY-MM-DD:HH:MM:SS ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01715" -->
+
+
 **restore_clause ::=**
 
 ![restore_clause](media/SQL/restore_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01716" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2495" image_path_raw="media/SQL/restore_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restore_clause ::=
+    RESTORE { restore_database_clause | restore_tablespace_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01716" -->
+
 
 **restore_database_clause ::=**
 
 ![restore_database](media/SQL/restore_database.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01717" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2499" image_path_raw="media/SQL/restore_database.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restore_database_clause ::=
+    DATABASE
+    [ from_tag_clause
+    | UNTIL TIME '(' YYYY-MM-DD:HH:MM:SS ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01717" -->
+
+
 **restore_tablespace_clause ::=**
 
 ![restore_tablespace](media/SQL/restore_tablespace.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01718" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2503" image_path_raw="media/SQL/restore_tablespace.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restore_tablespace_clause ::=
+    TABLESPACE tablespace_name [ { ',' tablespace_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01718" -->
+
 
 **change_backup_directory_clause ::=**
 
 ![change_backup_directory](media/SQL/change_backup_directory.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01719" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2507" image_path_raw="media/SQL/change_backup_directory.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+change_backup_directory_clause ::=
+    CHANGE BACKUP DIRECTORY '(' directory ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01719" -->
+
+
 **move_backup_clause ::=**
 
 ![move_backup](media/SQL/move_backup.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01720" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2511" image_path_raw="media/SQL/move_backup.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+move_backup_clause ::=
+    MOVE BACKUP FILE TO '(' directory ')'
+    [ WITH CONTENTS ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01720" -->
+
 
 **delete_backup_clause ::=**
 
 ![delete_backup](media/SQL/delete_backup.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01721" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2515" image_path_raw="media/SQL/delete_backup.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delete_backup_clause ::=
+    DELETE OBSOLETE BACKUP FILES
+```
+<!-- IMG_RECOVERY_END ref_id="img-01721" -->
+
+
 **change_tracking_clause ::=**
 
 ![change_tracking](media/SQL/change_tracking.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01722" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2519" image_path_raw="media/SQL/change_tracking.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+change_tracking_clause ::=
+    { ENABLE | DISABLE } INCREMENTAL CHUNK CHANGE TRACKING
+```
+<!-- IMG_RECOVERY_END ref_id="img-01722" -->
+
+
 **snapshot_clause ::=**
 
 ![](media/SQL/8df50a0b0a940bcf36d59c734118d74c.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01723" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2523" image_path_raw="media/SQL/8df50a0b0a940bcf36d59c734118d74c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+snapshot_clause ::=
+    { BEGIN | END } SNAPSHOT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01723" -->
+
 
 #### 전제 조건
 
@@ -78021,35 +83426,113 @@ iSQL> ALTER DATABASE RECOVER DATABASE UNTIL CANCEL;
 
 ![](media/SQL/01f546cab50943e8bcf3f443282d41fa.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01724" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2804" image_path_raw="media/SQL/01f546cab50943e8bcf3f443282d41fa.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_index ::=
+    ALTER INDEX [ user_name '.' ] index_name
+    { directkey_mod_clause
+    | rebuild_clause
+    | RENAME TO new_name
+    | alter_index_properties
+    | AGING
+    | REORGANIZATION }
+    [ ';' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01724" -->
+
+
 
 
 **directkey_mod_clause ::=**
 
 ![directkey_mod_clause](media/SQL/directkey_mod_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01725" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2810" image_path_raw="media/SQL/directkey_mod_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+directkey_mod_clause ::=
+    DIRECTKEY [ { MAXSIZE integer | OFF } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01725" -->
+
+
 **rebuild_clause ::=**
 
 ![rebuid_caluseimage42](media/SQL/rebuid_caluseimage42.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01726" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2814" image_path_raw="media/SQL/rebuid_caluseimage42.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rebuild_clause ::=
+    REBUILD
+    [ PARTITION index_partition_name [ index_attribute ] ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01726" -->
+
 
 **index_attribute ::=**
 
 ![image43_index_attribute](media/SQL/image43_index_attribute.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01727" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2818" image_path_raw="media/SQL/image43_index_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_attribute ::=
+    TABLESPACE tablespace_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01727" -->
+
+
 **alter_index_properties::=**
 
 ![image44_alter_index](media/SQL/image44_alter_index.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01728" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2822" image_path_raw="media/SQL/image44_alter_index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_index_properties ::=
+    { alter_index_segment_attribute_clause | allocate_extent_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01728" -->
+
 
 **alter_index_segment_attribute_clause::=**
 
 ![image45_alter_index_segment](media/SQL/image45_alter_index_segment.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01729" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2826" image_path_raw="media/SQL/image45_alter_index_segment.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_index_segment_attribute_clause ::=
+    { INITRANS integer | MAXTRANS integer } [ storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01729" -->
+
+
 **storage_clause::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01730" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2830" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01730" -->
+
+
 **allocate_extent_clause::=**
 
 ![image47_allocate_extent_clause](media/SQL/image47_allocate_extent_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01731" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2834" image_path_raw="media/SQL/image47_allocate_extent_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+allocate_extent_clause ::=
+    ALLOCATE EXTENT
+    [ '(' SIZE integer { K | M | G } ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01731" -->
+
 
 #### 전제 조건
 
@@ -78205,9 +83688,35 @@ iSQL> ALTER INDEX idx1 REORGANIZATION;
 
 ![](media/SQL/324c973656a57966cf2121f7e86e46f5.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01732" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2988" image_path_raw="media/SQL/324c973656a57966cf2121f7e86e46f5.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_job ::=
+    ALTER JOB job_name SET
+    { execute_procedure_statement
+    | START expr1
+    | END expr1
+    | INTERVAL number { YEAR | MONTH | DAY | HOUR | MINUTE }
+    | ENABLE
+    | DISABLE
+    | COMMENT text }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01732" -->
+
+
 **execute_procedure_statement ::=**
 
 ![execute_procedure_statement](media/SQL/execute_procedure_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01733" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="2992" image_path_raw="media/SQL/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] procedure_name
+    '(' [ expr2 [ { ',' expr2 } ] ] ')'
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01733" -->
+
 
 #### 전제 조건
 
@@ -78314,6 +83823,19 @@ Alter success.
 
 ![](media/SQL/alter_queue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01734" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3097" image_path_raw="media/SQL/alter_queue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_queue ::=
+    ALTER QUEUE [ user_name '.' ] queue_name
+    { COMPACT
+    | MSGID RESET
+    | DELETE ON
+    | DELETE OFF }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01734" -->
+
+
 #### 설명
 
 큐의 정의를 변경한다.
@@ -78340,19 +83862,70 @@ DELETE OFF는 큐 테이블에 DELETE 구문을 허용하지 않는다. 이 경�
 
 ![image49_alter_replication](media/SQL/image49_alter_replication.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01735" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3123" image_path_raw="media/SQL/image49_alter_replication.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_replication ::=
+    ALTER REPLICATION replication_name
+    { SYNC [ ONLY ] [ PARALLEL parallel_factor ] [ TABLE replication_item [ { ',' replication_item } ] ]
+    | START [ RETRY ]
+    | QUICKSTART [ RETRY ]
+    | RESET
+    | ADD TABLE FROM replication_item TO replication_item
+    | DROP { TABLE FROM replication_item TO replication_item
+           | HOST remote_host_ip '.' remote_port_no [ USING conn_type [ lb_latency ] ] }
+    | alter_replication_set_clause
+    | offline_clause }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01735" -->
+
+
 
 
 **replication_item ::=**
 
 ![replication_item](media/SQL/replication_item.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01736" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3129" image_path_raw="media/SQL/replication_item.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+replication_item ::=
+    user_name '.' tbl_name
+    [ PARTITION partition_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01736" -->
+
+
 **alter_replication_set_clause ::=**
 
 ![alter_replication_set_clause](media/SQL/alter_replication_set_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01737" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3133" image_path_raw="media/SQL/alter_replication_set_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_replication_set_clause ::=
+    SET { HOST remote_host_ip '.' remote_port_no
+        | RECOVERY { ENABLE | DISABLE }
+        | GAPLESS { ENABLE | DISABLE }
+        | GROUPING { ENABLE | DISABLE }
+        | PARALLEL receiver_applier_count }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01737" -->
+
+
 **offline_clause ::=**
 
 ![offline_clause](media/SQL/offline_clause.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01738" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3137" image_path_raw="media/SQL/offline_clause.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+offline_clause ::=
+    { SET OFFLINE { ENABLE WITH log_dir [ { ',' log_dir } ]
+                  | DISABLE }
+    | START WITH OFFLINE
+    | BUILD OFFLINE META [ AT SN '(' sn ')' ]
+    | RESET OFFLINE META }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01738" -->
+
 
 #### 전제 조건
 
@@ -78556,17 +84129,69 @@ Alter success.
 
 ![](media/SQL/alter_sequence.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01739" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3339" image_path_raw="media/SQL/alter_sequence.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_sequence ::=
+    ALTER SEQUENCE [ user_name '.' ] seq_name
+    { sequence_options | sync_table_clause | restart_clause }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01739" -->
+
+
 **sequence_options ::=**
 
 ![](media/SQL/sequence_alter_options.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01740" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3343" image_path_raw="media/SQL/sequence_alter_options.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sequence_options ::=
+    { INCREMENT BY integer
+    | MAXVALUE integer
+    | NOMAXVALUE
+    | MINVALUE integer
+    | NOMINVALUE
+    | CYCLE
+    | NOCYCLE
+    | CACHE integer
+    | NOCACHE
+    | FLUSH CACHE } [ { INCREMENT BY integer
+                      | MAXVALUE integer
+                      | NOMAXVALUE
+                      | MINVALUE integer
+                      | NOMINVALUE
+                      | CYCLE
+                      | NOCYCLE
+                      | CACHE integer
+                      | NOCACHE
+                      | FLUSH CACHE } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01740" -->
+
 
 **sync_table_clause ::=**
 
 ![sync_table_clause](media/SQL/sync_table_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01741" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3347" image_path_raw="media/SQL/sync_table_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sync_table_clause ::=
+    { ENABLE | DISABLE } SYNC TABLE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01741" -->
+
+
 **restart_clause ::=**
 
 ![sync_table_clause](media/SQL/restart_sequence_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01742" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3351" image_path_raw="media/SQL/restart_sequence_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+restart_clause ::=
+    RESTART [ { START } WITH integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01742" -->
+
 
 #### 전제 조건
 
@@ -78702,127 +84327,428 @@ iSQL> ALTER SEQUENCE seq1 ENABLE SYNC TABLE;
 
 ![](media/SQL/17ce67a416098226c32df31b2e42cbe3.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01743" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3485" image_path_raw="media/SQL/17ce67a416098226c32df31b2e42cbe3.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table ::=
+    ALTER TABLE [ user_name '.' ] table_name
+    { log_compression_clause
+    | alter_table_properties
+    | alter_table_segment_properties
+    | alter_table_partitioning
+    | alter_table_tablespace
+    | column_clauses
+    | constraints_clauses
+    | RENAME TO new_tbl_name
+    | MAXROWS integer
+    | ALL INDEX { ENABLE | DISABLE }
+    | aging_clause
+    | compact_clause
+    | allocate_extent_clause
+    | ACCESS access_mode_clause
+    | TOUCH }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01743" -->
+
+
 
 
 **log_compression_clause ::=**
 
 ![log_compression_clause](media/SQL/log_compression_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01744" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3491" image_path_raw="media/SQL/log_compression_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+log_compression_clause ::=
+    { COMPRESSED LOGGING | UNCOMPRESSED LOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01744" -->
+
+
 **alter_table_properties::=**
 
 ![image52_alter_table_properties](media/SQL/image52_alter_table_properties.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01745" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3495" image_path_raw="media/SQL/image52_alter_table_properties.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_properties ::=
+    { logging_clause | parallel_clause | row_movement_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01745" -->
+
 
 **alter_table_tablespace::=**
 
 ![alter_table_tablespace](media/SQL/alter_table_tablespace.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01746" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3499" image_path_raw="media/SQL/alter_table_tablespace.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_tablespace ::=
+    ALTER TABLESPACE tablespace_name
+    [ table_move_index_clause ] [ table_lob_column_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01746" -->
+
+
 **table_move_index_clause::=**
 
 ![table_move_index_clause](media/SQL/table_move_index_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01747" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3503" image_path_raw="media/SQL/table_move_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_move_index_clause ::=
+    INDEX '(' index_name TABLESPACE tablespace_name
+    [ { ',' index_name TABLESPACE tablespace_name } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01747" -->
+
 
 **table_lob_column_clause::=**
 
 ![table_lob_column_clause](media/SQL/table_lob_column_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01748" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3507" image_path_raw="media/SQL/table_lob_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_lob_column_clause ::=
+    LOB '(' column_name TABLESPACE tablespace_name
+    [ { ',' column_name TABLESPACE tablespace_name } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01748" -->
+
+
 **logging_clause::=**
 
 ![logging_clause](media/SQL/logging_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01749" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3511" image_path_raw="media/SQL/logging_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+logging_clause ::=
+    { LOGGING | NOLOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01749" -->
+
 
 **parallel_clause::=**
 
 ![PARALLEL_CLAUSE](media/SQL/PARALLEL_CLAUSE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01750" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3515" image_path_raw="media/SQL/PARALLEL_CLAUSE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel_clause ::=
+    { NOPARALLEL | PARALLEL integer }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01750" -->
+
+
 **row_movement_clause::=**
 
 ![row_movement_clause](media/SQL/row_movement_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01751" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3519" image_path_raw="media/SQL/row_movement_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+row_movement_clause ::=
+    { ENABLE | DISABLE } ROW MOVEMENT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01751" -->
+
 
 **alter_table_segment_properties::=**
 
 ![image53_alter_table_segment_properties](media/SQL/image53_alter_table_segment_properties.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01752" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3523" image_path_raw="media/SQL/image53_alter_table_segment_properties.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_segment_properties ::=
+    alter_table_segment_attribute_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-01752" -->
+
+
 **alter_table_segment_attribute_clause::=**
 
 ![image54_alter_table_segment_attribute_clause](media/SQL/image54_alter_table_segment_attribute_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01753" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3527" image_path_raw="media/SQL/image54_alter_table_segment_attribute_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_segment_attribute_clause ::=
+    [ { PCTFREE integer | PCTUSED integer } ]
+    [ { INITRANS integer | MAXTRANS integer } ]
+    [ storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01753" -->
+
 
 **storage_clause::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01754" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3531" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01754" -->
+
+
 **alter_table_partitioning::=**
 
 ![ALTER_TABLE_PARTITIONING](media/SQL/ALTER_TABLE_PARTITIONING.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01755" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3535" image_path_raw="media/SQL/ALTER_TABLE_PARTITIONING.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_table_partitioning ::=
+    add_table_partition
+    | alter_partition
+    | coalesce_table_partition
+    | drop_table_partition
+    | merge_table_partition
+    | rename_table_partition
+    | split_table_partition
+    | truncate_table_partition
+    | partition_access_mode
+```
+<!-- IMG_RECOVERY_END ref_id="img-01755" -->
+
 
 **add_table_partition ::=**
 
 ![image56_add_table_partition](media/SQL/image56_add_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01756" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3539" image_path_raw="media/SQL/image56_add_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+add_table_partition ::=
+    ADD partition_spec
+```
+<!-- IMG_RECOVERY_END ref_id="img-01756" -->
+
+
 **alter_partition ::=**
 
 ![alter_partition](media/SQL/alter_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01757" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3543" image_path_raw="media/SQL/alter_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_partition ::=
+    ALTER PARTITION partition_name TABLESPACE tablespace_name
+    [ partition_index_clause ] [ partition_lob_column_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01757" -->
+
 
 **partition_index_clause ::=**
 
 ![partition_index_clause](media/SQL/partition_index_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01758" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3547" image_path_raw="media/SQL/partition_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_index_clause ::=
+    INDEX '(' index_name TABLESPACE tablespace_name
+              [ { ',' index_name TABLESPACE tablespace_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01758" -->
+
+
 **partition_lob_column_clause ::=**
 
 ![partition_lob_column_clause](media/SQL/partition_lob_column_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01759" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3551" image_path_raw="media/SQL/partition_lob_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_lob_column_clause ::=
+    LOB '(' column_name TABLESPACE tablespace_name
+              [ { ',' column_name TABLESPACE tablespace_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01759" -->
+
 
 **coalesce_table_partition ::=**
 
 ![image60_coalesce_table_partition](media/SQL/image60_coalesce_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01760" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3555" image_path_raw="media/SQL/image60_coalesce_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+coalesce_table_partition ::=
+    COALESCE PARTITION
+```
+<!-- IMG_RECOVERY_END ref_id="img-01760" -->
+
+
 **drop_table_partition ::=**
 
 ![image61_drop_table_partition](media/SQL/image61_drop_table_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01761" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3559" image_path_raw="media/SQL/image61_drop_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_table_partition ::=
+    DROP PARTITION partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01761" -->
+
 
 **merge_table_partition ::=**
 
 ![image62_merge_table_partition](media/SQL/image62_merge_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01762" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3563" image_path_raw="media/SQL/image62_merge_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_table_partition ::=
+    MERGE PARTITIONS partition_1 ',' partition_2 INTO partition_spec
+```
+<!-- IMG_RECOVERY_END ref_id="img-01762" -->
+
+
 **rename_table_partition ::=**
 
 ![image63_rename_table_partition](media/SQL/image63_rename_table_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01763" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3567" image_path_raw="media/SQL/image63_rename_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_table_partition ::=
+    RENAME PARTITION old_partition_name TO new_partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01763" -->
+
 
 **split_table_partition ::=**
 
 ![image64_split_table_partition](media/SQL/image64_split_table_partition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01764" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3571" image_path_raw="media/SQL/image64_split_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+split_table_partition ::=
+    SPLIT PARTITION current_partition
+        { AT | VALUES } '(' value [ { ',' value } ] ')'
+        INTO '(' partition_spec ',' partition_spec ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01764" -->
+
+
 **truncate_table_partition ::=**
 
 ![image65_truncate_table_partition](media/SQL/image65_truncate_table_partition.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01765" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3575" image_path_raw="media/SQL/image65_truncate_table_partition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+truncate_table_partition ::=
+    TRUNCATE PARTITION partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01765" -->
+
 
 **partition_spec ::=**
 
 ![image57_partition_spec](media/SQL/image57_partition_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01766" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3579" image_path_raw="media/SQL/image57_partition_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_spec ::=
+    PARTITION partition_name table_partition_description
+    [ index_partition_spec ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01766" -->
+
+
 **table_partition_description ::=**
 
 ![table_partition_description](media/SQL/table_partition_description.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01767" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3583" image_path_raw="media/SQL/table_partition_description.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_partition_description ::=
+    [ TABLESPACE tablespace_name ]
+    [ lob_column_properties ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01767" -->
+
 
 **index_partition_spec ::=**
 
 ![index_partition_spec](media/SQL/index_partition_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01768" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3587" image_path_raw="media/SQL/index_partition_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partition_spec ::=
+    INDEX '(' partitioned_index_name index_partition_description
+              [ { ',' partitioned_index_name index_partition_description } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01768" -->
+
+
 **index_partition_description ::=**
 
 ![index_partition_description](media/SQL/index_partition_description.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01769" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3591" image_path_raw="media/SQL/index_partition_description.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partition_description ::=
+    PARTITION index_partition_name
+    [ TABLESPACE tablespace_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01769" -->
+
 
 **partition_access_mode ::=**
 
 ![PARTITION_ACCESS_MODE](media/SQL/PARTITION_ACCESS_MODE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01770" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3595" image_path_raw="media/SQL/PARTITION_ACCESS_MODE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_access_mode ::=
+    ACCESS PARTITION partition_name access_mode_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-01770" -->
+
+
 **access_mode_clause ::=**
 
 ![ACCESS_MODE_CLAUSE_](media/SQL/ACCESS_MODE_CLAUSE_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01771" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3599" image_path_raw="media/SQL/ACCESS_MODE_CLAUSE_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+access_mode_clause ::=
+    READ { ONLY | WRITE | APPEND }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01771" -->
+
 
 **column_clauses::=**
 
 ![image66_column_clauses](media/SQL/image66_column_clauses.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01772" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3603" image_path_raw="media/SQL/image66_column_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_clauses ::=
+    add_column_clause
+    | alter_column_clause
+    | modify_column_clause
+    | drop_column_clause
+    | rename_column_clause
+    | reorganize_column_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-01772" -->
+
+
 **add_column_clauses::=**
 
 ![image67_add_column_clauses](media/SQL/image67_add_column_clauses.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01773" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3607" image_path_raw="media/SQL/image67_add_column_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+add_column_clauses ::=
+    ADD [ COLUMN ] '(' column_definition [ { ',' column_definition } ] ')'
+    [ lob_column_properties ]
+    [ partition_lob_storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01773" -->
+
 
 <a name="column_definition"><a/>
 
@@ -78830,73 +84756,255 @@ iSQL> ALTER SEQUENCE seq1 ENABLE SYNC TABLE;
 
 ![column_definition](media/SQL/column_definition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01774" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3613" image_path_raw="media/SQL/column_definition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_definition ::=
+    column_name
+    { data_type [ encrypt_clause ] [ variable_clause ] [ in_row_clause ] [ default_clause ]
+    | TIMESTAMP }
+    [ { ',' column_constraint } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01774" -->
+
+
 **partition_lob_storage_clause ::=**
 
 ![image68_partition_lob_storage_clause](media/SQL/image68_partition_lob_storage_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01775" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3617" image_path_raw="media/SQL/image68_partition_lob_storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_lob_storage_clause ::=
+    '(' PARTITION partition_name LOB_storage_clause
+        [ { ',' PARTITION partition_name LOB_storage_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01775" -->
+
 
 **alter_column_clause ::=**
 
 ![image69_alter_column_clause](media/SQL/image69_alter_column_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01776" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3621" image_path_raw="media/SQL/image69_alter_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_column_clause ::=
+    ALTER [ COLUMN ] '(' column_name
+        { SET DEFAULT expr | DROP DEFAULT | NULL | NOT NULL } ')'
+    | LOB_storage_clause
+    | partition_lob_storage_clause
+
+LOB_storage_clause ::=
+    LOB '(' LOB_item [ { ',' LOB_item } ] ')' STORE AS '(' lob_attributes ')'
+
+partition_lob_storage_clause ::=
+    '(' PARTITION partition_name LOB_storage_clause
+        [ { ',' PARTITION partition_name LOB_storage_clause } ] ')'
+
+lob_attributes ::=
+    { LOGGING | NOLOGGING | BUFFER | NOBUFFER }
+    [ { LOGGING | NOLOGGING | BUFFER | NOBUFFER } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01776" -->
+
+
 **modify_column_clause::=**
 
 ![image70_modify_column_clause](media/SQL/image70_modify_column_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01777" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3625" image_path_raw="media/SQL/image70_modify_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_column_clause ::=
+    MODIFY [ COLUMN ]
+        { modify_column_spec
+        | '(' modify_column_spec [ { ',' modify_column_spec } ] ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01777" -->
+
 
 **modify_column_spec::=**
 
 ![image71_modify_column_spec](media/SQL/modify_column_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01778" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3629" image_path_raw="media/SQL/modify_column_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_column_spec ::=
+    column_name
+    [ data_type [ { FIXED | VARIABLE } ] [ TOLERATE DATA LOSS ] ]
+    [ DEFAULT expr ]
+    [ { NOT } NULL ]
+    [ SRID integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01778" -->
+
+
 **drop_column_clause::=**
 
 ![image72_drop_column_clause](media/SQL/image72_drop_column_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01779" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3633" image_path_raw="media/SQL/image72_drop_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_column_clause ::=
+    DROP [ COLUMN ]
+        { column_name
+        | '(' column_name [ { ',' column_name } ] ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01779" -->
+
 
 **rename_column_clause::=**
 
 ![rename_column_clause](media/SQL/rename_column_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01780" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3637" image_path_raw="media/SQL/rename_column_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_column_clause ::=
+    RENAME COLUMN column_name TO new_column_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01780" -->
+
+
 **reorganize_column_clause::=**
 
 ![reorganize_column](media/SQL/reorganize_column.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01781" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3641" image_path_raw="media/SQL/reorganize_column.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+reorganize_column_clause ::=
+    REORGANIZE [ COLUMN ] '(' column_name [ { ',' column_name } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01781" -->
+
 
 **constraints_clauses::=**
 
 ![constraints_clauses](media/SQL/constraints_clauses.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01782" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3645" image_path_raw="media/SQL/constraints_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+constraints_clauses ::=
+    add_table_constraint_clause
+    | modify_constraint_clause
+    | rename_constraint_clause
+    | drop_constraint_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-01782" -->
+
+
 **add_table_constraint_clauses ::=**
 
 ![add_table_constraint_clauses](media/SQL/add_table_constraint_clauses.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01783" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3649" image_path_raw="media/SQL/add_table_constraint_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+add_table_constraint_clauses ::=
+    ADD table_constraint_for_alter
+```
+<!-- IMG_RECOVERY_END ref_id="img-01783" -->
+
 
 **table_constraint_for_alter::=**
 
 ![table_constraint_for_alter](media/SQL/table_constraint_for_alter.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01784" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3653" image_path_raw="media/SQL/table_constraint_for_alter.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_constraint_for_alter ::=
+    [ CONSTRAINT constraint_name ]
+    { { PRIMARY KEY | UNIQUE | LOCALUNIQUE }
+          '(' column_name [ { ',' column_name } ] ')' [ using_index_clause ]
+          [ constraint_state ]
+    | referential_constraint [ constraint_state ]
+    | check_clause [ constraint_state ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01784" -->
+
+
 **constraint_state::=**
 
 ![constraint_state](media/SQL/constraint_state.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01785" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3657" image_path_raw="media/SQL/constraint_state.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+constraint_state ::=
+    ENABLE { VALIDATE | NOVALIDATE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01785" -->
+
 
 **modify_constraint_clause::=**
 
 ![modify_constraint_clause](media/SQL/modify_constraint_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01786" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3661" image_path_raw="media/SQL/modify_constraint_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_constraint_clause ::=
+    MODIFY CONSTRAINT constraint_name constraint_state
+```
+<!-- IMG_RECOVERY_END ref_id="img-01786" -->
+
+
 **rename_constraint_clauses ::=**
 
 ![rename_constraint_clauses](media/SQL/rename_constraint_clauses.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01787" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3665" image_path_raw="media/SQL/rename_constraint_clauses.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename_constraint_clauses ::=
+    RENAME CONSTRAINT constraint_name TO new_constraint_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01787" -->
+
 
 **drop_constraint_clause::=**
 
 ![drop_constraint_clause](media/SQL/drop_constraint_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01788" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3669" image_path_raw="media/SQL/drop_constraint_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_constraint_clause ::=
+    DROP
+        { CONSTRAINT constraint_name
+        | PRIMARY KEY
+        | { UNIQUE | LOCALUNIQUE } '(' column_constraint [ { ',' column_constraint } ] ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01788" -->
+
+
 **aging_clause::=**
 
 ![aging_clause](media/SQL/aging_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01789" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3673" image_path_raw="media/SQL/aging_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+aging_clause ::=
+    AGING [ PARTITION partition_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01789" -->
+
 
 **compact_clause::=**
 
 ![compact_clause](media/SQL/compact_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01790" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3677" image_path_raw="media/SQL/compact_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+compact_clause ::=
+    COMPACT [ PARTITION partition_name ] [ MAXPAGES integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01790" -->
+
+
 **allocate_extent_clause::=**
 
 ![allocate_extent_clause](media/SQL/allocate_extent_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01791" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="3681" image_path_raw="media/SQL/allocate_extent_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+allocate_extent_clause ::=
+    ALLOCATE EXTENT
+    [ '(' SIZE integer { K | M | G } ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01791" -->
+
 
 #### 전제 조건
 
@@ -80256,41 +86364,138 @@ Alter success.
 
 ![alter_tablespace](media/SQL/alter_tablespace.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01792" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5039" image_path_raw="media/SQL/alter_tablespace.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_tablespace ::=
+    ALTER TABLESPACE tablespace_name
+    { datafile_tempfile_clause
+    | modify_checkpoint_path_clause
+    | status_clause
+    | backup_clause
+    } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01792" -->
+
+
 **datafile_tempfile_clause ::=**
 
 ![datafile_tempfile_clause](media/SQL/datafile_tempfile_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01793" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5043" image_path_raw="media/SQL/datafile_tempfile_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_tempfile_clause ::=
+      ADD { DATAFILE | TEMPFILE } datafile_spec [ { ',' datafile_spec } ]
+    | RENAME { DATAFILE | TEMPFILE } '''' file_name '''' [ { ',' '''' file_name '''' } ] TO '''' file_name '''' [ { ',' '''' file_name '''' } ]
+    | ALTER { modify_datafile_clause | modify_autoextend_clause }
+    | DROP { DATAFILE | TEMPFILE } '''' file_name '''' [ { ',' '''' file_name '''' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01793" -->
+
 
 **datafile_spec ::=**
 
 ![datafile_spec](media/SQL/datafile_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01794" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5047" image_path_raw="media/SQL/datafile_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_spec ::=
+    '''' file_name ''''
+    [ SIZE integer [ K | M | G ] ]
+    [ REUSE ]
+    [ autoextend_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01794" -->
+
+
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01795" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5051" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01795" -->
+
 
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01796" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5055" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01796" -->
+
+
 **modify_datafile_clause ::=**
 
 ![modify_datafile_clause](media/SQL/modify_datafile_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01797" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5059" image_path_raw="media/SQL/modify_datafile_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_datafile_clause ::=
+    { DATAFILE | TEMPFILE } '''' file_name ''''
+    { autoextend_clause
+    | SIZE integer [ K | M | G ]
+    }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01797" -->
+
 
 **modify_autoextend_clause ::=**
 
 ![modify_autoextend_clause](media/SQL/modify_autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01798" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5063" image_path_raw="media/SQL/modify_autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_autoextend_clause ::=
+    autoextend_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-01798" -->
+
+
 **modify_checkpoint_path_clause ::=**
 
 ![modify_checkpoint_path_clause](media/SQL/modify_checkpoint_path_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01799" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5067" image_path_raw="media/SQL/modify_checkpoint_path_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+modify_checkpoint_path_clause ::=
+      ADD CHECKPOINT PATH '''' chkpoint_path ''''
+    | RENAME CHECKPOINT PATH '''' chkpoint_path '''' TO '''' chkpoint_path ''''
+    | DROP CHECKPOINT PATH '''' chkpoint_path ''''
+```
+<!-- IMG_RECOVERY_END ref_id="img-01799" -->
+
 
 **status_clause ::=**
 
 ![status_clause](media/SQL/status_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01800" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5071" image_path_raw="media/SQL/status_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+status_clause ::=
+    { ONLINE | OFFLINE | DISCARD }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01800" -->
+
+
 **backup_clause ::=**
 
 ![backup_clause](media/SQL/backup_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01801" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5075" image_path_raw="media/SQL/backup_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+backup_clause ::=
+    { BEGIN | END } BACKUP
+```
+<!-- IMG_RECOVERY_END ref_id="img-01801" -->
+
 
 #### 전제 조건
 
@@ -80505,6 +86710,15 @@ Alter success.
 
 ![alter_trigger](media/SQL/alter_trigger.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01802" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5288" image_path_raw="media/SQL/alter_trigger.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_trigger ::=
+    ALTER TRIGGER [ user_name '.' ] trigger_name
+    { ENABLE | DISABLE | COMPILE } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01802" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 트리거가 속한 스키마의 소유자 또는 ALTER ANY TRIGGER 시스템 권한을
@@ -80556,6 +86770,22 @@ Alter success.
 **alter_user ::=**
 
 ![alter_user_image89](media/SQL/alter_user_image89.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01803" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5340" image_path_raw="media/SQL/alter_user_image89.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_user ::=
+    ALTER USER user_name
+    { IDENTIFIED BY password
+    | TEMPORARY TABLESPACE tblspace_name
+    | DEFAULT TABLESPACE tblspace_name
+    | ACCESS tblspace_name { ON | OFF }
+    | LIMIT '(' password_parameters [ { ',' password_parameters } ] ')'
+    | ACCOUNT { LOCK | UNLOCK }
+    | { ENABLE | DISABLE } TCP
+    } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01803" -->
+
 
 [password_parameters ::=](#password_parameters)
 
@@ -80653,6 +86883,14 @@ iSQL> CONNECT rose2/rose2;
 
 ![alter_view_image90](media/SQL/alter_view_image90.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01804" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5436" image_path_raw="media/SQL/alter_view_image90.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_view ::=
+    ALTER VIEW [ user_name '.' ] view_name COMPILE ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01804" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 뷰가 속한 스키마의 소유자 또는 ALTER ANY TABLE 시스템 권한을 가진
@@ -80710,6 +86948,18 @@ DNO   EMP_AVG_SAL
 
 ![alter_mview](media/SQL/alter_mview.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01805" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5493" image_path_raw="media/SQL/alter_mview.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_materialized_view ::=
+    ALTER MATERIALIZED VIEW [ user_name '.' ] mview_name
+    REFRESH
+    [ { COMPLETE | FAST | FORCE } ]
+    [ { ON DEMAND | ON COMMIT } ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01805" -->
+
+
 #### 전제 조건
 
 아래의 사용자만이 이 구문으로 materialized view의 속성을 변경할 수 있다.
@@ -80743,6 +86993,18 @@ ALTER MATERIALIZED VIEW mv1 REFRESH COMPLETE ON DEMAND;
 **comment_on ::=**
 
 ![comment_on_image91](media/SQL/comment_on_image91.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01806" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5527" image_path_raw="media/SQL/comment_on_image91.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+comment_on ::=
+    COMMENT ON
+    { TABLE [ user_name '.' ] { table_name | view_name }
+    | COLUMN [ user_name '.' ] { table_name | view_name } '.' column_name
+    }
+    IS '''' comment '''' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01806" -->
+
 
 #### 전제 조건
 
@@ -80822,6 +87084,20 @@ Comment created.
 
 ![](media/SQL/9fb57281787aa263aa7d56eb48f4b3da.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01807" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5605" image_path_raw="media/SQL/9fb57281787aa263aa7d56eb48f4b3da.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+conjoin_table ::=
+    CONJOIN TABLE tbl_name PARTITION BY
+    { conjoin_range_clause | conjoin_list_clause }
+    [ row_movement_clause ]
+    [ tablespace_clause ]
+    [ physical_attributes_clause ]
+    [ logging_clause ]
+    [ lob_column_properties ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01807" -->
+
+
 [row_movement_clause ::=](#row_movement_clause),
 [tablespace_clause ::=](#tablespace_clause), [physical_attributes_clause
 ::=](#physical_attributes_clause), [logging_clause ::=](#logging_clause),
@@ -80831,17 +87107,51 @@ Comment created.
 
 ![](media/SQL/40634d2070f1d40b16a33aac52ab102c.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01808" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5614" image_path_raw="media/SQL/40634d2070f1d40b16a33aac52ab102c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+conjoin_range_clause ::=
+    RANGE '(' column_name [ { ',' column_name } ] ')' '(' range_table_to_partition_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01808" -->
+
+
 **range_table_to_partition_clause ::=**
 
 ![](media/SQL/0b00718934d68775a5494aa3352eec73.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01809" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5618" image_path_raw="media/SQL/0b00718934d68775a5494aa3352eec73.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+range_table_to_partition_clause ::=
+    TABLE tbl_name TO PARTITION partition_name VALUES LESS THAN '(' { value | DEFAULT } [ { ',' value } ] ')'
+    [ { ',' TABLE tbl_name TO PARTITION partition_name VALUES LESS THAN '(' { value | DEFAULT } [ { ',' value } ] ')' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01809" -->
+
 
 **conjoin_list_clause ::=**
 
 ![](media/SQL/6a1a5051d6c3a88b14ff462d68b00706.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01810" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5622" image_path_raw="media/SQL/6a1a5051d6c3a88b14ff462d68b00706.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+conjoin_list_clause ::=
+    LIST '(' column_name ')' '(' list_table_to_partition_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01810" -->
+
+
 **list_table_to_partition_clause ::=**
 
 ![](media/SQL/5296c172826c160f152057b8171285d5.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01811" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5626" image_path_raw="media/SQL/5296c172826c160f152057b8171285d5.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+list_table_to_partition_clause ::=
+    TABLE tbl_name TO PARTITION partition_name VALUES '(' { value | DEFAULT } [ { ',' value } ] ')'
+    [ { ',' TABLE tbl_name TO PARTITION partition_name VALUES '(' { value | DEFAULT } [ { ',' value } ] ')' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01811" -->
+
 
 #### 전제 조건
 
@@ -80923,6 +87233,18 @@ Conjoin success.
 **create_database ::=**
 
 ![create_database_image92](media/SQL/create_database_image92.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01812" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5707" image_path_raw="media/SQL/create_database_image92.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_database ::=
+    CREATE DATABASE database_name INITSIZE '=' integer [ M | G ]
+    { ARCHIVELOG | NOARCHIVELOG }
+    [ CHARACTER SET charaset ]
+    [ NATIONAL CHARACTER SET charaset ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01812" -->
+
 
 #### 전제 조건
 
@@ -81026,6 +87348,15 @@ Create success.
 
 ![create_directory](media/SQL/create_directory.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01813" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5809" image_path_raw="media/SQL/create_directory.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_directory ::=
+    CREATE [ OR REPLACE ] DIRECTORY directory_name
+    AS '''' path_name '''' ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01813" -->
+
+
 #### 전제 조건
 
 SYS 사용자 또는 CREATE ANY DIRECTORY 시스템 권한을 가진 사용자만이 이 구문으로
@@ -81095,57 +87426,186 @@ Create success.
 
 ![create_index_image98](media/SQL/create_index_image98.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01814" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5878" image_path_raw="media/SQL/create_index_image98.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_index ::=
+    CREATE [ LOCALUNIQUE | UNIQUE ] INDEX [ user_name '.' ] index_name
+    ON table_index_clause
+    { memory_index_clause | disk_index_clause }
+    [ storage_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01814" -->
+
+
 **table_index_clause ::=**
 
 ![table_index_clause](media/SQL/table_index_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01815" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5882" image_path_raw="media/SQL/table_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_index_clause ::=
+    [ user_name '.' ] tbl_name '(' index_expr [ ASC | DESC ] [ { ',' index_expr [ ASC | DESC ] } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01815" -->
+
 
 **memory_index_clause ::=**
 
 ![memory_index_clause_image98_1](media/SQL/memory_index_clause_image98_1.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01816" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5886" image_path_raw="media/SQL/memory_index_clause_image98_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+memory_index_clause ::=
+    [ index_partitioning_clause ]
+    [ domain_index_clause ]
+    [ directkey_clause ]
+    [ memory_index_attributes ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01816" -->
+
+
 **disk_index_clause::=**
 
 ![disk_index_clause_image98_2](media/SQL/disk_index_clause_image98_2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01817" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5890" image_path_raw="media/SQL/disk_index_clause_image98_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+disk_index_clause ::=
+    [ index_partitioning_clause ]
+    [ domain_index_clause ]
+    [ disk_index_attributes ]
+    [ physical_attributes_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01817" -->
+
 
 **domain_index_clause ::=**
 
 ![domain_index_clause](media/SQL/domain_index_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01818" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5894" image_path_raw="media/SQL/domain_index_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+domain_index_clause ::=
+    INDEXTYPE IS { BTREE | RTREE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01818" -->
+
+
 **directkey_clause ::=**
 
 ![directkey_clause](media/SQL/directkey_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01819" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5898" image_path_raw="media/SQL/directkey_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+directkey_clause ::=
+    DIRECTKEY [ MAXSIZE integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01819" -->
+
 
 **memory_index_attributes ::=**
 
 ![memory_index_attributes_image98_3](media/SQL/memory_index_attributes_image98_3.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01820" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5902" image_path_raw="media/SQL/memory_index_attributes_image98_3.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+memory_index_attributes ::=
+    { TABLESPACE tablespace_name | parallel_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01820" -->
+
+
 **storage_clause ::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01821" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5906" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01821" -->
+
 
 **index_partitioning_clause ::=**
 
 ![index_partitioning_clause](media/SQL/index_partitioning_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01822" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5910" image_path_raw="media/SQL/index_partitioning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partitioning_clause ::=
+    LOCAL '(' index_partition_definition [ TABLESPACE tablespace_name ]
+    [ { ',' index_partition_definition [ TABLESPACE tablespace_name ] } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01822" -->
+
+
 **index_partition_definition ::=**
 
 ![index_partition_def](media/SQL/index_partition_def.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01823" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5914" image_path_raw="media/SQL/index_partition_def.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_partition_definition ::=
+    PARTITION index_partition_name ON table_partition_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01823" -->
+
 
 **disk_index_attributes::=**
 
 ![disk_index_attributes_image98_4](media/SQL/disk_index_attributes_image98_4.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01824" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5918" image_path_raw="media/SQL/disk_index_attributes_image98_4.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+disk_index_attributes ::=
+    { TABLESPACE tablespace_name | parallel_clause | logging_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01824" -->
+
+
 **parallel_clause ::=**
 
 ![parallel_clause_create_index](media/SQL/parallel_clause_create_index.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01825" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5922" image_path_raw="media/SQL/parallel_clause_create_index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel_clause ::=
+    { NOPARALLEL | PARALLEL parallel_factor }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01825" -->
+
 
 **logging_clause ::=**
 
 ![logging_clause_create_index](media/SQL/logging_clause_create_index.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01826" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5926" image_path_raw="media/SQL/logging_clause_create_index.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+logging_clause ::=
+    { LOGGING | NOLOGGING [ FORCE | NOFORCE ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01826" -->
+
+
 **physical_attributes_clause ::=**
 
 ![physical_attributes_clause_image98_5](media/SQL/physical_attributes_clause_image98_5.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01827" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="5930" image_path_raw="media/SQL/physical_attributes_clause_image98_5.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+physical_attributes_clause ::=
+    { INITRANS integer | MAXTRANS integer } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-01827" -->
+
 
 #### 전제 조건
 
@@ -81797,17 +88257,55 @@ Create success.
 
 ![](media/SQL/4962e4da941760b43081cc8c9c55fa28.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01829" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6580" image_path_raw="media/SQL/4962e4da941760b43081cc8c9c55fa28.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_job ::=
+    CREATE JOB job_name exec_procedure_statement start_end_clause
+    [ interval_clause ]
+    [ { ENABLE | DISABLE } ]
+    [ COMMENT text ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01829" -->
+
+
 **execute_procedure_statement ::=**
 
 ![execute_procedure_statement](media/SQL/execute_procedure_statement.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01830" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6584" image_path_raw="media/SQL/execute_procedure_statement.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+execute_procedure_statement ::=
+    EXEC[UTE] [ user_name '.' ] procedure_name
+    '(' [ expr2 [ { ',' expr2 } ] ] ')'
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01830" -->
+
 
 **start_end_clause ::=**
 
 ![start_end_clause](media/SQL/start_end_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01831" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6588" image_path_raw="media/SQL/start_end_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+start_end_clause ::=
+    START expr1 [ END expr1 ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01831" -->
+
+
 **interval_clause ::=**
 
 ![interval_clause](media/SQL/interval_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01832" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6592" image_path_raw="media/SQL/interval_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+interval_clause ::=
+    INTERVAL number { YEAR | MONTH | DAY | HOUR | MINUTE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01832" -->
+
 
 #### 전제 조건
 
@@ -81887,6 +88385,21 @@ Create success.
 **create_queue ::=**
 
 ![create_queue_image108](media/SQL/create_queue_image108.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01833" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6671" image_path_raw="media/SQL/create_queue_image108.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_queue ::=
+    CREATE QUEUE queue_name
+    '(' { size [ { FIXED | variable_clause } ]
+        | column_definition [ { ',' column_definition } ] }
+    ')'
+    [ MAXROWS count ]
+    [ DELETE { ON | OFF } ]
+    [ tablespace_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01833" -->
+
 
 [column_definition ::=](#column_definition)
 
@@ -81989,13 +88502,54 @@ Create success.
 
 ![create_replication](media/SQL/create_replication.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01834" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6772" image_path_raw="media/SQL/create_replication.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_replication ::=
+    CREATE [ LAZY | EAGER ] REPLICATION replication_name
+    [ FOR ANALYSIS | FOR PROPAGABLE LOGGING | FOR PROPAGATION | FOR ANALYSIS PROPAGATION ]
+    [ AS MASTER | AS SLAVE ]
+    [ option_clause ]
+    WITH
+    '(' replication_host_ip ',' replication_host_port_no ')'
+    [ { ',' '(' replication_host_ip ',' replication_host_port_no ')' } ]
+    [ USING conn_type [ ib_latency ] ]
+    FROM replication_item TO replication_item
+    [ { ',' FROM replication_item TO replication_item } ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01834" -->
+
+
 **option_clause ::=**
 
 ![](media/SQL/option_clause.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01835" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6776" image_path_raw="media/SQL/option_clause.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+option_clause ::=
+    OPTIONS { RECOVERY
+            | OFFLINE log_dir [ { ',' log_dir } ]
+            | GROUPING
+            | PARALLEL receiver_applier_count
+            | GAPLESS
+            | RECEIVE_ONLY
+            | META_LOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01835" -->
+
+
 **replication_item ::=**
 
 ![replication_item](media/SQL/replication_item.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01836" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6780" image_path_raw="media/SQL/replication_item.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+replication_item ::=
+    user_name '.' tbl_name
+    [ PARTITION partition_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01836" -->
+
 
 #### 전제 조건
 
@@ -82132,6 +88686,14 @@ REP2                                      3
 
 ![CREATE_ROLE](media/SQL/CREATE_ROLE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01837" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6915" image_path_raw="media/SQL/CREATE_ROLE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_role ::=
+    CREATE ROLE role_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01837" -->
+
+
 #### 전제 조건
 
 SYS 사용자와 CREATE ROLE 시스템 권한을 가진 사용자만이 롤(ROLE)을 생성할 수
@@ -82172,13 +88734,56 @@ Create success.
 
 ![create_sequence_image110](media/SQL/create_sequence_image110.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01838" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6955" image_path_raw="media/SQL/create_sequence_image110.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_sequence ::=
+    CREATE SEQUENCE [ user_name '.' ] seq_name
+        [ sequence_options ] [ sync_table_clause ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01838" -->
+
+
 **sequence_options ::=**
 
 ![sequence_options_create](media/SQL/sequence_create_options.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01839" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6959" image_path_raw="media/SQL/sequence_create_options.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sequence_options ::=
+    { START WITH integer
+    | INCREMENT BY integer
+    | MAXVALUE integer
+    | NOMAXVALUE
+    | MINVALUE integer
+    | NOMINVALUE
+    | CYCLE
+    | NOCYCLE
+    | CACHE integer
+    | NOCACHE } [ { START WITH integer
+                  | INCREMENT BY integer
+                  | MAXVALUE integer
+                  | NOMAXVALUE
+                  | MINVALUE integer
+                  | NOMINVALUE
+                  | CYCLE
+                  | NOCYCLE
+                  | CACHE integer
+                  | NOCACHE } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01839" -->
+
+
 **sync_table_clause ::=**
 
 ![sync_table_clause](media/SQL/sync_table_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01840" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="6963" image_path_raw="media/SQL/sync_table_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sync_table_clause ::=
+    { ENABLE | DISABLE } SYNC TABLE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01840" -->
+
 
 #### 전제 조건
 
@@ -82574,6 +89179,15 @@ CREATE SEQUENCE seq1 CACHE 100 ENABLE SYNC TABLE;
 
 ![create_synonym_image111](media/SQL/create_synonym_image111.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01841" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7357" image_path_raw="media/SQL/create_synonym_image111.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_synonym ::=
+    CREATE [ OR REPLACE ] [ PUBLIC ] SYNONYM [ user_name '.' ] synonym_name
+    FOR [ user_name '.' ] object_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01841" -->
+
+
 #### 전제 조건
 
 아래의 조건 중 하나 이상을 만족해야 한다.
@@ -82745,6 +89359,28 @@ MY_DEPT.MEMBER
 
 ![CREATE_TABLE_2](media/SQL/CREATE_TABLE_2.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01842" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7528" image_path_raw="media/SQL/CREATE_TABLE_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_table ::=
+    CREATE [ GLOBAL ] [ TEMPORARY ] TABLE [ user_name '.' ] tbl_name
+        '(' { column_definition | table_constraint } [ ',' { column_definition | table_constraint } ] ')'
+        [ temporary_attributes_clause ]
+        [ MAXROWS integer ]
+        [ table_partitioning_clause ]
+        [ access_mode_clause ]
+        [ tablespace_clause ]
+        [ physical_attributes_clause ]
+        [ log_compression_clause ]
+        [ logging_clause ]
+        [ parallel_clause ]
+        [ table_compression_clause ]
+        [ lob_column_properties ]
+        [ AS subquery ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01842" -->
+
+
 [table_constraint
 ::=](#table_constraint), [temporary_attributes_clause
 ::=](#temporary_attributes_clause),
@@ -82760,49 +89396,153 @@ MY_DEPT.MEMBER
 
 ![column_definition_image113](media/SQL/column_definition_image113.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01843" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7543" image_path_raw="media/SQL/column_definition_image113.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_definition ::=
+    column_name
+    { data_type [ encrypt_clause ] [ variable_clause ] [ in_row_clause ] [ default_clause ]
+    | TIMESTAMP }
+    [ { ',' column_constraint } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01843" -->
+
+
 **encrypt_clause::=**
 
 ![encrypt_clause](media/SQL/encrypt_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01844" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7547" image_path_raw="media/SQL/encrypt_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+encrypt_clause ::=
+    ENCRYPT USING policy_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01844" -->
+
 
 **variable_clause::=**
 
 ![variable_clause](media/SQL/variable_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01845" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7551" image_path_raw="media/SQL/variable_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+variable_clause ::=
+    FIXED | VARIABLE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01845" -->
+
+
 **in_row_clause::=**
 
 ![in_row_clause](media/SQL/in_row_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01846" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7555" image_path_raw="media/SQL/in_row_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+in_row_clause ::=
+    IN ROW integer
+```
+<!-- IMG_RECOVERY_END ref_id="img-01846" -->
+
 
 **default_clause::=**
 
 ![default_clause](media/SQL/default_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01847" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7559" image_path_raw="media/SQL/default_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+default_clause ::=
+    DEFAULT expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-01847" -->
+
+
 **column_constraint ::=**
 
 ![column_constraint_image114](media/SQL/column_constraint_image114.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01848" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7563" image_path_raw="media/SQL/column_constraint_image114.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_constraint ::=
+    [ CONSTRAINT constraint_name ]
+    { NOT NULL
+    | NULL
+    | unique_clause
+    | references_clause
+    | check_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01848" -->
+
 
 **unique_clause ::=**
 
 ![unique_clause](media/SQL/unique_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01849" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7567" image_path_raw="media/SQL/unique_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unique_clause ::=
+    unique_specification [ sort_order_clause ] [ directkey_clause ] [ using_index_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01849" -->
+
+
 **unique_specification ::=**
 
 ![unique_specification](media/SQL/unique_specification.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01850" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7571" image_path_raw="media/SQL/unique_specification.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unique_specification ::=
+    PRIMARY KEY | UNIQUE | LOCALUNIQUE
+```
+<!-- IMG_RECOVERY_END ref_id="img-01850" -->
+
 
 **sort_order_clause ::=**
 
 ![sort_order_clause](media/SQL/sort_order_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01851" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7575" image_path_raw="media/SQL/sort_order_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+sort_order_clause ::=
+    ASC | DESC
+```
+<!-- IMG_RECOVERY_END ref_id="img-01851" -->
+
+
 **directkey_clause ::=**
 
 ![directkey_clause](media/SQL/directkey_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01852" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7579" image_path_raw="media/SQL/directkey_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+directkey_clause ::=
+    DIRECTKEY [ MAXSIZE integer ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01852" -->
+
 
 **using_index_clause ::=**
 
 ![using_index_clause_image117](media/SQL/using_index_clause_image117.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01853" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7583" image_path_raw="media/SQL/using_index_clause_image117.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+using_index_clause ::=
+    USING INDEX [ index_partitioning_clause ] [ index_attribute_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01853" -->
+
+
 **index_attribute_clause ::=**
 
 ![index_attribute_clause_image118](media/SQL/index_attribute_clause_image118.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01854" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7587" image_path_raw="media/SQL/index_attribute_clause_image118.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+index_attribute_clause ::=
+    memory_index_attributes | disk_index_attributes
+```
+<!-- IMG_RECOVERY_END ref_id="img-01854" -->
+
 
 [memory_index_attributes ::=](#memory_index_attributes), [disk_index_attributes
 ::=](#disk_index_attributes)
@@ -82811,21 +89551,69 @@ MY_DEPT.MEMBER
 
 ![references_clause](media/SQL/references_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01855" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7594" image_path_raw="media/SQL/references_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+references_clause ::=
+    REFERENCES [ user_name '.' ] tbl_name [ '(' column_name ')' ]
+    [ ON { INSERT NO ACTION
+         | UPDATE NO ACTION
+         | DELETE { NO ACTION | CASCADE | SET NULL } } ] ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-01855" -->
+
+
 **check_clause ::=**
 
 ![check_clause](media/SQL/check_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01856" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7598" image_path_raw="media/SQL/check_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+check_clause ::=
+    CHECK '(' condition ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01856" -->
+
 
 **table_constraint ::=**
 
 ![table_constraint](media/SQL/table_constraint.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01857" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7602" image_path_raw="media/SQL/table_constraint.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_constraint ::=
+    [ CONSTRAINT constraint_name ]
+    { table_unique_clause
+    | referential_constraint
+    | check_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01857" -->
+
+
 **table_unique_clause ::=**
 
 ![table_unique_clause](media/SQL/table_unique_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01858" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7606" image_path_raw="media/SQL/table_unique_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_unique_clause ::=
+    unique_specification '(' column_name [ sort_order_clause ] [ ',' column_name [ sort_order_clause ] ] ')'
+    [ directkey_clause ]
+    [ using_index_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01858" -->
+
+
 **referential_constraint ::=**
 
 ![referential_constraint](media/SQL/referential_constraint.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01859" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7610" image_path_raw="media/SQL/referential_constraint.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+referential_constraint ::=
+    FOREIGN KEY '(' column_name [ ',' column_name ] ')' references_clause
+```
+<!-- IMG_RECOVERY_END ref_id="img-01859" -->
+
 
 [references_clause ::=](#references_clause)
 
@@ -82833,21 +89621,69 @@ MY_DEPT.MEMBER
 
 ![temporary_attributes_clause](media/SQL/temporary_attributes_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01860" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7616" image_path_raw="media/SQL/temporary_attributes_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+temporary_attributes_clause ::=
+    ON COMMIT { DELETE | PRESERVE } ROWS
+```
+<!-- IMG_RECOVERY_END ref_id="img-01860" -->
+
+
 **table_partitioning_clause ::=**
 
 ![table_partitioning_clause_image123](media/SQL/table_partitioning_clause_image123.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01861" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7620" image_path_raw="media/SQL/table_partitioning_clause_image123.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_partitioning_clause ::=
+    { range_partitioning
+    | hash_partitioning
+    | list_partitioning
+    | range_partitioning_using_hash }
+    [ row_movement_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01861" -->
+
 
 **range_partitioning ::=**
 
 ![range_partitioning_image124](media/SQL/range_partitioning_image124.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01862" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7624" image_path_raw="media/SQL/range_partitioning_image124.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+range_partitioning ::=
+    PARTITION BY RANGE '(' column [ ',' column ] ')'
+    '(' partition_default_clause [ ',' partition_range_clause ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01862" -->
+
+
 **partition_default_clause ::=**
 
 ![partition_default](media/SQL/partition_default.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01863" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7628" image_path_raw="media/SQL/partition_default.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_default_clause ::=
+    PARTITION partition_name VALUES DEFAULT
+    table_partition_description
+```
+<!-- IMG_RECOVERY_END ref_id="img-01863" -->
+
+
 **table_partition_description ::=**
 
 ![TABLE_PARTITION_DESCRIPTION_2](media/SQL/TABLE_PARTITION_DESCRIPTION_2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01864" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7632" image_path_raw="media/SQL/TABLE_PARTITION_DESCRIPTION_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_partition_description ::=
+    [ TABLESPACE tablespace_name ]
+    [ lob_column_properties ]
+    [ access_mode_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01864" -->
+
 
 [lob_column_properties ::=](#lob_column_properties)*,* [access_mode_clause
 ::=](#access_mode_clause_CREATETALBE)
@@ -82856,11 +89692,31 @@ MY_DEPT.MEMBER
 
 ![partition_range_clause_image126](media/SQL/partition_range_clause_image126.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01865" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7639" image_path_raw="media/SQL/partition_range_clause_image126.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_range_clause ::=
+    PARTITION partition_name
+    VALUES LESS THAN '(' value [ ',' value ] ')'
+    table_partition_description
+```
+<!-- IMG_RECOVERY_END ref_id="img-01865" -->
+
+
 [table_partition_description ::=](#table_partition_description)
 
 **hash_partitioning ::=**
 
 ![hash_paritioning_image126_1](media/SQL/hash_paritioning_image126_1.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01866" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7645" image_path_raw="media/SQL/hash_paritioning_image126_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hash_partitioning ::=
+    PARTITION BY HASH '(' column [ ',' column ] ')'
+    '(' PARTITION partition_name table_partition_description
+        [ ',' PARTITION partition_name table_partition_description ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01866" -->
+
 
 [table_partition_description ::=](#table_partition_description)
 
@@ -82868,15 +89724,44 @@ MY_DEPT.MEMBER
 
 ![list_partitioning_image127](media/SQL/list_partitioning_image127.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01867" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7651" image_path_raw="media/SQL/list_partitioning_image127.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+list_partitioning ::=
+    PARTITION BY LIST '(' column [ ',' column ] ')'
+    '(' partition_default_clause [ ',' partition_list_clause ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01867" -->
+
+
 [partition_default_clause ::=](#partition_default_clause)
 
 **partition_list_clause ::=**
 
 ![table_list_clause_image128](media/SQL/table_list_clause_image128.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01868" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7657" image_path_raw="media/SQL/table_list_clause_image128.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_list_clause ::=
+    PARTITION partition_name
+    VALUES '(' value [ ',' value ] ')'
+    table_partition_description
+```
+<!-- IMG_RECOVERY_END ref_id="img-01868" -->
+
+
 **range_partitioning_using_hash ::=**
 
 ![range_using_hash_partitioning](media/SQL/range_using_hash_partitioning_image.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01869" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7661" image_path_raw="media/SQL/range_using_hash_partitioning_image.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+range_partitioning_using_hash ::=
+    PARTITION BY RANGE_USING_HASH '(' column ')'
+    '(' { partition_default_clause | partition_range_clause }
+        [ ',' { partition_default_clause | partition_range_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01869" -->
+
 
 [partition_default_clause ::=](#partition_default_clause)
 
@@ -82886,49 +89771,158 @@ MY_DEPT.MEMBER
 
 ![row_movement_clause](media/SQL/row_movement_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01870" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7669" image_path_raw="media/SQL/row_movement_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+row_movement_clause ::=
+    { ENABLE | DISABLE } ROW MOVEMENT
+```
+<!-- IMG_RECOVERY_END ref_id="img-01870" -->
+
+
 **access_mode_clause ::=**
 
 ![ACCESS_MODE_CLAUSE_](media/SQL/ACCESS_MODE_CLAUSE_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01871" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7673" image_path_raw="media/SQL/ACCESS_MODE_CLAUSE_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+access_mode_clause ::=
+    READ { ONLY | WRITE | APPEND }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01871" -->
+
 
 **tablespace_clause ::=**
 
 ![tablespace_clause](media/SQL/tablespace_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01872" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7677" image_path_raw="media/SQL/tablespace_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+tablespace_clause ::=
+    TABLESPACE tablespace_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01872" -->
+
+
 **physical_attributes_clause ::=**
 
 ![physical_attributes_clause_image130_1](media/SQL/physical_attributes_clause_image130_1.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01873" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7681" image_path_raw="media/SQL/physical_attributes_clause_image130_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+physical_attributes_clause ::=
+    { PCTFREE integer
+    | PCTUSED integer
+    | INITRANS integer
+    | MAXTRANS integer
+    | storage_clause } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-01873" -->
+
 
 **storage_clause ::=**
 
 ![storage_clause](media/SQL/storage_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01874" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7685" image_path_raw="media/SQL/storage_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+storage_clause ::=
+    STORAGE '('
+    { INITEXTENTS integer
+    | NEXTEXTENTS integer
+    | MINEXTENTS integer
+    | MAXEXTENTS { integer | UNLIMITED } }
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01874" -->
+
+
 **log_compression_clause ::=**
 
 ![log_compression_clause_image130_2](media/SQL/log_compression_clause_image130_2.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01875" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7689" image_path_raw="media/SQL/log_compression_clause_image130_2.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+log_compression_clause ::=
+    { COMPRESSED LOGGING | UNCOMPRESSED LOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01875" -->
+
 
 **logging_clause ::=**
 
 ![logging_clause](media/SQL/logging_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01876" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7693" image_path_raw="media/SQL/logging_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+logging_clause ::=
+    { LOGGING | NOLOGGING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01876" -->
+
+
 **parallel_clause::=**
 
 ![PARALLEL_CLAUSE](media/SQL/PARALLEL_CLAUSE.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01877" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7697" image_path_raw="media/SQL/PARALLEL_CLAUSE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+parallel_clause ::=
+    { NOPARALLEL | PARALLEL integer }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01877" -->
+
 
 **table_compression_clause ::=**
 
 ![table_compression](media/SQL/table_compression.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01878" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7701" image_path_raw="media/SQL/table_compression.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_compression_clause ::=
+    COMPRESS '(' column_name [ { ',' column_name | MAXROWS integer } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01878" -->
+
+
 **lob_column_properties ::=**
 
 ![lob_column_properties_image133](media/SQL/lob_column_properties_image133.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01879" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7705" image_path_raw="media/SQL/lob_column_properties_image133.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+lob_column_properties ::=
+    LOB_storage_clause [ LOB_storage_clause ] ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-01879" -->
+
 
 **LOB_storage_clause ::=**
 
 ![lob_storage_clause_image134](media/SQL/lob_storage_clause_image134.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01880" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7709" image_path_raw="media/SQL/lob_storage_clause_image134.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+LOB_storage_clause ::=
+    LOB '(' LOB_item [ ',' LOB_item ] ')' STORE AS '(' lob_attributes ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01880" -->
+
+
 **lob_attributes ::=**
 
 ![lob_attribute](media/SQL/lob_attribute.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01881" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="7713" image_path_raw="media/SQL/lob_attribute.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+lob_attributes ::=
+    { TABLESPACE tablespace_name
+    | LOGGING
+    | NOLOGGING
+    | BUFFER
+    | NOBUFFER } ...
+```
+<!-- IMG_RECOVERY_END ref_id="img-01881" -->
+
 
 #### 전제 조건
 
@@ -83221,6 +90215,20 @@ PARTITION BY RANGE (product_id)
 위의 설명을 그림으로 나타내면 다음과 같다.
 
 ![create_table_lob](media/SQL/create_table_lob.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01882" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8005" image_path_raw="media/SQL/create_table_lob.gif" image_class="E" format="mermaid" verified="True" -->
+```mermaid
+flowchart TD
+    A{LOB 컬럼의 테이블스페이스 명시}
+    A -->|YES| B([지정한 테이블스페이스])
+    A -->|NO| C{파티션의 테이블스페이스 명시}
+    C -->|YES| D([지정한 테이블스페이스])
+    C -->|NO| E{파티션의 테이블스페이스 명시}
+    E -->|YES| F([지정한 테이블스페이스])
+    E -->|NO| G[파티션의 테이블스페이스 명시]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01882" -->
+
 
 *partition_range_clause*
 
@@ -83920,17 +90928,57 @@ PARTITION BY RANGE_USING_HASH (product_id)
 
 ![create_disk_tablespace_image137](media/SQL/create_disk_tablespace_image137.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01883" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8703" image_path_raw="media/SQL/create_disk_tablespace_image137.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_disk_tablespace ::=
+    CREATE { DISK | DATA } TABLESPACE tablespace_name DATAFILE
+        datafile_spec [ ',' datafile_spec ]
+        [ EXTENTSIZE integer { K | M | G } ]
+        [ SEGMENT MANAGEMENT { MANUAL | AUTO } ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01883" -->
+
+
 **datafile_spec ::=**
 
 ![datafile_spec](media/SQL/datafile_spec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01884" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8707" image_path_raw="media/SQL/datafile_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_spec ::=
+    '''' file_name ''''
+    [ SIZE integer [ K | M | G ] ]
+    [ REUSE ]
+    [ autoextend_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01884" -->
+
 
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01885" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8711" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01885" -->
+
+
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01886" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8715" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01886" -->
+
 
 #### 전제 조건
 
@@ -84098,25 +91146,79 @@ Create success.
 
 ![create_memory_tablespace_image140](media/SQL/create_memory_tablespace_image140.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01887" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8881" image_path_raw="media/SQL/create_memory_tablespace_image140.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_memory_tablespace ::=
+    CREATE { MEMORY | DATA } TABLESPACE tablespace_name initsize_clause
+        [ autoextend_clause ]
+        [ checkpoint_path_clause ]
+        [ splitsize_clause ]
+        [ ONLINE | OFFLINE ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01887" -->
+
+
 **initsize_clause ::=**
 
 ![initsize_clause_image141](media/SQL/initsize_clause_image141.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01888" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8885" image_path_raw="media/SQL/initsize_clause_image141.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+initsize_clause ::=
+    SIZE integer [ K | M | G ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01888" -->
+
 
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01889" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8889" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01889" -->
+
+
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01890" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8893" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01890" -->
+
 
 **checkpoint_path_clause ::=**
 
 ![checkpoint_path_clause_image143](media/SQL/checkpoint_path_clause_image143.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01891" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8897" image_path_raw="media/SQL/checkpoint_path_clause_image143.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+checkpoint_path_clause ::=
+    CHECKPOINT PATH '(' checkpoint_path [ { ',' checkpoint_path } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01891" -->
+
+
 **splitsize_clause ::=**
 
 ![splitsize_clause_image144](media/SQL/splitsize_clause_image144.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01892" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="8901" image_path_raw="media/SQL/splitsize_clause_image144.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+splitsize_clause ::=
+    SPLIT EACH integer [ K | M | G ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01892" -->
+
 
 #### 전제 조건
 
@@ -84284,17 +91386,53 @@ Create success.
 
 ![create_tablespace_image145](media/SQL/create_tablespace_image145.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01893" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9067" image_path_raw="media/SQL/create_tablespace_image145.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_volatile_tablespace ::=
+    CREATE [ VOLATILE ] [ DATA ] TABLESPACE tablespace_name
+    initsize_clause
+    [ autoextend_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01893" -->
+
+
 **initsize_clause ::=**
 
 ![initsize_clause_image141](media/SQL/initsize_clause_image141.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01894" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9071" image_path_raw="media/SQL/initsize_clause_image141.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+initsize_clause ::=
+    SIZE integer [ K | M | G ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01894" -->
+
 
 **autoextend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01895" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9075" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01895" -->
+
+
 **maxsize_clause ::=**
 
 ![maxsize_clause](media/SQL/maxsize_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01896" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9079" image_path_raw="media/SQL/maxsize_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+maxsize_clause ::=
+    MAXSIZE { UNLIMITED | integer [ K | M | G ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01896" -->
+
 
 #### 전제 조건
 
@@ -84408,13 +91546,44 @@ Create success.
 
 ![create_temporary_tablespace](media/SQL/create_temporary_tablespace.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01897" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9191" image_path_raw="media/SQL/create_temporary_tablespace.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_temporary_tablespace ::=
+    CREATE TEMPORARY TABLESPACE tablespace_name
+    TEMPFILE datafile_spec [ { ',' datafile_spec } ]
+    [ EXTENTSIZE integer [ K | M | G ] ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01897" -->
+
+
 **datafile_spec ::=**
 
 ![datafile_spec](media/SQL/datafile_spec.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01898" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9195" image_path_raw="media/SQL/datafile_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+datafile_spec ::=
+    '''' file_name ''''
+    [ SIZE integer [ K | M | G ] ]
+    [ REUSE ]
+    [ autoextend_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01898" -->
+
+
 **autoexetend_clause ::=**
 
 ![autoextend_clause](media/SQL/autoextend_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01899" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9199" image_path_raw="media/SQL/autoextend_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+autoextend_clause ::=
+      AUTOEXTEND OFF
+    | AUTOEXTEND ON [ NEXT integer [ K | M | G ] ] [ maxsize_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01899" -->
+
 
 #### 전제 조건
 
@@ -84460,29 +91629,101 @@ Create success.
 
 ![create_trigger](media/SQL/create_trigger.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01900" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9243" image_path_raw="media/SQL/create_trigger.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_trigger ::=
+    CREATE [ OR REPLACE ] TRIGGER [ user_name '.' ] trigger_name
+    { simple_dml_trigger | instead_of_dml_trigger }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01900" -->
+
+
 **simple_dml_trigger ::=**
 
 ![simple_dml_trigger_image151](media/SQL/simple_dml_trigger_image151.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01901" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9247" image_path_raw="media/SQL/simple_dml_trigger_image151.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+simple_dml_trigger ::=
+    { AFTER | BEFORE } trigger_event ON [ user_name '.' ] tbl_name
+    [ referencing_clause ]
+    [ trigger_action ]
+    psm_body
+```
+<!-- IMG_RECOVERY_END ref_id="img-01901" -->
+
 
 **trigger_event ::=**
 
 ![trigger_event_image152](media/SQL/trigger_event_image152.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01902" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9251" image_path_raw="media/SQL/trigger_event_image152.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+trigger_event ::=
+    { INSERT | DELETE | UPDATE [ OF column_name [ { ',' column_name } ] ] }
+    [ OR { INSERT | DELETE | UPDATE [ OF column_name [ { ',' column_name } ] ] } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01902" -->
+
+
 **referencing_clause ::=**
 
 ![referencing_clause_image152_1](media/SQL/referencing_clause_image152_1.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01903" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9255" image_path_raw="media/SQL/referencing_clause_image152_1.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+referencing_clause ::=
+    REFERENCING { OLD | NEW } [ ROW ] [ AS ] alias_name
+    [ { ',' { OLD | NEW } [ ROW ] [ AS ] alias_name } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01903" -->
+
 
 **trigger_action::=**
 
 ![](media/SQL/9c08ef3d3a9a235c54020897664f1e76.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01904" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9259" image_path_raw="media/SQL/9c08ef3d3a9a235c54020897664f1e76.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+trigger_action ::=
+    FOR EACH { ROW [ { ENABLE | DISABLE } ] [ WHEN '(' search_condition ')' ]
+             | STATEMENT [ { ENABLE | DISABLE } ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01904" -->
+
+
 **psm_body::=**
 
 ![](media/SQL/9bdcf9256b030ef2f125cae49db1e626.jpg)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01905" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9263" image_path_raw="media/SQL/9bdcf9256b030ef2f125cae49db1e626.jpg" image_class="C" format="bnf" verified="True" -->
+```bnf
+psm_body ::=
+    [ { AS | IS | DECLARE } [ declare_section ] ]
+    BEGIN
+    [ statement ]
+    [ EXCEPTION exception_handler ]
+    END [ trigger_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01905" -->
+
+
 **instead_of_dml_trigger::=**
 
 ![](media/SQL/15bb3089ca8a5848774adf787ad4e5ed.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01906" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9267" image_path_raw="media/SQL/15bb3089ca8a5848774adf787ad4e5ed.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+instead_of_dml_trigger ::=
+    INSTEAD OF { INSERT | DELETE | UPDATE } ON [ user_name '.' ] view_name
+    [ referencing_clause ]
+    [ FOR EACH ROW ]
+    [ { ENABLE | DISABLE } ]
+    psm_body
+```
+<!-- IMG_RECOVERY_END ref_id="img-01906" -->
+
 
 #### 전제 조건
 
@@ -84800,11 +92041,40 @@ ID SCORE
 
 ![create_user_image155](media/SQL/create_user_image155.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01907" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9583" image_path_raw="media/SQL/create_user_image155.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_user ::=
+    CREATE USER user_name IDENTIFIED BY password
+    [ TEMPORARY TABLESPACE tblspace_name ]
+    [ DEFAULT TABLESPACE tblspace_name ]
+    [ ACCESS tblspace_name { ON | OFF } ]
+    [ LIMIT '(' password_parameters [ { ',' password_parameters } ] ')' ]
+    [ { ENABLE | DISABLE } TCP ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01907" -->
+
+
 **<a name="password_parameters"><a/>**
 
 **password_parameters ::=**
 
 ![password_parameters](media/SQL/password_parameters.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01908" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9589" image_path_raw="media/SQL/password_parameters.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+password_parameters ::=
+    { FAILED_LOGIN_ATTEMPTS
+    | PASSWORD_LIFE_TIME
+    | PASSWORD_REUSE_TIME
+    | PASSWORD_REUSE_MAX
+    | PASSWORD_LOCK_TIME
+    | PASSWORD_GRACE_TIME }
+    { value | UNLIMITED | DEFAULT }
+    | PASSWORD_VERIFY_FUNCTION { function | NULL | DEFAULT }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01908" -->
+
 
 #### 전제 조건
 
@@ -85003,9 +92273,29 @@ iSQL> CREATE USER rose4 IDENTIFIED BY rose4
 
 ![create_view_image156](media/SQL/create_view_image156.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01909" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9786" image_path_raw="media/SQL/create_view_image156.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_view ::=
+    CREATE [ OR REPLACE ] [ [ NO ] FORCE ]
+    VIEW [ user_name '.' ] view_name [ '(' alias_name [ { ',' alias_name } ] ')' ]
+    AS subquery
+    [ query_restriction_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01909" -->
+
+
 **query_restriction_clause ::=**
 
 ![query_restriction_clause_image157](media/SQL/query_restriction_clause_image157.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01910" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9790" image_path_raw="media/SQL/query_restriction_clause_image157.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+query_restriction_clause ::=
+    WITH READ ONLY
+```
+<!-- IMG_RECOVERY_END ref_id="img-01910" -->
+
 
 #### 전제 조건
 
@@ -85142,6 +92432,25 @@ Sandra                Hammond               Saeed                 Pahlavi
 
 ![create_mview](media/SQL/create_mview.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01911" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9925" image_path_raw="media/SQL/create_mview.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+create_materialized_view ::=
+    CREATE MATERIALIZED VIEW [ user_name '.' ] mview_name
+    [ '(' c_alias [ { ',' c_alias } ] ')' ]
+    [ MAXROWS integer ]
+    [ table_partitioning_clause ]
+    [ tablespace_clause ]
+    [ physical_attributes_clause ]
+    [ logging_clause ]
+    [ lob_column_properties ]
+    [ build_clause ]
+    [ refresh_clause ]
+    AS subquery
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01911" -->
+
+
 [table_partitioning_clause ::=](#table_partitioning_clause), [tablespace_clause
 ::=](#tablespace_clause), [logging_clause ::=](#logging_clause),
 [lob_column_properties ::=](#lob_column_properties)
@@ -85150,15 +92459,42 @@ Sandra                Hammond               Saeed                 Pahlavi
 
 ![physical_attributes_clause](media/SQL/physical_attributes_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01912" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9933" image_path_raw="media/SQL/physical_attributes_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+physical_attributes_clause ::=
+    { INITRANS integer | MAXTRANS integer }
+    [ { INITRANS integer | MAXTRANS integer } ]
+    [ storage_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01912" -->
+
+
 [storage_clause ::=](#storage_clause)
 
 **build_clause ::=**
 
 ![build_clause](media/SQL/build_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01913" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9939" image_path_raw="media/SQL/build_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+build_clause ::=
+    BUILD { IMMEDIATE | DEFERRED }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01913" -->
+
+
 **refresh_clause ::=**
 
 ![refresh_clause](media/SQL/refresh_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01914" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="9943" image_path_raw="media/SQL/refresh_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+refresh_clause ::=
+    REFRESH [ { COMPLETE | FAST | FORCE } ] [ { ON DEMAND | ON COMMIT } ]
+    | NEVER REFRESH
+```
+<!-- IMG_RECOVERY_END ref_id="img-01914" -->
+
 
 #### 전제 조건
 
@@ -85285,11 +92621,27 @@ SELECT * FROM employees;
 
 ![](media/SQL/112a655747996d5a7aa626adb1927e8a.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01915" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10068" image_path_raw="media/SQL/112a655747996d5a7aa626adb1927e8a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+disjoin_table ::=
+    DISJOIN TABLE tbl_name '(' partition_to_table_clause [ { ',' partition_to_table_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01915" -->
+
+
 
 
 **partition_to_table_clause ::=**
 
 ![](media/SQL/cf5d8b45fc1e7f0af96650019286c30e.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01916" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10074" image_path_raw="media/SQL/cf5d8b45fc1e7f0af96650019286c30e.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+partition_to_table_clause ::=
+    PARTITION partition_name TO TABLE tbl_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-01916" -->
+
 
 #### 전제 조건
 
@@ -85362,6 +92714,14 @@ Disjoin success.
 
 ![drop_database_image158](media/SQL/drop_database_image158.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01917" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10145" image_path_raw="media/SQL/drop_database_image158.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_database ::=
+    DROP DATABASE database_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01917" -->
+
+
 #### 전제 조건
 
 이 구문은 SYS 사용자가 –sysdba 관리자 모드에서만 수행할 수 있으며, PROCESS 구동
@@ -85408,6 +92768,14 @@ Drop success.
 
 ![drop_directory_image160](media/SQL/drop_directory_image160.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01918" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10191" image_path_raw="media/SQL/drop_directory_image160.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_directory ::=
+    DROP DIRECTORY directory_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01918" -->
+
+
 #### 전제 조건
 
 SYS 사용자와 DROP ANY DIRECTORY 시스템 권한을 가진 사용자만이 디렉토리 객체를
@@ -85440,6 +92808,14 @@ Drop success.
 **drop_index ::=**
 
 ![drop_index_image161](media/SQL/drop_index_image161.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01919" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10224" image_path_raw="media/SQL/drop_index_image161.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_index ::=
+    DROP INDEX [ user_name '.' ] index_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01919" -->
+
 
 #### 전제 조건
 
@@ -85478,6 +92854,14 @@ Drop success.
 
 ![drop_job](media/SQL/drop_job.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01920" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10261" image_path_raw="media/SQL/drop_job.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_job ::=
+    DROP JOB job_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01920" -->
+
+
 #### 전제 조건
 
 SYS 사용자만이 이 구문을 사용할 수 있다.
@@ -85509,6 +92893,14 @@ Drop success.
 
 ![drop_queue_image162](media/SQL/drop_queue_image162.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01921" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10292" image_path_raw="media/SQL/drop_queue_image162.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_queue ::=
+    DROP QUEUE queue_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01921" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 테이블 소유자, DROP ANY TABLE 시스템 권한을 가진 사용자만이 큐를
@@ -85537,6 +92929,14 @@ iSQL> DROP QUEUE Q1;
 **drop_replication ::=**
 
 ![drop_replication_image163](media/SQL/drop_replication_image163.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01922" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10321" image_path_raw="media/SQL/drop_replication_image163.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_replication ::=
+    DROP REPLICATION replication_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01922" -->
+
 
 #### 전제 조건
 
@@ -85574,6 +92974,14 @@ iSQL> DROP REPLICATION rep1;
 
 ![drop_role](media/SQL/drop_role.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01923" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10357" image_path_raw="media/SQL/drop_role.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_role ::=
+    DROP ROLE role_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01923" -->
+
+
 #### 전제 조건
 
 SYS 사용자와 DROP ANY ROLE 시스템 권한을 가진 사용자만이 롤(ROLE)을 삭제할 수
@@ -85605,6 +93013,14 @@ Drop success.
 **drop_sequence ::=**
 
 ![drop_sequence_image164](media/SQL/drop_sequence_image164.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01924" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10389" image_path_raw="media/SQL/drop_sequence_image164.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_sequence ::=
+    DROP SEQUENCE [ user_name '.' ] seq_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01924" -->
+
 
 #### 전제 조건
 
@@ -85642,6 +93058,14 @@ Drop success.
 **drop_synonym ::=**
 
 ![drop_synonym](media/SQL/drop_synonym.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01925" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10426" image_path_raw="media/SQL/drop_synonym.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_synonym ::=
+    DROP [ PUBLIC ] SYNONYM [ user_name '.' ] synonym_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01925" -->
+
 
 #### 전제 조건
 
@@ -85697,6 +93121,16 @@ Drop success.
 
 ![](media/SQL/3b6b6558264ad2e958e72fe192ae417a.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01926" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10480" image_path_raw="media/SQL/3b6b6558264ad2e958e72fe192ae417a.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_table ::=
+    DROP TABLE [ user_name '.' ] table_name
+    [ CASCADE [ CONSTRAINTS ] ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01926" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 테이블의 소유자, DROP ANY TABLE 시스템 권한을 가진 사용자만이
@@ -85742,6 +93176,16 @@ Drop success.
 **drop_tablespace ::=**
 
 ![drop_tablespace](media/SQL/drop_tablespace.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01927" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10526" image_path_raw="media/SQL/drop_tablespace.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_tablespace ::=
+    DROP TABLESPACE tablespace_name
+    [ INCLUDING CONTENTS [ AND DATAFILES ] [ CASCADE CONSTRAINTS ] ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01927" -->
+
 
 #### 전제 조건
 
@@ -85843,6 +93287,14 @@ Drop success.
 
 ![drop_trigger_image168](media/SQL/drop_trigger_image168.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01928" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10626" image_path_raw="media/SQL/drop_trigger_image168.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_trigger ::=
+    DROP TRIGGER [ user_name '.' ] trigger_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01928" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 트리거의 소유자, DROP ANY TRIGGER 시스템 권한을 가진 사용자만이
@@ -85879,6 +93331,14 @@ Drop success.
 **drop_user ::=**
 
 ![drop_user_image169](media/SQL/drop_user_image169.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01929" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10663" image_path_raw="media/SQL/drop_user_image169.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_user ::=
+    DROP USER user_name [ CASCADE ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01929" -->
+
 
 #### 전제 조건
 
@@ -85928,6 +93388,14 @@ Drop success.
 
 ![drop_view_image170](media/SQL/drop_view_image170.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01930" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10711" image_path_raw="media/SQL/drop_view_image170.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_view ::=
+    DROP VIEW [ user_name '.' ] view_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01930" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 뷰의 소유자, DROP ANY VIEW 시스템 권한을 가진 사용자만이 뷰를 삭제할
@@ -85964,6 +93432,14 @@ Drop success.
 **drop_mview ::=**
 
 ![drop_mview](media/SQL/drop_mview.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01931" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10748" image_path_raw="media/SQL/drop_mview.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+drop_mview ::=
+    DROP MATERIALIZED VIEW [ user_name '.' ] mview_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01931" -->
+
 
 #### 전제 조건
 
@@ -86006,6 +93482,16 @@ DROP MATERIALIZED VIEW mv1;
 
 ![](media/SQL/af48066754b43e83d3e54d7fe20abdae.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01932" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10789" image_path_raw="media/SQL/af48066754b43e83d3e54d7fe20abdae.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+flashback_table ::=
+    FLASHBACK [ user_name '.' ] TABLE table_name TO BEFORE DROP
+    { DROP | RENAME TO table_name }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01932" -->
+
+
 #### 전제 조건
 
 아래의 조건 중 하나 이상을 만족해야 이 구문을 수행할 수 있다.
@@ -86042,13 +93528,45 @@ DROP MATERIALIZED VIEW mv1;
 
 ![grant_image171](media/SQL/grant_image171.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01933" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10825" image_path_raw="media/SQL/grant_image171.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grant ::=
+    GRANT { grant_system_privilege | grant_object_privilege } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01933" -->
+
+
 **grant_system_privilege ::=**
 
 ![grant_system_privilege](media/SQL/grant_system_privilege.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01934" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10829" image_path_raw="media/SQL/grant_system_privilege.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grant_system_privilege ::=
+    { system_privilege | role | ALL PRIVILEGES }
+    [ { ',' { system_privilege | role | ALL PRIVILEGES } } ]
+    TO { user | role | PUBLIC }
+    [ { ',' { user | role | PUBLIC } } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01934" -->
+
+
 **grant_object_privilege ::=**
 
 ![grant_object_privilege](media/SQL/grant_object_privilege.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01935" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="10833" image_path_raw="media/SQL/grant_object_privilege.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grant_object_privilege ::=
+    { object_privilege | ALL [ PRIVILEGES ] }
+    [ { ',' { object_privilege | ALL [ PRIVILEGES ] } } ]
+    ON { object | DIRECTORY directory_name }
+    TO { user | PUBLIC | role }
+    [ { ',' { user | PUBLIC | role } } ]
+    [ WITH GRANT OPTION ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01935" -->
+
 
 #### 전제 조건
 
@@ -86788,6 +94306,14 @@ T1.I1
 
 ![](media/SQL/bdce75dd2f142620aa1120b6035f7c67.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01936" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11571" image_path_raw="media/SQL/bdce75dd2f142620aa1120b6035f7c67.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+purge_table_statement ::=
+    PURGE TABLE [ user_name '.' ] table_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01936" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 테이블의 소유자, DROP ANY TABLE 시스템 권한을 가진 사용자만이 이
@@ -86832,6 +94358,14 @@ Purge success.
 **rename ::=**
 
 ![rename](media/SQL/rename.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01937" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11616" image_path_raw="media/SQL/rename.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rename ::=
+    RENAME [ user_name '.' ] tbl_name TO new_tbl_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01937" -->
+
 
 #### 전제 조건
 
@@ -86888,13 +94422,48 @@ Alter success.
 
 ![revoke_image175](media/SQL/revoke_image175.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01938" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11671" image_path_raw="media/SQL/revoke_image175.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+revoke ::=
+    REVOKE { revoke_system_privilege | revoke_object_privilege }
+           [ ',' { revoke_system_privilege | revoke_object_privilege } ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01938" -->
+
+
 **revoke_system_privilege ::=**
 
 ![REVOKE_SYSTEM_PRIVILEGE](media/SQL/REVOKE_SYSTEM_PRIVILEGE.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01939" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11675" image_path_raw="media/SQL/REVOKE_SYSTEM_PRIVILEGE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+revoke_system_privilege ::=
+    { system_privilege | role | ALL PRIVILEGES }
+    [ ',' { system_privilege | role | ALL PRIVILEGES } ]
+    FROM
+    { user | role | PUBLIC }
+    [ ',' { user | role | PUBLIC } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01939" -->
+
+
 **revoke_object_privilege ::=**
 
 ![REVOKE_OBJECT_PRIVILEGE](media/SQL/REVOKE_OBJECT_PRIVILEGE.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01940" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11679" image_path_raw="media/SQL/REVOKE_OBJECT_PRIVILEGE.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+revoke_object_privilege ::=
+    { object_privilege | role | ALL PRIVILEGES }
+    [ ',' { object_privilege | role | ALL PRIVILEGES } ]
+    ON { object | DIRECTORY directory_name }
+    FROM
+    { user | role | PUBLIC }
+    [ ',' { user | role | PUBLIC } ]
+    [ CASCADE CONSTRAINT ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01940" -->
+
 
 #### 전제 조건
 
@@ -87125,6 +94694,14 @@ iSQL> delete from user01.t1 where i1=3;
 
 ![truncate_image178](media/SQL/truncate_image178.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01941" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11908" image_path_raw="media/SQL/truncate_image178.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+truncate ::=
+    TRUNCATE TABLE [ user_name '.' ] tbl_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01941" -->
+
+
 #### 전제 조건
 
 SYS 사용자, 테이블이 속한 스키마의 소유자, 테이블에 ALTER 객체 권한을 가진
@@ -87186,13 +94763,43 @@ Truncate success.
 
 ![delete_image179](media/SQL/delete_image179.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01942" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11969" image_path_raw="media/SQL/delete_image179.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delete ::=
+    DELETE [ hints ] from_clause
+        [ PARTITION '(' partition_name ')' ]
+        [ where_clause ]
+        [ returning_clause ]
+        [ limit_clause ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01942" -->
+
+
 **from_clause ::=**
 
 ![from_clause_image180](media/SQL/from_clause_image180.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01943" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11973" image_path_raw="media/SQL/from_clause_image180.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+from_clause ::=
+    FROM { [ user_name '.' ] { tbl_name | view_name }
+         | '(' subquery ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01943" -->
+
+
 **where_clause ::=**
 
 ![where_clause_image181](media/SQL/where_clause_image181.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01944" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11977" image_path_raw="media/SQL/where_clause_image181.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+where_clause ::=
+    WHERE condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-01944" -->
+
 
 <a name="returning_clause"><a/>
 
@@ -87200,25 +94807,77 @@ Truncate success.
 
 ![returning_clause](media/SQL/returning_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01945" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11983" image_path_raw="media/SQL/returning_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+returning_clause ::=
+    { RETURN | RETURNING } expr [ ',' expr ]
+    INTO variable_name [ ',' variable_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01945" -->
+
+
 **limit_clause ::=**
 
 ![limit_clause_](media/SQL/limit_clause_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01946" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11987" image_path_raw="media/SQL/limit_clause_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+limit_clause ::=
+    LIMIT [ row_offset ',' ] row_count
+```
+<!-- IMG_RECOVERY_END ref_id="img-01946" -->
+
 
 **multiple_delete ::=**
 
 ![multiple_delete](media/SQL/multiple_delete.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01947" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11991" image_path_raw="media/SQL/multiple_delete.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+multiple_delete ::=
+    DELETE [ hints ] tbl_name [ { ',' tbl_name } ] FROM tbl_ref [ where_clause ]
+    | DELETE [ hints ] FROM tbl_name [ { ',' tbl_name } ] USING tbl_ref [ where_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01947" -->
+
+
 **tbl_ref ::=**
 
 ![tbl_ref](C:/jin_altibase/패치노트_매뉴얼/Documents/Manuals/Altibase_7.3/kor/media/SQL/tbl_ref.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01948" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11995" image_path_raw="C:/jin_altibase/패치노트_매뉴얼/Documents/Manuals/Altibase_7.3/kor/media/SQL/tbl_ref.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+tbl_ref ::=
+    one_table | join_table
+```
+<!-- IMG_RECOVERY_END ref_id="img-01948" -->
+
 
 **one_table ::=**
 
 ![one_table](C:/jin_altibase/패치노트_매뉴얼/Documents/Manuals/Altibase_7.3/kor/media/SQL/one_table.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01949" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="11999" image_path_raw="C:/jin_altibase/패치노트_매뉴얼/Documents/Manuals/Altibase_7.3/kor/media/SQL/one_table.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+one_table ::=
+    [ user_name '.' ] { tbl_name | view_name }
+    [ '(' subquery ')' ]
+    [ [ AS ] alias_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01949" -->
+
+
 **join_table ::=**
 
 ![join_table](C:/jin_altibase/패치노트_매뉴얼/Documents/Manuals/Altibase_7.3/kor/media/SQL/join_table.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01950" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12003" image_path_raw="C:/jin_altibase/패치노트_매뉴얼/Documents/Manuals/Altibase_7.3/kor/media/SQL/join_table.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+join_table ::=
+    tbl_ref [ join_type ] JOIN tbl_ref ON condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-01950" -->
+
 
 
 
@@ -87437,11 +95096,34 @@ V2                   VARCHAR(30)          nikita
 
 ![](media/SQL/insert.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01951" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12220" image_path_raw="media/SQL/insert.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+insert ::=
+    INSERT [ insert_hints ]
+    { single_table_insert | multi_table_insert }
+    [ wait_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01951" -->
+
+
 
 
 **single_table_insert ::=**
 
 ![single_table_insert](media/SQL/single_table_insert.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01952" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12226" image_path_raw="media/SQL/single_table_insert.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table_insert ::=
+    INTO table_clause
+    [ '(' column_name [ ',' column_name ] ')' ]
+    { values_clause [ returning_clause ]
+    | subquery [ returning_clause ]
+    | DEFAULT VALUES }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01952" -->
+
 
 [returning_clause ::=](#returning_clause),
 [subquery ::=](#subquery)
@@ -87450,11 +95132,30 @@ V2                   VARCHAR(30)          nikita
 
 ![table_clause](media/SQL/table_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01953" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12233" image_path_raw="media/SQL/table_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+table_clause ::=
+    { [ user_name '.' ] { tbl_name | view_name }
+    | '(' subquery ')' }
+    [ PARTITION '(' partition_name ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01953" -->
+
+
 [subquery ::=](#subquery)
 
 **multi_table_insert ::=**
 
 ![multi_table_insert](media/SQL/multi_table_insert.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01954" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12239" image_path_raw="media/SQL/multi_table_insert.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+multi_table_insert ::=
+    ALL { INTO table_clause [ '(' column_name [ { ',' column_name } ] ')' ] values_clause } ...
+    subquery
+```
+<!-- IMG_RECOVERY_END ref_id="img-01954" -->
+
 
 [subquery ::=](#subquery)
 
@@ -87462,9 +95163,26 @@ V2                   VARCHAR(30)          nikita
 
 ![](media/SQL/5234b9cafb6bc0a5d51f4c4824c484dd.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01955" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12245" image_path_raw="media/SQL/5234b9cafb6bc0a5d51f4c4824c484dd.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+values_clause ::=
+    VALUES '(' { expr | DEFAULT } [ ',' { expr | DEFAULT } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01955" -->
+
+
 **wait_clause ::=**
 
 ![](media/SQL/140182321afa39fb9ded6e62d0300e32.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01956" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12249" image_path_raw="media/SQL/140182321afa39fb9ded6e62d0300e32.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+wait_clause ::=
+    nowait
+  | wait integer [ SEC | MSEC | USEC ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01956" -->
+
 
 #### 전제 조건
 
@@ -87739,6 +95457,17 @@ ENO         E_LASTNAME            E_FIRSTNAME           DNO
 **lock_table ::=**
 
 ![](media/SQL/lock_table_partition.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01957" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12523" image_path_raw="media/SQL/lock_table_partition.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+lock_table ::=
+    LOCK TABLE [ user_name '.' ] tbl_name
+        [ PARTITION '(' partition_name ')' ]
+        IN lock_mode MODE
+        { WAIT integer | NOWAIT } ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01957" -->
+
 
 #### 전제 조건
 
@@ -88130,6 +95859,14 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![select](media/SQL/select.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01958" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12913" image_path_raw="media/SQL/select.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+select ::=
+    [ with_clause ] subquery [ for_update_clause ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01958" -->
+
+
 [for_update_clause
 ::=](#for_update_clause)
 
@@ -88137,17 +95874,53 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![with_clause](media/SQL/with_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01959" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12920" image_path_raw="media/SQL/with_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+with_clause ::=
+    WITH query_name
+        [ '(' alias_name [ ',' alias_name ] ')' ]
+        AS '(' subquery ')'
+    [ ',' query_name
+        [ '(' alias_name [ ',' alias_name ] ')' ]
+        AS '(' subquery ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01959" -->
+
+
 <a name="subquery"><a/>
 
 **subquery ::=**
 
 ![subquery](media/SQL/subquery.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01960" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12926" image_path_raw="media/SQL/subquery.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+subquery ::=
+    select_clause [ order_by_clause ] [ limit_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01960" -->
+
+
 [limit_clause ::=](#limit_clause)
 
 **select_clause ::=**
 
 ![](media/SQL/77d1a3feb68a0257346ff3590901be12.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01961" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12932" image_path_raw="media/SQL/77d1a3feb68a0257346ff3590901be12.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_clause ::=
+    SELECT [ hints ] [ ALL | DISTINCT ] [ TOP '(' expr ')' ]
+        select_list
+    FROM tbl_reference [ ',' tbl_reference ]
+    [ where_clause ]
+    [ hierarchical_query_clause ]
+    [ group_by_clause ]
+    [ HAVING condition ]
+    [ { UNION [ ALL ] | INTERSECT | MINUS } '(' select_clause ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01961" -->
+
 
 [hierarchical_query_clause ::=](#hierarchical_query_clause), [group_by_clause
 ::=](#group_by_clause)
@@ -88156,11 +95929,35 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![select_list](media/SQL/select_list.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01962" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12939" image_path_raw="media/SQL/select_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+select_list ::=
+    '*'
+  | { [ user_name '.' ] tbl_name '.' '*'
+    | expr [ [ AS ] alias_name ]
+    | '*' }
+    [ ',' { [ user_name '.' ] tbl_name '.' '*'
+           | expr [ [ AS ] alias_name ]
+           | '*' } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01962" -->
+
+
 <a name="tbl_reference"><a/>
 
 **tbl_reference ::=**
 
 ![](media/SQL/e71b7bc2eebb6dec22a57132da33f80c.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01963" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12945" image_path_raw="media/SQL/e71b7bc2eebb6dec22a57132da33f80c.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+tbl_reference ::=
+    single_table
+  | joined_table
+  | TABLE '(' function_name [ '(' [ expr [ ',' expr ] ] ')' ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01963" -->
+
 
 [joined_table ::=](#joined_table)
 
@@ -88170,9 +95967,31 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![single_table_150611](media/SQL/single_table_150611.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01964" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12953" image_path_raw="media/SQL/single_table_150611.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+single_table ::=
+    LATERAL '(' subquery ')'
+  | [ user_name '.' ] tbl_name
+        [ PARTITION '(' partition_name ')' ]
+        [ pivot_clause | unpivot_clause ]
+  [ [ AS ] alias_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01964" -->
+
+
 **pivot_clause ::=**
 
 ![pivot_clause](media/SQL/pivot_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01965" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12957" image_path_raw="media/SQL/pivot_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pivot_clause ::=
+    PIVOT '(' aggregate_function '(' expr ')'
+              [ [ AS ] alias ] [ ',' aggregate_function '(' expr ')' [ [ AS ] alias ] ]
+              pivot_for_clause pivot_in_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01965" -->
+
 
 <a name="pivot_for_clause"><a/>
 
@@ -88180,13 +95999,41 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![pivot_for_clause](media/SQL/pivot_for_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01966" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12963" image_path_raw="media/SQL/pivot_for_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pivot_for_clause ::=
+    FOR column_name
+  | FOR '(' column_name [ ',' column_name ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01966" -->
+
+
 **pivot_in_clause ::=**
 
 ![pivot_in_clause](media/SQL/pivot_in_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01967" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12967" image_path_raw="media/SQL/pivot_in_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+pivot_in_clause ::=
+    IN '(' { expr | '(' expr [ ',' expr ] ')' } [ [ AS ] alias ]
+           [ ',' { expr | '(' expr [ ',' expr ] ')' } [ [ AS ] alias ] ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01967" -->
+
+
 **unpivot_clause ::=**
 
 ![unpivot_clause](media/SQL/unpivot_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01968" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12971" image_path_raw="media/SQL/unpivot_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unpivot_clause ::=
+    UNPIVOT [ { INCLUDE | EXCLUDE } NULLS ]
+        '(' { column_name | '(' column_name [ ',' column_name ] ')' }
+            pivot_for_clause unpivot_in_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01968" -->
+
 
 [pivot_for_clause ::=](#pivot_for_clause)
 
@@ -88194,11 +96041,31 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![unpivot_in_clause](media/SQL/unpivot_in_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01969" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12977" image_path_raw="media/SQL/unpivot_in_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unpivot_in_clause ::=
+    IN '(' { column_name | '(' column_name [ ',' column_name ] ')' }
+           [ AS { alias_name | '(' alias_name [ ',' alias_name ] ')' } ]
+           [ ',' { column_name | '(' column_name [ ',' column_name ] ')' }
+                 [ AS { alias_name | '(' alias_name [ ',' alias_name ] ')' } ] ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01969" -->
+
+
 <a name="joined_table"><a/>
 
 **joined_table ::=**
 
 ![joined_table](media/SQL/joined_table.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01970" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12983" image_path_raw="media/SQL/joined_table.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+joined_table ::=
+    tbl_reference [ join_type ] JOIN tbl_reference ON condition
+  | tbl_reference [ apply_type ] APPLY single_table
+```
+<!-- IMG_RECOVERY_END ref_id="img-01970" -->
+
 
 [tbl_reference ::=](#tbl_reference), [single_table ::=](#single_table),
 
@@ -88206,9 +96073,29 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![join_type_image199](media/SQL/join_type_image199.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01971" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12989" image_path_raw="media/SQL/join_type_image199.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+join_type ::=
+    INNER
+  | LEFT [ OUTER ]
+  | RIGHT [ OUTER ]
+  | FULL [ OUTER ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01971" -->
+
+
 **apply_type ::=**
 
 ![apply_type](media/SQL/apply_type.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01972" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12993" image_path_raw="media/SQL/apply_type.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+apply_type ::=
+    CROSS
+  | OUTER
+```
+<!-- IMG_RECOVERY_END ref_id="img-01972" -->
+
 
 <a name="where_clause"><a/>
 
@@ -88216,11 +96103,28 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![where_clause](media/SQL/where_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01973" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="12999" image_path_raw="media/SQL/where_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+where_clause ::=
+    WHERE condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-01973" -->
+
+
 <a name="hierarchical_query_clause"><a/>
 
 **hierarchical_query_clause ::=**
 
 ![hierarchical_query_clause](media/SQL/hierarchical_query_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01974" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13005" image_path_raw="media/SQL/hierarchical_query_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+hierarchical_query_clause ::=
+    CONNECT BY [ NOCYCLE ] condition [ IGNORE LOOP ] [ START WITH condition ]
+  | START WITH condition CONNECT BY [ NOCYCLE ] condition [ IGNORE LOOP ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01974" -->
+
 
 <a name="group_by_clause"><a/>
 
@@ -88228,25 +96132,83 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![group_by_clause](media/SQL/group_by_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01975" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13011" image_path_raw="media/SQL/group_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_by_clause ::=
+    GROUP BY { expr | rollup_cube_clause | grouping_sets_clause }
+             [ ',' { expr | rollup_cube_clause | grouping_sets_clause } ]
+    [ HAVING condition ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01975" -->
+
+
 **rollup_cube_clause ::=**
 
 ![rollup_cube_list](media/SQL/rollup_cube_list.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01976" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13015" image_path_raw="media/SQL/rollup_cube_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rollup_cube_clause ::=
+    { ROLLUP | CUBE } grouping_expression_list
+```
+<!-- IMG_RECOVERY_END ref_id="img-01976" -->
+
 
 **grouping_sets_clause ::=**
 
 ![grouping_sets_clause](media/SQL/grouping_sets_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01977" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13019" image_path_raw="media/SQL/grouping_sets_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grouping_sets_clause ::=
+    GROUPING SETS '(' { grouping_expression_list | rollup_cube_clause }
+                      [ ',' { grouping_expression_list | rollup_cube_clause } ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01977" -->
+
+
 **grouping_expression_list ::=**
 
 ![grouping_expr_list](media/SQL/grouping_expr_list.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01978" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13023" image_path_raw="media/SQL/grouping_expr_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+grouping_expression_list ::=
+    expression_list [ ',' expression_list ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01978" -->
+
 
 **expression_list ::=**
 
 ![expr_list](media/SQL/expr_list.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01979" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13027" image_path_raw="media/SQL/expr_list.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+expression_list ::=
+    expr
+  | '(' expr { ',' expr } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01979" -->
+
+
 **order_by_clause ::=**
 
 ![order_by_clause](media/SQL/order_by_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01980" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13031" image_path_raw="media/SQL/order_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+order_by_clause ::=
+    ORDER [ SIBLINGS ] BY
+        { expr | location | c_alias }
+        [ ASC | DESC ]
+        [ NULLS FIRST | NULLS LAST ]
+        { ',' { expr | location | c_alias }
+               [ ASC | DESC ]
+               [ NULLS FIRST | NULLS LAST ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01980" -->
+
 
 <a name="imit_clause"><a/>
 
@@ -88254,11 +96216,30 @@ lock_mode에 명시한 잠금 모드로 특정한 모드 내에서 테이블 잠
 
 ![limit_clause_](media/SQL/limit_clause_.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01981" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13037" image_path_raw="media/SQL/limit_clause_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+limit_clause ::=
+    LIMIT [ row_offset ',' ] row_count
+```
+<!-- IMG_RECOVERY_END ref_id="img-01981" -->
+
+
 <a name="for_update_clause"><a/>
 
 **for_update_clause ::=**
 
 ![](media/SQL/f241bd3f3359d8cb294e30715f7b2724.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01982" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="13043" image_path_raw="media/SQL/f241bd3f3359d8cb294e30715f7b2724.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+for_update_clause ::=
+    FOR UPDATE
+        [ NOWAIT
+        | WAIT integer [ SEC | MSEC | USEC ]
+        ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01982" -->
+
 
 #### 전제 조건
 
@@ -90316,11 +98297,50 @@ C1          C2
 
 ![update_image229](media/SQL/update_image229.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01984" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15099" image_path_raw="media/SQL/update_image229.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+update ::=
+    UPDATE [ hints ]
+        { [ user_name '.' ] { tbl_name | view_name }
+        | '(' subquery ')'
+        }
+        [ PARTITION '(' partition_name ')' ]
+        [ t_alias | AS t_alias ]
+        set_clause_list
+        [ where_clause ]
+        [ returning_clause ]
+        [ limit_clause ]
+        ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01984" -->
+
+
 [returning_clause ::=](#returning_clause)
 
 **set_clause_list ::=**
 
 ![set_clause_list_image230](media/SQL/set_clause_list_image230.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01985" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15105" image_path_raw="media/SQL/set_clause_list_image230.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_clause_list ::=
+    SET
+        { column_name '=' { expr | '(' subquery ')' }
+        | '(' column_name { ',' column_name } ')' '='
+            { '(' expr { ',' expr } ')'
+            | '(' subquery ')'
+            }
+        }
+        { ',' { column_name '=' { expr | '(' subquery ')' }
+              | '(' column_name { ',' column_name } ')' '='
+                  { '(' expr { ',' expr } ')'
+                  | '(' subquery ')'
+                  }
+              }
+        }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01985" -->
+
 
 
 
@@ -90328,25 +98348,77 @@ C1          C2
 
 ![where_clause_image181](media/SQL/where_clause_image181.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01986" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15111" image_path_raw="media/SQL/where_clause_image181.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+where_clause ::=
+    WHERE condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-01986" -->
+
+
 **limit_clause ::=**
 
 ![limit_clause_](media/SQL/limit_clause_.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01987" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15115" image_path_raw="media/SQL/limit_clause_.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+limit_clause ::=
+    LIMIT [ row_offset ',' ] row_count
+```
+<!-- IMG_RECOVERY_END ref_id="img-01987" -->
+
 
 **multiple_update ::=**
 
 ![multiple_update](media/SQL/multiple_update.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01988" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15119" image_path_raw="media/SQL/multiple_update.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+multiple_update ::=
+    UPDATE [ hints ] tbl_ref [ { ',' tbl_ref } ]
+    set_clause
+    [ where_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01988" -->
+
+
 **tbl_ref ::=**
 
 ![multiple_update2](media/SQL/tbl_ref.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01989" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15123" image_path_raw="media/SQL/tbl_ref.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+tbl_ref ::=
+    one_table | join_table
+```
+<!-- IMG_RECOVERY_END ref_id="img-01989" -->
+
 
 **one_table ::=**
 
 ![multiple_update3](media/SQL/one_table.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01990" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15127" image_path_raw="media/SQL/one_table.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+one_table ::=
+    [ user_name '.' ] { tbl_name | view_name }
+    [ '(' subquery ')' ]
+    [ [ AS ] alias_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01990" -->
+
+
 **join_table ::=**
 
 ![multiple_update4](media/SQL/join_table.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01991" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15131" image_path_raw="media/SQL/join_table.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+join_table ::=
+    tbl_ref [ join_type ] JOIN tbl_ref ON condition
+```
+<!-- IMG_RECOVERY_END ref_id="img-01991" -->
+
 
 #### 전제 조건
 
@@ -90676,6 +98748,23 @@ UPDATE employees e, departments d SET salary=4000 WHERE e.dno = d.dno and d.dnam
 
 ![move_image238](media/SQL/move_image238.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01992" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15459" image_path_raw="media/SQL/move_image238.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+move ::=
+    MOVE [ hints ] INTO
+        [ user_name '.' ] target_tbl_name
+        [ PARTITION '(' partition_name ')' ]
+        [ column_commalist ]
+    FROM
+        [ user_name '.' ] source_tbl_name
+        [ expression_commalist ]
+    [ where_clause ]
+    [ limit_clause ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01992" -->
+
+
 [where_clause ::=](#where_clause), [limit_clause
 ::=](#limit_clause)
 
@@ -90683,9 +98772,25 @@ UPDATE employees e, departments d SET salary=4000 WHERE e.dno = d.dno and d.dnam
 
 ![column_commalist_image239](media/SQL/column_commalist_image239.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01993" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15466" image_path_raw="media/SQL/column_commalist_image239.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+column_commalist ::=
+    '(' column_name { ',' column_name } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01993" -->
+
+
 **expression_commalist ::=**
 
 ![expression_commalist_image240](media/SQL/expression_commalist_image240.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01994" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15470" image_path_raw="media/SQL/expression_commalist_image240.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+expression_commalist ::=
+    '(' expr { ',' expr } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01994" -->
+
 
 #### 전제 조건
 
@@ -90765,21 +98870,79 @@ iSQL> MOVE INTO T1 FROM T2(I1, I2, I3);
 
 ![merge](media/SQL/merge.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01995" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15548" image_path_raw="media/SQL/merge.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge ::=
+    MERGE [ hints ] INTO
+        [ user_name '.' ] tbl_name
+        [ t_alias ]
+    USING
+        [ user_name '.' ] { tbl_name | view_name }
+        [ t_alias ]
+    ON '(' search_condition ')'
+    merge_operation_spec
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01995" -->
+
+
 **merge_operation_spec ::=**
 
 ![merge_operation_spec](media/SQL/merge_operation_spec.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01996" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15552" image_path_raw="media/SQL/merge_operation_spec.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+merge_operation_spec ::=
+    { matched_update_clause
+    | not_matched_insert_clause
+    | no_rows_insert_clause
+    }
+```
+<!-- IMG_RECOVERY_END ref_id="img-01996" -->
+
 
 **matched_update_clause ::=**
 
 ![merge_matched_update_clause](media/SQL/merge_matched_update_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01997" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15556" image_path_raw="media/SQL/merge_matched_update_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+matched_update_clause ::=
+    WHEN MATCHED THEN
+    UPDATE SET set_clause_list [ where_clause ] [ limit_clause ]
+    | DELETE [ where_clause ] [ limit_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01997" -->
+
+
 **not_matched_insert_clause::=**
 
 ![merge_not_matched_insert_clause](media/SQL/merge_not_matched_insert_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01998" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15560" image_path_raw="media/SQL/merge_not_matched_insert_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+not_matched_insert_clause ::=
+    WHEN NOT MATCHED THEN INSERT
+    [ '(' insert_column_list ')' ]
+    VALUES '(' values_clause ')'
+    [ where_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-01998" -->
+
+
 **no_rows_insert_clause ::=**
 
 ![merge_no_rows_insert_clause](media/SQL/merge_no_rows_insert_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-01999" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15564" image_path_raw="media/SQL/merge_no_rows_insert_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+no_rows_insert_clause ::=
+    WHEN NO ROWS THEN INSERT
+    [ '(' insert_column_list ')' ]
+    VALUES '(' values_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-01999" -->
+
 
 #### 전제 조건
 
@@ -91028,9 +99191,25 @@ EMPNO       LASTNAME
 
 ![enqueue_image242](media/SQL/enqueue_image242.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02000" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15811" image_path_raw="media/SQL/enqueue_image242.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+enqueue ::=
+    ENQUEUE INTO queue_name '(' column_name { ',' column_name } ')' values_clause ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02000" -->
+
+
 **values_clause ::=**
 
 ![values_clause_image243](media/SQL/values_clause_image243.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02001" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15815" image_path_raw="media/SQL/values_clause_image243.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+values_clause ::=
+    VALUES '(' { expr | DEFAULT } { ',' { expr | DEFAULT } } ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02001" -->
+
 
 #### 설명
 
@@ -91066,9 +99245,29 @@ ENQUEUE INTO Q1(message,corrid) VALUES ('This is a message', 237);
 
 ![dequeue_image244](media/SQL/dequeue.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02002" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15849" image_path_raw="media/SQL/dequeue.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dequeue ::=
+    DEQUEUE queue_column_list FROM queue_name [ where_clause ]
+    [ fifo_option ]
+    { NOWAIT
+    | WAIT integer [ SEC | MSEC | USEC ] }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02002" -->
+
+
 **fifo_option ::=**
 
 ![fifo_image244](media/SQL/fifo_option.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02003" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15853" image_path_raw="media/SQL/fifo_option.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+fifo_option ::=
+    FIFO | LIFO
+```
+<!-- IMG_RECOVERY_END ref_id="img-02003" -->
+
 
 #### 설명
 
@@ -91122,6 +99321,17 @@ DEQUEUE MESSAGE, CORRID FROM Q1 WHERE CORRID=237;
 
 ![alter_replication_dcl](media/SQL/alter_replication_dcl.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02004" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15905" image_path_raw="media/SQL/alter_replication_dcl.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_replication_dcl ::=
+    { ALTER | STOP | FLUSH } REPLICATION replication_name
+    [ ALL ]
+    [ WAIT wait_time ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02004" -->
+
+
 #### 설명
 
 CREATE REPLICATION 구문으로 이중화 생성 후 이중화의 동작을 제어하는 구문이다.
@@ -91164,19 +99374,57 @@ CREATE REPLICATION 구문으로 이중화 생성 후 이중화의 동작을 제�
 
 ![alter_session_image246](media/SQL/alter_session_image246.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02005" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15947" image_path_raw="media/SQL/alter_session_image246.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_session ::=
+    ALTER SESSION
+        { alter_session_set_clause
+        | replication_mode_set_clause
+        | dblink_session_close_clause
+        | set_transaction_clause
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02005" -->
+
+
 [set_transaction_clause::=](#set_transaction)
 
 **alter_session_set_clause::=**
 
 ![alter_session_set_clause_image247](media/SQL/alter_session_set_clause_image247.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02006" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15953" image_path_raw="media/SQL/alter_session_set_clause_image247.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_session_set_clause ::=
+    SET property_name '=' property_value
+```
+<!-- IMG_RECOVERY_END ref_id="img-02006" -->
+
+
 **replication_mode_set_clause::=**
 
 ![replication_mode_set_clause_image248](media/SQL/replication_mode_set_clause_image248.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02007" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15957" image_path_raw="media/SQL/replication_mode_set_clause_image248.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+replication_mode_set_clause ::=
+    SET REPLICATION '=' { DEFAULT | NONE }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02007" -->
+
+
 **dblink_session_close_clause::=**
 
 ![dblink_session_close_clause_image249](media/SQL/dblink_session_close_clause_image249.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02008" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="15961" image_path_raw="media/SQL/dblink_session_close_clause_image249.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+dblink_session_close_clause ::=
+    CLOSE DATABASE LINK { ALL | dblink_name }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02008" -->
+
 
 #### 설명
 
@@ -91231,9 +99479,37 @@ iSQL> ALTER SESSION CLOSE DATABASE LINK ALL;
 
 ![alter_system](media/SQL/alter_system.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02009" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16014" image_path_raw="media/SQL/alter_system.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_system ::=
+    ALTER SYSTEM
+        { CHECKPOINT
+        | MEMORY COMPACT
+        | { START | STOP } FLUSHER integer
+        | ARCHIVE LOG { START | STOP }
+        | SWITCH LOGFILE
+        | SET alter_system_set_clause
+        | FLUSH BUFFER_POOL
+        | { COMPACT | RESET } SQL_PLAN_CACHE
+        | { START | STOP | RELOAD } AUDIT
+        | RELOAD ACCESS LIST
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02009" -->
+
+
 **alter_system_set_clause ::=**
 
 ![alter_session_set_clause_image247](media/SQL/alter_session_set_clause_image247.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02010" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16018" image_path_raw="media/SQL/alter_session_set_clause_image247.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+alter_session_set_clause ::=
+    SET property_name '=' property_value
+```
+<!-- IMG_RECOVERY_END ref_id="img-02010" -->
+
 
 #### 설명
 
@@ -91328,21 +99604,71 @@ iSQL> ALTER SYSTEM ARCHIVE LOG START;
 
 ![audit](media/SQL/audit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02011" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16111" image_path_raw="media/SQL/audit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit ::=
+    AUDIT
+        { audit_operation_clause
+        | audit_object_clause
+        | ddl_clause
+        }
+    [ WHENEVER [ NOT ] SUCCESSFUL ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02011" -->
+
+
 **audit_operation_clause ::=**
 
 ![audit_operation_clause](media/SQL/audit_operation_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02012" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16115" image_path_raw="media/SQL/audit_operation_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_operation_clause ::=
+    { ALL | sql_statement_type { ',' sql_statement_type } }
+    [ by_clause ]
+    [ BY { ACCESS | SESSION } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02012" -->
+
 
 **by_clause ::=**
 
 ![audit_by_clause](media/SQL/audit_by_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02013" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16119" image_path_raw="media/SQL/audit_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+by_clause ::=
+    BY user_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02013" -->
+
+
 **audit_object_clause ::=**
 
 ![audit_object_clause](media/SQL/audit_object_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02014" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16123" image_path_raw="media/SQL/audit_object_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_object_clause ::=
+    { ALL | sql_operation { ',' sql_operation } }
+    ON [ user_name '.' ] object_name
+    [ BY { ACCESS | SESSION } ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02014" -->
+
+
 **ddl_clause ::=**
 
 ![audit_ddl_clause](media/SQL/audit_ddl_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02015" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16127" image_path_raw="media/SQL/audit_ddl_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ddl_clause ::=
+    DDL by_clause { by_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02015" -->
+
 
 #### 전제 조건
 
@@ -91511,6 +99837,14 @@ Audit success.
 
 ![commit_image252](media/SQL/commit_image252.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02016" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16294" image_path_raw="media/SQL/commit_image252.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+commit ::=
+    COMMIT [ WORK ] [ FORCE global_tx_id ] ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02016" -->
+
+
 #### 설명
 
 현재의 트랜잭션을 데이터베이스에 명시적으로 커밋하는 구문이다.
@@ -91551,13 +99885,42 @@ Commit success.
 
 ![delaudit](media/SQL/delaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02017" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16334" image_path_raw="media/SQL/delaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delaudit ::=
+    DELAUDIT
+        { by_clause
+        | ALL
+        | delaudit_object_clause
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02017" -->
+
+
 **delaudit_user_clause ::=**
 
 ![delaudit_user_clause](media/SQL/delaudit_user_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02018" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16338" image_path_raw="media/SQL/delaudit_user_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+by_clause ::=
+    BY user_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02018" -->
+
+
 **delaudit_object_clause ::=**
 
 ![delaudit_object_clause](media/SQL/delaudit_object_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02019" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16342" image_path_raw="media/SQL/delaudit_object_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+delaudit_object_clause ::=
+    ON [ user_name '.' ] object_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02019" -->
+
 
 #### 전제 조건
 
@@ -91625,21 +99988,69 @@ Audit success.
 
 ![noaudit](media/SQL/noaudit.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02020" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16408" image_path_raw="media/SQL/noaudit.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+noaudit ::=
+    NOAUDIT
+        { audit_operation_clause
+        | audit_object_clause
+        | ddl_clause
+        }
+    [ WHENEVER [ NOT ] SUCCESSFUL ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02020" -->
+
+
 **audit_operation_clause ::=**
 
 ![noaudit_operation_clause](media/SQL/noaudit_operation_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02021" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16412" image_path_raw="media/SQL/noaudit_operation_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_operation_clause ::=
+    { ALL | sql_statement_type { ',' sql_statement_type } }
+    [ by_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02021" -->
+
 
 **by_clause ::=**
 
 ![noaudit_by_clause](media/SQL/noaudit_by_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02022" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16416" image_path_raw="media/SQL/noaudit_by_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+by_clause ::=
+    BY [ user_name ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02022" -->
+
+
 **audit_object_clause ::=**
 
 ![noaudit_object_clause](media/SQL/noaudit_object_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02023" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16420" image_path_raw="media/SQL/noaudit_object_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+audit_object_clause ::=
+    { ALL | sql_operation { ',' sql_operation } }
+    ON [ user_name '.' ] object_name
+```
+<!-- IMG_RECOVERY_END ref_id="img-02023" -->
+
+
 **ddl_clause ::=**
 
 ![audit_ddl_clause](media/SQL/audit_ddl_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02024" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16424" image_path_raw="media/SQL/audit_ddl_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ddl_clause ::=
+    DDL by_clause { by_clause }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02024" -->
+
 
 #### 전제 조건
 
@@ -91731,6 +100142,14 @@ Audit success.
 
 ![savepoint_image253](media/SQL/savepoint_image253.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02025" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16514" image_path_raw="media/SQL/savepoint_image253.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+savepoint ::=
+    SAVEPOINT savepoint_name ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02025" -->
+
+
 #### 설명
 
 저장점을 생성하는 구문이다. 저장점의 생성은 지금까지 실행된 트랜잭션 처리의
@@ -91785,6 +100204,17 @@ Commit success.
 **rollback ::=**
 
 ![rollback_image253](media/SQL/rollback.jpg)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02026" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16569" image_path_raw="media/SQL/rollback.jpg" image_class="C" format="bnf" verified="True" -->
+```bnf
+rollback ::=
+    ROLLBACK [ WORK ]
+    [ TO SAVEPOINT savepoint_name
+    | FORCE global_tx_id ]
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02026" -->
+
 
 #### 설명
 
@@ -91909,6 +100339,23 @@ Commit success.
 **set_transaction ::=**
 
 ![set_transaction_image255](media/SQL/set_transaction_image255.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02027" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="16693" image_path_raw="media/SQL/set_transaction_image255.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+set_transaction ::=
+    SET TRANSACTION
+        { READ ONLY
+        | READ WRITE
+        | ISOLATION LEVEL
+            { READ COMMITTED
+            | REPEATABLE READ
+            | SERIALIZABLE
+            }
+        }
+    ';'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02027" -->
+
 
 #### 설명
 
@@ -92403,6 +100850,14 @@ COVAR_POP(ENO,SALARY)
 
 ![cume_dist_with_group](media/SQL/cume_dist_with_group.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02028" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17186" image_path_raw="media/SQL/cume_dist_with_group.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+cume_dist_with_group ::=
+    CUME_DIST '(' expr { ',' expr } ')' WITHIN GROUP '(' window_order_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02028" -->
+
+
 [window_order_clause::=](#window_order_clause)
 
 ##### 설명
@@ -92456,6 +100911,19 @@ CUME_DIST(1500) within group (order by SAL
 ##### 구문
 
 ![first_clause](media/SQL/first_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02029" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17240" image_path_raw="media/SQL/first_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+first_clause ::=
+    aggregate_function KEEP
+    '(' DENSE_RANK FIRST ORDER BY
+        expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ]
+        { ',' expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ] }
+    ')'
+    [ OVER '(' [ query_partition_clause ] ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02029" -->
+
 
 ##### 설명
 
@@ -92543,6 +101011,19 @@ Davenport
 ##### 구문
 
 ![last_clause](media/SQL/last_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02030" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17327" image_path_raw="media/SQL/last_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+last_clause ::=
+    aggregate_function KEEP
+    '(' DENSE_RANK LAST ORDER BY
+        expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ]
+        { ',' expr [ DESC | ASC ] [ NULLS { FIRST | LAST } ] }
+    ')'
+    [ OVER '(' [ query_partition_clause ] ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02030" -->
+
 
 ##### 설명
 
@@ -92665,6 +101146,14 @@ MIN(PRICE)
 
 ![percent_rank_with_group](media/SQL/percent_rank_with_group.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02031" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17448" image_path_raw="media/SQL/percent_rank_with_group.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+percent_rank_with_group ::=
+    PERCENT_RANK '(' expr { ',' expr } ')' WITHIN GROUP '(' window_order_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02031" -->
+
+
 [window_order_clause::=](#window_order_clause)
 
 ##### 설명
@@ -92720,6 +101209,23 @@ RNK
 ##### 구문 
 
 ![stats_one_way_anova](media/SQL/stats_one_way_anova.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02032" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17504" image_path_raw="media/SQL/stats_one_way_anova.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+stats_one_way_anova ::=
+    STATS_ONE_WAY_ANOVA '(' expr1 ',' expr2
+        [ ',' { SIG
+               | F_RATIO
+               | MEAN_SQUARES_WITHIN
+               | MEAN_SQUARES_BETWEEN
+               | DF_WITHIN
+               | DF_BETWEEN
+               | SUM_SQUARES_WITHIN
+               | SUM_SQUARES_BETWEEN } ]
+    ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02032" -->
+
 
 ##### 설명
 
@@ -93101,13 +101607,38 @@ Altibase는 버전 6.3.1부터 아래의 윈도우 함수를 지원한다.
 
 ![window_funtion](media/SQL/window_funtion.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02033" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17884" image_path_raw="media/SQL/window_funtion.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_function ::=
+    window_function '(' [ arg_expr ] ')' [ IGNORE NULLS ]
+    OVER '(' window_specification ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02033" -->
+
+
 **window_specification ::=**
 
 ![window_specification](media/SQL/window_specification.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02034" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17888" image_path_raw="media/SQL/window_specification.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_specification ::=
+    [ window_partition_clause ] [ window_order_clause ] [ window_frame_clause ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02034" -->
+
+
 **window_partition_clause ::=**
 
 ![](media/SQL/c757b5e78596fe30326cd3b8207e582e.png)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02035" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17892" image_path_raw="media/SQL/c757b5e78596fe30326cd3b8207e582e.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_partition_clause ::=
+    PARTITION BY expr { ',' expr }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02035" -->
+
 
 <a name="window_order_clause"><a/>
 
@@ -93115,9 +101646,35 @@ Altibase는 버전 6.3.1부터 아래의 윈도우 함수를 지원한다.
 
 ![window_order_clause](media/SQL/window_order_clause.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02036" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17898" image_path_raw="media/SQL/window_order_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_order_clause ::=
+    ORDER BY expr [ ASC | DESC ] [ NULLS FIRST | NULLS LAST ]
+             { ',' expr [ ASC | DESC ] [ NULLS FIRST | NULLS LAST ] }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02036" -->
+
+
 **window_frame_clause ::=**
 
 ![window_frame_clause](media/SQL/window_frame_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02037" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="17902" image_path_raw="media/SQL/window_frame_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+window_frame_clause ::=
+    { ROWS | RANGE }
+    { BETWEEN { UNBOUNDED PRECEDING
+               | CURRENT ROW
+               | value { PRECEDING | FOLLOWING } }
+      AND     { UNBOUNDED FOLLOWING
+               | CURRENT ROW
+               | value { PRECEDING | FOLLOWING } }
+    | UNBOUNDED PRECEDING
+    | CURRENT ROW
+    | value PRECEDING }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02037" -->
+
 
 #### 설명
 
@@ -93418,6 +101975,16 @@ LEAD 함수와 동일하다.
 
 ![listagg](media/SQL/listagg.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02038" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="18201" image_path_raw="media/SQL/listagg.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+listagg ::=
+    LISTAGG '(' expr [ ',' arg ] ')' WITHIN GROUP
+    '(' order_by_clause ')'
+    [ OVER '(' PARTITION BY expr { ',' expr } ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02038" -->
+
+
 ##### 설명
 
 입력된 *expr*에 해당하는 칼럼 값을 order_by_clause에 지정한 그룹내의 순서대로
@@ -93562,6 +102129,14 @@ NTH_VALUE 함수와 동일하다.
 
 ![](media/SQL/6f2150471eaa21981888a7750e6f7ff1.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02039" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="18345" image_path_raw="media/SQL/6f2150471eaa21981888a7750e6f7ff1.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+ntile ::=
+    NTILE '(' expr ')' OVER '(' [ window_partition_clause ] order_by_caluse ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02039" -->
+
+
 [window_partition_clause::=](#window_partition_clause)
 
 ##### 설명
@@ -93608,6 +102183,15 @@ William                           3
 ##### 구문 
 
 ![percentile_cont](media/SQL/percentile_cont.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02040" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="18392" image_path_raw="media/SQL/percentile_cont.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+percentile_cont ::=
+    PERCENTILE_CONT '(' expr1 ')' WITHIN GROUP '(' ORDER BY expr2 [ ASC | DESC ] ')'
+    [ OVER '(' PARTITION BY expr ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02040" -->
+
 
 ##### 설명 
 
@@ -93684,6 +102268,15 @@ EMPNO median asc cont median desc cont
 ##### 구문 
 
 ![percentile_disc](media/SQL/percentile_disc.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02041" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="18468" image_path_raw="media/SQL/percentile_disc.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+percentile_disc ::=
+    PERCENTILE_DISC '(' expr1 ')' WITHIN GROUP '(' ORDER BY expr2 [ ASC | DESC ] ')'
+    [ OVER '(' PARTITION BY expr ')' ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02041" -->
+
 
 ##### 설명
 
@@ -93763,6 +102356,14 @@ EMPNO median asc cont median desc cont
 
 ![rank_with_group](media/SQL/rank_with_group.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02042" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="18546" image_path_raw="media/SQL/rank_with_group.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+rank_with_group ::=
+    RANK '(' expr { ',' expr } ')' WITHIN GROUP '(' window_order_clause ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02042" -->
+
+
 [window_order_clause::=](#window_order_clause)
 
 ##### 설명
@@ -93818,6 +102419,14 @@ RNK
 ##### 구문
 
 ![ratio_to_report](media/SQL/ratio_to_report.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02043" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="18602" image_path_raw="media/SQL/ratio_to_report.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+ratio_to_report ::=
+    RATIO_TO_REPORT '(' expr ')' OVER '(' [ window_partition_clause ] ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02043" -->
+
 
 [window_partition_clause::=](#window_partition_clause)
 
@@ -98732,17 +107341,49 @@ Wang                  Xiong                 manager          NULL
 
 ![case](media/SQL/case.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02044" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="23515" image_path_raw="media/SQL/case.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+case ::=
+    CASE { simple_case_expr | searched_case_expr } [ else_clause ] END
+```
+<!-- IMG_RECOVERY_END ref_id="img-02044" -->
+
+
 **simple_case_expr**
 
 ![simple_case_expr](media/SQL/simple_case_expr.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02045" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="23519" image_path_raw="media/SQL/simple_case_expr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+simple_case_expr ::=
+    expr { WHEN comparison_expr THEN return_expr }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02045" -->
+
 
 **searched_case_expr**
 
 ![searched_case_expr](media/SQL/searched_case_expr.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02046" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="23523" image_path_raw="media/SQL/searched_case_expr.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+searched_case_expr ::=
+    { WHEN condition THEN return_expr }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02046" -->
+
+
 **else_clause**
 
 ![else_clause](media/SQL/else_clause.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02047" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="23527" image_path_raw="media/SQL/else_clause.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+else_clause ::=
+    ELSE else_expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-02047" -->
+
 
 ##### 설명
 
@@ -99988,6 +108629,14 @@ ID          Path
 
 ![](media/SQL/091919f332dcfd2bb254326b412e7d35.png)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02048" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="24771" image_path_raw="media/SQL/091919f332dcfd2bb254326b412e7d35.png" image_class="C" format="bnf" verified="True" -->
+```bnf
+sys_context ::=
+    SYS_CONTEXT '(' namespace ',' parameter ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02048" -->
+
+
 ##### 설명
 
 이 함수는 현재 세션에 접속한 환경 정보(context)를 namespace로 하여 관련된 파라미터의 결과값을 반환한다. 해당 함수는 Altibase 내장 저장 함수로, $ALTIBASE_HOME/packages 디렉터리 아래에 있는 sys_context.sql, sys_context.plb 스크립트를 차례로 실행하여 생성해야 사용할 수 있다.
@@ -100602,6 +109251,22 @@ F111100001  AU-100                AC0010     10000       100000
 
 ![simple_comparison_condition_image260](media/SQL/simple_comparison_condition_image260.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02049" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25385" image_path_raw="media/SQL/simple_comparison_condition_image260.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+simple_comparison_condition ::=
+    { expr | '(' subquery ')' }
+    { '=' | '!=' | '<>' | '>' | '<' | '>=' | '<=' }
+    { expr | '(' subquery ')' }
+  | '(' expr { ',' expr } ')'
+    { '=' | '<>' | '!=' }
+    '(' expr { ',' expr } ')'
+  | '(' expr { ',' expr } ')'
+    { '=' | '<>' | '!=' }
+    '(' subquery ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02049" -->
+
+
 ##### 설명
 
 단순 비교 조건은 명시된 연산자를 기준으로 양쪽의 수식을 비교하여 TRUE, FALSE
@@ -100647,6 +109312,22 @@ TM-U950    8000     96200      769600000
 **group_comparison_condition ::=**
 
 ![group_comparison_condition_image267](media/SQL/group_comparison_condition_image267.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02050" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25431" image_path_raw="media/SQL/group_comparison_condition_image267.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+group_comparison_condition ::=
+    expr
+    { '=' | '!=' | '<>' | '>' | '<' | '>=' | '<=' }
+    { ANY | SOME | ALL }
+    { '(' expr { ',' expr } ')' | '(' subquery ')' }
+  | '(' expr { ',' expr } ')'
+    { '=' | '!=' | '<>' }
+    { ANY | SOME | ALL }
+    '(' { '(' expr { ',' expr } ')' { ',' '(' expr { ',' expr } ')' }
+        | subquery ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02050" -->
+
 
 ##### 설명
 
@@ -100705,6 +109386,14 @@ ONO                  ORDER_DATE   PROCESSING
 
 ![between_image261](media/SQL/between_image261.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02051" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25488" image_path_raw="media/SQL/between_image261.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+between_condition ::=
+    expr [ NOT ] BETWEEN expr AND expr
+```
+<!-- IMG_RECOVERY_END ref_id="img-02051" -->
+
+
 ##### 설명
 
 BEETWEEN 비교는 어떤 값이 주어진 범위에 속하는지를 체크하기 위해 사용된다.
@@ -100740,6 +109429,14 @@ M-T500     5000       1000.54   5002700
 **exists_condition ::=**
 
 ![exists_image265](media/SQL/exists_image265.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02052" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25524" image_path_raw="media/SQL/exists_image265.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+exists_condition ::=
+    EXISTS '(' subquery ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02052" -->
+
 
 ##### 설명
 
@@ -100806,6 +109503,17 @@ No rows selected.
 
 ![in_image262](media/SQL/in_image262.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02053" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25589" image_path_raw="media/SQL/in_image262.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+in_condition ::=
+    expr [ NOT ] IN { '(' expr { ',' expr } ')' | '(' subquery ')' }
+  | '(' expr { ',' expr } ')' [ NOT ] IN
+    '(' { '(' expr { ',' expr } ')' { ',' '(' expr { ',' expr } ')' }
+        | subquery ')' }
+```
+<!-- IMG_RECOVERY_END ref_id="img-02053" -->
+
+
 ##### 설명
 
 IN 조건은 ‘= ANY’ 조건을 사용한 그룹 비교와 동일하다. 이런 종류의 조건은 왼쪽의
@@ -100864,6 +109572,14 @@ Sanchez               Estevan
 
 ![inlist_operator](media/SQL/inlist_operator.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02054" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25647" image_path_raw="media/SQL/inlist_operator.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+inlist_condition ::=
+    [ NOT ] INLIST '(' expr ',' comma_separated_values ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02054" -->
+
+
 ##### 설명
 
 INLIST는 *comma_separated_values*내 각각의 값들 중 어느 하나가 *expr*과 일치하면
@@ -100902,6 +109618,14 @@ DNO         E_FIRSTNAME           E_LASTNAME
 
 ![isnull_image264](media/SQL/isnull_image264.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02055" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25685" image_path_raw="media/SQL/isnull_image264.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+isnull_condition ::=
+    expr IS [ NOT ] NULL
+```
+<!-- IMG_RECOVERY_END ref_id="img-02055" -->
+
+
 ##### 설명
 
 IS NULL 조건은 표현식(expression)이 널(NULL) 인지 아닌지 검사하기 위해 사용된다.
@@ -100931,6 +109655,14 @@ ENO         E_FIRSTNAME           E_LASTNAME            EMP_JOB
 **like_condition ::=**
 
 ![like_image263](media/SQL/like_image263.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02056" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25715" image_path_raw="media/SQL/like_image263.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+like_condition ::=
+    expr [ NOT ] LIKE expr [ ESCAPE char_literal indexdesc_hint char_literal ]
+```
+<!-- IMG_RECOVERY_END ref_id="img-02056" -->
+
 
 ##### 설명
 
@@ -100998,6 +109730,14 @@ John
 
 ![regexp_like_condition](media/SQL/regexp_like_condition.gif)
 
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02057" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25781" image_path_raw="media/SQL/regexp_like_condition.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+regexp_like_condition ::=
+    [ NOT ] REGEXP_LIKE '(' source_expr ',' pattern_expr ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02057" -->
+
+
 ##### 설명
 
 REGEXP_LIKE는 LIKE 검사 조건과 유사하다. LIKE가 단순한 패턴 일치 검사라면, REGEXP_LIKE는 정규 표현식 일치 검사를 수행한다. Altibase는 POSIX Basic Regular Expression (BRE)을 지원한다. 정규 표현식에 대한 자세한 설명은 "[A.부록: 정규 표현식](#부록-정규-표현식)"을 참고하라.
@@ -101044,6 +109784,14 @@ ENO         E_LASTNAME            EMP_JOB
 **unique_condition ::=**
 
 ![unique_image266](media/SQL/unique_image266.gif)
+
+<!-- IMG_RECOVERY_BEGIN ref_id="img-02058" source_md="Manuals/Altibase_7.1/kor/SQL Reference.md" line_no="25828" image_path_raw="media/SQL/unique_image266.gif" image_class="C" format="bnf" verified="True" -->
+```bnf
+unique_condition ::=
+    UNIQUE '(' subquery ')'
+```
+<!-- IMG_RECOVERY_END ref_id="img-02058" -->
+
 
 ##### 설명
 
