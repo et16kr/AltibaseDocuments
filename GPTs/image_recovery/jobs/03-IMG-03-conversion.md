@@ -22,16 +22,25 @@ and B entirely).
      block.
    - **D** (tabular image) → a Markdown table.
    - **E** (flowchart) → a Mermaid `flowchart` block.
+   Many C-class diagrams are `.gif`. If the image-reading tool cannot open a
+   `.gif` (or any) raster, convert it to PNG into a scratch temp directory with
+   ImageMagick (`convert`) and read that — never modify the original.
 2. **Verification — D4: full per-image cross-check.** Every conversion must be
    verified against its rendered raster. Where the raster is too low-resolution
    to transcribe reliably, fall back to the manual's PDF rendition (the
-   `Manuals/.../PDF/` folders). If the content is still unreadable, **flag it —
-   do not guess.**
+   `Manuals/.../PDF/` folders — note these exist for the 7.1 / 7.3 trees but not
+   necessarily for `Altibase_trunk`). If the content is still unreadable,
+   **flag it — do not guess.**
 3. Write `GPTs/image_recovery/image_conversions.jsonl`, one JSON record per
-   C/D/E reference, with fields: `ref_id`, `class`, `source_md`,
+   C/D/E reference, with fields: `ref_id`, `class`, `source_md`, `line_no`
+   (both carried from `image_inventory.tsv`, joined by `ref_id`),
    `image_path_raw`, `format` (`bnf`/`table`/`mermaid`), `converted_text`,
    `verified` (`true` only after the raster/PDF cross-check), `source_used`
    (`raster`/`pdf`), `notes` (empty, or the reason it could not be verified).
+4. **Write resumably.** This job may be large. Append records as you go and, on
+   a re-run, skip references whose `ref_id` is already present in
+   `image_conversions.jsonl` so an interrupted run resumes instead of redoing
+   every conversion.
 
 ## Constraints (non-negotiable)
 

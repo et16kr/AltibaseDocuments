@@ -41,16 +41,19 @@ Build a complete inventory of every Markdown image reference in `Manuals/`.
 
 ```bash
 test -s GPTs/image_recovery/image_inventory.tsv
-# Row count (minus header) must equal the count of image references in Manuals/:
+# The crude grep below is a LOWER BOUND on image references in Manuals/:
 refs=$(grep -rhoE '!\[[^]]*\]\([^)]*\)|<img [^>]*src=' Manuals --include='*.md' | wc -l)
 rows=$(( $(wc -l < GPTs/image_recovery/image_inventory.tsv) - 1 ))
-echo "refs=$refs rows=$rows"   # must match
+echo "refs=$refs rows=$rows"   # rows must be >= refs
 git diff --check
 ```
 
 For PASS: the inventory covers 100% of image references in `Manuals/`, every
 row has all columns populated (`image_path_resolved` may be empty only when the
-image file genuinely does not exist), and the TSV is well-formed.
+image file genuinely does not exist), and the TSV is well-formed. The grep above
+is only a lower bound — reference-style (`![alt][id]`) or multi-line forms may
+add rows — so `rows` must be **>= `refs`**, and you must additionally confirm
+every grep match is represented in the inventory.
 
 ## Completion protocol
 

@@ -25,11 +25,22 @@ conversion. This is the conversion-fidelity check; it is read-only.
      source manuals; if C has fewer than 40 conversions, audit all of them.
    - Always audit **every** conversion that IMG-03 marked `verified:false`,
      regardless of class.
+   - Class **A/B** (classified redundant, never converted): audit a
+     **stratified sample** — at least 10% and at least 30 images across the
+     manuals. A C/D/E diagram mislabelled A/B is never converted, so its
+     information is lost silently and no conversion exists to compare; this
+     sample is the only check against that failure mode. Treat a misclassified
+     A/B (the image genuinely carries unique non-redundant content) as a
+     `material` finding.
 2. **Compare.** For each audited reference: open the original raster with the
    image-reading tool, read the conversion's `converted_text`, and compare:
    - **E** — every node, edge, label, and branch direction.
    - **D** — every header and cell.
    - **C** — every grammar path, token, and optional/mandatory marker.
+   - **A/B** — there is no `converted_text`; instead open the image and its
+     inventory `context` and confirm the image content is genuinely redundant
+     with the adjacent syntax block (A) or prose (B). If the image carries
+     unique content, the classification is wrong.
    If a `.gif` raster cannot be opened, convert it to PNG into a scratch temp
    directory with ImageMagick (`convert`) and read that — never modify the
    original. If the raster is unreadable, fall back to the manual's PDF. For
@@ -40,7 +51,10 @@ conversion. This is the conversion-fidelity check; it is read-only.
    difference, no information lost) | `material` (a missing or wrong node,
    edge, cell, token, or a reversed direction) | `uncertain` (raster and PDF
    both unreadable).
-4. Write the audit ledger `GPTs/image_recovery/image_comparison_audit.tsv`
+4. Write ledger rows resumably — append as you go and, on a re-run, skip
+   `ref_id`s already audited so an interrupted run resumes rather than
+   re-auditing every image. Write the audit ledger
+   `GPTs/image_recovery/image_comparison_audit.tsv`
    (header + `ref_id`, `class`, `verdict`, `detail`) and the report
    `GPTs/reports/image_content_recovery_comparison_audit_20260522.md`:
    per-verdict counts, audit coverage per class, and **every** `material` and

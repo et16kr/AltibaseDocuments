@@ -17,8 +17,20 @@ work end to end, verify it, and report the result exactly as specified.
 Wire the conversion sidecar into the build so the recovered text reaches the
 upload-package shards, **without modifying any original document**.
 
+0. **Baseline precondition.** If a previous attempt of this job left local
+   edits to the build scripts, discard them first
+   (`git checkout -- GPTs/source_pack/scripts/`) so you start from the committed
+   baseline. Then run `build_source_manifest.py --check` and
+   `build_source_pack.py --check` on the unmodified build. If either fails, the
+   committed baseline does not reproduce from the current `~/AID` — **STOP and
+   FAIL** with that reason; do not proceed (a stale baseline would make this
+   job's diff unverifiable).
 1. Treat `GPTs/image_recovery/image_conversions.jsonl` as a build-stage
    **sidecar**. The `Manuals/` originals stay byte-unchanged (decision D1).
+   Each sidecar record carries `ref_id`, `source_md`, and `line_no`; join to
+   `image_inventory.tsv` by `ref_id` if more reference context is needed, and
+   target each injection by `(source_md, line_no, image_path_raw)` so repeated
+   identical references are disambiguated.
 2. Modify the source-pack build
    (`GPTs/source_pack/scripts/build_source_manifest.py` and/or
    `build_source_pack.py`) so that, during extraction, at each image reference

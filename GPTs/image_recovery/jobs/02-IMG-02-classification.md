@@ -31,7 +31,11 @@ Only C/D/E will later be converted; A/B are skipped.
    rule that misfires. Err toward **C/D/E** when a call is uncertain — a wrong
    A/B silently drops unique information.
 3. **Residual pass.** Classify rows the rules cannot decide by reading the
-   raster image and its context.
+   raster image and its context. If the image-reading tool cannot open a `.gif`
+   (or any) raster, convert it to PNG into a scratch temp directory with
+   ImageMagick (`convert`) and read that — never modify the original. Write
+   classification rows resumably so an interrupted run can resume rather than
+   reclassify every row.
 4. Write `GPTs/image_recovery/image_classification.tsv`, one row per inventory
    `ref_id`, header + tab-separated columns: `ref_id`, `class` (A–E),
    `decided_by` (rule id or `vision`), `rationale` (one line),

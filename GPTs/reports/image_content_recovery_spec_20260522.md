@@ -146,8 +146,8 @@ the sidecar is the single reviewable artifact.
 - **Conversion hallucination** — AI transcription can invent diagram content;
   mitigated by mandatory raster cross-check and PDF fallback.
 - **Classification false-negative** — a class-A/B call that is really C/D/E
-  silently drops unique info; mitigated by sampled manual validation of the
-  rules in Phase 1.
+  silently drops unique info; mitigated by sampled rule validation in Phase 1
+  and by the Phase 5 audit's stratified re-check of A/B classifications.
 - **Rebuild wipe** — recovered text not injected upstream is lost; addressed by
   §5 / decision D1.
 - **Low-resolution rasters** — small-text railroad diagrams may be unreadable;
