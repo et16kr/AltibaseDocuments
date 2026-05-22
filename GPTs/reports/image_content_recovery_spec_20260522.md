@@ -161,3 +161,11 @@ The current answerability eval will not move on this job alone — its 270
 questions were authored against the text. To actually exercise recovered
 diagram content, a later effort could add diagram-dependent eval questions
 (e.g. precise SQL-statement-syntax questions). Noted, not included here.
+
+A second follow-on: IMG-03 renders class-D (tabular) images as Markdown tables,
+which cannot represent merged cells (`rowspan`/`colspan`) or block content
+inside a cell. For source tables with that structure a Markdown table cannot be
+a faithful conversion, so IMG-06 may correctly flag it `material`. A later
+revision should let IMG-03 emit an HTML `<table>` (valid inside Markdown) for
+those tables — Markdown stays the base format, HTML is used only where Markdown
+cannot express the structure. The current run uses Markdown tables only.
