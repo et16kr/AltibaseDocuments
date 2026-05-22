@@ -20,10 +20,11 @@ Validate the rebuilt package and document the image-recovery mechanism.
    `![]()` / `<img>` reference and the recovered text, and that the recovered
    text matches the `image_conversions.jsonl` record.
 2. **Regression check.** `git diff` the rebuilt `GPTs/source_pack/` and
-   `GPTs/upload_package/` shards against their last commit before IMG-04, and
-   confirm **every** changed hunk sits at a C/D/E reference site that gained
-   recovered text — no non-C/D/E reference site, and no non-image content,
-   changed.
+   `GPTs/upload_package/` shards against the repository state from before IMG-04
+   ran — current `HEAD` if IMG-04 committed nothing, otherwise the commit before
+   IMG-04's checkpoint — and confirm **every** changed hunk sits at a C/D/E
+   reference site that gained recovered text: no non-C/D/E reference site, and
+   no non-image content, changed.
 3. **Update docs.** Update `GPTs/source_pack/README.md` and
    `GPTs/upload_package/00_README_SOURCE_PRESERVING_UPLOAD.md` to describe the
    image-recovery sidecar: what classes are recovered, that originals are

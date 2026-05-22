@@ -63,8 +63,8 @@ little, so the user can decide whether to continue the runner.
 test -s GPTs/image_recovery/image_classification.tsv
 test -f GPTs/reports/image_content_audit_20260522.md
 # Every inventory row must be classified exactly once:
-inv=$(( $(wc -l < GPTs/image_recovery/image_inventory.tsv) - 1 ))
-cls=$(( $(wc -l < GPTs/image_recovery/image_classification.tsv) - 1 ))
+inv=$(( $(grep -c . GPTs/image_recovery/image_inventory.tsv) - 1 ))
+cls=$(( $(grep -c . GPTs/image_recovery/image_classification.tsv) - 1 ))
 echo "inventory=$inv classified=$cls"   # must match
 git diff --check
 ```

@@ -16,8 +16,9 @@ work end to end, verify it, and report the result exactly as specified.
 Produce a **text rendition** of every image classified **C, D, or E** (skip A
 and B entirely).
 
-1. For each C/D/E reference, read the rendered raster image and transcribe its
-   content in the per-class format:
+1. For each C/D/E reference, read the rendered raster image (located via
+   `image_path_resolved` in `image_inventory.tsv`, joined by `ref_id`) and
+   transcribe its content in the per-class format:
    - **C** (railroad/syntax diagram) → a BNF/EBNF grammar in a fenced code
      block.
    - **D** (tabular image) → a Markdown table.
@@ -37,6 +38,8 @@ and B entirely).
    `image_path_raw`, `format` (`bnf`/`table`/`mermaid`), `converted_text`,
    `verified` (`true` only after the raster/PDF cross-check), `source_used`
    (`raster`/`pdf`), `notes` (empty, or the reason it could not be verified).
+   `converted_text` must have no trailing whitespace on any line — IMG-04
+   inserts it verbatim into shards that are checked with `git diff --check`.
 4. **Write resumably.** This job may be large. Append records as you go and, on
    a re-run, skip references whose `ref_id` is already present in
    `image_conversions.jsonl` so an interrupted run resumes instead of redoing
@@ -57,7 +60,7 @@ and B entirely).
 test -s GPTs/image_recovery/image_conversions.jsonl
 # One conversion record per C/D/E classification row:
 cde=$(awk -F'\t' 'NR>1 && ($2=="C"||$2=="D"||$2=="E")' GPTs/image_recovery/image_classification.tsv | wc -l)
-conv=$(wc -l < GPTs/image_recovery/image_conversions.jsonl)
+conv=$(grep -c . GPTs/image_recovery/image_conversions.jsonl)
 echo "cde=$cde conversions=$conv"   # must match
 python3 -c "import json,sys; [json.loads(l) for l in open('GPTs/image_recovery/image_conversions.jsonl')]; print('jsonl OK')"
 git diff --check

@@ -43,7 +43,7 @@ Build a complete inventory of every Markdown image reference in `Manuals/`.
 test -s GPTs/image_recovery/image_inventory.tsv
 # The crude grep below is a LOWER BOUND on image references in Manuals/:
 refs=$(grep -rhoE '!\[[^]]*\]\([^)]*\)|<img [^>]*src=' Manuals --include='*.md' | wc -l)
-rows=$(( $(wc -l < GPTs/image_recovery/image_inventory.tsv) - 1 ))
+rows=$(( $(grep -c . GPTs/image_recovery/image_inventory.tsv) - 1 ))
 echo "refs=$refs rows=$rows"   # rows must be >= refs
 git diff --check
 ```

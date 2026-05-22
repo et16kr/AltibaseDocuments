@@ -8,8 +8,11 @@ work end to end, verify it, and report the result exactly as specified.
 - Working directory is the repository root (`/home/et16/AltibaseDocuments`).
 - Spec: `GPTs/reports/image_content_recovery_spec_20260522.md` — Phase 5.
 - Inputs: `GPTs/image_recovery/image_conversions.jsonl` (IMG-03),
-  `GPTs/image_recovery/image_classification.tsv` (IMG-02), the rendered rasters
-  under `Manuals/.../media/`, and the manuals' `PDF/` folders.
+  `GPTs/image_recovery/image_classification.tsv` (IMG-02), and
+  `GPTs/image_recovery/image_inventory.tsv` (IMG-01) — join by `ref_id` for
+  each image's `image_path_resolved` (to locate the raster file) and `context`
+  (for the A/B audit). The rendered rasters and the manuals' `PDF/` folders are
+  the comparison sources.
 
 ## Task
 
