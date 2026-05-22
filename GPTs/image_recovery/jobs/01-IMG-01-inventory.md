@@ -27,8 +27,11 @@ Build a complete inventory of every Markdown image reference in `Manuals/`.
    - `basename` — image file basename.
    - `heading_chain` — the chain of enclosing Markdown headings, ` > `-joined.
    - `context` — the surrounding text needed to classify the image later: at
-     least 12 lines before and 12 lines after the reference, with newlines
-     escaped as `\n` so the row stays single-line.
+     least 12 lines before and 12 lines after the reference.
+   No field value may contain a raw tab or newline — escape them as `\t` and
+   `\n` so every row is a single, well-formed TSV line. This matters: the
+   `Manuals/` markdown contains literal tab characters, and `context` would
+   otherwise break the column layout for every downstream job.
 3. Do not convert, classify, or modify anything — this job only inventories.
 
 ## Constraints (non-negotiable)

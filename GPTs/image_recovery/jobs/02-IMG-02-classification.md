@@ -31,11 +31,11 @@ Only C/D/E will later be converted; A/B are skipped.
    rule that misfires. Err toward **C/D/E** when a call is uncertain — a wrong
    A/B silently drops unique information.
 3. **Residual pass.** Classify rows the rules cannot decide by reading the
-   raster image and its context. If the image-reading tool cannot open a `.gif`
-   (or any) raster, convert it to PNG into a scratch temp directory with
-   ImageMagick (`convert`) and read that — never modify the original. Write
-   classification rows resumably so an interrupted run can resume rather than
-   reclassify every row.
+   raster image and its context. The image-reading tool reads `.gif`, `.png`,
+   and `.jpg` directly. If an image genuinely cannot be read, set its
+   `raster_readable` flag (`low_res`/`missing`) and classify from context
+   alone — never guess and never modify the original. Write classification rows
+   resumably so an interrupted run can resume rather than reclassify every row.
 4. Write `GPTs/image_recovery/image_classification.tsv`, one row per inventory
    `ref_id`, header + tab-separated columns: `ref_id`, `class` (A–E),
    `decided_by` (rule id or `vision`), `rationale` (one line),
@@ -66,6 +66,9 @@ test -f GPTs/reports/image_content_audit_20260522.md
 inv=$(( $(grep -c . GPTs/image_recovery/image_inventory.tsv) - 1 ))
 cls=$(( $(grep -c . GPTs/image_recovery/image_classification.tsv) - 1 ))
 echo "inventory=$inv classified=$cls"   # must match
+# Every class value must be exactly one of A B C D E (downstream awk relies on it):
+bad=$(awk -F'\t' 'NR>1 && $2!~/^[ABCDE]$/' GPTs/image_recovery/image_classification.tsv | wc -l)
+echo "invalid_class_rows=$bad"   # must be 0
 git diff --check
 ```
 

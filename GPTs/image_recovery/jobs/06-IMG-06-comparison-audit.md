@@ -44,12 +44,11 @@ conversion. This is the conversion-fidelity check; it is read-only.
      inventory `context` and confirm the image content is genuinely redundant
      with the adjacent syntax block (A) or prose (B). If the image carries
      unique content, the classification is wrong.
-   If a `.gif` raster cannot be opened, convert it to PNG into a scratch temp
-   directory with ImageMagick (`convert`) and read that — never modify the
-   original. If the raster is unreadable, fall back to the manual's PDF. For
-   class E you may additionally render `converted_text` with `mmdc`
-   (mermaid-cli) into the scratch dir for a side-by-side visual compare if the
-   tool is available; otherwise do a structural compare.
+   The image-reading tool reads `.gif`, `.png`, and `.jpg` directly; if a
+   raster is unreadable, fall back to the manual's PDF, and if that also fails
+   record `uncertain`. For class E you may additionally render `converted_text`
+   with `mmdc` (mermaid-cli) into a scratch temp directory for a side-by-side
+   visual compare if the tool is available; otherwise do a structural compare.
 3. **Verdict per audited image:** `match` | `minor` (cosmetic or ordering
    difference, no information lost) | `material` (a missing or wrong node,
    edge, cell, token, or a reversed direction) | `uncertain` (raster and PDF
@@ -67,7 +66,7 @@ conversion. This is the conversion-fidelity check; it is read-only.
 
 - Read-only audit: do NOT modify `image_conversions.jsonl`, the originals,
   `GPTs/source_pack/`, `GPTs/upload_package/`, or build scripts.
-- `gif`→`png` scratch conversions go to a temp directory only.
+- Any `mmdc` render output goes to a scratch temp directory only.
 - Do not run `run-all.sh` or other jobs' files.
 
 ## Acceptance checks

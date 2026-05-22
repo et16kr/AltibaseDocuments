@@ -23,9 +23,9 @@ and B entirely).
      block.
    - **D** (tabular image) → a Markdown table.
    - **E** (flowchart) → a Mermaid `flowchart` block.
-   Many C-class diagrams are `.gif`. If the image-reading tool cannot open a
-   `.gif` (or any) raster, convert it to PNG into a scratch temp directory with
-   ImageMagick (`convert`) and read that — never modify the original.
+   The image-reading tool reads `.gif`, `.png`, and `.jpg` directly (many
+   C-class diagrams are `.gif`). If an image genuinely cannot be read, do not
+   guess — use the PDF fallback (step 2) and, failing that, flag it.
 2. **Verification — D4: full per-image cross-check.** Every conversion must be
    verified against its rendered raster. Where the raster is too low-resolution
    to transcribe reliably, fall back to the manual's PDF rendition (the
