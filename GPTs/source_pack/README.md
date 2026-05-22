@@ -15,7 +15,10 @@ source-pack baseline. The manifest builder considers these repository source roo
 - `3rd Party Guide for Altibase/`
 
 The manifest builder also materializes file-level AID upload-content candidates from
-the approved AID tiering evidence. It does not treat every file under `GPTs/reports/`
+the approved AID tiering evidence. The AID corpus is a separate Git repository
+checked out at `~/AID`; its repository, branch (`combine`), and pinned commit are
+recorded in `GPTs/AID_DEPENDENCY.md`, which is required for a reproducible rebuild.
+It does not treat every file under `GPTs/reports/`
 as source. Reports are included only when the builder lists them as approved support
 evidence with a concrete reason in `source_manifest.tsv`. Requirements, readiness
 drafts, transient review notes, and generated validation logs remain outside the

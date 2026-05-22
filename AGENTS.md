@@ -58,7 +58,9 @@ state, patch level, platform, log excerpt, object definition, installed tool out
 unsupported behavior, or live validation, ask for that missing input and provide the
 safest source-backed next check instead of inventing a definitive answer.
 
-The `~/AID` workspace is also in scope. It contains Korean-source-updated English
+The `~/AID` workspace is also in scope. It is a separate Git repository
+(`git@github.com:et16kr/AID.git`, branch `combine`); its pinned commit and setup
+are recorded in `GPTs/AID_DEPENDENCY.md`. It contains Korean-source-updated English
 documentation, source-stabilization evidence, semantic coverage reports, and an
 `llm-reference/` package intended for GPTs, Codex, and other LLMs. Treat AID content as
 a high-value English working source while preserving its own Korean-source-verified,
