@@ -3,7 +3,7 @@
 - Date: 2026-05-22
 - Repository: `/home/et16/AltibaseDocuments`
 - Status: **Confirmed** (2026-05-22) — §9 decisions settled. Job runner:
-  `GPTs/image_recovery/` (jobs IMG-01 … IMG-05).
+  `GPTs/image_recovery/` (jobs IMG-01 … IMG-06).
 - Related: `GPTs/reports/answerability_improvement_cycle3_plan_20260522.md`
   (separate effort; this job is **not** part of the answerability cycle).
 
@@ -88,6 +88,10 @@ the sidecar is the single reviewable artifact.
 - **Phase 4 — Validation & docs.** Spot-check converted sites in the rebuilt
   shards; confirm no regression to existing text; update the source-pack /
   upload-package docs. Output: validation report.
+- **Phase 5 — Conversion comparison audit.** Independently compare each
+  converted graph against its original image — classes D and E fully, class C
+  on a stratified sample. Any `material` mismatch fails the run so a faithless
+  conversion is caught, not shipped. Output: comparison audit ledger + report.
 
 ## 7. Deliverables
 
@@ -97,6 +101,8 @@ the sidecar is the single reviewable artifact.
 - Updated `source_pack` build + rebuilt `upload_package/` shards.
 - Audit report (class counts, recoverable-information estimate) and a
   validation report.
+- `image_comparison_audit.tsv` + comparison audit report — the per-image
+  image-vs-graph fidelity verdicts.
 
 ## 8. Inputs
 
@@ -130,6 +136,9 @@ the sidecar is the single reviewable artifact.
   existing text is byte-unchanged elsewhere (no regression).
 - The audit report quantifies class counts and the recoverable-information
   estimate.
+- The comparison audit (Phase 5) finds **zero `material` mismatches** — classes
+  D and E compared fully, class C on a stratified sample — against the
+  converted graphs.
 - `git diff --check` clean.
 
 ## 11. Risks

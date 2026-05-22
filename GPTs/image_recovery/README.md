@@ -65,12 +65,16 @@ present and the source-pack build scripts exist, and aborts otherwise.
 | 03 | IMG-03 convert C/D/E images | 2 | `image_conversions.jsonl` |
 | 04 | IMG-04 build-sidecar integration and shard rebuild | 3 | updated build + rebuilt shards |
 | 05 | IMG-05 validation and documentation | 4 | validation report, updated READMEs |
+| 06 | IMG-06 conversion comparison audit | 5 | comparison audit report + ledger |
 
 Job 02 is a soft stop/go: if classes C/D/E turn out negligible it still passes,
 but its result says so plainly so the run can be reconsidered before IMG-03.
 Job 04 rebuilds `GPTs/upload_package/`, which changes the corpus the
 answerability harness runs against — re-baselining that harness is out of scope
 and is flagged in the IMG-04 result.
+Job 06 independently compares each converted graph against its original image
+(D and E fully, C sampled); it fails on any `material` mismatch, so a faithless
+conversion stops the run rather than shipping silently.
 
 ## Artifacts
 
