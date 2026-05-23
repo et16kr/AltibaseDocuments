@@ -72,11 +72,11 @@ Context selection is manifest-aware and source-block-aware:
   truncation guarantee the assembled context never exceeds the budget.
 - **Named-definition admission.** Every per-version manual row in the source
   manifest carries the same generic title, so `route_sources()` cannot single out
-  the manual that documents a specific property, error code, or view, and a
-  generic-titled mis-route can flood the saturated budget with the wrong manual.
-  To stay resilient, `build_context()` admits the chunks the question's own named
-  identifier points at into a dedicated highest-priority section, regardless of the
-  routing decision:
+  the manual that documents a specific property, error code, view, or
+  replication clause, and a generic-titled mis-route can flood the saturated
+  budget with the wrong manual. To stay resilient, `build_context()` admits the
+  chunks the question's own named identifier points at into a dedicated
+  highest-priority section, regardless of the routing decision:
   - a **property-definition section** (`build_definition_section`) for
     `properties` questions — the General Reference-1 block whose heading is a
     property identifier from the question text, plus the `V$PROPERTY`
@@ -85,12 +85,41 @@ Context selection is manifest-aware and source-block-aware:
     and `views_performance_monitoring` questions — the Error Message Reference
     entry for a named error symbol, hex code, or `ERR-<hex>` runtime code
     (`build_error_reference_section`), and the full General Reference-2 section of
-    a named `V$`/`X$`/`SYS_..._` identifier (`build_dict_view_section`).
+    a named `V$`/`X$`/`SYS_..._` identifier (`build_dict_view_section`);
+  - a **replication clause / option section** for
+    `replication_cdc_security_network` questions
+    (`build_replication_section`) — the Replication Manual section that the
+    named DDL clause, replication command, or option block points at
+    (`CREATE/ALTER/DROP REPLICATION`, `START`/`STOP`/`RESET`/`FLUSH`,
+    `ADD`/`DROP HOST`, Gapless / Parallel Applier / Meta Logging / Offline /
+    `REPLICATION MODE` …), version-filtered, plus the replication monitoring
+    views (`V$REPSENDER` / `V$REPRECEIVER` / `V$REPSYNC` / …) from the General
+    Reference-2 data-dictionary manual as the documented companion (the
+    analogue of the `V$PROPERTY` companion for properties).
   Each builder is anchored on identifiers in the question text and confined to the
   relevant `source_family`, so it returns nothing — and `build_context()` is
-  byte-identical to before — for a question that names no such identifier.
-  `route_sources()` itself is unchanged; the fix makes assembly resilient to the
-  unavoidable routing miss.
+  byte-identical to before — for a question that names no such identifier or
+  replication clause. `route_sources()` itself is unchanged; the fix makes
+  assembly resilient to the unavoidable routing miss.
+- **Prose → identifier resolution.** A residual band of questions names the
+  object only descriptively rather than by its identifier ("session time zone"
+  vs `TIME_ZONE`, "conversion not applicable" vs
+  `mtERR_ABORT_CONVERSION_NOT_APPLICABLE`, "wait-event investigation" vs
+  `V$SESSION_WAIT`). The identifier-anchored builders above then never fire and
+  the question falls back to plain lexical retrieval, which is insufficient
+  under the saturated 180k budget against a generic-titled mis-route.
+  `resolve_prose_identifiers()` closes that gap with a deterministic,
+  conservative, high-precision phrase → identifier map: each lower-cased anchor
+  phrase was verified to occur in exactly one residual question (and in no
+  other benchmark question), and to point at a property / error / view with a
+  documented section in `GPTs/upload_package/`. The resolved identifiers are
+  unioned into the sets `build_definition_section`,
+  `build_error_reference_section`, and `build_dict_view_section` already
+  extract literally, so a resolved phrase reaches exactly the same admission
+  path — and the resolver returns three empty sets, leaving `build_context()`
+  byte-identical, for every question whose object is named by its identifier or
+  whose prose is too ambiguous to resolve safely. Only the question text is
+  read; no judge-only field is consulted.
 - **Exact-block deduplication.** After the budgeted fill passes, `build_context()`
   drops any chunk whose body byte-identically repeats an already-selected chunk
   and reinvests the freed budget — duplicate-aware and add-only — in unique
@@ -148,11 +177,22 @@ and degrades to a plain pre-routing lexical rebuild. It writes
   `verify`/`check`/`validate`/`confirm`). Literal **required-token** preservation
   (`literal_token_present()`) stays exact — only fact-term coverage is form-tolerant.
 - **Prohibited-claim detection (round 2).** `prohibited_claim_present()` is
-  polarity-, direction-, and markdown-emphasis-aware. Before any negation or
-  ordering analysis the answer passes through `strip_markdown_emphasis()`, so an
-  emphasised negation (`does **not** commit`) still tokenises as `not` while
-  identifier underscores (`SSL_PORT_NO`) survive. `parse_order_claim()` separates
-  ordering claims ("X before Y") from asymmetric-relation claims ("A overrides B",
+  polarity-, direction-, markdown-emphasis-, and quoted-span-aware. Before any
+  negation or ordering analysis the answer passes through
+  `strip_markdown_emphasis()`, so an emphasised negation (`does **not** commit`)
+  still tokenises as `not` while identifier underscores (`SSL_PORT_NO`) survive.
+  The negation read for an intrinsically-negative ("cannot") claim is then
+  taken on the answer's own prose: `mask_quoted_span_negations()` blanks
+  negation tokens (`cannot` / `cant` / `never` / `not` / `no` / `without` /
+  `unsupported`) that sit inside fenced triple-backtick code blocks, inline
+  backtick spans, or single- / double- / curly-quoted string literals, so a
+  `does not` inside a CLI example like `` `altierr -w "does not"` `` — which is
+  example text, not the answer's polarity — cannot flip the verdict. Only the
+  negation tokens inside such spans are blanked (replaced by equal-length
+  spaces); the surrounding prose and every claim / technical term, including
+  ones that sit inside the same span, is left byte-for-byte intact so it still
+  counts toward sentence coverage. `parse_order_claim()` separates ordering
+  claims ("X before Y") from asymmetric-relation claims ("A overrides B",
   "A replaces / supersedes / precedes B", "A takes precedence over B"): the same
   words in the other direction are an allowed answer, so such a claim flags only
   when high bag-of-words overlap is paired with the answer actually asserting the
@@ -167,6 +207,54 @@ and degrades to a plain pre-routing lexical rebuild. It writes
   test collapsed to "zero findings", which let a single near-miss override an
   in-policy numeric score; `high`/`medium` near-miss findings now remain as
   remediation signal without auto-failing the question.
+
+### Multi-sample answer mode
+
+`answer_runner.py` can generate N answer records per question to expose live
+answer-generation variance. The count is resolved by `resolve_answer_samples()`
+with the precedence: an explicit `--samples` CLI flag, then the
+`ANSWER_SAMPLES` environment variable, then the default of 1. Because
+`run-test.sh` invokes the runner with a fixed argument list and never passes
+`--samples`, `ANSWER_SAMPLES` is the only path a live benchmark run can enable
+multi-sampling — exactly like `JUDGE_LLM_FACT` for the judge. The value must be
+a positive integer.
+
+For each question, retrieval, `build_context()` assembly, prompt construction,
+and the leakage check are computed once and shared across that question's N
+samples; only answer generation repeats. The runner writes N answer records per
+question to `answers.jsonl`, each tagged with a 0-based `sample_index`, and
+keeps the `retrieval_audit.jsonl` sidecar one record per question regardless of
+N. `sample_index` is multi-sample bookkeeping rather than part of the canonical
+answer-record schema, so the validator drops it before schema-checking the
+record structure.
+
+`ANSWER_SAMPLES=1` (the default) keeps every artifact byte-for-byte identical
+to a pre-multi-sample run: the loop runs once, `sample_index` is omitted from
+the record, and `answers.jsonl` / `aggregate_report.json` / `report.md` read
+exactly as before. `answer_runner.py --self-test` exercises both paths — the
+flag/env resolution and `sample_index` tagging — so the N=1 byte-identity and
+the N>1 plumbing are both verified hermetically without a provider.
+
+### Scorecard variance band
+
+When the judge consumes a multi-sample `answers.jsonl`, `compute_variance_band()`
+summarises each scorecard metric (`pass_rate`, `fact_coverage`,
+`critical_fact_coverage`, `required_token_preservation`,
+`unsupported_claim_rate`, `version_handling`, `altibase_specific_correctness`,
+`missing_input_handling`) as the mean across the N samples together with the
+per-sample min and max, so a genuine retrieval / answer gain can be read
+against the live answer-generation noise floor. Every sample must answer every
+selected question; the judge errors out otherwise so per-sample metrics share
+the same question set.
+
+The result is added as an optional `variance_band` field to
+`aggregate_report.json` and as a "Sample Variance Band" Markdown section in
+`report.md`. A single-sample run leaves `variance_band` off and emits no
+Markdown section, so `aggregate_report.json` still validates against the
+unmodified `aggregate_report.schema.json` and `report.md` is byte-for-byte the
+pre-band layout. The `Overall Metrics` table continues to show the
+single-number metrics (the per-sample mean for a multi-sample run); the band
+is purely additive.
 
 ### Optional LLM-assisted fact judge
 
@@ -205,8 +293,10 @@ default and the fallback.
 `calibrate_judge.py` measures how well the rule judge agrees with hand-labelled
 ground truth. It runs the judge's `fact_match(fact_text, answer, required_tokens)`
 over each entry of the gold set `fixtures/judge_gold_set.jsonl` — labelled
-`(question_id, fact_id)` pairs each marked `covered` or `not_covered` — compares the
-judge's `.covered` verdict against the human label, and prints and writes a confusion
+`(question_id, fact_id)` pairs each marked `covered` or `not_covered`, expanded in
+cycle 3 to roughly 150 entries balanced across the benchmark's seven domains so
+agreement is measured on a representative slice — compares the judge's
+`.covered` verdict against the human label, and prints and writes a confusion
 matrix with precision, recall, F1, and overall agreement. It is a measurement tool:
 it always exits 0 and never fails on low agreement. With `--llm-fact-judge` (or
 `JUDGE_LLM_FACT=1`) it routes each gold entry through `judge_fact(...)` instead, so

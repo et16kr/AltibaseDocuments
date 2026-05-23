@@ -369,9 +369,28 @@ def load_questions(manifest: dict[str, Any]) -> list[dict[str, Any]]:
     return records
 
 
+def answer_sample_index(record: dict[str, Any]) -> int:
+    """Return an answer record's 0-based sample index (0 when absent) (C3-04).
+
+    A legacy single-sample ``answers.jsonl`` carries no ``sample_index``; each
+    such record is sample 0 of a one-sample run and is judged exactly as before.
+    A multi-sample run (``ANSWER_SAMPLES`` > 1) tags every record with a 0-based
+    ``sample_index``.
+    """
+    value = record.get("sample_index")
+    if value is None:
+        return 0
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise JudgeError(
+            f"answer record for {record.get('question_id', '<unknown>')} has an "
+            f"invalid sample_index: {value!r}"
+        )
+    return value
+
+
 def load_answer_records(path: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
-    seen_ids: set[str] = set()
+    seen_keys: set[tuple[str, int]] = set()
     try:
         handle = path.open("r", encoding="utf-8")
     except FileNotFoundError as exc:
@@ -392,9 +411,17 @@ def load_answer_records(path: Path) -> list[dict[str, Any]]:
             question_id = record.get("question_id")
             if not isinstance(question_id, str) or not question_id:
                 raise JudgeError(f"{repo_rel(path)}:{line_no} has no question_id")
-            if question_id in seen_ids:
-                raise JudgeError(f"Duplicate answer for question id: {question_id}")
-            seen_ids.add(question_id)
+            # A run is keyed by (question_id, sample_index) so a multi-sample
+            # run's N records per question are all accepted, while a duplicate
+            # of the same (question, sample) -- and any duplicate in a legacy
+            # single-sample file, where every sample_index is 0 -- still errors.
+            sample_index = answer_sample_index(record)
+            key = (question_id, sample_index)
+            if key in seen_keys:
+                raise JudgeError(
+                    f"Duplicate answer for question id {question_id} sample {sample_index}"
+                )
+            seen_keys.add(key)
             records.append(record)
     if not records:
         raise JudgeError(f"No answer records found in {repo_rel(path)}")
@@ -1302,6 +1329,56 @@ def strip_markdown_emphasis(text: str) -> str:
     return text
 
 
+# Negation words the polarity guards recognise as single tokens. A negation
+# that sits inside a quoted code/example span is part of a command or verbatim
+# example, not the answer's own prose -- mask_quoted_span_negations() blanks it.
+QUOTED_SPAN_NEGATION_RE = re.compile(
+    r"(?<![A-Za-z])(?:cannot|cant|never|not|no|without|unsupported)(?![A-Za-z])",
+    re.IGNORECASE,
+)
+# The spans that hold commands, code, and verbatim examples rather than the
+# answer's prose: fenced triple-backtick code blocks, inline backtick spans,
+# and single- or double-quoted string literals. Both straight and curly quotes
+# are covered, because live answers use either. The single-quote pattern is
+# boundary-guarded (no surrounding letter/digit) so an apostrophe inside a word
+# such as "doesn't" or "user's" does not open a spurious span.
+QUOTED_SPAN_RES = (
+    re.compile(r"```.*?```", re.DOTALL),
+    re.compile(r"`[^`]*`"),
+    re.compile("[\"“”][^\"“”]*[\"“”]"),
+    re.compile(
+        r"(?<![A-Za-z0-9])['‘’][^'‘’\n]*['‘’]"
+        r"(?![A-Za-z0-9])"
+    ),
+)
+
+
+def mask_quoted_span_negations(text: str) -> str:
+    """Blank negation words that sit inside quoted code/example spans.
+
+    Inline backtick spans, fenced triple-backtick code blocks, and quoted
+    string literals hold commands, code, and verbatim examples rather than the
+    answer's own prose. A negation token there -- for example the ``does not``
+    in the CLI example ``altierr -w "does not"`` -- belongs to that example,
+    not to the answer asserting a negative, so the cannot-claim polarity guard
+    must not read it. Only the negation words inside such spans are blanked
+    (replaced by equal-length runs of spaces); every other character -- the
+    backticks and quotes themselves, technical/claim terms, and all the
+    surrounding prose -- is left byte-for-byte intact, so a span-resident claim
+    term still counts toward sentence coverage and only the answer's own prose
+    contributes its polarity.
+    """
+
+    def blank(match: "re.Match[str]") -> str:
+        return QUOTED_SPAN_NEGATION_RE.sub(
+            lambda hit: " " * len(hit.group(0)), match.group(0)
+        )
+
+    for span_re in QUOTED_SPAN_RES:
+        text = span_re.sub(blank, text)
+    return text
+
+
 def claim_is_negative(claim: str) -> bool:
     """True when a prohibited claim's own *main* clause is negative in polarity.
 
@@ -1338,7 +1415,25 @@ def answer_asserts_negative_claim(answer: str, claim_terms: list[str]) -> bool:
     sentence-scoped -- the answer sentence covering the most claim terms decides
     the polarity. If that sentence negates, the answer asserts the negative
     claim; otherwise it affirms the opposite and is safe.
+
+    The negation read is kept on the answer's *own prose* by two C3-01
+    refinements:
+
+    * Negation tokens inside quoted code/example spans are blanked first
+      (mask_quoted_span_negations), so a ``does not`` inside a CLI example such
+      as ``altierr -w "does not"`` -- which is example text, not the answer's
+      polarity -- cannot flip the verdict.
+    * Only MAIN_CLAUSE_NEGATION_TOKENS count as a polarity-flipping negation --
+      the same impossibility-negations claim_is_negative() reads on the claim
+      side. "without" is excluded for the identical reason it is excluded there:
+      "search ... with or without the minus sign" affirms that the search *is*
+      possible; it does not assert an impossibility, so it must not be read as
+      the answer echoing a ``cannot`` claim.
+
+    raw markdown emphasis is then stripped so an emphasised negation word still
+    tokenises plainly. ``answer`` is therefore the raw answer text.
     """
+    answer = strip_markdown_emphasis(mask_quoted_span_negations(answer))
     claim_stems = {
         suffix_stem(term)
         for term in claim_terms
@@ -1356,7 +1451,9 @@ def answer_asserts_negative_claim(answer: str, claim_terms: list[str]) -> bool:
         cover = sum(1 for stem in stems if stem_in_set(stem, claim_stems))
         if cover > best_cover:
             best_cover = cover
-            best_has_negation = any(token in NEGATION_TOKENS for token in tokens)
+            best_has_negation = any(
+                token in MAIN_CLAUSE_NEGATION_TOKENS for token in tokens
+            )
     return best_cover > 0 and best_has_negation
 
 
@@ -1455,7 +1552,11 @@ def prohibited_claim_present(claim: str, answer: str) -> tuple[bool, str]:
         #     sentence also negates; an answer that affirms the affirmative
         #     ("it can use ... OUTPUT") is safe even if it negates elsewhere.
         if claim_negative:
-            if answer_asserts_negative_claim(answer_for_analysis, claim_terms):
+            # answer_asserts_negative_claim() does its own quoted-span negation
+            # masking and markdown-emphasis stripping, so it takes the raw
+            # answer (not answer_for_analysis, whose backticks are already
+            # gone -- the quoted spans could no longer be located).
+            if answer_asserts_negative_claim(answer, claim_terms):
                 return True, f"high lexical overlap ({score:.2f}); answer asserts the negative claim"
             return False, f"high lexical overlap ({score:.2f}) but answer affirms the opposite"
         if answer_has_negation_near(answer_norm_for_analysis, claim_terms):
@@ -1929,6 +2030,69 @@ def group_metrics(judgments: list[dict[str, Any]]) -> dict[str, float]:
     }
 
 
+# --- C3-04: multi-sample variance band --------------------------------------
+# A multi-sample live run (ANSWER_SAMPLES>1) answers every question N times.
+# The scorecard then reports each metric as the mean across the N samples
+# together with the min-max band, so a genuine retrieval/answer gain is never
+# hidden inside live answer-generation variance -- the cycle-2 rerun
+# (reports/full_rerun_analysis_cycle2_20260520.md section 6, target 3) found
+# the answer-generation noise floor as large as the cycle-2 signal. All eight
+# group_metrics() fields vary per sample, so all eight are banded.
+VARIANCE_BAND_METRICS = (
+    "pass_rate",
+    "fact_coverage",
+    "critical_fact_coverage",
+    "required_token_preservation",
+    "unsupported_claim_rate",
+    "version_handling",
+    "altibase_specific_correctness",
+    "missing_input_handling",
+)
+
+
+def metric_band(values: list[float]) -> dict[str, Any]:
+    """Mean and min-max band for one metric across the per-sample values."""
+    return {
+        "mean": mean(values, default=0.0),
+        "min": rate(min(values)) if values else 0.0,
+        "max": rate(max(values)) if values else 0.0,
+        "per_sample": [rate(value) for value in values],
+    }
+
+
+def compute_variance_band(
+    judgments: list[dict[str, Any]],
+    sample_of_judgment: list[int],
+    sample_indices: list[int],
+    questions_per_sample: int,
+) -> dict[str, Any]:
+    """Summarise per-sample metric spread for a multi-sample run (C3-04).
+
+    ``judgments`` is the flat list of every per-(question, sample) judgment and
+    ``sample_of_judgment`` carries each judgment's sample index in the same
+    order. Each scorecard metric is reduced to a mean plus a min-max band across
+    the per-sample group_metrics(). Single-sample runs do not call this -- the
+    band would be degenerate and every artifact must read exactly as today.
+    """
+    per_sample: dict[int, list[dict[str, Any]]] = {index: [] for index in sample_indices}
+    for judgment, sample in zip(judgments, sample_of_judgment):
+        per_sample[sample].append(judgment)
+    sample_metrics = [group_metrics(per_sample[index]) for index in sample_indices]
+    passed_per_sample = [
+        sum(1 for judgment in per_sample[index] if judgment["passed"])
+        for index in sample_indices
+    ]
+    return {
+        "samples": len(sample_indices),
+        "questions_per_sample": questions_per_sample,
+        "metrics": {
+            metric: metric_band([metrics[metric] for metrics in sample_metrics])
+            for metric in VARIANCE_BAND_METRICS
+        },
+        "passed_per_sample": passed_per_sample,
+    }
+
+
 def aggregate_by_dimension(
     questions_by_id: dict[str, dict[str, Any]],
     judgments: list[dict[str, Any]],
@@ -2049,6 +2213,7 @@ def build_aggregate_report(
     markdown_report_path: Path,
     invalid_run: bool,
     generated_at: str,
+    variance_band: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     metrics = group_metrics(judgments)
     aggregates = {
@@ -2080,7 +2245,7 @@ def build_aggregate_report(
     else:
         summary = "Readiness decision: " + decision + ". " + "; ".join(decision_reasons)
 
-    return {
+    report: dict[str, Any] = {
         "$schema": "../schemas/aggregate_report.schema.json",
         "report_id": f"{manifest['manifest_id']}_{judgments[0]['run_id'] if judgments else 'empty'}_aggregate",
         "manifest_id": manifest["manifest_id"],
@@ -2109,6 +2274,14 @@ def build_aggregate_report(
         },
         "summary": summary,
     }
+    # C3-04: the variance band is an additive field, present only for a
+    # multi-sample run. A single-sample run leaves it off, so aggregate_report
+    # .json is byte-for-byte identical to a pre-C3-04 run and still validates
+    # against the unmodified aggregate-report schema. Every existing top-level
+    # key and metric is preserved either way.
+    if variance_band is not None:
+        report["variance_band"] = variance_band
+    return report
 
 
 def metric_percent(value: float) -> str:
@@ -2123,6 +2296,45 @@ def markdown_table(headers: list[str], rows: list[list[str]]) -> str:
     for row in rows:
         lines.append("| " + " | ".join(row) + " |")
     return "\n".join(lines)
+
+
+def variance_band_markdown(band: dict[str, Any] | None) -> list[str]:
+    """Markdown lines for the C3-04 multi-sample variance band.
+
+    Returns an empty list for a single-sample run, so report.md is byte-for-byte
+    identical to a pre-C3-04 run.
+    """
+    if not band:
+        return []
+    metrics = band["metrics"]
+    rows = [
+        [
+            metric.replace("_", " ").capitalize(),
+            metric_percent(metrics[metric]["mean"]),
+            metric_percent(metrics[metric]["min"]),
+            metric_percent(metrics[metric]["max"]),
+        ]
+        for metric in VARIANCE_BAND_METRICS
+    ]
+    return [
+        "## Sample Variance Band",
+        "",
+        (
+            f"Live answer generation was sampled {band['samples']} times per "
+            f"question ({band['questions_per_sample']} questions per sample). "
+            "The Overall Metrics above are the mean across samples; the band "
+            "below is the min-max spread across samples, so a retrieval or "
+            "answer gain can be read against the live answer-generation noise "
+            "floor."
+        ),
+        "",
+        markdown_table(["Metric", "Mean", "Min", "Max"], rows),
+        "",
+        "Passing questions per sample: "
+        + ", ".join(str(count) for count in band["passed_per_sample"])
+        + ".",
+        "",
+    ]
 
 
 def write_markdown_report(report: dict[str, Any], output_path: Path) -> None:
@@ -2182,6 +2394,7 @@ def write_markdown_report(report: dict[str, Any], output_path: Path) -> None:
             ],
         ),
         "",
+        *variance_band_markdown(report.get("variance_band")),
         "## Domain Results",
         "",
         markdown_table(
@@ -2468,12 +2681,23 @@ def run_judge(
     selected_questions = filter_questions(load_questions(manifest), question_ids, limit)
     questions_by_id = {record["id"]: record for record in selected_questions}
     answer_records = load_answer_records(answers_path)
+    # C3-04: a multi-sample run carries N records per question, each tagged with
+    # a 0-based sample_index; a legacy single-sample file carries none, so every
+    # record is sample 0. `sample_of_record` is index-aligned with both
+    # `answer_records` and the `judgments` built from them below.
+    sample_of_record = [answer_sample_index(record) for record in answer_records]
+    sample_indices = sorted(set(sample_of_record))
     answer_validator = load_schema_validator("answer_record.schema.json") if validate_output else None
     if answer_validator:
         answer_errors: list[str] = []
         for record in answer_records:
+            # sample_index is C3-04 bookkeeping, not part of the answer-record
+            # schema; validate the canonical record without it.
+            instance = {
+                key: value for key, value in record.items() if key != "sample_index"
+            }
             answer_errors.extend(
-                validate_instance(record, answer_validator, f"answer {record['question_id']}")
+                validate_instance(instance, answer_validator, f"answer {record['question_id']}")
             )
         if answer_errors:
             raise JudgeError("Answer record schema validation failed: " + "; ".join(answer_errors[:10]))
@@ -2489,6 +2713,20 @@ def run_judge(
             "Answer file contains question id(s) outside the selected manifest/filter: "
             + ", ".join(extra_answers[:20])
         )
+    # Every sample must answer every selected question, so the per-sample
+    # metrics in the variance band are computed over the same question set.
+    for sample in sample_indices:
+        sample_ids = {
+            record["question_id"]
+            for record, record_sample in zip(answer_records, sample_of_record)
+            if record_sample == sample
+        }
+        sample_missing = sorted(set(questions_by_id) - sample_ids)
+        if sample_missing:
+            raise JudgeError(
+                f"Answer sample {sample} is missing selected question id(s): "
+                + ", ".join(sample_missing[:20])
+            )
 
     run_ids = {str(record.get("run_id", "")) for record in answer_records if record.get("run_id")}
     run_id = sorted(run_ids)[0] if len(run_ids) == 1 else f"mixed_{digest_text(repo_rel(answers_path))[-12:]}"
@@ -2534,6 +2772,15 @@ def run_judge(
 
     markdown_path = destination / "report.md"
     aggregate_path = destination / "aggregate_report.json"
+    # The variance band is emitted only for a multi-sample run; a single-sample
+    # run passes None and aggregate_report.json reads exactly as before C3-04.
+    variance_band = (
+        compute_variance_band(
+            judgments, sample_of_record, sample_indices, len(selected_questions)
+        )
+        if len(sample_indices) > 1
+        else None
+    )
     aggregate = build_aggregate_report(
         manifest=manifest,
         policy=policy,
@@ -2546,9 +2793,17 @@ def run_judge(
         markdown_report_path=markdown_path,
         invalid_run=False,
         generated_at=judged_at,
+        variance_band=variance_band,
     )
     if aggregate_validator:
-        aggregate_errors = validate_instance(aggregate, aggregate_validator, "aggregate report")
+        # variance_band is the C3-04 additive field; validate the canonical
+        # report without it against the unmodified aggregate-report schema.
+        aggregate_instance = {
+            key: value for key, value in aggregate.items() if key != "variance_band"
+        }
+        aggregate_errors = validate_instance(
+            aggregate_instance, aggregate_validator, "aggregate report"
+        )
         if aggregate_errors:
             raise JudgeError("Aggregate report schema validation failed: " + "; ".join(aggregate_errors[:10]))
     write_json(aggregate_path, aggregate)
@@ -2657,6 +2912,37 @@ SQL_137_C2_ANSWER = 'An Altibase answer should say:\n\n- `DECODE` is similar to 
 TOOL_003_C2_ANSWER = 'In Altibase 7.3, an anonymous block is a stored procedure block used independently without a header.\n\nMain differences from a stored procedure:\n\n- It does not create or store a PSM object in the database.\n- It does not return the value of a RETURN clause.\n- Unlike stored procedures, it can use BIND variables for INPUT, OUTPUT, and INOUTPUT.\n\nStored procedures are created as database objects with `CREATE [OR REPLACE] PROCEDURE`, have a header and body, and are managed with statements such as `ALTER PROCEDURE`, `DROP PROCEDURE`, and `EXECUTE`.\n\nExample of BIND variables in an anonymous block:\n\n```sql\niSQL> VAR OUT1 OUTPUT INTEGER;\niSQL> VAR INOUT1 INOUTPUT INTEGER;\niSQL> EXEC :INOUT1 := 1;\n\niSQL> DECLARE\n    VAR1 INTEGER;\nBEGIN\n    VAR1 := :INOUT1;\n    :OUT1 := VAR1;\n    :INOUT1 := VAR1 + 1;\nEND;\n/\nExecute success.\n\niSQL> PRINT VAR;\n[ HOST VARIABLE ]\n-------------------------------------------------------\nNAME                 TYPE                 VALUE\n-------------------------------------------------------\nOUT1                 INTEGER              1\nINOUT1               INTEGER              2\n```\n\nHere, `:INOUT1` is read and then updated, and `:OUT1` receives the output value.'
 TOOL_019_C2_ANSWER = 'In 8.1, after using `SQLPutLob` to update `JSON` data through an Altibase CLI LOB locator, you must call `SQLFreeLob2`.\n\n`SQLFreeLob2` releases resources related to the `LOB Locator` for the `JSON` data type.\n\nIt does **not** `commit` or `rollback` the changes to the LOB pointed to by the locator. Transaction completion still has to be handled separately with an explicit `commit` or `rollback`.'
 TOOL_033_C2_ANSWER = '**Runbook**\n\nFor aexport-generated files, permission is selected in this order:\n\n1. `AEXPORT_FILE_PERMISSION`\n2. `ALTIBASE_UT_FILE_PERMISSION`\n3. Default `666` (`user:rw, group:rw, other: rw`)\n\n`ALTIBASE_UT_FILE_PERMISSION` is the common environment variable for files created by `aexport`, `iLoader`, and `iSQL`.\n\n```bash\nexport ALTIBASE_UT_FILE_PERMISSION=600\n```\n\nWith only this set, files created by `aexport` use `600` (`user:rw, group:--, other:--`).\n\n`AEXPORT_FILE_PERMISSION` is specific to files created by `aexport`. If it is set, it overrides `ALTIBASE_UT_FILE_PERMISSION` for `aexport` output.\n\n```bash\nexport ALTIBASE_UT_FILE_PERMISSION=660\nexport AEXPORT_FILE_PERMISSION=600\n```\n\nIn this case, `aexport`-generated files use `AEXPORT_FILE_PERMISSION=600`, not `ALTIBASE_UT_FILE_PERMISSION=660`.\n\nIf neither variable is set, `aexport`-generated files default to `666` (`user:rw, group:rw, other: rw`).\n\nIf an invalid permission value is used, the documented error is:\n\n```text\n326, HY000, utERR_ABORT_FilePerm_OutOfRange_Error = File permission value is out of range (<0%s>=<1%s>)\n# *Cause: File permission value is out of range.\n# *Action: Use valid file permission value.\n```'
+
+
+# C3-01 prohibited-claim false-positive regression fixtures.
+#
+# ERR_101_C3_ANSWER is the verbatim ERR-101 answer from the cycle-2 job-09 run
+# altibase_source_preserving_20260521_220915_job09
+# (reports/full_benchmark/runs/.../answers/answers.jsonl). It was the single
+# surviving prohibited-claim false positive after cycle 2
+# (reports/full_rerun_analysis_cycle2_20260520.md section 4): the `cannot`-
+# phrased claim "A negative SQLCODE cannot be searched with altierr" mis-fired
+# even though the answer states the OPPOSITE -- a negative SQLCODE *can* be
+# searched, with worked examples. Its best-covering sentence carries an
+# incidental "without" ("search ... with or without the minus sign"), which is
+# positive polarity, not an impossibility; and the answer also contains a
+# `does not` inside the CLI example `altierr -w "does not"`, a negation that
+# belongs to example text, not the answer's prose. Neither is the answer
+# asserting the negative claim, so ERR-101 must read as NOT present.
+ERR_101_C3_ANSWER = 'Use `altierr` as the first lookup step, matching the evidence the user has.\n\n- If the user has an `ERR-` code, search by hexadecimal or decimal code. Example for `ERR-00015`:\n```sh\naltierr 0x00015\naltierr –w 00015\naltierr 21\n```\n\n- If the user has a negative `SQLCODE` from C/C++ precompiler or an ODBC error code returned by the ODBC function, search either with or without the minus sign, or by the equivalent hex code:\n```sh\naltierr -266286\naltierr 266286\naltierr 0x4102E\n```\n\n- If the user only has an error-message keyword, search message text with `–w`. This can return multiple records, so ask the user to share the exact error code/message if the result is ambiguous:\n```sh\naltierr –w connect\naltierr –w “does not”\n```\n\nIn an Altibase answer, explain that `altierr` returns the error code number, error code string, description, cause, and action. For ODBC cases, also ask the user to collect the diagnostic error number/message from `SQLError` or supported diagnostic APIs such as `SQLGetDiagRec` if they only provided a generic failure.'
+
+# C3-01 quoted-span isolation case. This synthetic answer affirms the opposite
+# of a `cannot`-phrased claim in plain prose ("can use OUTPUT bind variables")
+# and carries NO prose negation; its only negation token is the `does not`
+# inside the backtick example span `flag does not apply`. It must read as NOT
+# present, and -- unlike ERR-101, which is also cleared by the "without"
+# refinement -- it isolates the quoted-span masking: without
+# mask_quoted_span_negations() the span's `not` would flip the verdict.
+QUOTED_SPAN_SAFE_CLAIM = "Anonymous blocks cannot use OUTPUT bind variables."
+QUOTED_SPAN_SAFE_ANSWER = (
+    "Anonymous blocks can use OUTPUT bind variables, even in an example like "
+    "`flag does not apply`."
+)
 
 
 def prohibited_claim_regression_failures() -> list[str]:
@@ -2786,6 +3072,86 @@ def prohibited_claim_regression_failures() -> list[str]:
     if not genuine_direction_present:
         failures.append("a clearly prohibited direction-sensitive claim was not detected")
 
+    # C3-01: the verbatim cycle-2 job-09 ERR-101 answer -- the single
+    # prohibited-claim false positive that survived cycle 2. The answer states
+    # the OPPOSITE of the `cannot`-phrased claim (a negative SQLCODE *can* be
+    # searched), so it must read as NOT present.
+    err101_c3_present, err101_c3_notes = prohibited_claim_present(
+        NEGATIVE_CLAIM_ERR101, ERR_101_C3_ANSWER
+    )
+    if err101_c3_present:
+        failures.append(
+            "the cycle-2 job-09 ERR-101 answer was wrongly flagged as a "
+            f"prohibited claim [quoted-span / incidental negation] ({err101_c3_notes})"
+        )
+
+    # C3-01: isolate the quoted-span masking. The answer affirms the opposite
+    # of a `cannot` claim with no prose negation; its only negation is `does
+    # not` inside a backtick example span and must not flip the verdict.
+    quoted_span_safe_present, quoted_span_safe_notes = prohibited_claim_present(
+        QUOTED_SPAN_SAFE_CLAIM, QUOTED_SPAN_SAFE_ANSWER
+    )
+    if quoted_span_safe_present:
+        failures.append(
+            "an answer whose only negation sits inside a quoted example span "
+            f"was wrongly flagged as a prohibited claim ({quoted_span_safe_notes})"
+        )
+
+    return failures
+
+
+def variance_band_self_test_failures() -> list[str]:
+    """Deterministic self-test for the C3-04 multi-sample variance band.
+
+    Exercises the pure band helpers on synthetic per-sample judgments -- no
+    provider, no fixture file -- so the judge self-test stays hermetic. It
+    confirms a one-sample band is degenerate (mean == min == max), so the band
+    behaves as N=1, and that a three-sample band reports the mean and spread.
+    """
+    failures: list[str] = []
+
+    def judgment(passed: bool) -> dict[str, Any]:
+        score = 1.0 if passed else 0.0
+        return {
+            "passed": passed,
+            "scores": {
+                "fact_coverage": score,
+                "critical_fact_coverage": score,
+                "required_token_preservation": score,
+                "version_handling": 1.0,
+                "altibase_specific_correctness": score,
+                "missing_input_handling": 1.0,
+            },
+            "prohibited_claim_results": [],
+        }
+
+    # One sample -> degenerate band: mean == min == max.
+    band1 = compute_variance_band(
+        [judgment(True), judgment(False)], [0, 0], [0], 2
+    )
+    pass1 = band1["metrics"]["pass_rate"]
+    if not (pass1["mean"] == pass1["min"] == pass1["max"] == 0.5):
+        failures.append(f"single-sample band is not degenerate: {pass1}")
+    if band1["passed_per_sample"] != [1]:
+        failures.append(f"single-sample passed_per_sample wrong: {band1['passed_per_sample']}")
+
+    # Three samples with pass rates 1.0 / 0.5 / 0.0 -> mean 0.5, band 0.0-1.0.
+    judgments = [
+        judgment(True), judgment(True),    # sample 0: 2/2 passed
+        judgment(True), judgment(False),   # sample 1: 1/2 passed
+        judgment(False), judgment(False),  # sample 2: 0/2 passed
+    ]
+    band3 = compute_variance_band(judgments, [0, 0, 1, 1, 2, 2], [0, 1, 2], 2)
+    pass3 = band3["metrics"]["pass_rate"]
+    if not (pass3["mean"] == 0.5 and pass3["min"] == 0.0 and pass3["max"] == 1.0):
+        failures.append(f"three-sample pass-rate band wrong: {pass3}")
+    if pass3["per_sample"] != [1.0, 0.5, 0.0]:
+        failures.append(f"three-sample per-sample pass rates wrong: {pass3['per_sample']}")
+    if band3["passed_per_sample"] != [2, 1, 0]:
+        failures.append(f"three-sample passed_per_sample wrong: {band3['passed_per_sample']}")
+    if band3["samples"] != 3 or band3["questions_per_sample"] != 2:
+        failures.append(f"three-sample band header wrong: {band3}")
+
     return failures
 
 
@@ -2805,7 +3171,14 @@ def run_self_test(policy_path: Path) -> int:
             validate_output=True,
         )
         judgments = load_answer_like_jsonl(result.judgments_path)
+        aggregate = load_json(result.aggregate_report_path)
     by_id = {record["question_id"]: record for record in judgments}
+    if "variance_band" in aggregate:
+        print(
+            "SELF-TEST FAILED: single-sample run emitted a variance band",
+            file=sys.stderr,
+        )
+        return 1
     if not by_id["PROP-001"]["passed"]:
         print("SELF-TEST FAILED: PROP-001 calibration answer should pass", file=sys.stderr)
         return 1
@@ -2825,10 +3198,16 @@ def run_self_test(policy_path: Path) -> int:
         for message in llm_helper_failures:
             print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
         return 1
+    variance_failures = variance_band_self_test_failures()
+    if variance_failures:
+        for message in variance_failures:
+            print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
+        return 1
     print(
-        "OK: judge/report self-test passed (incl. OPS-111 / TOOL-038 and "
-        "C2-01 PROP-140 / PROP-142 / SQL-137 / TOOL-003 / TOOL-019 / TOOL-033 "
-        "regression, LLM-fact-judge verdict/vote helpers)"
+        "OK: judge/report self-test passed (incl. OPS-111 / TOOL-038, "
+        "C2-01 PROP-140 / PROP-142 / SQL-137 / TOOL-003 / TOOL-019 / TOOL-033, "
+        "C3-01 ERR-101 quoted-span regression, LLM-fact-judge verdict/vote "
+        "helpers, C3-04 variance band)"
     )
     return 0
 

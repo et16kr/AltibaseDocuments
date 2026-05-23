@@ -1,0 +1,18 @@
+# Job manifest for run-all.sh  —  tab-separated:  id <TAB> title <TAB> prompt_file
+# Order is execution order. Lines starting with # are ignored.
+# Cycle 3. Plan: GPTs/reports/answerability_improvement_cycle3_plan_20260522.md
+# Phase 1 — measurement validity (gate: agreement >= 90% on the expanded gold set)
+01	C3-01 ERR-101 quoted-span prohibited-claim fix	01-C3-01-prohibited-claim-quoted-span-fix.md
+02	C3-02 Expand and audit the judge gold set	02-C3-02-expand-gold-set.md
+03	C3-03 Enlarge the coding-agent question suite	03-C3-03-enlarge-coding-agent-suite.md
+04	C3-04 Multi-sample answer generation and variance band	04-C3-04-multi-sample-variance-band.md
+05	C3-05 Judge re-calibration gate	05-C3-05-judge-recalibration-gate.md
+# Phase 2 — retrieval / coverage
+06	C3-06 replication identifier-anchored assembly	06-C3-06-replication-assembly.md
+07	C3-07 views_performance_monitoring residual coverage	07-C3-07-vpm-residual-coverage.md
+08	C3-08 Prose-named identifier resolution	08-C3-08-prose-identifier-resolution.md
+# Phase 3 — validation runs (LIVE, long-running, expensive)
+09	C3-09 Targeted calibration run (stop/go gate)	09-C3-09-targeted-calibration-run.md
+10	C3-10 Full re-run and regression analysis	10-C3-10-full-rerun-analysis.md
+# Phase 4 — documentation
+11	C3-11 Harness documentation update	11-C3-11-docs-update.md

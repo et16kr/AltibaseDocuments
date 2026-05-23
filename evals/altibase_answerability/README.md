@@ -152,12 +152,28 @@ question to the documented source blocks, propagates per-chunk source-block meta
 (`source_id`, `block_id`, version, language) into the context headers, and partitions
 `max_context_chars` into priority sections so routed-source content leads the context
 without crowding out secondary lexical chunks. When a question names a specific
-property, error code, or `V$`/`X$`/`SYS_` view, the runner also admits that
-identifier's own documented definition block into a dedicated highest-priority
-section, so a generic-titled routing miss cannot starve it, and a final exact-block
-deduplication pass reinvests budget otherwise spent on byte-identical chunks. Use
-`--context-mode full` only when the selected model can safely accept the whole
-attachment set. See `scripts/README.md` for the context-selection details.
+property, error code, `V$`/`X$`/`SYS_` view, or replication clause / option, the
+runner also admits that identifier's own documented definition block — the
+Replication Manual clause section plus its monitoring-view companion, for a
+replication question — into a dedicated highest-priority section, so a
+generic-titled routing miss cannot starve it. A small deterministic
+prose→identifier resolver (`resolve_prose_identifiers()`) bridges the residual
+band of questions that name an object only descriptively ("session time zone"
+→ `TIME_ZONE`, "wait-event investigation" → `V$SESSION_WAIT`) so a curated
+phrase reaches the same admission path as a literally-named identifier. A
+final exact-block deduplication pass then reinvests budget otherwise spent on
+byte-identical chunks. Use `--context-mode full` only when the selected model
+can safely accept the whole attachment set. See `scripts/README.md` for the
+context-selection details.
+
+The runner can optionally generate N answer records per question to expose
+live answer-generation variance: set `ANSWER_SAMPLES=N` (or pass `--samples N`
+directly) to write N records per question, each tagged with a 0-based
+`sample_index`. Retrieval and context assembly are computed once per question
+and shared across its samples; only answer generation repeats. `ANSWER_SAMPLES=1`
+is the default and keeps every artifact byte-for-byte identical to a pre-N
+single-sample run. See `scripts/README.md` for details, including how the
+scorecard variance band is emitted only for `N > 1`.
 
 Each run also writes a `retrieval_audit.jsonl` sidecar next to `answers.jsonl`. The
 audit records, per question, the ranking tokens, the routed source ids, and the
@@ -181,13 +197,23 @@ judge/report validation does not require live model calls.
 Fact coverage is semantic-tolerant: a deterministic suffix stemmer and a small curated
 equivalence map let correct paraphrases and word-form variants count as covered, while
 literal required-token preservation stays exact. Prohibited-claim detection is
-polarity-, direction-, and markdown-emphasis-aware, so a correct, safe answer is not
-flagged merely for sharing vocabulary with a prohibited claim. A question's `passed`
-decision is made directly against the `readiness_thresholds` in `policy.json` — no
-`blocker` finding, critical fact coverage and required-token preservation at or above
-their policy minimums, and no prohibited claim — and near-miss `high`/`medium`
-findings remain as remediation signal without auto-failing an otherwise in-policy
-answer.
+polarity-, direction-, markdown-emphasis-, and quoted-span-aware: negation tokens
+inside fenced code blocks, inline backtick spans, and quoted string literals are
+blanked before the polarity read, so a `does not` inside a CLI example does not
+make an otherwise-safe answer look like it asserts the prohibited claim. A
+correct, safe answer is therefore not flagged merely for sharing vocabulary with
+a prohibited claim. A question's `passed` decision is made directly against the
+`readiness_thresholds` in `policy.json` — no `blocker` finding, critical fact
+coverage and required-token preservation at or above their policy minimums, and
+no prohibited claim — and near-miss `high`/`medium` findings remain as
+remediation signal without auto-failing an otherwise in-policy answer.
+
+For a multi-sample answer file (`ANSWER_SAMPLES>1`), the judge additionally
+emits a `variance_band` block summarising each scorecard metric as a mean and
+min-max across the per-sample group metrics. The band appears as an additive
+field in `aggregate_report.json` and as a `Sample Variance Band` section in
+`report.md`; a single-sample run leaves both off and reads exactly as before.
+See `scripts/README.md` for the metric list and the byte-identity guarantee.
 
 `judge_report.py` also carries an optional LLM-assisted fact judge
 (`--llm-fact-judge`, or the `JUDGE_LLM_FACT=1` environment toggle), off by default.
@@ -198,10 +224,12 @@ rule verdict on any provider failure or tie. With it off, judging is byte-for-by
 rule judge. See `scripts/README.md` for the band, caching, and fallback details.
 
 `scripts/calibrate_judge.py` measures judge-vs-human agreement against the labelled
-gold set `fixtures/judge_gold_set.jsonl`, reporting a confusion matrix with precision,
-recall, and overall agreement. It is a measurement tool and never fails a run, and it
-accepts the same `--llm-fact-judge` flag to measure agreement with the LLM-assisted
-judge enabled.
+gold set `fixtures/judge_gold_set.jsonl` — expanded in cycle 3 to roughly 150
+labelled entries balanced across the benchmark's seven domains — reporting a
+confusion matrix with precision, recall, and overall agreement. It is a
+measurement tool and never fails a run, and it accepts the same
+`--llm-fact-judge` flag to measure agreement with the LLM-assisted judge
+enabled.
 
 Judgments must score at least:
 

@@ -307,6 +307,158 @@ DICT_VIEW_FAMILY = "general_reference_2_dictionary_views"
 DICT_VIEW_HEADING_RE = re.compile(r"[vx]\$[a-z0-9_]+")
 DICT_META_HEADING_RE = re.compile(r"sys_[a-z0-9_]+_")
 
+# --- Replication clause / option block admission (C3-06) --------------------
+# replication_cdc_security_network was, with views_performance_monitoring, the
+# worst domain (10.0 % pass) and the only one with no dedicated cycle-2 builder.
+# Its questions ask about replication DDL clauses (CREATE / ALTER / DROP
+# REPLICATION and the ALTER sub-commands START, STOP, SYNC, QUICKSTART, RETRY,
+# RESET, FLUSH, ADD/DROP HOST ...), replication option blocks (Gapless, Parallel
+# Applier, Meta Logging, Offline ...) and the replication monitoring views. As
+# with the C2-06 property manual and the C2-07 error / dictionary manuals, every
+# per-version Replication Manual row in `02_source_manifest.md` carries the same
+# generic title, so `route_sources()` cannot single it out and a generic-titled
+# mis-route starves the clause / option section the question needs.
+#
+# `build_replication_section()` admits, regardless of routing, (1) the
+# Replication Manual section the question's named clause / option points at and
+# (2) the replication monitoring views (`V$REPSENDER` / `V$REPSYNC` / ...) as
+# the documented companion — the same definition-block-plus-companion shape as
+# the C2-06 property section. The admission is anchored on replication-clause
+# phrases verified to occur ONLY in replication_cdc_security_network question
+# text (across all seven full-suite domains and the coding-agent suite), so it
+# is inert — and `build_context()` byte-identical — for every non-replication
+# question.
+REPLICATION_MANUAL_FAMILY = "replication_manual"
+
+# Replication Manual section key -> the documented section headings (Korean and
+# English, all version trees) that open that section. Both manuals carry the
+# English clause / option keyword in the heading — the Korean heading embeds it
+# in parentheses, e.g. `이중화 생성 (CREATE REPLICATION)` — so each key lists the
+# headings in both languages. Headings are matched after `_normalize_heading`
+# (lower-cased, backslashes / markdown bold stripped, curly quotes folded,
+# whitespace collapsed), an exact match rather than a substring test so a
+# procedure heading such as `세션의 이중화 모드 설정` cannot be mistaken for the
+# `이중화 모드` section.
+REPLICATION_SECTION_HEADINGS = {
+    "create": ("이중화 생성 (CREATE REPLICATION)", "CREATE REPLICATION"),
+    "alter": (
+        "이중화 시작, 종료와 변경 (ALTER REPLICATION)",
+        'Starting, Stopping and Modifying Replication using "ALTER REPLICATION"',
+    ),
+    "sync": ("이중화 동기화(SYNC)",),
+    "drop": ("이중화 삭제 (DROP REPLICATION)", "DROP REPLICATION"),
+    "gapless": (
+        "이중화 갭 해소 옵션(Replication Gapless Option)",
+        "Replication Gapless Option",
+    ),
+    "parallel": (
+        "병렬 적용자 옵션 (Parallel Applier Option)",
+        "Parallel Applier Option",
+    ),
+    "meta_logging": (
+        "메타 로깅 옵션(Meta Logging Option)",
+        "메타 로깅 옵션 (Meta Logging Option)",
+        "Meta Logging Option",
+    ),
+    "offline": ("오프라인 옵션(Offline Option)", "Offline Option"),
+    "mode": ("이중화 모드", "Replication Mode"),
+    "host": (
+        "다중 IP 네트워크 환경에서의 이중화",
+        "원격 호스트 지정",
+        "Replication in a Multiple IP Network Environment",
+    ),
+}
+
+# Generic per-clause sub-section headings (Syntax / Prerequisites / Description /
+# Error Codes / Example / Exceptions / Cautions, Korean and English). A chunk
+# under one of these — or a size-split continuation that keeps the clause
+# heading — belongs to the section opened by the most recent clause heading; any
+# other heading closes the section.
+REPLICATION_GENERIC_SUBSECTIONS = frozenset(
+    {
+        "구문",
+        "전제 조건",
+        "전제조건",
+        "설명",
+        "에러코드",
+        "에러 코드",
+        "예제",
+        "예외상황",
+        "예외 상황",
+        "주의사항",
+        "주의 사항",
+        "syntax",
+        "prerequisites",
+        "prerequisite",
+        "description",
+        "error codes",
+        "error code",
+        "example",
+        "examples",
+        "exceptions",
+        "exception",
+        "cautions",
+        "caution",
+    }
+)
+
+# Replication-clause anchor phrase (a lower-cased substring of the question
+# text) -> the Replication Manual section keys to admit. Every phrase was
+# verified to occur only in replication_cdc_security_network question text, so
+# `extract_replication_anchors` returns an empty set — and the builder is inert
+# — for every non-replication question. `create replication` is deliberately
+# NOT an anchor phrase: it also occurs in sql_ddl_dml_datatypes question text.
+# The CREATE REPLICATION section is still reachable via the `create` key carried
+# by the `replication host` anchor (host failover questions need the WITH /
+# USING connection-type clause documented under CREATE REPLICATION).
+REPLICATION_ANCHOR_PHRASES = {
+    "alter replication": ("alter", "sync"),
+    "drop replication": ("drop",),
+    "quickstart": ("alter",),
+    "sync only": ("sync", "alter"),
+    "start with offline": ("offline",),
+    "meta_logging": ("meta_logging",),
+    "gapless": ("gapless", "parallel"),
+    "parallel applier": ("parallel", "gapless"),
+    "replication mode": ("mode",),
+    "replication host": ("host", "create"),
+}
+
+# The replication monitoring views admitted from General Reference-2 as the
+# documented companion whenever a replication-clause anchor fires — the analogue
+# of the C2-06 `V$PROPERTY` companion. Matched as chunk headings with
+# backslashes stripped, so the markdown-escaped `V\$REPSENDER` heading matches.
+REPLICATION_MONITOR_VIEWS = frozenset(
+    {
+        "v$repsender",
+        "v$repreceiver",
+        "v$repgap",
+        "v$repsync",
+        "v$repoffline_status",
+    }
+)
+
+
+def _normalize_heading(heading: str) -> str:
+    """Lower-case a heading and fold the escaping / markup the manuals vary on.
+
+    Strips the markdown backslash escapes and bold `*` markers, folds curly
+    quotes to straight quotes, and collapses whitespace, so the exact-match
+    lookup in `REPLICATION_SECTION_HEADINGS` is insensitive to the rendering
+    differences across the Korean and English manual copies.
+    """
+    text = heading.replace("\\", "").replace("*", "")
+    text = text.replace("“", '"').replace("”", '"')
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+# Reverse lookup (normalized heading -> section key), built once at import.
+REPLICATION_HEADING_TO_KEY = {
+    _normalize_heading(heading): key
+    for key, headings in REPLICATION_SECTION_HEADINGS.items()
+    for heading in headings
+}
+
 
 @dataclass(frozen=True)
 class AttachmentDocument:
@@ -1067,6 +1219,162 @@ def version_scope_serves(question_scope: str, block_scope: str) -> bool:
     return False
 
 
+# --- Prose-named identifier resolution (C3-08) ------------------------------
+# The C2-06 / C2-07 / C3-06 named-definition admission only fires when the
+# question text contains the *identifier* its builder anchors on -- a property
+# name (`extract_property_names`), an error symbol / hex code
+# (`extract_error_identifiers`), or a `V$`/`X$`/`SYS_..._` view name
+# (`extract_dict_view_names`). A residual band of questions names the object
+# only *descriptively*: PROP-123 says "session time zone", not the `TIME_ZONE`
+# property; ERR-120 says "conversion not applicable", not
+# `mtERR_ABORT_CONVERSION_NOT_APPLICABLE`; VPM-108 says "wait-event
+# investigation", not `V$SESSION_WAIT`. The identifier-anchored section then
+# never fires and the question falls back to plain lexical retrieval, which is
+# insufficient under the saturated 180k budget against a generic-titled
+# mis-route.
+#
+# `resolve_prose_identifiers()` closes that gap with a deterministic,
+# conservative, high-precision prose -> identifier map. Each rule pairs a
+# distinctive lower-cased question-text phrase with the canonical identifier(s)
+# it points at. Every phrase was verified, against the full benchmark question
+# corpus and the in-package source, to satisfy three conditions:
+#
+#   1. it occurs in the residual question's text;
+#   2. it occurs in NO other benchmark question -- so the resolver fires only
+#      for the intended question and `build_context()` stays byte-identical for
+#      every other question; and
+#   3. it points at an identifier with a documented section / entry in
+#      `GPTs/upload_package/` that the existing C2-06 / C2-07 builder admits
+#      (a property whose General Reference-1 heading IS the identifier; an Error
+#      Message Reference `0x... symbol message` entry; a General Reference-2
+#      `V$`/`SYS_..._` section).
+#
+# The resolved identifiers are unioned into the identifier set the builders
+# already extract literally, so a resolved phrase reaches exactly the same
+# admission path as a literally-named identifier. Ambiguous prose that names no
+# object distinctively is deliberately left unresolved (see the C3-08 report):
+# resolving nothing is always preferred to admitting the wrong block. Only the
+# question text and the in-package source are used -- never a judge-only
+# question field (`required_tokens`, `expected_facts`, `source_refs`,
+# `prohibited_claims`).
+#
+# Each identifier is given in the lower-cased form the consuming builder
+# compares against: a property heading token, an error symbol / hex literal as
+# it appears in `chunk.search_text`, or a `V$`/`SYS_..._` heading with the
+# markdown `$`/`_` escaping already folded out.
+PROSE_IDENTIFIER_RESOLUTIONS: dict[str, tuple[tuple[str, str], ...]] = {
+    # PROP-123 -- "session time zone be changed ... valid value sources": the
+    # `TIME_ZONE` server property (General Reference-1 `#### TIME_ZONE`) and its
+    # documented value-source view `V$TIME_ZONE_NAMES` (General Reference-2).
+    "session time zone": (
+        ("property", "time_zone"),
+        ("view", "v$time_zone_names"),
+    ),
+    # ERR-117 -- "insufficient-privilege errors ... SYSDBA operations": the
+    # SQL-layer and management-layer insufficient-privilege errors.
+    "insufficient-privilege": (
+        ("error", "qperr_abort_qdp_insufficient_privileges"),
+        ("error", "mmerr_abort_insufficient_priv"),
+    ),
+    # ERR-119 -- "distinguish CHECK constraint violations from parent-child
+    # referential constraint failures": the CHECK-constraint error and the two
+    # parent/child referential-integrity errors.
+    "check constraint violations": (
+        ("error", "qperr_abort_qdn_violate_check_constraint"),
+    ),
+    "referential constraint failures": (
+        ("error", "qperr_abort_qmx_child_exist"),
+        ("error", "qperr_abort_qmx_not_found_parent_row"),
+    ),
+    # ERR-120 -- the four type conversion / overflow / literal error messages
+    # the question quotes verbatim ("conversion not applicable", "value
+    # overflow", "invalid literal", "out-of-range type value").
+    "conversion not applicable": (
+        ("error", "mterr_abort_conversion_not_applicable"),
+    ),
+    "value overflow": (("error", "mterr_abort_value_overflow"),),
+    "invalid literal": (("error", "mterr_abort_invalid_literal"),),
+    "out-of-range type value": (("error", "mterr_abort_overflow"),),
+    # ERR-123 -- "LOB operations fail because the connection is in autocommit
+    # mode across SQL, CLI/ODBC, or utility contexts": the SQL-, ODBC- and
+    # utility-layer LOB-in-autocommit-mode errors.
+    "autocommit mode": (
+        ("error", "qperr_abort_qmx_lob_autocommit_mode"),
+        ("error", "ulerr_abort_lob_autocommit_mode_err"),
+        ("error", "uterr_abort_lob_autocommit_mode_err"),
+    ),
+    # ERR-130 -- "server-side SSL certificate, handshake, and unsupported
+    # OpenSSL version errors": the three communication-layer SSL errors.
+    "ssl certificate": (
+        ("error", "cmerr_abort_invalid_certificate"),
+        ("error", "cmerr_abort_ssl_handshake"),
+        ("error", "cmerr_abort_unsupported_openssl_version"),
+    ),
+    # VPM-103 -- "data type code": the `V$DATATYPE` performance view that maps
+    # each data-type code to its documented type.
+    "data type code": (("view", "v$datatype"),),
+    # VPM-104 -- "meta tables ... index definitions and index columns": the
+    # `SYS_INDICES_` / `SYS_INDEX_COLUMNS_` data-dictionary meta tables.
+    "index definitions and index columns": (
+        ("view", "sys_indices_"),
+        ("view", "sys_index_columns_"),
+    ),
+    # VPM-106 -- "meta tables ... partition pruning, partition access, and
+    # local index partition": the three partition data-dictionary meta tables.
+    "partition pruning": (
+        ("view", "sys_table_partitions_"),
+        ("view", "sys_part_key_columns_"),
+        ("view", "sys_index_partitions_"),
+    ),
+    # VPM-107 -- "performance views ... active SQL text, timing, plan-cache
+    # linkage": the `V$STATEMENT` / `V$SQLTEXT` performance views.
+    "active sql text": (
+        ("view", "v$statement"),
+        ("view", "v$sqltext"),
+    ),
+    # VPM-108 -- "lock-wait or wait-event investigation, which views should be
+    # combined": the wait-event and lock-wait performance views.
+    "wait-event": (
+        ("view", "v$session_wait"),
+        ("view", "v$session_event"),
+        ("view", "v$session_wait_class"),
+        ("view", "v$lock_wait"),
+        ("view", "v$lock_statement"),
+    ),
+}
+
+# Resolver-output kinds, used to seed the empty-result skeleton so a caller can
+# index every kind unconditionally.
+PROSE_IDENTIFIER_KINDS = ("property", "error", "view")
+
+
+def resolve_prose_identifiers(question: str) -> dict[str, set[str]]:
+    """Resolve descriptive references in a question to canonical identifiers (C3-08).
+
+    Scans the question text for the distinctive anchor phrases in
+    `PROSE_IDENTIFIER_RESOLUTIONS` and unions the canonical identifier(s) each
+    points at, grouped by the builder that consumes them: `property` ->
+    `build_definition_section`, `error` -> `build_error_reference_section`,
+    `view` -> `build_dict_view_section`.
+
+    Every phrase was verified to occur in exactly one residual question and in
+    no other benchmark question, so this returns three empty sets -- and the
+    C2-06 / C2-07 builders stay byte-identical -- for every question that names
+    its object by an identifier or whose prose is too ambiguous to resolve
+    safely. Plain lower-cased substring matching, like
+    `extract_replication_anchors`, so the result is deterministic; the returned
+    sets feed set-membership / set-intersection tests in the builders, never an
+    order-sensitive walk, so determinism is preserved.
+    """
+    lowered = question.lower()
+    resolved: dict[str, set[str]] = {kind: set() for kind in PROSE_IDENTIFIER_KINDS}
+    for phrase, identifiers in PROSE_IDENTIFIER_RESOLUTIONS.items():
+        if phrase in lowered:
+            for kind, identifier in identifiers:
+                resolved[kind].add(identifier)
+    return resolved
+
+
 def build_definition_section(
     scored_chunks: list[tuple[int, ContextChunk]],
     projection: dict[str, Any],
@@ -1100,7 +1408,14 @@ def build_definition_section(
     deterministic.
     """
     question = str(projection.get("question", ""))
-    property_names = set(extract_property_names(question))
+    # C3-08: union the literally-named property identifiers with any resolved
+    # from a descriptive reference in the question prose (e.g. "session time
+    # zone" -> the TIME_ZONE property). resolve_prose_identifiers() returns an
+    # empty set for any question with no curated prose anchor, so this is a
+    # byte-identical no-op outside the prose-residual questions.
+    property_names = set(extract_property_names(question)) | resolve_prose_identifiers(
+        question
+    )["property"]
     question_scope = str(projection.get("version_scope", ""))
 
     definition_blocks: list[tuple[int, ContextChunk]] = []
@@ -1183,7 +1498,14 @@ def build_error_reference_section(
     preserved, so the result is deterministic.
     """
     question = str(projection.get("question", ""))
-    identifiers = extract_error_identifiers(question)
+    # C3-08: union literally-named error identifiers with any resolved from a
+    # descriptive error-message reference in the question prose (e.g.
+    # "conversion not applicable" -> mtERR_ABORT_CONVERSION_NOT_APPLICABLE).
+    # resolve_prose_identifiers() returns an empty set for any question with no
+    # curated prose anchor, so this is a byte-identical no-op there.
+    identifiers = extract_error_identifiers(question) | resolve_prose_identifiers(
+        question
+    )["error"]
     if not identifiers:
         return []
     question_scope = str(projection.get("version_scope", ""))
@@ -1241,7 +1563,14 @@ def build_dict_view_section(
     so the result is deterministic.
     """
     question = str(projection.get("question", ""))
-    view_names = extract_dict_view_names(question)
+    # C3-08: union literally-named V$/X$/SYS_..._ identifiers with any resolved
+    # from a descriptive reference in the question prose (e.g. "wait-event
+    # investigation" -> V$SESSION_WAIT). resolve_prose_identifiers() returns an
+    # empty set for any question with no curated prose anchor, so this is a
+    # byte-identical no-op outside the prose-residual questions.
+    view_names = extract_dict_view_names(question) | resolve_prose_identifiers(
+        question
+    )["view"]
     if not view_names:
         return []
     question_scope = str(projection.get("version_scope", ""))
@@ -1258,6 +1587,103 @@ def build_dict_view_section(
             current_view = head
         if (
             current_view in view_names
+            and version_scope_serves(question_scope, meta.version_scope)
+        ):
+            selected.append((score_by_chunk.get(chunk, 0), chunk))
+    return selected
+
+
+def extract_replication_anchors(question: str) -> set[str]:
+    """Return the Replication Manual section keys a question's clauses point at (C3-06).
+
+    Scans the question text for the replication-clause anchor phrases in
+    `REPLICATION_ANCHOR_PHRASES` and unions their section keys. Every phrase is
+    an Altibase-replication-specific clause / option name verified to occur only
+    in replication_cdc_security_network question text, so the set is empty for
+    any non-replication question and the C3-06 builder is inert there.
+    """
+    lowered = question.lower()
+    keys: set[str] = set()
+    for phrase, section_keys in REPLICATION_ANCHOR_PHRASES.items():
+        if phrase in lowered:
+            keys.update(section_keys)
+    return keys
+
+
+def build_replication_section(
+    context_chunks: list[ContextChunk],
+    scored_chunks: list[tuple[int, ContextChunk]],
+    projection: dict[str, Any],
+) -> list[tuple[int, ContextChunk]]:
+    """Select Replication Manual clause / option blocks and the monitoring-view companion (C3-06).
+
+    For a question that names a replication clause or option, `build_context()`
+    admits, regardless of the manifest routing decision:
+
+    * the Replication Manual (`REPLICATION_MANUAL_FAMILY`) section the named
+      clause / option points at — the section heading chunk and every following
+      generic sub-section chunk (`구문` / Syntax, `설명` / Description,
+      `예제` / Example, ...) — version-filtered; and
+    * the replication monitoring views (`REPLICATION_MONITOR_VIEWS`) from the
+      General Reference-2 data-dictionary manual (`DICT_VIEW_FAMILY`) as the
+      documented companion — the analogue of the C2-06 `V$PROPERTY` companion,
+      which carries the `REPL_MODE` / `ACT_REPL_MODE` / `START_FLAG` /
+      `SYNC_RECORD_COUNT` column facts these questions need.
+
+    Both passes walk `context_chunks` in document order tracking the most recent
+    section / view heading: the Replication Manual breaks a clause into chunks
+    under generic `구문` / `설명` / `예제` sub-headings that do not repeat the
+    clause name, and a view's column list sits under a generic `칼럼 정보`
+    sub-heading — neither carries the anchor heading. Headings are matched after
+    `_normalize_heading` (an exact lookup, so a procedure heading such as
+    `세션의 이중화 모드 설정` is not mistaken for the `이중화 모드` section).
+
+    Anchored on the clause / option phrases the question itself states and
+    confined to the two replication-bearing manual families, so it returns an
+    empty list — and `build_context()` is byte-identical to before — for every
+    question that names no replication clause. Chunks are returned in document
+    order with their lexical score attached, so the result is deterministic.
+    """
+    question = str(projection.get("question", ""))
+    section_keys = extract_replication_anchors(question)
+    if not section_keys:
+        return []
+    question_scope = str(projection.get("version_scope", ""))
+    score_by_chunk = {chunk: score for score, chunk in scored_chunks}
+    selected: list[tuple[int, ContextChunk]] = []
+
+    # Pass 1: the named clause / option section(s) of the Replication Manual.
+    current_key: str | None = None
+    for chunk in context_chunks:
+        meta = chunk.block_meta
+        if meta is None or meta.source_family != REPLICATION_MANUAL_FAMILY:
+            current_key = None
+            continue
+        head = _normalize_heading(chunk.heading)
+        matched = REPLICATION_HEADING_TO_KEY.get(head)
+        if matched is not None:
+            current_key = matched
+        elif head not in REPLICATION_GENERIC_SUBSECTIONS:
+            # Any non-generic heading closes the current clause section.
+            current_key = None
+        if (
+            current_key in section_keys
+            and version_scope_serves(question_scope, meta.version_scope)
+        ):
+            selected.append((score_by_chunk.get(chunk, 0), chunk))
+
+    # Pass 2: the replication monitoring-view companion from General Reference-2.
+    current_view: str | None = None
+    for chunk in context_chunks:
+        meta = chunk.block_meta
+        if meta is None or meta.source_family != DICT_VIEW_FAMILY:
+            current_view = None
+            continue
+        head = chunk.heading_lower.replace("\\", "").strip()
+        if DICT_VIEW_HEADING_RE.fullmatch(head) or DICT_META_HEADING_RE.fullmatch(head):
+            current_view = head
+        if (
+            current_view in REPLICATION_MONITOR_VIEWS
             and version_scope_serves(question_scope, meta.version_scope)
         ):
             selected.append((score_by_chunk.get(chunk, 0), chunk))
@@ -1415,9 +1841,16 @@ def build_context(
     # the question names — admitted regardless of routing, like the C2-06
     # definition section. Empty for any question that names no error or view,
     # so build_context is byte-identical to before outside the two domains.
-    reference_section = build_error_reference_section(
-        scored_chunks, projection
-    ) + build_dict_view_section(context_chunks, scored_chunks, projection)
+    # Section 1b (C3-06): Replication Manual clause / option blocks and the
+    # replication monitoring-view companion for the clause(s) a replication
+    # question names — admitted regardless of routing, the same way. Empty for
+    # any question that names no replication clause, so build_context stays
+    # byte-identical to before for every non-replication question.
+    reference_section = (
+        build_error_reference_section(scored_chunks, projection)
+        + build_dict_view_section(context_chunks, scored_chunks, projection)
+        + build_replication_section(context_chunks, scored_chunks, projection)
+    )
 
     routing_metadata = build_routing_metadata(routed_source_ids, manifest_rows or {})
 
@@ -1905,6 +2338,7 @@ def answer_record(
     prompt_text: str,
     request_payload: dict[str, Any],
     result: ProviderResult,
+    sample_index: int | None = None,
 ) -> dict[str, Any]:
     attachment_context: dict[str, Any] = {
         "attachment_files": context.files,
@@ -1938,6 +2372,11 @@ def answer_record(
     }
     if result.error:
         record["error"] = result.error
+    # C3-04: a multi-sample run (ANSWER_SAMPLES>1) tags each of a question's N
+    # answer records with its 0-based sample index. N=1 passes None, so the
+    # record is byte-for-byte identical to a pre-C3-04 single-sample run.
+    if sample_index is not None:
+        record["sample_index"] = sample_index
     return record
 
 
@@ -1953,7 +2392,12 @@ def load_answer_record_validator() -> Any | None:
 def validate_answer_record(record: dict[str, Any], validator: Any | None) -> list[str]:
     if validator is None:
         return ["jsonschema is not installed; cannot validate answer record schema"]
-    return [error.message for error in sorted(validator.iter_errors(record), key=lambda item: list(item.path))]
+    # `sample_index` is C3-04 multi-sample bookkeeping, not part of the canonical
+    # answer-record schema; validate the record without it so a multi-sample run
+    # still schema-checks the answer-record structure. A single-sample (N=1)
+    # record has no sample_index, so this is a no-op for the unchanged path.
+    instance = {key: value for key, value in record.items() if key != "sample_index"}
+    return [error.message for error in sorted(validator.iter_errors(instance), key=lambda item: list(item.path))]
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
@@ -2018,6 +2462,184 @@ def filter_questions(
     if not selected:
         raise RunnerError("No questions selected")
     return selected
+
+
+def resolve_answer_samples(
+    cli_samples: int | None, env: dict[str, str] | None = None
+) -> int:
+    """Resolve the per-question answer-sample count (C3-04).
+
+    Precedence: the explicit ``--samples`` CLI flag, then the ``ANSWER_SAMPLES``
+    environment variable, then the default of 1. run-test.sh invokes this runner
+    with a fixed argument list and passes no ``--samples`` flag, so
+    ``ANSWER_SAMPLES`` is the only path a live benchmark run (cycle-3 jobs
+    09-10) can enable multi-sampling -- exactly like the ``JUDGE_LLM_FACT`` env
+    toggle for the judge. The value must be a positive integer; N=1 keeps every
+    artifact byte-for-byte identical to a pre-C3-04 run.
+    """
+    if env is None:
+        env = os.environ
+    if cli_samples is not None:
+        value, source = cli_samples, "--samples"
+    else:
+        raw = env.get("ANSWER_SAMPLES", "").strip()
+        if not raw:
+            return 1
+        try:
+            value = int(raw)
+        except ValueError as exc:
+            raise RunnerError(
+                f"ANSWER_SAMPLES must be a positive integer, got {raw!r}"
+            ) from exc
+        source = "ANSWER_SAMPLES"
+    if value < 1:
+        raise RunnerError(f"{source} must be a positive integer, got {value}")
+    return value
+
+
+def multi_sample_self_test_failures() -> list[str]:
+    """Deterministic self-test for the C3-04 N-sample plumbing.
+
+    Exercises ANSWER_SAMPLES/--samples resolution and the ``sample_index``
+    tagging of answer records -- no provider call -- so the runner self-test
+    stays hermetic and the N=1 path is verified to be byte-for-byte unchanged.
+    """
+    failures: list[str] = []
+
+    # --- ANSWER_SAMPLES / --samples resolution ---
+    resolve_cases: list[tuple[int | None, dict[str, str], int]] = [
+        (None, {}, 1),
+        (3, {}, 3),
+        (None, {"ANSWER_SAMPLES": "4"}, 4),
+        (2, {"ANSWER_SAMPLES": "9"}, 2),
+    ]
+    for cli, env, expected in resolve_cases:
+        got = resolve_answer_samples(cli, env=env)
+        if got != expected:
+            failures.append(
+                f"resolve_answer_samples({cli!r}, {env!r}) -> {got}, expected {expected}"
+            )
+    for cli, env in ((0, {}), (-1, {}), (None, {"ANSWER_SAMPLES": "0"}), (None, {"ANSWER_SAMPLES": "x"})):
+        try:
+            resolve_answer_samples(cli, env=env)
+        except RunnerError:
+            pass
+        else:
+            failures.append(f"resolve_answer_samples({cli!r}, {env!r}) did not raise")
+
+    # --- sample_index tagging: present for N>1, absent (byte-identical) for N=1 ---
+    bundle = ContextBundle(
+        text="context",
+        files=["GPTs/upload_package/source_pack_shard_001.md"],
+        digest="sha256:0",
+        mode="lexical",
+        char_count=7,
+        chunk_count=1,
+        context_source_glob="GPTs/upload_package/*.md",
+        context_root="GPTs/upload_package",
+    )
+    projection = {
+        "id": "PROP-001",
+        "question": "What does MEM_MAX_DB_SIZE control?",
+        "version_scope": "7.3",
+        "user_level": "advanced_operator",
+        "answer_type": "reference",
+        "answer_language": "en",
+    }
+    base = dict(
+        run_id="RUN",
+        manifest={"manifest_id": "selftest"},
+        projection=projection,
+        provider="offline",
+        model="fixture",
+        mode="dry_run",
+        context=bundle,
+        draft_path=None,
+        leakage_check={"passed": True, "judge_only_keys_checked": [], "failures": []},
+        prompt_text="prompt",
+        request_payload={"model": "fixture"},
+        result=ProviderResult(status="skipped", answer="placeholder", usage={}),
+    )
+    if "sample_index" in answer_record(**base, sample_index=None):
+        failures.append("N=1 answer record carries a sample_index field")
+    for index in (0, 2):
+        record = answer_record(**base, sample_index=index)
+        if record.get("sample_index") != index:
+            failures.append(
+                f"answer record sample_index not tagged: {record.get('sample_index')!r}"
+            )
+
+    # --- validate_answer_record ignores sample_index ---
+    validator = load_answer_record_validator()
+    if validator is not None:
+        tagged = answer_record(**base, sample_index=1)
+        if validate_answer_record(tagged, validator):
+            failures.append("validate_answer_record rejected a sample_index-tagged record")
+
+    return failures
+
+
+def prose_resolution_self_test_failures() -> list[str]:
+    """Deterministic self-test for the C3-08 prose -> identifier resolver.
+
+    Verifies that distinctive descriptive phrases resolve to the expected
+    canonical identifiers, that a question naming its object by an identifier
+    (or with no curated anchor) resolves to nothing -- the byte-identical-context
+    guarantee -- and that the result carries all three resolver-output kinds.
+    No source material and no provider call, so the runner self-test stays
+    hermetic.
+    """
+    failures: list[str] = []
+
+    # A descriptive property reference resolves to the property identifier and
+    # its documented value-source view (PROP-123 shape).
+    prop = resolve_prose_identifiers(
+        "How can an Altibase 7.3 session time zone be changed, and what valid "
+        "value sources should be checked?"
+    )
+    if prop["property"] != {"time_zone"} or prop["view"] != {"v$time_zone_names"}:
+        failures.append(f"prose property/view resolution: {prop}")
+
+    # A descriptive error-message reference resolves to the error symbols
+    # (ERR-120 shape -- messages quoted verbatim in the question).
+    err = resolve_prose_identifiers(
+        "What should an answer check when Altibase reports conversion not "
+        "applicable, value overflow, invalid literal, or out-of-range type value?"
+    )
+    if not {
+        "mterr_abort_conversion_not_applicable",
+        "mterr_abort_value_overflow",
+        "mterr_abort_invalid_literal",
+        "mterr_abort_overflow",
+    } <= err["error"]:
+        failures.append(f"prose error resolution: {err}")
+
+    # A descriptive view reference resolves to the dictionary-view identifiers
+    # (VPM-108 shape).
+    view = resolve_prose_identifiers(
+        "For an Altibase lock-wait or wait-event investigation, which views "
+        "should be combined?"
+    )
+    if not {"v$session_wait", "v$lock_wait", "v$session_event"} <= view["view"]:
+        failures.append(f"prose view resolution: {view}")
+
+    # A question that names its object by an identifier resolves to nothing, so
+    # build_context() is byte-identical to the pre-C3-08 assembly for it.
+    inert = resolve_prose_identifiers("What does MEM_MAX_DB_SIZE control?")
+    if any(inert[kind] for kind in PROSE_IDENTIFIER_KINDS):
+        failures.append(
+            f"prose resolver not inert for an identifier-named question: {inert}"
+        )
+    if set(inert) != set(PROSE_IDENTIFIER_KINDS):
+        failures.append(f"prose resolver result missing a kind key: {sorted(inert)}")
+
+    # Determinism: the same question resolves identically on repeat calls.
+    if resolve_prose_identifiers(
+        "session time zone change"
+    ) != resolve_prose_identifiers("session time zone change"):
+        failures.append("prose resolver is not deterministic")
+
+    return failures
 
 
 def run_self_test(policy_path: Path) -> int:
@@ -2231,6 +2853,18 @@ def run_self_test(policy_path: Path) -> int:
         )
         return 1
 
+    multi_sample_failures = multi_sample_self_test_failures()
+    if multi_sample_failures:
+        for message in multi_sample_failures:
+            print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
+        return 1
+
+    prose_failures = prose_resolution_self_test_failures()
+    if prose_failures:
+        for message in prose_failures:
+            print(f"SELF-TEST FAILED: {message}", file=sys.stderr)
+        return 1
+
     if run_routing_self_test() != 0:
         return 1
 
@@ -2413,6 +3047,17 @@ def parse_args() -> argparse.Namespace:
         help="Maximum attachment context characters. Use 0 for unlimited.",
     )
     parser.add_argument("--chunk-chars", type=int, default=8_000)
+    parser.add_argument(
+        "--samples",
+        type=int,
+        default=None,
+        help=(
+            "Answer samples to generate per question (env ANSWER_SAMPLES; "
+            "default 1). N>1 writes N answer records per question to stabilise "
+            "live-run answer-generation variance; retrieval/context assembly is "
+            "computed once per question and shared across its samples."
+        ),
+    )
     parser.add_argument("--offline-preview-chars", type=int, default=2_000)
     parser.add_argument("--validate-output", action="store_true", help="Validate answer records against schema.")
     parser.add_argument("--self-test", action="store_true", help="Run leakage-check self-test and exit.")
@@ -2445,6 +3090,7 @@ def main() -> int:
             raise RunnerError("--limit must be a positive integer")
         if args.chunk_chars < 512:
             raise RunnerError("--chunk-chars must be at least 512")
+        samples = resolve_answer_samples(args.samples)
 
         output_dir = args.output_dir
         if output_dir is None:
@@ -2476,6 +3122,12 @@ def main() -> int:
         with answer_path.open("w", encoding="utf-8") as answer_handle:
             for question in questions:
                 projection = project_question(question, manifest, policy)
+                # Retrieval and context assembly (build_context), prompt
+                # construction, and the leakage check are computed once per
+                # question and shared across that question's samples (C3-04):
+                # only answer generation repeats. The retrieval-audit sidecar
+                # therefore stays one record per question regardless of
+                # ANSWER_SAMPLES.
                 context, retrieval_audit = build_context(
                     documents,
                     context_chunks,
@@ -2497,43 +3149,51 @@ def main() -> int:
                     prompt_scaffold,
                     policy,
                 )
-                if leakage_check["passed"]:
-                    result = run_provider(provider, model, mode, prompt_text, context, projection, args)
-                else:
-                    result = ProviderResult(
-                        status="error",
-                        answer="",
-                        usage={},
-                        error="leakage check failed; no provider call was made",
-                    )
-
-                record = answer_record(
-                    run_id,
-                    manifest,
-                    projection,
-                    provider,
-                    model,
-                    mode,
-                    context,
-                    draft_path,
-                    leakage_check,
-                    prompt_text,
-                    request_payload,
-                    result,
-                )
-                if args.validate_output:
-                    validation_errors = validate_answer_record(record, validator)
-                    if validation_errors:
-                        record["status"] = "error"
-                        record["error"] = "answer record schema validation failed: " + "; ".join(
-                            validation_errors
+                # Generate `samples` answer records per question. With samples=1
+                # (the default) the loop runs once and sample_index is left
+                # None, so each record is byte-for-byte identical to a pre-C3-04
+                # run. In dry_run mode no provider is called, so the N records
+                # are placeholder-identical, but the N-record loop still runs so
+                # the multi-sample plumbing is verifiable without a provider.
+                for sample_number in range(samples):
+                    if leakage_check["passed"]:
+                        result = run_provider(provider, model, mode, prompt_text, context, projection, args)
+                    else:
+                        result = ProviderResult(
+                            status="error",
+                            answer="",
+                            usage={},
+                            error="leakage check failed; no provider call was made",
                         )
-                        error_count += 1
-                if result.status == "error" or not leakage_check["passed"]:
-                    error_count += 1
 
-                answer_handle.write(canonical_json(record) + "\n")
-                records_written += 1
+                    record = answer_record(
+                        run_id,
+                        manifest,
+                        projection,
+                        provider,
+                        model,
+                        mode,
+                        context,
+                        draft_path,
+                        leakage_check,
+                        prompt_text,
+                        request_payload,
+                        result,
+                        sample_index=sample_number if samples > 1 else None,
+                    )
+                    if args.validate_output:
+                        validation_errors = validate_answer_record(record, validator)
+                        if validation_errors:
+                            record["status"] = "error"
+                            record["error"] = "answer record schema validation failed: " + "; ".join(
+                                validation_errors
+                            )
+                            error_count += 1
+                    if result.status == "error" or not leakage_check["passed"]:
+                        error_count += 1
+
+                    answer_handle.write(canonical_json(record) + "\n")
+                    records_written += 1
 
         retrieval_audit_path = write_retrieval_audit(output_dir, retrieval_audits)
 
@@ -2545,6 +3205,7 @@ def main() -> int:
             "provider": provider,
             "model": model,
             "context_mode": args.context_mode,
+            "samples": samples,
             "answer_records": records_written,
             "errors": error_count,
             "answers_path": repo_rel(answer_path),

@@ -20,7 +20,9 @@ Domain files:
 - `tools_apis_connectors_migration.jsonl`
 - `coding_agent_source_preserving.jsonl` is separate from the production 270-question
   answerability baseline. It contains `AGENT-*` practical coding-agent tasks that are
-  selected only by the source-preserving coding-agent manifest.
+  selected only by the source-preserving coding-agent manifest, and was grown in
+  cycle 3 to at least 30 questions so the small-profile gate has a meaningful
+  per-subdomain spread.
 
 Production manifests should select the domain files above, not the fixture seed file.
 The validator's default `full` profile enforces the 200-question total and per-domain

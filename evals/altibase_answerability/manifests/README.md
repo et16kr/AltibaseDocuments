@@ -49,6 +49,12 @@ the selected context, not a separate input; routing degrades cleanly to plain le
 ranking when they are absent. See `../scripts/README.md` for the context-selection and
 retrieval-audit details.
 
+Manifest fields cover what the runner does per question; live-run knobs that
+multiply the per-question record count, such as the `ANSWER_SAMPLES`
+environment variable for multi-sample answer generation, sit outside the
+manifest. `ANSWER_SAMPLES=1` (the default) leaves every artifact byte-for-byte
+identical to a pre-multi-sample run; see `../scripts/README.md` for details.
+
 ## Coding-Agent Manifest
 
 `coding_agent_source_preserving_package.json` is a separate benchmark for practical

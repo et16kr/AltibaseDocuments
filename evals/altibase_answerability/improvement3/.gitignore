@@ -1,0 +1,4 @@
+# Runtime state, logs, and the LLM verdict cache are not durable artifacts.
+state/
+logs/
+cache/

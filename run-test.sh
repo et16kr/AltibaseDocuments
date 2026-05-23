@@ -221,6 +221,16 @@ lines = [
     f"Answers: {report['artifacts']['answers_path']}",
     f"Judgments: {report['artifacts']['judgments_path']}",
 ]
+# C3-04: a multi-sample run carries a variance band; a single-sample run does
+# not, so summary.txt is byte-for-byte identical to a pre-C3-04 run.
+band = report.get("variance_band")
+if band:
+    pass_band = band["metrics"]["pass_rate"]
+    lines.append(
+        f"Sample variance band: {band['samples']} samples; "
+        f"pass rate mean {pct(pass_band['mean'])} "
+        f"(min {pct(pass_band['min'])}, max {pct(pass_band['max'])})"
+    )
 summary_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 print(
     "RESULT "
